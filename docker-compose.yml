@@ -75,15 +75,15 @@ services:
       - web_back
       - web_api
     ports:
-      - '3002:3002'
-      - '3001:3001'
+      - '3032:3032'
+      - '3031:3031'
 
   postgres:
     image: postgres:14-alpine
     expose:
-      - '5432/tcp'
+      - '5434/tcp'
     ports:
-      - '5432:5432'
+      - '5434:5434'
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
@@ -99,7 +99,7 @@ services:
     volumes:
       - redisdata:/data
     ports:
-      - '6379:6379'
+      - '6381:6381'
     healthcheck:
       test: redis-cli ping
       interval: 1s
