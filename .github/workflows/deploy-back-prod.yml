@@ -4,7 +4,7 @@ on:
     branches:
       - 'main'
     paths:
-      - 'bidon_back/*'
+      - 'bidon_back/**'
 
 jobs:
   build-and-debloy:
