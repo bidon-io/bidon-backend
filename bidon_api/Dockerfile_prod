@@ -49,4 +49,4 @@ ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
 EXPOSE 3000
 # Use Bash as the default command
 
-CMD ["/bin/bash"]
+#CMD bundle exec puma -C /app/config/puma.rb -e production
