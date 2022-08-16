@@ -2,8 +2,7 @@ name: Deploy back
 on:
   push:
     branches:
-      - 'DO/autobuild'
-      #- 'main'
+      - 'main'
     paths:
       - 'bidon_back/**'
 

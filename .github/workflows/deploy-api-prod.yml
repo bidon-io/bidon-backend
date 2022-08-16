@@ -2,8 +2,7 @@ name: Deploy api
 on:
   push:
     branches:
-      - 'DO/autobuild'
-      #- 'main'
+      - 'main'
     paths:
       - 'bidon_api/**'
 
