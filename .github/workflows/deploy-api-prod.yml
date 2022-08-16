@@ -2,7 +2,8 @@ name: Deploy api
 on:
   push:
     branches:
-      - 'main'
+      - 'DO/autobuild'
+      #- 'main'
     paths:
       - 'bidon_api/**'
 
@@ -21,10 +22,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Bild image
-        run: make docker-build-api TAG=${{ github.sha }}
+        run: make docker-build-prod-api TAG=${{ github.sha }}
 
       - name: Push image
-        run: make docker-push-api TAG=${{ github.sha }}
+        run: make docker-push-prod-api TAG=${{ github.sha }}
 
       - name: Checks-out repository devops
         uses: actions/checkout@v3
