@@ -33,6 +33,6 @@ jobs:
           repository: appodeal/devops
           token: ${{ secrets.PAT_APPODEAL_RUNNER }}
 
-      - name: Purge cache
+      - name: Deploy
         working-directory: ./appodeal/prod
         run: make bidon-api TAG=${{ github.sha }}
