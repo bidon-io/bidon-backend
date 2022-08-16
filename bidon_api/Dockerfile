@@ -59,12 +59,20 @@ RUN apt-get update -qq \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
   && truncate -s 0 /var/log/*log
 
+RUN useradd -ms /usr/sbin/nologin -u 1000 deploy
+
 ENV LANG=C.UTF-8 \
   BUNDLE_JOBS=4 \
   BUNDLE_RETRY=3
 
+# Change user to deploy
+USER deploy
+
 WORKDIR /app
 
-COPY . .
+COPY --chown=deploy:deploy Gemfile .
+COPY --chown=deploy:deploy Gemfile.lock .
 
 RUN bundle install && rm -rf /data/bundle/cache
+
+COPY --chown=deploy:deploy . .
