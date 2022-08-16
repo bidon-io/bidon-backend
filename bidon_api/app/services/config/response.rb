@@ -3,6 +3,7 @@
 module Config
   class Response
     attr_reader :config_request
+
     delegate :present?, to: :body
 
     def initialize(config_request)

@@ -7,9 +7,9 @@ RSpec.describe ConfigController, type: :controller do
     let(:expected_response) do
       {
         error: {
-          code: 422,
+          code:    422,
           message: 'Request should contain X-BidOn-Version header',
-        }
+        },
       }.to_json
     end
 
@@ -68,9 +68,9 @@ RSpec.describe ConfigController, type: :controller do
       let(:expected_response) do
         {
           error: {
-            code: 422,
+            code:    422,
             message: 'App key is invalid',
-          }
+          },
         }.to_json
       end
 
@@ -88,9 +88,9 @@ RSpec.describe ConfigController, type: :controller do
       let(:expected_response) do
         {
           error: {
-            code: 500,
+            code:    500,
             message: 'Internal Server Error',
-          }
+          },
         }.to_json
       end
 
