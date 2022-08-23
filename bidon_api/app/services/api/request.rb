@@ -2,15 +2,30 @@
 
 module Api
   class Request
+    extend Memoist
+
     attr_reader :params
 
     def initialize(params)
       @params = params
     end
 
-    # TODO: check if app is valid
     def valid?
-      true
+      app.present?
     end
+
+    def adapters
+      params['adapters'].presence || []
+    end
+
+    def app
+      app_key = params.dig('app', 'key')
+      package_name = params.dig('app', 'bundle')
+
+      return unless app_key && package_name
+
+      App.find(app_key:, package_name:).present?
+    end
+    memoize :app
   end
 end

@@ -21,4 +21,11 @@ class ApplicationController < ActionController::API
   def render_app_key_invalid
     render json: { error: { code: 422, message: 'App key is invalid' } }, status: :unprocessable_entity
   end
+
+  def zipped_params
+    json = Utils.decode_params(request.raw_post)
+    ActionController::Parameters.new(Oj.load(json))
+  rescue Zlib::GzipFile::Error, Oj::ParseError
+    ActionController::Parameters.new
+  end
 end
