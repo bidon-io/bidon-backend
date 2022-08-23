@@ -19,12 +19,7 @@ module Utils
   #
   # @return [String]
   def zip(data)
-    z = +''
-    gz = Zlib::GzipWriter.new(StringIO.new(z))
-    gz.write(data)
-    gz.close
-
-    z
+    ActiveSupport::Gzip.compress(data)
   end
 
   # @param [String] data
