@@ -99,7 +99,7 @@ GEM
     mail (2.7.1)
       mini_mime (>= 0.1.1)
     marcel (1.0.2)
-    memoist (0.16.2)
+    memo_wise (1.7.0)
     method_source (1.0.0)
     mini_mime (1.1.2)
     minitest (5.16.3)
@@ -239,7 +239,7 @@ DEPENDENCIES
   bootsnap
   factory_bot_rails
   lograge
-  memoist
+  memo_wise
   oj
   pg (~> 1.1)
   puma (~> 5.0)

@@ -2,7 +2,7 @@
 
 module Api
   class Request
-    extend Memoist
+    prepend MemoWise
 
     attr_reader :params
 
@@ -26,6 +26,6 @@ module Api
 
       App.find(app_key:, package_name:).present?
     end
-    memoize :app
+    memo_wise :app
   end
 end

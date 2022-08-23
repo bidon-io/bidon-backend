@@ -1,7 +1,7 @@
 module Api
   module Config
     class AdaptersFetcher
-      extend Memoist
+      prepend MemoWise
 
       attr_reader :config_adapters
 
@@ -19,7 +19,7 @@ module Api
       def app_mmp_profile
         AppMmpProfile.where(app_id: app.id).order(Sequel.desc(:start_date)).first
       end
-      memoize :app_mmp_profile
+      memo_wise :app_mmp_profile
 
       private
 
