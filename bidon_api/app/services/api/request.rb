@@ -24,7 +24,7 @@ module Api
 
       return unless app_key && package_name
 
-      App.find(app_key:, package_name:).present?
+      App.find(app_key:, package_name:)
     end
     memo_wise :app
   end
