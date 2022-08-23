@@ -10,8 +10,8 @@ gem 'puma', '~> 5.0'
 gem 'rails', '~> 7.0.3', '>= 7.0.3.1'
 
 gem 'bootsnap', require: false
-gem 'oj'
 gem 'memoist'
+gem 'oj'
 gem 'redis'
 gem 'ruby-kafka'
 gem 'sequel-rails'
