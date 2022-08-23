@@ -31,6 +31,6 @@ module Utils
   #
   # @return [String]
   def unzip(data)
-    Zlib::GzipReader.new(StringIO.new(data)).read
+    ActiveSupport::Gzip.decompress(data)
   end
 end
