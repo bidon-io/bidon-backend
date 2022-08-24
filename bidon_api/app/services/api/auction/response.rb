@@ -15,13 +15,14 @@ module Api
       end
 
       def body
-        @body ||= {
+        {
           'rounds'     => auction_configuration&.rounds || [],
           'line_items' => line_items,
           'token'      => '{}',
           'min_price'  => auction_configuration&.pricefloor || 0,
         }
       end
+      memo_wise :body
 
       def auction_configuration
         AuctionConfiguration.where(app_id: app.id).order(Sequel.desc(:created_at)).first
