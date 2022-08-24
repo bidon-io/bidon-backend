@@ -1,0 +1,2 @@
+class AuctionConfiguration < ApplicationRecord
+end

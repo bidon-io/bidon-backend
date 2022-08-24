@@ -1,0 +1,2 @@
+class DemandSource < ApplicationRecord
+end
