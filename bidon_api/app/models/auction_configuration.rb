@@ -1,2 +1,2 @@
-class AuctionConfiguration < ApplicationRecord
+class AuctionConfiguration < Sequel::Model
 end

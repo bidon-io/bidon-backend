@@ -1,2 +1,2 @@
-class DemandSource < ApplicationRecord
+class DemandSource < Sequel::Model
 end

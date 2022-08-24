@@ -32,8 +32,8 @@ module Api
         LineItem.eager(demand_source_account: :demand_source).where(app_id: app.id).map do |line_item|
           {
             id:         line_item.demand_source_account.demand_source.api_key,
-            pricefloor: line_item.bid_floor,
-            ad_unit_id: line_item.code
+            pricefloor: line_item.bid_floor.to_f,
+            ad_unit_id: line_item.code,
           }
         end
       end
