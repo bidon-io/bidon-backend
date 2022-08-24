@@ -24,8 +24,8 @@ class ApplicationController < ActionController::API
 
   def zipped_params
     json = Utils.decode_params(request.raw_post)
-    ActionController::Parameters.new(Oj.load(json))
-  rescue Zlib::GzipFile::Error, Oj::ParseError
+    ActionController::Parameters.new(JSON.parse(json))
+  rescue Zlib::GzipFile::Error, JSON::ParserError
     ActionController::Parameters.new
   end
 end
