@@ -25,11 +25,15 @@ module Api
       memo_wise :body
 
       def auction_configuration
+        return unless app
+
         AuctionConfiguration.where(app_id: app.id).order(Sequel.desc(:created_at)).first
       end
       memo_wise :auction_configuration
 
       def line_items
+        return [] unless app
+
         LineItem.eager(demand_source_account: :demand_source).where(app_id: app.id).map do |line_item|
           {
             id:         line_item.demand_source_account.demand_source.api_key,
@@ -38,7 +42,7 @@ module Api
           }
         end
       end
-      memo_wise :auction_configuration
+      memo_wise :line_items
     end
   end
 end
