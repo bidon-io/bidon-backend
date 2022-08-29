@@ -100,7 +100,8 @@ module Appodeal
 
     def sync_app_demand_profiles
       profiles = appodeal_connection.execute <<~SQL.squish
-        SELECT id, app_id, network AS demand_source_id, data::jsonb, account_id,
+        SELECT DISTINCT ON (app_id, demand_source_id)
+               id, app_id, network AS demand_source_id, data::jsonb, account_id,
           CASE
             WHEN network = 1260 THEN 'DemandSourceAccount::BidMachine'
             WHEN network = 20 THEN 'DemandSourceAccount::Admob'
@@ -109,6 +110,7 @@ module Appodeal
         FROM app_network_profiles
         WHERE app_id IN (#{app_ids.join(', ')})
           AND network IN (#{demand_ids.join(', ')})
+        ORDER BY app_id, demand_source_id, updated_at DESC
       SQL
 
       build_models(AppDemandProfile, profiles)
