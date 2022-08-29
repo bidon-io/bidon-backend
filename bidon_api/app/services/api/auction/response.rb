@@ -16,10 +16,12 @@ module Api
 
       def body
         {
-          'rounds'     => auction_configuration&.rounds || [],
-          'line_items' => line_items,
-          'token'      => '{}',
-          'min_price'  => auction_configuration&.pricefloor || 0,
+          'rounds'                   => auction_configuration&.rounds || [],
+          'line_items'               => line_items,
+          'token'                    => '{}',
+          'min_price'                => auction_configuration&.pricefloor || 0,
+          'auction_id'               => auction_id,
+          'auction_configuration_id' => auction_configuration&.id || 0,
         }
       end
       memo_wise :body
@@ -39,6 +41,11 @@ module Api
         end
       end
       memo_wise :line_items
+
+      def auction_id
+        SecureRandom.uuid
+      end
+      memo_wise :auction_id
     end
   end
 end
