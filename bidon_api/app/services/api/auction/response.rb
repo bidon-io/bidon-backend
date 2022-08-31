@@ -15,13 +15,15 @@ module Api
       end
 
       def body
+        return unless auction_configuration
+
         {
-          'rounds'                   => auction_configuration&.rounds || [],
+          'rounds'                   => auction_configuration.rounds,
           'line_items'               => line_items,
           'token'                    => '{}',
-          'min_price'                => auction_configuration&.pricefloor || 0,
+          'min_price'                => auction_configuration.pricefloor,
           'auction_id'               => auction_id,
-          'auction_configuration_id' => auction_configuration&.id || 0,
+          'auction_configuration_id' => auction_configuration.id,
         }
       end
       memo_wise :body
