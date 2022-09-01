@@ -8,7 +8,6 @@ ARG AWS_SECRET_ACCESS_KEY
 RUN aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} \
     && aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
 
-ARG SKIP_CACHE
 RUN aws s3 cp s3://appodeal-geo-db/prod/GeoIP2-City_current.mmdb /opt/GeoIP/ \
     && aws s3 cp s3://appodeal-geo-db/prod/SxGeoCity.dat /opt/GeoIP/
 
