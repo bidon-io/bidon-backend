@@ -19,8 +19,8 @@ class KafkaEvent
 
   def fill_geo_data!
     params['geo']['ip'] = ip
-    params['geo']['country'] = geo_data['country_code']
-    params['geo']['country_id'] = geo_data['country_id']
+    params['geo']['country'] = geo_data[:country_code]
+    params['geo']['country_id'] = geo_data[:country_id]
   end
 
   def geo_data
