@@ -9,11 +9,11 @@ module Api
         2 => { width: 300, height: 250 },
       }.freeze
 
-      attr_reader :app, :ad_type_id, :banner_format
+      attr_reader :app, :ad_type, :banner_format
 
-      def initialize(app:, ad_type_id:, banner_format: 0)
+      def initialize(app:, ad_type:, banner_format: 0)
         @app = app
-        @ad_type_id = ad_type_id
+        @ad_type = ad_type
         @banner_format = banner_format
       end
 
@@ -31,9 +31,9 @@ module Api
 
       def line_items
         result = LineItem.eager(demand_source_account: :demand_source)
-                         .where(app_id: app.id, ad_type: ad_type_id)
+                         .where(app_id: app.id, ad_type: LineItem::AD_TYPES[ad_type])
 
-        if ad_type_id == Api::Request::AD_TYPE_IDS['banner']
+        if ad_type == :banner
           result.where(FORMAT_SIZES[banner_format])
         else
           result

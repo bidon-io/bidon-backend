@@ -8,7 +8,7 @@ module Api
       attr_reader :auction_request
 
       delegate :present?, to: :body
-      delegate :app, :ad_type_id, :ad_object, to: :auction_request
+      delegate :app, :ad_type, :ad_object, to: :auction_request
 
       def initialize(auction_request)
         @auction_request = auction_request
@@ -34,7 +34,7 @@ module Api
       memo_wise :rounds
 
       def line_items
-        LineItemsFetcher.new(app:, ad_type_id:, banner_format: ad_object.dig('banner', 'format')).fetch
+        LineItemsFetcher.new(app:, ad_type:, banner_format: ad_object.dig('banner', 'format')).fetch
       end
       memo_wise :line_items
 
@@ -44,7 +44,8 @@ module Api
       memo_wise :auction_id
 
       def auction_configuration
-        AuctionConfiguration.where(app_id: app.id, ad_type: ad_type_id).order(Sequel.desc(:created_at)).first
+        AuctionConfiguration.where(app_id: app.id, ad_type: AuctionConfiguration::AD_TYPES[ad_type])
+                            .order(Sequel.desc(:created_at)).first
       end
       memo_wise :auction_configuration
     end

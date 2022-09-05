@@ -4,12 +4,6 @@ module Api
   class Request
     prepend MemoWise
 
-    AD_TYPE_IDS = {
-      'interstitial'   => 1,
-      'banner'         => 2,
-      'rewarded_video' => 3,
-    }.freeze
-
     attr_reader :params
 
     def initialize(params)
@@ -21,11 +15,7 @@ module Api
     end
 
     def ad_type
-      params['ad_type']
-    end
-
-    def ad_type_id
-      AD_TYPE_IDS[ad_type]
+      params['ad_type'].to_sym
     end
 
     def ad_object
