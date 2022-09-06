@@ -31,7 +31,7 @@ module Api
 
       def line_items
         result = LineItem.eager(demand_source_account: :demand_source)
-                         .where(app_id: app.id, ad_type: LineItem::AD_TYPES[ad_type])
+                         .where(app_id: app.id, ad_type: AdType::ENUM[ad_type])
 
         if ad_type == :banner
           result.where(FORMAT_SIZES[banner_format])

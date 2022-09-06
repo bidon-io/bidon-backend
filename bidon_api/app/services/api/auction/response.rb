@@ -44,7 +44,7 @@ module Api
       memo_wise :auction_id
 
       def auction_configuration
-        AuctionConfiguration.where(app_id: app.id, ad_type: AuctionConfiguration::AD_TYPES[ad_type])
+        AuctionConfiguration.where(app_id: app.id, ad_type: AdType::ENUM[ad_type])
                             .order(Sequel.desc(:created_at)).first
       end
       memo_wise :auction_configuration
