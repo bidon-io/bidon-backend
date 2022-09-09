@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/types/geo.json",
+  "title": "Geo Schema",
+  "type": "object",
+  "required": [
+    "lat",
+    "lon",
+    "accuracy",
+    "lastfix",
+    "country",
+    "city",
+    "zip",
+    "utcoffset"
+  ],
+  "properties": {
+    "lat": {
+      "title": "The lat Schema",
+      "type": "number"
+    },
+    "lon": {
+      "title": "The lon Schema",
+      "type": "number"
+    },
+    "accuracy": {
+      "title": "The accuracy Schema",
+      "type": "integer"
+    },
+    "lastfix": {
+      "title": "The lastfix Schema",
+      "type": "integer"
+    },
+    "country": {
+      "title": "The country Schema",
+      "type": "string"
+    },
+    "city": {
+      "title": "The city Schema",
+      "type": "string"
+    },
+    "zip": {
+      "title": "The zip Schema",
+      "type": "string"
+    },
+    "utcoffset": {
+      "title": "The utcoffset Schema",
+      "type": "integer"
+    }
+  }
+}

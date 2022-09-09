@@ -15,6 +15,7 @@ gem 'oj'
 gem 'redis'
 gem 'ruby-kafka'
 gem 'sequel-rails'
+gem 'json_schemer'
 
 gem 'sentry-rails'
 gem 'sentry-ruby'
