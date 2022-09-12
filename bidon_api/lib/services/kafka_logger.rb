@@ -5,8 +5,8 @@ module KafkaLogger
     KafkaProducer.produce(JSON.dump(event), topic: ENV.fetch('KAFKA_CLICK_TOPIC'))
   end
 
-  def log_finish(event)
-    KafkaProducer.produce(JSON.dump(event), topic: ENV.fetch('KAFKA_FINISH_TOPIC'))
+  def log_reward(event)
+    KafkaProducer.produce(JSON.dump(event), topic: ENV.fetch('KAFKA_REWARD_TOPIC'))
   end
 
   def log_show(event)
