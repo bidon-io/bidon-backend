@@ -28,6 +28,13 @@ class ApplicationController < ActionController::API
            status: :unprocessable_entity
   end
 
+  def validate_request_schema!
+    return if schemer.valid?(permitted_params)
+
+    render json:   { error: { code: 422, message: 'Invalid request schema' } },
+           status: :unprocessable_entity
+  end
+
   def render_empty_result
     render json: { success: true }, status: :ok
   end
@@ -45,4 +52,12 @@ class ApplicationController < ActionController::API
     params.except(:controller, :action).permit!.to_h
   end
   memo_wise :permitted_params
+
+  def schemer
+    JSONSchemer.schema(schema_path)
+  end
+
+  def schema_path
+    raise NotImplementedError
+  end
 end

@@ -10,12 +10,12 @@ gem 'puma', '~> 5.0'
 gem 'rails', '~> 7.0.3', '>= 7.0.3.1'
 
 gem 'bootsnap', require: false
+gem 'json_schemer'
 gem 'memo_wise'
 gem 'oj'
 gem 'redis'
 gem 'ruby-kafka'
 gem 'sequel-rails'
-gem 'json_schemer'
 
 gem 'sentry-rails'
 gem 'sentry-ruby'

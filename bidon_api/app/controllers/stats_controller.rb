@@ -1,17 +1,15 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
-  def create
-    binding.irb
-    schemer.validate(permitted_params)
+  before_action :validate_request_schema!
 
+  def create
     render_empty_result
   end
 
   private
 
-  def schemer
-    schema = Pathname.new(Rails.root.join('json_schema', 'stats.json'))
-    JSONSchemer.schema(schema)
+  def schema_path
+    Pathname.new(Rails.root.join('json_schema', 'stats.json'))
   end
 end

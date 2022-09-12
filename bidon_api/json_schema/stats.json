@@ -1,6 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "http://example.com/stats.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Stats Schema",
   "type": "object",
   "required": [
@@ -10,9 +9,7 @@
     "app",
     "user",
     "geo",
-    "ext",
-    "token",
-    "segment_id"
+    "token"
   ],
   "properties": {
     "stats": {
@@ -26,7 +23,7 @@
       "properties": {
         "auction_id": {
           "title": "The auction_id Schema",
-          "type": "string"  
+          "type": "string"
         },
         "auction_configuration_id": {
           "title": "The auction_configuration_id Schema",
@@ -119,11 +116,11 @@
         }
       }
     },
-    "device": { "$ref": "types/device.json" },
-    "session": { "$ref": "types/session.json" },
-    "app": { "$ref": "types/app.json" },
-    "user": { "$ref": "types/user.json" },
-    "geo": { "$ref": "types/geo.json" },
+    "device": { "$ref": "./types/device.json" },
+    "session": { "$ref": "./types/session.json" },
+    "app": { "$ref": "./types/app.json" },
+    "user": { "$ref": "./types/user.json" },
+    "geo": { "$ref": "./types/geo.json" },
     "ext": {
       "title": "The ext Schema",
       "type": "object",

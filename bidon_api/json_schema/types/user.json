@@ -1,6 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "http://example.com/types/user.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Root Schema",
   "type": "object",
   "required": [
