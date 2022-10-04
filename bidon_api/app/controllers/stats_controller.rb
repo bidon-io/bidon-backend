@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
-  before_action :validate_request_schema!
-
   def create
     render_empty_result
   end

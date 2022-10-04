@@ -4,6 +4,7 @@ class ApplicationController < ActionController::API
   before_action :set_sentry_context
   before_action :validate_bidon_header!
   before_action :validate_app!
+  before_action :validate_request_schema!
 
   wrap_parameters false
 

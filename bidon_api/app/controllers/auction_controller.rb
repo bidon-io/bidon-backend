@@ -11,4 +11,10 @@ class AuctionController < ApplicationController
              status: :unprocessable_entity
     end
   end
+
+  private
+
+  def schema_path
+    Pathname.new(Rails.root.join('json_schema', 'auction.json'))
+  end
 end

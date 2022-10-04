@@ -6,4 +6,10 @@ class ConfigController < ApplicationController
 
     render json: config_response.body, status: :ok
   end
+
+  private
+
+  def schema_path
+    Pathname.new(Rails.root.join('json_schema', 'config.json'))
+  end
 end
