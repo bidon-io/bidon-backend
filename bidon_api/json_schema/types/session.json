@@ -34,26 +34,26 @@
         },
         "start_ts": {
             "title": "The start_ts Schema",
-            "type": "integer"
+            "type": "string"
         },
         "monotonic_start_ts": {
             "title": "The monotonic_start_ts Schema",
-            "type": "integer"
+            "type": "string"
         },
         "ts": {
             "title": "The ts Schema",
-            "type": "integer"
+            "type": "string"
         },
         "monotonic_ts": {
             "title": "The monotonic_ts Schema",
-            "type": "integer"
+            "type": "string"
         },
         "memory_warnings_ts": {
             "title": "The memory_warnings_ts Schema",
             "type": "array",
             "items": {
                 "title": "A Schema",
-                "type": "integer"
+                "type": "string"
             }
         },
         "memory_warnings_monotonic_ts": {
@@ -61,32 +61,32 @@
             "type": "array",
             "items": {
                 "title": "A Schema",
-                "type": "integer"
+                "type": "string"
             }
         },
         "ram_used": {
             "title": "The ram_used Schema",
-            "type": "integer"
+            "type": "string"
         },
         "ram_size": {
             "title": "The ram_size Schema",
-            "type": "integer"
+            "type": "string"
         },
         "storage_free": {
             "title": "The storage_free Schema",
-            "type": "integer"
+            "type": "string"
         },
         "storage_used": {
             "title": "The storage_used Schema",
-            "type": "integer"
+            "type": "string"
         },
         "battery": {
             "title": "The battery Schema",
-            "type": "number"
+            "type": "string"
         },
         "cpu_usage": {
             "title": "The cpu_usage Schema",
-            "type": "number"
+            "type": "string"
         }
     }
 }

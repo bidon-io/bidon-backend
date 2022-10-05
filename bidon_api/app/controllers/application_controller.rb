@@ -6,12 +6,9 @@ class ApplicationController < ActionController::API
   before_action :validate_app!
   before_action :validate_request_schema!
 
-  wrap_parameters false
+  rescue_from StandardError, with: :handle_exception
 
-  rescue_from StandardError do |error|
-    Sentry.capture_exception(error)
-    render json: { error: { code: 500, message: 'Internal Server Error' } }, status: :internal_server_error
-  end
+  wrap_parameters false
 
   private
 
@@ -34,6 +31,11 @@ class ApplicationController < ActionController::API
 
     render json:   { error: { code: 422, message: 'Invalid request schema' } },
            status: :unprocessable_entity
+  end
+
+  def handle_exception
+    Sentry.capture_exception(error)
+    render json: { error: { code: 500, message: 'Internal Server Error' } }, status: :internal_server_error
   end
 
   def render_empty_result

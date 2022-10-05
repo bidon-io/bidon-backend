@@ -46,23 +46,23 @@
     },
     "h": {
       "title": "The h Schema",
-      "type": "integer"
+      "type": "string"
     },
     "w": {
       "title": "The w Schema",
-      "type": "integer"
+      "type": "string"
     },
     "ppi": {
       "title": "The ppi Schema",
-      "type": "integer"
+      "type": "string"
     },
     "pxratio": {
       "title": "The pxratio Schema",
-      "type": "number"
+      "type": "string"
     },
     "js": {
       "title": "The js Schema",
-      "type": "integer"
+      "type": "string"
     },
     "language": {
       "title": "The language Schema",
