@@ -33,7 +33,7 @@ class ApplicationController < ActionController::API
            status: :unprocessable_entity
   end
 
-  def handle_exception
+  def handle_exception(error)
     Sentry.capture_exception(error)
     render json: { error: { code: 500, message: 'Internal Server Error' } }, status: :internal_server_error
   end
