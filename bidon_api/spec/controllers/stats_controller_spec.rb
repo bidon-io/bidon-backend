@@ -3,7 +3,6 @@
 require 'rails_helper'
 
 RSpec.describe StatsController, type: :controller do
-
   context 'X-BidOn-Version header present' do
     before do
       request.headers['X-BidOn-Version'] = '1.2.3'

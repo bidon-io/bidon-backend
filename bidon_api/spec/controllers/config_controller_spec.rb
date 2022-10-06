@@ -3,7 +3,6 @@
 require 'rails_helper'
 
 RSpec.describe ConfigController, type: :controller do
-
   context 'missing X-BidOn-Version header' do
     let(:expected_response) do
       {
