@@ -27,6 +27,71 @@ module RequestParams
     }
   end
 
+  def stats_params
+    {
+      stats:      {
+        auction_id:               'f26af577-869e-41cb-909e-4d3eba57a28b',
+        auction_configuration_id: 10,
+        rounds:                   [
+          {
+            id:          'postbid',
+            pricefloor:  1.0,
+            winner_id:   'bidmachine',
+            winner_ecpm: 1.0,
+            demands:     [
+              {
+                id:             'admob',
+                ad_unit_id:     'AAAA',
+                status:         'WIN',
+                ecpm:           1.0,
+                bid_start_ts:   123,
+                bid_finish_ts:  124,
+                fill_start_ts:  126,
+                fill_finish_ts: 130,
+              },
+            ],
+          },
+        ],
+      },
+      device:     device_params,
+      session:    session_params,
+      app:        app_params,
+      user:       user_params,
+      geo:        geo_params,
+      ext:        default_object_params,
+      token:      '{}',
+      segment_id: 'some segment id',
+    }
+  end
+
+  def show_params
+    {
+      show:       {
+        auction_id:               'f26af577-869e-41cb-909e-4d3eba57a28b',
+        auction_configuration_id: 10,
+        imp_id:                   '66b039f6-d43a-49ee-a84d-1eee15e91fba',
+        demand_id:                'admob',
+        ad_unit_id:               'AAAA',
+        ecpm:                     1.0,
+        banner:                   {
+          format: 'LEADERBOARD',
+        },
+        interstitial:             {
+        },
+        rewarded:                 {
+        },
+      },
+      device:     device_params,
+      session:    session_params,
+      app:        app_params,
+      user:       user_params,
+      geo:        geo_params,
+      ext:        default_object_params,
+      token:      '{}',
+      segment_id: 'some segment id',
+    }
+  end
+
   def device_params
     {
       ua:              'User Agent',
