@@ -9,7 +9,7 @@ class ConfigController < ApplicationController
 
   private
 
-  def schema_path
-    Pathname.new(Rails.root.join('json_schema', 'config.json'))
+  def schema_file_name
+    'config.json'
   end
 end

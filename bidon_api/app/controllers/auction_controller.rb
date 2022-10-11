@@ -14,7 +14,7 @@ class AuctionController < ApplicationController
 
   private
 
-  def schema_path
-    Pathname.new(Rails.root.join('json_schema', 'auction.json'))
+  def schema_file_name
+    'auction.json'
   end
 end

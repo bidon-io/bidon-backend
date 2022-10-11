@@ -57,10 +57,16 @@ class ApplicationController < ActionController::API
   memo_wise :permitted_params
 
   def schemer
-    JSONSchemer.schema(schema_path)
+    Rails.cache.fetch("schemer_#{schema_file_name}") do
+      JSONSchemer.schema(schema_path, ref_resolver: SchemerFileResolver.new)
+    end
   end
 
   def schema_path
+    Pathname.new(Rails.root.join('json_schema', schema_file_name))
+  end
+
+  def schema_file_name
     raise NotImplementedError
   end
 end

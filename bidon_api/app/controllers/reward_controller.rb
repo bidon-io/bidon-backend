@@ -7,7 +7,7 @@ class RewardController < ApplicationController
 
   private
 
-  def schema_path
-    Pathname.new(Rails.root.join('json_schema', 'show.json'))
+  def schema_file_name
+    'show.json'
   end
 end

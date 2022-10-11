@@ -7,7 +7,7 @@ class StatsController < ApplicationController
 
   private
 
-  def schema_path
-    Pathname.new(Rails.root.join('json_schema', 'stats.json'))
+  def schema_file_name
+    'stats.json'
   end
 end

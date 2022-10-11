@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Config Schema",
+  "title": "Auction Schema",
   "type": "object",
   "required": [
     "device",
