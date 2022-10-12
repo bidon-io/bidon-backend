@@ -14,7 +14,7 @@ class OfflineGeocoder
 
   def find_geo_data(ip)
     country_code = country_code_for(ip)
-    country_id = Country.find_cached(country_code).id
+    country_id = Country.find_cached(country_code)&.id
 
     { country_code:, country_id: }
   end
