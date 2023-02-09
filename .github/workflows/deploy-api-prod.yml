@@ -1,10 +1,10 @@
 name: Deploy api
 on:
   push:
-#    branches:
-#      - 'main'
-#    paths:
-#      - 'bidon_api/**'
+    branches:
+      - 'main'
+    paths:
+      - 'bidon_api/**'
 
 jobs:
   build-and-debloy:
