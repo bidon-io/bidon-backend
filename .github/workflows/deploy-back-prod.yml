@@ -1,10 +1,10 @@
 name: Deploy back
 on:
   push:
-#    branches:
-#      - 'main'
-#    paths:
-#      - 'bidon_back/**'
+    branches:
+      - 'main'
+    paths:
+      - 'bidon_back/**'
 
 jobs:
   build-and-debloy:
