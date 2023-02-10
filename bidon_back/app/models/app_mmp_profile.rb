@@ -9,7 +9,7 @@ class AppMmpProfile < ApplicationRecord
 
   belongs_to :mmp_account_secondary,
              class_name:  'MmpAccount',
-             foreign_key: 'secondary_mmp_account',
+             foreign_key: "secondary_mmp_account',
              inverse_of:  :secondary_app_profiles,
              optional:    true
 

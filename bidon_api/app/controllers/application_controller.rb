@@ -13,7 +13,7 @@ class ApplicationController < ActionController::API
   private
 
   def validate_bidon_header!
-    return if request.headers['X-BidOn-Version'].present?
+    return if request.headers["X-BidOn-Version'].present?
 
     render json:   { error: { code: 422, message: 'Request should contain X-BidOn-Version header' } },
            status: :unprocessable_entity
