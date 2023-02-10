@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up ruby
         uses: ruby/setup-ruby@v1
       - name: Cache rubocop output
@@ -31,7 +33,7 @@ jobs:
         uses: reviewdog/action-rubocop@v2
         with:
           github_token: ${{ secrets.github_token }}
-          rubocop_flags: ${{ steps.changed-files.outputs.all }} --only-recognized-file-types --force-exclusion
+          rubocop_flags: ${{ steps.changed-files.outputs.all_changed_files }} --only-recognized-file-types --force-exclusion
           rubocop_version: gemfile
           rubocop_extensions: |
             rubocop-rails:gemfile
