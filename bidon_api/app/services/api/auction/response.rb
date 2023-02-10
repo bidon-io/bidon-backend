@@ -18,7 +18,7 @@ module Api
         return unless auction_configuration
 
         {
-          "rounds'                   => rounds,
+          'rounds'                   => rounds,
           'line_items'               => line_items,
           'token'                    => '{}',
           'min_price'                => auction_configuration.pricefloor,
