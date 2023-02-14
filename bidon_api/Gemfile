@@ -22,6 +22,7 @@ gem 'sentry-ruby'
 
 gem 'maxminddb'
 gem 'sypex_geo'
+gem 'flatten'
 
 group :development do
   gem 'benchmark-ips'
