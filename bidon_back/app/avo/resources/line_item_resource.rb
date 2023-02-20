@@ -7,14 +7,7 @@ class LineItemResource < Avo::BaseResource
   field :bid_floor, as: :number, required: true
   field :ad_type, as: :select, required: true, enum: ::AuctionConfiguration.ad_types
   field :account, as: :belongs_to, required: true
-  field :account_type,
-        as:       :select,
-        required: true,
-        options:  {
-          BidmachineAccount: 'DemandSourceAccount::BidMachine',
-          AdmobAccount:      'DemandSourceAccount::Admob',
-          ApplovinAccount:   'DemandSourceAccount::Applovin',
-        }
+  field :account_type, as: :select, required: true, enum: ::DemandSourceType::ENUM
   field :code, as: :text
   field :height, as: :number
   field :width, as: :number
