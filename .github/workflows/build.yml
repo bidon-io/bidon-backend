@@ -59,4 +59,4 @@ jobs:
 
       - name: Deploy
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-        run: make bidon-api TAG=${{ fromJson(steps.latest-release.outputs.data).tag_name }}
+        run: make bidon-${{ matrix.component }} TAG=${{ fromJson(steps.latest-release.outputs.data).tag_name }}
