@@ -1,5 +1,7 @@
 ARG RUBY_VERSION=3.1.2
 
+FROM ruby:$RUBY_VERSION-slim AS dev
+
 # Common dependencies
 RUN apt-get update -qq \
   && DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
