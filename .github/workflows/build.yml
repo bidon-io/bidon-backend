@@ -43,14 +43,6 @@ jobs:
       fail-fast: false
       component: [api, back]
     steps:
-      - name: Get latest release
-        id: latest-release
-        uses: octokit/request-action@v2.1.7
-        with:
-          route: GET /repos/${{ github.repository }}/releases/latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_RUNNER }}
-
       - name: Checks-out repository devops
         uses: actions/checkout@v3
         with:
