@@ -1,0 +1,196 @@
+---
+version: "3.9"
+x-logging: &default-logging
+  options:
+    max-size: "100m"
+    max-file: "5"
+  driver: json-file
+
+services:
+  postgres:
+    image: postgres:14.7
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: bidon
+      POSTGRES_DB: bidon
+    logging: *default-logging
+    restart: always
+    volumes:
+      - "./postgres-data:/var/lib/postgresql/data"
+
+  redis:
+    image: redis:7.0.0
+    container_name: redis
+    volumes:
+      - ./redis-data:/data
+    logging: *default-logging
+    restart: always
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    logging: *default-logging
+    restart: always
+
+  kafka:
+    image: confluentinc/cp-kafka:7.2.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    logging: *default-logging
+    restart: always
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.2
+    container_name: schema-registry
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    logging: *default-logging
+    restart: always
+
+  db-migration:
+    image: registry.appodeal.com/bidon/back:latest
+    command: bin/rails db:prepare
+    container_name: db-migration
+    depends_on:
+      - postgres
+    environment:
+      PG_DATABASE: bidon
+      PG_USERNAME: bidon
+      PG_PASSWORD: pass
+      PG_HOST: postgres
+      PG_PORT: 5432
+    logging: *default-logging
+
+  geodb-maxmind:
+    image: maxmindinc/geoipupdate:v4.7.1
+    container_name: geodb-maxmind
+    environment:
+      GEOIPUPDATE_ACCOUNT_ID: ACCOUNT_ID
+      GEOIPUPDATE_LICENSE_KEY: LICENSE_KEY
+      GEOIPUPDATE_EDITION_IDS: EDITION_IDS
+    volumes:/app/public/system/
+      - "./geodb/:/usr/share/GeoIP/"
+
+  geodb-sx:
+    image: bash:latest
+    command: >
+      bash -c "wget http://sypexgeo.net/files/SxGeoCity_utf8.zip &&
+      unzip SxGeoCity_utf8.zip &&
+      rm SxGeoCity_utf8.zip"
+    container_name: geodb-sx
+    volumes:
+      - "./geodb/:/geodb"
+    working_dir: /geodb
+
+  bidon-api:
+    #ghcr.io/bidon-io/bidon-back:latest
+    image: registry.appodeal.com/bidon/api:latest
+    command: bundle exec puma -C /app/config/puma.rb -p 3100
+    container_name: bidon-api
+    depends_on:
+      schema-registry:
+        condition: service_started
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      db-migration:
+        condition: service_completed_successfully
+      geodb-maxmind:
+        condition: service_completed_successfully
+      bidon-api:
+        condition: service_completed_successfully
+    environment:
+      MALLOC_ARENA_MAX: 2
+      PIDFILE: /tmp/server.pid
+      RAILS_ENV: production
+
+      RAILS_LOG_TO_STDOUT: 1
+      RAILS_PUMA_WORKER_COUNT: 2
+      RAILS_THREADS_COUNT: 2
+
+      SECRET_KEY_BASE: ${CHANGE_BASE_KEY}
+
+      PG_DATABASE: bidon
+      PG_USERNAME: bidon
+      PG_PASSWORD: pass
+      PG_HOST: postgres
+      PG_PORT: 5432
+
+      REDIS_URL: redis://redis:6379/0
+
+      KAFKA_BROKERS_LIST: kafka:9092
+      KAFKA_CLIENT_ID: bidon_dev
+      KAFKA_DELIVERY_THRESHOLD: 100
+      KAFKA_DELIVERY_INTERVAL: 30
+      KAFKA_REGISTRY_URL: http://schema-registry:8081
+
+      KAFKA_CLICK_TOPIC: click
+      KAFKA_REWARD_TOPIC: reward
+      KAFKA_SHOW_TOPIC: show
+      KAFKA_STATS_TOPIC: stats
+    logging: *default-logging
+    volumes:
+      - "./geodb/:/app/public/system/"
+    ports:
+      - 3100:3100
+    restart: always
+
+  bidon-backend:
+    #ghcr.io/bidon-io/bidon-back:latest
+    image: registry.appodeal.com/bidon/back:latest
+    command: bundle exec puma -C /app/config/puma.rb -p 3200
+    container_name: bidon-backend
+    depends_on:
+      schema-registry:
+        condition: service_started
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      db-migration:
+        condition: service_completed_successfully
+    environment:
+      MALLOC_ARENA_MAX: 2
+      PIDFILE: /tmp/server.pid
+      RAILS_ENV: production
+
+      RAILS_LOG_TO_STDOUT: 1
+      RAILS_PUMA_WORKER_COUNT: 2
+      RAILS_THREADS_COUNT: 2
+
+      SECRET_KEY_BASE: ${CHANGE_BASE_KEY}
+
+      PG_DATABASE: bidon
+      PG_USERNAME: bidon
+      PG_PASSWORD: pass
+      PG_HOST: postgres
+      PG_PORT: 5432
+
+      REDIS_URL: redis://redis:6379/0
+
+      KAFKA_BROKERS_LIST: kafka:9092
+      KAFKA_REGISTRY_URL: http://schema-registry:8081
+    logging: *default-logging
+    ports:
+      - 3200:3200
+    restart: always
