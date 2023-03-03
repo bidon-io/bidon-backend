@@ -23,7 +23,7 @@ docker compose down --volumes --rmi local --remove-orphans || true
 ```
 
 ### Start prod environment
-Use the following command for generate `SECRET_KEY_BASE`:
+Use the following command to generate `SECRET_KEY_BASE`:
 ```shell
 docker compose -f docker-compose-prod.yml run --rm --no-deps bidon-backend rails secret
 ```
