@@ -14,7 +14,7 @@ x-bidon-environment: &bidon-environment
   RAILS_LOG_TO_STDOUT: 1
   RAILS_PUMA_WORKER_COUNT: 2
   RAILS_THREADS_COUNT: 2
-  SECRET_KEY_BASE: ${CHANGE_BASE_KEY}
+  SECRET_KEY_BASE: <CHANGE_ME>
   PG_DATABASE: bidon
   PG_USERNAME: bidon
   PG_PASSWORD: pass
@@ -32,6 +32,25 @@ x-bidon-environment: &bidon-environment
   KAFKA_STATS_TOPIC: stats
 
 services:
+  geodb-maxmind:
+    image: maxmindinc/geoipupdate:v4.7.1
+    environment:
+      GEOIPUPDATE_ACCOUNT_ID: <CHANGE_ME>
+      GEOIPUPDATE_LICENSE_KEY: <CHANGE_ME>
+      GEOIPUPDATE_EDITION_IDS: GeoLite2-City
+    volumes:
+      - "geodb:/usr/share/GeoIP/"
+
+  geodb-sx:
+    image: bash:latest
+    command: >
+      bash -c "wget -O SxGeoCity_utf8.zip http://sypexgeo.net/files/SxGeoCity_utf8.zip &&
+      unzip -o SxGeoCity_utf8.zip &&
+      rm SxGeoCity_utf8.zip"
+    volumes:
+      - "geodb:/geodb"
+    working_dir: /geodb
+    
   postgres:
     image: postgres:14.7
     environment:
@@ -104,25 +123,6 @@ services:
       PG_HOST: postgres
       PG_PORT: 5432
     logging: *default-logging
-
-  geodb-maxmind:
-    image: maxmindinc/geoipupdate:v4.7.1
-    environment:
-      GEOIPUPDATE_ACCOUNT_ID: ACCOUNT_ID
-      GEOIPUPDATE_LICENSE_KEY: LICENSE_KEY
-      GEOIPUPDATE_EDITION_IDS: GeoLite2-City
-    volumes:
-      - "geodb:/usr/share/GeoIP/"
-
-  geodb-sx:
-    image: bash:latest
-    command: >
-      bash -c "wget -O SxGeoCity_utf8.zip http://sypexgeo.net/files/SxGeoCity_utf8.zip &&
-      unzip -o SxGeoCity_utf8.zip &&
-      rm SxGeoCity_utf8.zip"
-    volumes:
-      - "geodb:/geodb"
-    working_dir: /geodb
 
   bidon-api:
     image: ghcr.io/bidon-io/bidon-back:latest

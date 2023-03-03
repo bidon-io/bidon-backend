@@ -29,6 +29,7 @@ docker compose down --volumes --rmi local --remove-orphans || true
 docker compose -f docker-compose-prod.yml run --rm --no-deps bidon-backend rails secret
 ```
 #### Deploy
+Change the MaxMind credentials and SECRET_KEY_BASE.
 ```
 docker compose -f docker-compose-prod.yml up -d
 ```
