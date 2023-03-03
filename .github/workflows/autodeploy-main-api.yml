@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'task/DO-1174/autodeploy'
     paths:
       - 'bidon_api/**'
 
