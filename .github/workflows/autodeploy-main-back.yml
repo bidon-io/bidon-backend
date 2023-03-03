@@ -35,7 +35,7 @@ jobs:
         run: make docker-build-prod-back TAG=$TAG
 
       - name: Push image
-        run: make docker-push-prod-back TAG=$$TAG
+        run: make docker-push-prod-back TAG=$TAG
 
       - name: Checks-out repository devops
         uses: actions/checkout@v3
