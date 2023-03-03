@@ -40,7 +40,7 @@ services:
       POSTGRES_DB: bidon
     logging: *default-logging
     volumes:
-      - "./postgres-data:/var/lib/postgresql/data"
+      - "postgres-data:/var/lib/postgresql/data"
     <<: *restart-policy
 
   redis:
@@ -53,9 +53,12 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+      ZOOKEEPER_SNAPSHOT_TRUST_EMPTY: "true"
     logging: *default-logging
     volumes:
-      - "./zookeeper-data:/var/lib/zookeeper/data"
+      - "zookeeper-data:/var/lib/zookeeper/data"
+      - "zookeeper-log:/var/lib/zookeeper/log"
     <<: *restart-policy
 
   kafka:
@@ -74,7 +77,8 @@ services:
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
     logging: *default-logging
     volumes:
-      - "./kafka-data:/var/lib/kafka/data"
+      - "kafka-data:/var/lib/kafka/data"
+      - "kafka-log:/var/lib/kafka/log"
     <<: *restart-policy
 
   schema-registry:
@@ -108,7 +112,7 @@ services:
       GEOIPUPDATE_LICENSE_KEY: LICENSE_KEY
       GEOIPUPDATE_EDITION_IDS: GeoLite2-City
     volumes:
-      - "./geodb/:/usr/share/GeoIP/"
+      - "geodb:/usr/share/GeoIP/"
 
   geodb-sx:
     image: bash:latest
@@ -117,7 +121,7 @@ services:
       unzip -o SxGeoCity_utf8.zip &&
       rm SxGeoCity_utf8.zip"
     volumes:
-      - "./geodb/:/geodb"
+      - "geodb:/geodb"
     working_dir: /geodb
 
   bidon-api:
@@ -141,7 +145,7 @@ services:
     environment: *bidon-environment
     logging: *default-logging
     volumes:
-      - "./geodb/:/app/public/system/"
+      - "geodb:/app/public/system/"
     ports:
       - 3100:3100
     <<: *restart-policy
@@ -165,3 +169,10 @@ services:
     ports:
       - 3200:3200
     <<: *restart-policy
+volumes:
+  geodb:
+  postgres-data:
+  zookeeper-log:
+  zookeeper-data:
+  kafka-data:
+  kafka-log:
