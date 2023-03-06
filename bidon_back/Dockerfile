@@ -105,5 +105,7 @@ ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
 # Check that Ruby uses jemalloc
 # MALLOC_CONF=stats_print:true ruby -e "exit"
 
+RUN pwd
+
 # Assets
 RUN bundle exec rails assets:precompile
