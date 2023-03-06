@@ -101,7 +101,6 @@ ENV PG_DATABASE= \
   APPODEAL_PG_PORT=
 
 ENV RUBYOPT="--enable-frozen_string_literal,yjit"
-
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
 # Check that Ruby uses jemalloc
 # MALLOC_CONF=stats_print:true ruby -e "exit"
