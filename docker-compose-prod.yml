@@ -8,7 +8,6 @@ x-logging: &default-logging
     max-file: "5"
   driver: json-file
 x-bidon-environment: &bidon-environment
-  LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so
   MALLOC_ARENA_MAX: 2
   PIDFILE: /tmp/server.pid
   RAILS_ENV: production
