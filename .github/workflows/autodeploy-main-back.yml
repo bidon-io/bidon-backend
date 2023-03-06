@@ -2,9 +2,10 @@ name: Autodeploy main backend
 on:
   push:
     branches:
-      - 'main'
-    paths:
-      - 'bidon_back/**'
+      - 'DO-1161/Multiplatform_buil'
+      #- 'main'
+    #paths:
+    #  - 'bidon_back/**'
 
 jobs:
   build-and-debloy:
@@ -31,10 +32,7 @@ jobs:
         run: echo TAG=main-`echo ${{ github.sha }} | cut -c1-8` >> $GITHUB_ENV
 
       - name: Build image
-        run: make docker-build-prod-back TAG=$TAG
-
-      - name: Push image
-        run: make docker-push-prod-back TAG=$TAG
+        run: make docker-build-push-prod-back TAG=$TAG
 
       - name: Checks-out repository devops
         uses: actions/checkout@v3
@@ -42,6 +40,6 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
-      - name: Deploy
-        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-        run: make bidon-backend TAG=$TAG
+      #- name: Deploy
+      #  working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
+      #  run: make bidon-backend TAG=$TAG
