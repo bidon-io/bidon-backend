@@ -50,7 +50,7 @@ services:
     volumes:
       - "geodb:/geodb"
     working_dir: /geodb
-    
+
   postgres:
     image: postgres:14.7
     environment:
