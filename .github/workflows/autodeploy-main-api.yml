@@ -2,7 +2,7 @@ name: Autodeploy main api
 on:
   push:
     branches:
-      - DO-1161/Multiplatform_buil
+      - 'DO-1161/Multiplatform_buil'
       #- 'main'
     paths:
       - 'bidon_api/**'
