@@ -2,8 +2,7 @@ name: Autodeploy main backend
 on:
   push:
     branches:
-      - 'DO-1161/Multiplatform_buil'
-      #- 'main'
+      - 'main'
     paths:
       - 'bidon_back/**'
 
@@ -43,6 +42,6 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
-      #- name: Deploy
-      #  working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-      #  run: make bidon-backend TAG=$TAG
+      - name: Deploy
+        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
+        run: make bidon-backend TAG=$TAG

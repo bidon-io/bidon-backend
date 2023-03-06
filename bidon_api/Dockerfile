@@ -73,18 +73,7 @@ COPY --chown=deploy:deploy Gemfile.lock .
 RUN bundle install && rm -rf /data/bundle/cache
 ENV RUBYOPT="--enable-frozen_string_literal,yjit"
 
-ARG TARGETARCH
-RUN touch .env; \
-    if [ "$TARGETARCH" = "amd64" ]; then \
-    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so ; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-    export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so ; \
-    fi; \
-    echo LD_PRELOAD=$LD_PRELOAD > .env;
-
-RUN echo "$LD_PRELOAD"
-
-#ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
 # Check that Ruby uses jemalloc
 # MALLOC_CONF=stats_print:true ruby -e "exit"
 
