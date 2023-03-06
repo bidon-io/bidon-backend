@@ -3,7 +3,7 @@ REGISTRY_INT = "registry.appodeal.com/bidon"
 docker-build-prod-api:
 	##cd bidon_api && docker build --target=prod -t $(REGISTRY_INT)/api:$(TAG) -t $(REGISTRY_INT)/api:latest -t $(REGISTRY_EXT)/bidon-api:latest -t $(REGISTRY_EXT)/bidon-api:$(TAG) .
 	cd bidon_api && docker buildx build --platform linux/amd64,linux/arm64 --target=prod \
-					--cache-to type=registry,ref=$(REGISTRY_EXT)/bidon-api:cache --cache-from type=registry,ref=$(REGISTRY_EXT)/bidon-api:cache \
+					--build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $(REGISTRY_EXT)/bidon-api:latest \
 					-t $(REGISTRY_INT)/api:$(TAG) -t $(REGISTRY_INT)/api:latest -t $(REGISTRY_EXT)/bidon-api:latest -t $(REGISTRY_EXT)/bidon-api:$(TAG) --push .
 docker-push-prod-api:
 	docker push registry.appodeal.com/bidon/api:$(TAG)
