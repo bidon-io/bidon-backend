@@ -4,8 +4,8 @@ on:
     branches:
       - 'DO-1161/Multiplatform_buil'
       #- 'main'
-    paths:
-      - 'bidon_back/**'
+    #paths:
+    #  - 'bidon_back/**'
 
 jobs:
   build-and-debloy:

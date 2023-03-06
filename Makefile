@@ -5,7 +5,7 @@ REGISTRY_INT = "registry.appodeal.com/bidon"
 docker-build-push-prod-api:
 	cd bidon_api && docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --target=prod \
 					--build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $(REGISTRY_EXT)/bidon-api:latest \
-					-t $(REGISTRY_INT)/api:$(TAG) -t $(REGISTRY_INT)/api:latest -t $(REGISTRY_EXT)/bidon-api:latest -t $(REGISTRY_EXT)/bidon-api:$(TAG) --push .
+					-t $(REGISTRY_INT)/api:$(TAG) -t $(REGISTRY_INT)/api:latest -t $(REGISTRY_EXT)/bidon-api:$(TAG) -t $(REGISTRY_EXT)/bidon-api:latest  --push .
 #docker-push-prod-api:
 #	docker push registry.appodeal.com/bidon/api:$(TAG)
 #	docker push registry.appodeal.com/bidon/api:latest
@@ -17,7 +17,7 @@ docker-build-push-prod-api:
 docker-build-push-prod-back:
 	cd bidon_back && docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --target=prod \
 					--build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $(REGISTRY_EXT)/bidon-back:latest \
-					-t $(REGISTRY_INT)/back:$(TAG) -t $(REGISTRY_INT)/back:latest -t $(REGISTRY_EXT)/bidon-back:latest -t $(REGISTRY_EXT)/bidon-back:$(TAG) --push .
+					-t $(REGISTRY_INT)/back:$(TAG) -t $(REGISTRY_INT)/back:latest -t $(REGISTRY_EXT)/bidon-back:$(TAG) -t $(REGISTRY_EXT)/bidon-back:latest --push .
 #docker-push-prod-back:
 #	docker push registry.appodeal.com/bidon/back:$(TAG)
 #	docker push registry.appodeal.com/bidon/back:latest
