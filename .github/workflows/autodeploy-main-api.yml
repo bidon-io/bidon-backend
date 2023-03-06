@@ -43,6 +43,6 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
-      #- name: Deploy
-      #  working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-      #  run: make bidon-api TAG=$TAG
+      - name: Deploy
+        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
+        run: make bidon-api TAG=$TAG
