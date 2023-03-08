@@ -14,7 +14,7 @@ module Api
       end
 
       def body
-        return unless adapters
+        return if adapters.blank?
 
         {
           'init'       => {

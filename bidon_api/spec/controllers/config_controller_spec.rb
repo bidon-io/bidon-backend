@@ -104,6 +104,7 @@ RSpec.describe ConfigController, type: :controller do
 
       it 'returns 422 with error' do
         allow_any_instance_of(Api::Request).to receive(:valid?).and_return(true)
+        allow_any_instance_of(Api::Config::AdaptersFetcher).to receive(:fetch).and_return({})
 
         post :create, params: config_params, as: :json
 
