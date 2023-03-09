@@ -13,4 +13,8 @@ class App < ApplicationRecord
   def settings=(value)
     super(JSON.parse(value.gsub('=>', ':')))
   end
+
+  def slug
+    "#{package_name} (#{platform_id})"
+  end
 end
