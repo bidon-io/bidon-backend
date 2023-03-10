@@ -15,7 +15,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
           'id'      => 'ROUND_INTERSTITIAL_2',
           'demands' => %w[bidmachine],
           'timeout' => 15_000,
-        }
+        },
       ]
     end
 
@@ -39,7 +39,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
     end
 
     it 'returns filtered rounds in 1 round' do
-      expect(::Api::Auction::RoundsFilterer.new(rounds:, adapters:).fetch).to eq expected_result
+      expect(described_class.new(rounds:, adapters:).fetch).to eq expected_result
     end
   end
 
@@ -55,7 +55,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
           'id'      => 'ROUND_INTERSTITIAL_2',
           'demands' => %w[bidmachine],
           'timeout' => 15_000,
-        }
+        },
       ]
     end
 
@@ -71,7 +71,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
     let(:expected_result) { [] }
 
     it 'returns empty array' do
-      expect(::Api::Auction::RoundsFilterer.new(rounds:, adapters:).fetch).to eq expected_result
+      expect(described_class.new(rounds:, adapters:).fetch).to eq expected_result
     end
   end
 
@@ -87,7 +87,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
           'id'      => 'ROUND_INTERSTITIAL_2',
           'demands' => %w[bidmachine],
           'timeout' => 15_000,
-        }
+        },
       ]
     end
 
@@ -98,7 +98,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
     let(:expected_result) { [] }
 
     it 'returns empty array' do
-      expect(::Api::Auction::RoundsFilterer.new(rounds:, adapters:).fetch).to eq expected_result
+      expect(described_class.new(rounds:, adapters:).fetch).to eq expected_result
     end
   end
 
@@ -119,7 +119,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
           'id'      => 'ROUND_INTERSTITIAL_3',
           'demands' => %w[admob bidmachine],
           'timeout' => 15_000,
-        }
+        },
       ]
     end
 
@@ -143,7 +143,7 @@ RSpec.describe Api::Auction::RoundsFilterer do
     end
 
     it 'returns filtered rounds in 1 round' do
-      expect(::Api::Auction::RoundsFilterer.new(rounds:, adapters:).fetch).to eq expected_result
+      expect(described_class.new(rounds:, adapters:).fetch).to eq expected_result
     end
   end
 end
