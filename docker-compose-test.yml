@@ -36,7 +36,7 @@ services:
       GEOIPUPDATE_LICENSE_KEY: ${MAXMIND_GEOIPUPDATE_LICENSE_KEY}
       GEOIPUPDATE_EDITION_IDS: GeoLite2-City
     volumes:
-      - "./geodb:/usr/share/GeoIP/"
+      - "./geodb/:/usr/share/GeoIP/"
 
   geodb-sx:
     image: bash:latest
@@ -45,7 +45,7 @@ services:
       unzip -o SxGeoCity_utf8.zip &&
       rm SxGeoCity_utf8.zip"
     volumes:
-      - "./geodb:/geodb"
+      - "./geodb/:/geodb"
     working_dir: /geodb
 
   postgres:
@@ -127,7 +127,8 @@ services:
         condition: service_completed_successfully
     environment: *bidon-environment
     volumes:
-      - "./geodb:/app/public/system/"
+      - "./geodb/:/app/public/system/"
+      - "./test/:/app/test/"
     <<: *restart-policy
 
   bidon-backend:
