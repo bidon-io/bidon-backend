@@ -1,7 +1,7 @@
 name: Rspec tests
 
 on:
-  push:
+  pull_request:
 
 env:
   COMPOSE_PROJECT_NAME: pr_${{github.run_number}}

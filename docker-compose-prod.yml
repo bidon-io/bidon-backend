@@ -56,7 +56,7 @@ services:
   postgres:
     image: postgres:14.7
     environment:
-      POSTGRES_PASSWORD: pass
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-password}
       POSTGRES_USER: bidon
       POSTGRES_DB: bidon
     logging: *default-logging
@@ -114,7 +114,7 @@ services:
     <<: *restart-policy
 
   db-migration:
-    image: registry.appodeal.com/bidon/back:latest
+    image: ghcr.io/bidon-io/bidon-back:latest
     command: bin/rails db:prepare
     depends_on:
       - postgres
