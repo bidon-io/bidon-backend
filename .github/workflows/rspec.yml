@@ -1,0 +1,67 @@
+name: Rspec tests
+
+on:
+  push:
+
+env:
+  COMPOSE_PROJECT_NAME: pr_${{github.run_number}}
+
+jobs:
+  build-api:
+    name: Build api image
+    runs-on: [self-hosted]
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Build
+        working-directory: bidon_api
+        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-api:$COMPOSE_PROJECT_NAME
+
+  build-back:
+    name: Build backend image
+    runs-on: [self-hosted]
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Build
+        working-directory: bidon_back
+        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-back:$COMPOSE_PROJECT_NAME
+
+  start-docker-compose:
+    name: Start docker compose
+    runs-on: [self-hosted]
+    needs: [build-api, build-back]
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Start docker compose
+        run: docker compose -f docker-compose-test.yml up -d
+
+  rspec-api:
+    name: Start rspec test on api
+    runs-on: [self-hosted]
+    needs: [start-docker-compose]
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Start docker compose
+        env:
+          BIDON_BACKEND_VERS: ${{ env.COMPOSE_PROJECT_NAME }}
+          MAXMIND_GEOIPUPDATE_ACCOUNT_ID: ${{ secrets.MAXMIND_GEOIPUPDATE_ACCOUNT_ID }}
+          MAXMIND_GEOIPUPDATE_LICENSE_KEY: ${{ secrets.MAXMIND_GEOIPUPDATE_LICENSE_KEY }}
+        run: docker compose -f docker-compose-test.yml exec bidon-api bundle exec rspec
+
+  stop-docker-compose:
+    name: Stop docker compose
+    runs-on: [self-hosted]
+    needs: [rspec-api]
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Start docker compose
+        run: docker compose -f docker-compose-test.yml down -v
