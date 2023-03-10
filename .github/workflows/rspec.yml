@@ -4,8 +4,8 @@ on:
   push:
 
 env:
-  BIDON_BACKEND_VERS: pr_${{github.run_number}}
   COMPOSE_PROJECT_NAME: pr_${{github.run_number}}
+  BIDON_BACKEND_VERS: pr_${{github.run_number}}
   MAXMIND_GEOIPUPDATE_ACCOUNT_ID: ${{ secrets.MAXMIND_GEOIPUPDATE_ACCOUNT_ID }}
   MAXMIND_GEOIPUPDATE_LICENSE_KEY: ${{ secrets.MAXMIND_GEOIPUPDATE_LICENSE_KEY }}
 
@@ -43,24 +43,9 @@ jobs:
       - name: Start docker compose
         run: docker compose -f docker-compose-test.yml up -d
 
-  rspec-api:
-    name: Start rspec test on api
-    runs-on: [self-hosted]
-    needs: [start-docker-compose]
-    steps:
-      - name: Checks-out repository
-        uses: actions/checkout@v3
-
       - name: Start docker compose
         run: docker compose -f docker-compose-test.yml exec bidon-api bundle exec rspec
 
-  stop-docker-compose:
-    name: Stop docker compose
-    runs-on: [self-hosted]
-    needs: [rspec-api]
-    steps:
-      - name: Checks-out repository
-        uses: actions/checkout@v3
-
       - name: Start docker compose
+        if: always()
         run: docker compose -f docker-compose-test.yml down -v
