@@ -16,7 +16,7 @@ jobs:
 
       - name: Build
         working-directory: bidon_api
-        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-api:$COMPOSE_PROJECT_NAME
+        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-api:$COMPOSE_PROJECT_NAME .
 
   build-back:
     name: Build backend image
@@ -27,7 +27,7 @@ jobs:
 
       - name: Build
         working-directory: bidon_back
-        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-back:$COMPOSE_PROJECT_NAME
+        run: docker build --target=prod -t ghcr.io/bidon-io/bidon-back:$COMPOSE_PROJECT_NAME .
 
   start-docker-compose:
     name: Start docker compose
