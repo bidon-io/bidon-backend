@@ -48,11 +48,12 @@ jobs:
       - name: Start tests
         run: docker compose -f docker-compose-test.yml exec bidon-api bundle exec rspec
 
-      - name: test
-        run: ls
-
-      - name: test
-        run: ls test
+      - name: Publish tests results
+        if: always()
+        uses: mikepenz/action-junit-report@v3
+        with:
+          check_name: Tests report
+          report_paths: 'test/*.xml'
 
       - name: Start docker compose
         if: always()
