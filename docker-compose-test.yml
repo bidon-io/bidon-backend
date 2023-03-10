@@ -96,7 +96,7 @@ services:
     <<: *restart-policy
 
   db-migration:
-    image: registry.appodeal.com/bidon/back:latest
+    image: ghcr.io/bidon-io/bidon-api:${BIDON_BACKEND_VERS}
     command: bin/rails db:prepare
     depends_on:
       - postgres
