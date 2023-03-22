@@ -146,7 +146,7 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *bidon-environment
-      HOST: b.appbaqend.com
+      ALLOWED_HOSTS: b.appbaqend.com
     logging: *default-logging
     volumes:
       - "geodb:/app/public/system/"
@@ -170,7 +170,7 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *bidon-environment
-      HOST: bidon.appodeal.com
+      ALLOWED_HOSTS: bidon.appodeal.com
     logging: *default-logging
     ports:
       - 3200:3200

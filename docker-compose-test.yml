@@ -127,7 +127,7 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *bidon-environment
-      HOST: web_api
+      ALLOWED_HOSTS: web_api
     volumes:
       - "./geodb/:/app/public/system/"
       - "./test/:/app/test/"
@@ -149,5 +149,5 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *bidon-environment
-      HOST: web_back
+      ALLOWED_HOSTS: web_back
     <<: *restart-policy
