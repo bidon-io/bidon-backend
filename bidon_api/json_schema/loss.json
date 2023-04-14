@@ -3,6 +3,7 @@
   "title": "Show Schema",
   "type": "object",
   "required": [
+    "external_winner",
     "bid",
     "device",
     "session",
