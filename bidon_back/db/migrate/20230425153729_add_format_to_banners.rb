@@ -15,7 +15,7 @@ class AddFormatToBanners < ActiveRecord::Migration[7.0]
       format = FORMATS["#{line_item.width}x#{line_item.height}"]
       next unless format
 
-      line_item.update!(format: format)
+      line_item.update!(format:)
     end
   end
 

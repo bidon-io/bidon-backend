@@ -1,5 +1,5 @@
 class LineItem < ApplicationRecord
-  self.ignored_columns = %w[width height]
+  self.ignored_columns += %w[width height]
 
   belongs_to :app
   belongs_to :account, class_name: 'DemandSourceAccount'
