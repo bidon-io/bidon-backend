@@ -34,7 +34,7 @@ module Api
                          .where(app_id: app.id, ad_type: AdType::ENUM[ad_type])
 
         return result unless ad_type == :banner
-        return [] unless ::LineItem.formats.value?(banner_format)
+        return [] unless FORMATS.include?(banner_format)
 
         result.where(format: banner_format)
       end
