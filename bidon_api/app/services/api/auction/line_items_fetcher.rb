@@ -31,11 +31,10 @@ module Api
         result = LineItem.eager(demand_source_account: :demand_source)
                          .where(app_id: app.id, ad_type: AdType::ENUM[ad_type])
 
-        if ad_type == :banner && banner_format.present?
-          result.where(format: banner_format)
-        else
-          result
-        end
+        return result unless ad_type == :banner
+        return [] unless ::LineItem.formats.value?(banner_format)
+
+        result.where(format: banner_format)
       end
     end
   end
