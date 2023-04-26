@@ -3,6 +3,8 @@ module Api
     class LineItemsFetcher
       prepend MemoWise
 
+      FORMATS = %w[BANNER LEADERBOARD MREC ADAPTIVE].freeze
+
       attr_reader :app, :ad_type, :adapters, :banner_format
 
       def initialize(app:, ad_type:, adapters:, banner_format:)
