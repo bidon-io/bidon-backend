@@ -20,7 +20,6 @@ jobs:
     runs-on: [self-hosted]
     env:
       TAG: ${{ inputs.tag }}
-    if: always() && needs.build.result == 'success'
     steps:
       - name: Checks-out repository devops
         uses: actions/checkout@v3
