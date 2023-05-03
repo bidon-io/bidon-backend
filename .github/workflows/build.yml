@@ -23,7 +23,7 @@ jobs:
           import os
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
             if '${{ github.event_name }}' == 'push':
-                print(f'TAG=${{ github.sha }}'[:8], file=fh)
+                print(f'TAG=main-{"${{ github.sha }}"[:8]}', file=fh)
             elif '${{ github.event_name }}' == 'release':
                 print('TAG=${{ github.event.release.tag_name }}', file=fh)
         shell: python
@@ -62,42 +62,10 @@ jobs:
       - name: Build and Push image
         run: make docker-build-push-prod-${{ matrix.component }} TAG=$TAG
 
-  migration:
-    name: Data migration
-    runs-on: [self-hosted]
-    needs: [tag, build]
-    env:
-      TAG: ${{ needs.tag.outputs.tag }}
-    if: always() && needs.build.result == 'success'
-    steps:
-      - name: Checks-out repository devops
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ secrets.ANSIBLE_SECRET }}/devops
-          token: ${{ secrets.PAT_RUNNER }}
-
-      - name: Deploy
-        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-        run: make bidon-data-migratio TAG=$TAG
-
   deploy:
     name: Deploy
-    runs-on: [self-hosted]
-    needs: [tag, migration]
-    env:
-      TAG: ${{ needs.tag.outputs.tag }}
-    if: always() && needs.migration.result == 'success'
-    strategy:
-      fail-fast: false
-      matrix:
-        component: [api, backend]
-    steps:
-      - name: Checks-out repository devops
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ secrets.ANSIBLE_SECRET }}/devops
-          token: ${{ secrets.PAT_RUNNER }}
-
-      - name: Deploy
-        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/prod
-        run: make bidon-${{ matrix.component }} TAG=$TAG
+    needs: build
+    uses: ./.github/workflows/deploy.yml
+    with:
+      tag:  ${{ needs.tag.outputs.tag }}
+    secrets: inherit
