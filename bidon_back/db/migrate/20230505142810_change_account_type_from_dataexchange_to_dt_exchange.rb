@@ -6,7 +6,7 @@ class ChangeAccountTypeFromDataexchangeToDtExchange < ActiveRecord::Migration[7.
         SET type = 'DemandSourceAccount::DTExchange'
         WHERE type = 'DemandSourceAccount::DataExchange'
       SQL
-    ) 
+    )
     execute(
       <<~SQL.squish,
         UPDATE app_demand_profiles
