@@ -35,7 +35,7 @@ module Api
 
       def dtexchange_demand_profile
         AppDemandProfile.eager(:demand_source_account)
-                        .where(app_id: app.id, account_type: 'DemandSourceAccount::DTExchange').first
+                        .where(app_id: app.id, account_type: 'DemandSourceAccount::DtExchange').first
       end
       memo_wise :dtexchange_demand_profile
 

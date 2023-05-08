@@ -3,7 +3,7 @@ module DemandSourceType
     BidmachineAccount: 'DemandSourceAccount::BidMachine',
     AdmobAccount:      'DemandSourceAccount::Admob',
     ApplovinAccount:   'DemandSourceAccount::Applovin',
-    DTExchangeAccount: 'DemandSourceAccount::DTExchange',
+    DTExchangeAccount: 'DemandSourceAccount::DtExchange',
     UnityAdsAccount:   'DemandSourceAccount::UnityAds',
   }.freeze
 end
