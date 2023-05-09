@@ -2,8 +2,6 @@
 
 class AuctionController < ApplicationController
   def create
-    KafkaLogger.log_auction(kafka_event)
-
     auction_response = Api::Auction::Response.new(api_request)
 
     if auction_response.present?
