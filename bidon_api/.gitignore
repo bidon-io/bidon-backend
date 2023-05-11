@@ -24,6 +24,3 @@
 /config/master.key
 
 public/system
-
-# Ignore rspec test output/
-/test
