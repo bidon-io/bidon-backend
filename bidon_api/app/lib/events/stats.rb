@@ -10,7 +10,7 @@ class Events::Stats < Events::Base
   end
 
   def auction_events
-    @params['rounds'].each_with_index.flat_map do |round, round_index|
+    @params['stats']['rounds'].each_with_index.flat_map do |round, round_index|
       events = round['demands'].each_index.map do |demand_index|
         Events::DemandResult.new(@params, round_index:, demand_index:)
       end

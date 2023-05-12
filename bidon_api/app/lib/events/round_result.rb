@@ -20,13 +20,13 @@ class Events::RoundResult < Events::Stats
       'stats__result__ecpm'       => round['winner_ecpm'],
       'round_id'                  => round['id'],
       'pricefloor'                => round['pricefloor'],
-      )
+    )
   end
 
   private
 
   def round
-    @round ||= @params['rounds'][@round_index]
+    @round ||= @params['stats']['rounds'][@round_index]
   end
 
   def winner_demand
@@ -35,12 +35,12 @@ class Events::RoundResult < Events::Stats
 
   def resolve_timestamp
     round_timestamp = max_demands_timestamp
-    return @params['timestamp'] unless round_timestamp
+    return @params.timestamp unless round_timestamp
 
     round_timestamp = round_timestamp.to_f / 1000
     # We don't really care what the timestamp is,
     # as long as it's less than the timestamp of the StatsEvent
-    return @params['timestamp'] if round_timestamp > @params['timestamp']
+    return @params.timestamp if round_timestamp > @params.timestamp
 
     round_timestamp
   end

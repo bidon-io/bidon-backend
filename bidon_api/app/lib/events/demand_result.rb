@@ -27,7 +27,7 @@ class Events::DemandResult < Events::Stats
   private
 
   def round
-    @round ||= @params['rounds'][@round_index]
+    @round ||= @params['stats']['rounds'][@round_index]
   end
 
   def demand
@@ -36,12 +36,12 @@ class Events::DemandResult < Events::Stats
 
   def resolve_timestamp
     demand_timestamp = demand['fill_finish_ts'].presence || demand['bid_finish_ts'].presence
-    return @params['timestamp'] unless demand_timestamp
+    return @params.timestamp unless demand_timestamp
 
     demand_timestamp = demand_timestamp.to_f / 1000
     # We don't really care what the timestamp is,
     # as long as it's less than the timestamp of the stats event
-    return @params['timestamp'] if demand_timestamp > @params['timestamp']
+    return @params.timestamp if demand_timestamp > @params.timestamp
 
     demand_timestamp
   end
