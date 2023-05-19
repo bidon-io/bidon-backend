@@ -3,15 +3,17 @@ package main
 import (
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/store"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
+	"os"
 )
 
 func main() {
-	db, err := openDB("postgres://bidon:pass@localhost:5434/bidon")
+	db, err := openDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
