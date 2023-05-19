@@ -1,13 +1,40 @@
 package main
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/bidon-io/bidon-backend/internal/admin"
+	"github.com/bidon-io/bidon-backend/internal/store"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"log"
+)
 
 func main() {
-	e := echo.New()
+	db, err := openDB("postgres://bidon:pass@localhost:5434/bidon")
+	if err != nil {
+		log.Fatalf("failed opening connection to postgres: %v", err)
+	}
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(200, "Hello, World!")
-	})
+	handlers := &admin.Handlers{
+		AuctionConfigurationRepo: &store.AuctionConfigurationRepo{
+			DB: db,
+		},
+	}
+
+	e := echo.New()
+	e.Use(middleware.Logger())
+
+	handlers.RegisterRoutes(e)
 
 	e.Logger.Fatal(e.Start(":1323"))
+}
+
+func openDB(databaseUrl string) (*gorm.DB, error) {
+	db, err := gorm.Open(postgres.Open(databaseUrl))
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
