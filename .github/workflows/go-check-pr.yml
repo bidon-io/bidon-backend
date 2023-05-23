@@ -17,5 +17,3 @@ jobs:
 
       - run: docker compose -f docker-compose.go-test.yml down --rmi local -v
         if: always()
-
-
