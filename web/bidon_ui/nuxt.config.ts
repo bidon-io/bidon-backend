@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   ssr: false,
   css: ["primevue/resources/themes/lara-light-blue/theme.css", "primevue/resources/primevue.css"],
+  modules: ["@nuxtjs/tailwindcss"],
   build: {
     transpile: ["primevue"],
   },
