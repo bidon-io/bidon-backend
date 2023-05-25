@@ -6,4 +6,7 @@ export default defineNuxtConfig({
   build: {
     transpile: ["primevue"],
   },
+  routeRules: {
+    '/': { redirect: '/auction_configurations' },
+  }
 });

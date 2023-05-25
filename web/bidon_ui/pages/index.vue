@@ -1,5 +1,3 @@
 <template>
-  <div>
-    <Button label="Prime" icon="pi pi-check"/>
-  </div>
+  <div></div>
 </template>
