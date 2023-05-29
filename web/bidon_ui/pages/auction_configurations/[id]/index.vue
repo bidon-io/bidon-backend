@@ -3,9 +3,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-
-const sampleAuctionConfiguration = {
+const resource = {
   id: 1,
   app: "SampleApp",
   name: "SampleAuction",
@@ -14,7 +12,6 @@ const sampleAuctionConfiguration = {
   rounds:
     '[{"id"=>"ROUND_REWARDED_1", "demands"=>["admob", "unityads", "applovin", "dtexchange"], "timeout"=>15000}, {"id"=>"ROUND_REWARDED_2", "demands"=>["bidmachine"], "timeout"=>15000}]',
 };
-const resource = ref(sampleAuctionConfiguration);
 const fields = [
   { label: "ID", key: "id" },
   { label: "App", key: "app", type: "link", link: "/apps/1" },

@@ -27,6 +27,8 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+
 const props = defineProps({
   resource: {
     type: Object,
@@ -37,5 +39,5 @@ const props = defineProps({
     required: true,
   },
 });
-const localResource = { ...props.resource };
+const localResource = ref(props.resource);
 </script>
