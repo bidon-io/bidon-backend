@@ -30,7 +30,8 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 
-	handlers.RegisterRoutes(e)
+	apiGroup := e.Group("/api")
+	handlers.RegisterRoutes(apiGroup)
 
 	webServer := http.FileServer(http.FS(web.FS))
 	e.GET("/*", echo.WrapHandler(webServer))
