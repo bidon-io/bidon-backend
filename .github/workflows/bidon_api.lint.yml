@@ -1,6 +1,8 @@
 name: bidon_api
 on:
   pull_request:
+    branches:
+      - "main"
     paths:
       - "bidon_api/**"
 jobs:
