@@ -147,8 +147,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_30_135323) do
   end
 
   create_table "segments", force: :cascade do |t|
-    t.string "name", default: "", null: false
-    t.text "description", default: "", null: false
+    t.string "name", null: false
+    t.text "description", null: false
     t.jsonb "filters", default: [], null: false
     t.boolean "enabled", default: true, null: false
     t.bigint "app_id", null: false
