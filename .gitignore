@@ -29,7 +29,7 @@
 
 # Ignore UI static files, but keep the directory
 /cmd/bidon-admin/web/ui
-!/cmd/bidon-admin/web/ui/.keep
+!/cmd/bidon-admin/web/ui/index.html
 
 # Ignore rspec test output/
 /**/test
