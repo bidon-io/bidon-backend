@@ -19,7 +19,7 @@ type SegmentAttrs struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Filters     []SegmentFilter `json:"filters"`
-	Enabled     bool            `json:"enabled"`
+	Enabled     *bool           `json:"enabled"`
 	AppID       int64           `json:"app_id"`
 }
 

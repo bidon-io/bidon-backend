@@ -1,31 +1,24 @@
 package store
 
 import (
-	"context"
-	"database/sql"
-	"github.com/bidon-io/bidon-backend/internal/admin"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+  "context"
+  "github.com/bidon-io/bidon-backend/internal/admin"
+  "gorm.io/gorm"
+  "gorm.io/gorm/clause"
 )
 
 type segment struct {
 	Model
-	Name        sql.NullString        `gorm:"column:name;type:varchar"`
-	Description string                `gorm:"column:description;type:varchar"`
-	Filters     []admin.SegmentFilter `gorm:"column:filters;type:jsonb;default:'[]';serializer:json"`
-	Enabled     bool                  `gorm:"column:enabled;type:bool;not null;default:true"`
+	Name        string                `gorm:"column:name;type:varchar;not null"`
+	Description string                `gorm:"column:description;type:text;not null"`
+	Filters     []admin.SegmentFilter `gorm:"column:filters;type:jsonb;not null;default:'[]';serializer:json"`
+	Enabled     *bool                 `gorm:"column:enabled;type:bool;not null;default:true"`
 	AppID       int64                 `gorm:"column:app_id;type:bigint;not null"`
 }
 
 func fromAttrs(attrs *admin.SegmentAttrs) segment {
-	name := sql.NullString{}
-	if attrs.Name != "" {
-		name.String = attrs.Name
-		name.Valid = true
-	}
-
 	return segment{
-		Name:        name,
+		Name:        attrs.Name,
 		Description: attrs.Description,
 		Filters:     attrs.Filters,
 		Enabled:     attrs.Enabled,
@@ -37,7 +30,7 @@ func (s *segment) segment() admin.Segment {
 	return admin.Segment{
 		ID: s.ID,
 		SegmentAttrs: admin.SegmentAttrs{
-			Name:        s.Name.String,
+			Name:        s.Name,
 			Description: s.Description,
 			Filters:     s.Filters,
 			Enabled:     s.Enabled,

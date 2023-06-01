@@ -21,21 +21,21 @@ func TestSegmentRepo_List(t *testing.T) {
 			Description: "Desc",
 			AppID:       1,
 			Filters:     []admin.SegmentFilter{{Type: "country", Name: "country", Operator: "in", Values: []string{"US", "UK"}}},
-			Enabled:     true,
+			Enabled:     func() *bool { b := true; return &b }(),
 		},
 		{
 			Name:        "Custom String Segment",
 			Description: "Desc",
 			AppID:       1,
 			Filters:     []admin.SegmentFilter{{Type: "string", Name: "custom_str", Operator: "==", Values: []string{"super"}}},
-			Enabled:     true,
+			Enabled:     func() *bool { b := false; return &b }(),
 		},
 		{
 			Name:        "Custom Num Segment",
 			Description: "Desc",
 			AppID:       1,
 			Filters:     []admin.SegmentFilter{{Type: "float", Name: "custom_num", Operator: ">=", Values: []string{"33"}}},
-			Enabled:     true,
+			Enabled:     func() *bool { b := true; return &b }(),
 		},
 	}
 
@@ -70,7 +70,7 @@ func TestSegmentRepo_Find(t *testing.T) {
 		Description: "Desc",
 		AppID:       1,
 		Filters:     []admin.SegmentFilter{{Type: "country", Name: "country", Operator: "in", Values: []string{"US", "UK"}}},
-		Enabled:     true,
+		Enabled:     func() *bool { b := true; return &b }(),
 	}
 
 	want, err := repo.Create(context.Background(), attrs)
@@ -99,7 +99,7 @@ func TestSegmentRepo_Update(t *testing.T) {
 		Description: "Desc",
 		AppID:       1,
 		Filters:     []admin.SegmentFilter{{Type: "country", Name: "country", Operator: "in", Values: []string{"US", "UK"}}},
-		Enabled:     true,
+		Enabled:     func() *bool { b := true; return &b }(),
 	}
 
 	segment, err := repo.Create(context.Background(), &attrs)
@@ -110,8 +110,12 @@ func TestSegmentRepo_Update(t *testing.T) {
 	want := segment
 	want.AppID = 2
 
+	enabled := false
+	want.Enabled = &enabled
+
 	updateParams := &admin.SegmentAttrs{
-		AppID: want.AppID,
+		AppID:   want.AppID,
+		Enabled: &enabled,
 	}
 	got, err := repo.Update(context.Background(), segment.ID, updateParams)
 	if err != nil {
@@ -134,7 +138,7 @@ func TestSegmentRepo_Delete(t *testing.T) {
 		Description: "Desc",
 		AppID:       1,
 		Filters:     []admin.SegmentFilter{{Type: "country", Name: "country", Operator: "in", Values: []string{"US", "UK"}}},
-		Enabled:     true,
+		Enabled:     func() *bool { b := true; return &b }(),
 	}
 	segment, err := repo.Create(context.Background(), attrs)
 	if err != nil {
