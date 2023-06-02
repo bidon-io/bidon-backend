@@ -49,6 +49,9 @@ func newAdminService(db *gorm.DB) *admin.Service {
 		Apps: &admin.AppService{
 			Repo: &store.AppRepo{DB: db},
 		},
+		AppDemandProfiles: &admin.AppDemandProfileService{
+			Repo: &store.AppDemandProfileRepo{DB: db},
+		},
 		Segments: &admin.SegmentService{
 			Repo: &store.SegmentRepo{DB: db},
 		},
