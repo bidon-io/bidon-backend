@@ -67,6 +67,9 @@ func newAdminService(db *gorm.DB) *admin.Service {
 		Countries: &admin.CountryService{
 			Repo: &store.CountryRepo{DB: db},
 		},
+		Users: &admin.UserService{
+			Repo: &store.UserRepo{DB: db},
+		},
 	}
 }
 

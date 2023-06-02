@@ -16,6 +16,7 @@ type Service struct {
 	DemandSourceAccounts  *DemandSourceAccountService
 	LineItems             *LineItemService
 	Countries             *CountryService
+	Users                 *UserService
 }
 
 func (s *Service) RegisterAPIRoutes(g *echo.Group) {
@@ -28,6 +29,7 @@ func (s *Service) RegisterAPIRoutes(g *echo.Group) {
 		{"line_items", s.LineItems},
 		{"demand_sources", s.DemandSources},
 		{"countries", s.Countries},
+		{"users", s.Users},
 	}
 
 	for i := range resources {
