@@ -61,6 +61,9 @@ func newAdminService(db *gorm.DB) *admin.Service {
 		LineItems: &admin.LineItemService{
 			Repo: &store.LineItemRepo{DB: db},
 		},
+		DemandSources: &admin.DemandSourceService{
+			Repo: &store.DemandSourceRepo{DB: db},
+		},
 	}
 }
 

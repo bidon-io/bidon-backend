@@ -15,6 +15,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&segment{},
 		&app{},
 		&appDemandProfile{},
+		&demandSource{},
 		&demandSourceAccount{},
 		&lineItem{},
 	)
