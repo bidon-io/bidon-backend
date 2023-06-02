@@ -18,6 +18,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&demandSource{},
 		&demandSourceAccount{},
 		&lineItem{},
+		&country{},
 	)
 }
 
