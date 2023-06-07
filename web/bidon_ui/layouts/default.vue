@@ -3,7 +3,7 @@
     <div class="bg-white w-64 md:w-1/4 lg:w-1/5 h-full overflow-y-auto">
       <div class="flex items-center justify-center mt-8">
         <div class="flex items-center">
-          <!-- <img class="h-6 w-6" src="favicon.ico" alt="logo" /> -->
+          <img class="h-10 w-10" src="@/assets/logo.webp" alt="logo" />
           <span class="text-blue-500 text-2xl mx-2 font-semibold">BidON</span>
         </div>
       </div>
