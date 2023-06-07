@@ -85,3 +85,74 @@ func TestMatchCountry(t *testing.T) {
 		t.Errorf("matchCountry returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
 }
+
+func TestMatchCustomString(t *testing.T) {
+	// Test case 1: == operator, prop eq value
+	filter := admin.SegmentFilter{
+		Operator: "==",
+		Name:     "best_friend",
+		Values:   []string{"Winnie Pooh"},
+	}
+
+	customProps := `{"best_friend":"Winnie Pooh"}`
+	expected := true
+	result := matchCustomString(filter, customProps)
+	if result != expected {
+		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
+	}
+
+	// Test case 2: == operator, prop not eq value
+	filter = admin.SegmentFilter{
+		Operator: "==",
+		Name:     "best_friend",
+		Values:   []string{"Winnie Pooh"},
+	}
+
+	customProps = `{"best_friend":"Tigger"}`
+	expected = false
+	result = matchCustomString(filter, customProps)
+	if result != expected {
+		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
+	}
+
+	// Test case 3: != operator, prop not eq value
+	filter = admin.SegmentFilter{
+		Operator: "!=",
+		Name:     "best_friend",
+		Values:   []string{"Winnie Pooh"},
+	}
+
+	customProps = `{"best_friend":"Tigger"}`
+	expected = true
+	result = matchCustomString(filter, customProps)
+	if result != expected {
+		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
+	}
+
+	// Test case 4: != operator, prop eq value
+	filter = admin.SegmentFilter{
+		Operator: "!=",
+		Name:     "best_friend",
+		Values:   []string{"Winnie Pooh"},
+	}
+
+	customProps = `{"best_friend":"Winnie Pooh"}`
+	expected = false
+	result = matchCustomString(filter, customProps)
+	if result != expected {
+		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
+	}
+
+	// Test case 5: Invalid customProps JSON
+	filter = admin.SegmentFilter{
+		Operator: "==",
+		Name:     "key1",
+		Values:   []string{"value1"},
+	}
+	customProps = `invalid JSON`
+	expected = false
+	result = matchCustomString(filter, customProps)
+	if result != expected {
+		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
+	}
+}

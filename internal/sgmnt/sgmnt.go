@@ -1,9 +1,13 @@
 package sgmnt
 
-import "github.com/bidon-io/bidon-backend/internal/admin"
+import (
+	"encoding/json"
+	"github.com/bidon-io/bidon-backend/internal/admin"
+)
 
 type Params struct {
-	Country string `json:"country"`
+	Country     string `json:"country"`
+	CustomProps string `json:"custom_props"`
 }
 
 func Match(segments []admin.Segment, params Params) *admin.Segment {
@@ -14,11 +18,13 @@ func Match(segments []admin.Segment, params Params) *admin.Segment {
 			switch filter.Type {
 			case "country":
 				isMatched = matchCountry(filter, params.Country)
+			case "custom_string":
+				isMatched = matchCustomString(filter, params.CustomProps)
 			}
-		}
 
-		if isMatched {
-			return &segment
+			if isMatched {
+				return &segment
+			}
 		}
 	}
 
@@ -31,6 +37,23 @@ func matchCountry(filter admin.SegmentFilter, country string) bool {
 		return containsString(filter.Values, country)
 	case "NOT IN":
 		return !containsString(filter.Values, country)
+	default:
+		return false
+	}
+}
+
+func matchCustomString(filter admin.SegmentFilter, customProps string) bool {
+	var parsedProps map[string]string
+
+	if err := json.Unmarshal([]byte(customProps), &parsedProps); err != nil {
+		return false
+	}
+
+	switch filter.Operator {
+	case "==":
+		return filter.Values[0] == parsedProps[filter.Name]
+	case "!=":
+		return filter.Values[0] != parsedProps[filter.Name]
 	default:
 		return false
 	}
