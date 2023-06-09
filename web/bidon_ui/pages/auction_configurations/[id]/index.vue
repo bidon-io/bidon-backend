@@ -3,15 +3,11 @@
 </template>
 
 <script setup>
-const resource = {
-  id: 1,
-  app: "SampleApp",
-  name: "SampleAuction",
-  adType: "rewarded",
-  priceFloor: 0.1,
-  rounds:
-    '[{"id"=>"ROUND_REWARDED_1", "demands"=>["admob", "unityads", "applovin", "dtexchange"], "timeout"=>15000}, {"id"=>"ROUND_REWARDED_2", "demands"=>["bidmachine"], "timeout"=>15000}]',
-};
+import axios from "@/services/ApiService.js";
+const route = useRoute();
+
+const response = await axios.get(`auction_configurations/${route.params.id}`);
+const resource = response.data;
 const fields = [
   { label: "ID", key: "id" },
   { label: "App", key: "app", type: "link", link: "/apps/1" },

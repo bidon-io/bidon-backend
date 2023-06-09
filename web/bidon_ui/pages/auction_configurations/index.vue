@@ -34,14 +34,9 @@
 
 <script setup>
 import { ref } from "vue";
+import axios from "@/services/ApiService.js";
 
-const sampleConfigurations = Array.from({ length: 100 }, (_, index) => ({
-  id: index,
-  app: `App${index}`,
-  name: `Configuration${index}`,
-  adType: "banner",
-  priceFloor: 0.01 * index,
-}));
-const configurations = ref(sampleConfigurations);
-const selectedConfiguration = ref();
+const response = await axios.get("/auction_configurations");
+const configurations = ref(response.data);
+const selectedConfiguration = ref(configurations);
 </script>

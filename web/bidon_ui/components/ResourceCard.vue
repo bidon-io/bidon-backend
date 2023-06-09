@@ -1,7 +1,7 @@
 <template>
   <div class="flex-1 p-6 mx-auto w-full">
     <Card>
-      <template #title>Auction Config {{ id }}</template>
+      <template #title>Auction Config {{ localResource.id }}</template>
       <template #content>
         <div class="divide-y">
           <div v-for="field in fields" :key="field.key" class="flex flex-row py-2">
@@ -13,7 +13,7 @@
               <NuxtLink v-if="field.type === 'link'" :to="field.link">{{ localResource[field.key] }}</NuxtLink>
               <Textarea
                 v-if="field.type === 'textarea'"
-                v-model="localResource[field.key]"
+                :value="JSON.stringify(localResource[field.key])"
                 rows="5"
                 cols="80"
                 disabled
