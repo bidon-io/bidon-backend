@@ -1,4 +1,4 @@
-package sgmnt
+package segment
 
 import (
 	"github.com/google/go-cmp/cmp"

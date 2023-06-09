@@ -1,4 +1,4 @@
-package sgmnt
+package segment
 
 import (
 	"encoding/json"
