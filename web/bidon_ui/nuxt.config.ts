@@ -9,6 +9,12 @@ export default defineNuxtConfig({
     "primevue/resources/primevue.css",
     "primeicons/primeicons.css",
   ],
+  components: [
+    {
+      path: "~/components",
+      pathPrefix: false,
+    },
+  ],
   modules: ["@nuxtjs/tailwindcss"],
   build: {
     transpile: ["primevue"],
