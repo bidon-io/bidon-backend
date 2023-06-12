@@ -23,7 +23,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.component("Card", Card);
   nuxtApp.vueApp.component("Column", Column);
   nuxtApp.vueApp.component("DataTable", DataTable);
-  nuxtApp.vueApp.component("DropDown", Dropdown);
+  nuxtApp.vueApp.component("Dropdown", Dropdown);
   nuxtApp.vueApp.component("InputNumber", InputNumber);
   nuxtApp.vueApp.component("InputText", InputText);
   nuxtApp.vueApp.component("Textarea", Textarea);

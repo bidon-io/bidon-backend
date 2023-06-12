@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1 p-6 mx-auto w-full">
-    <Card>
+    <Card class="p-6">
       <template #title>Auction Config {{ localResource.id }}</template>
       <template #content>
         <div class="divide-y">
