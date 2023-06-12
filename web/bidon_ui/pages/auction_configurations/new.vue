@@ -1,31 +1,24 @@
 <template>
   <Toast />
-  <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
+  <AuctionConfigurationForm :value="resource" @submit="handleSubmit" />
 </template>
 
 <script setup>
-import { useAsyncState } from "@vueuse/core";
 import axios from "@/services/ApiService.js";
 import { useToast } from "primevue/usetoast";
-
-const route = useRoute();
-const id = route.params.id;
-
-const { state: resource, isReady } = useAsyncState(async () => {
-  const response = await axios.get(`/auction_configurations/${id}`);
-  return response.data;
-});
+const resource = {};
 
 const toast = useToast();
-const handleSubmit = () => {
+const handleSubmit = (event) => {
+  console.log("event is", event);
   axios
-    .patch(`/auction_configurations/${id}`, resource.value)
+    .post("/auction_configurations", event)
     .then((response) => {
       console.log(response);
       toast.add({
         severity: "success",
         summary: "Success",
-        detail: "Auction configuration updated",
+        detail: "Auction configuration created",
       });
     })
     .catch((error) => {

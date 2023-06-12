@@ -32,8 +32,5 @@
 </template>
 
 <script setup>
-const menuItems = [
-  { name: "Apps", link: "resources/apps/" },
-  { name: "AuctionConfigurations", link: "/auction_configurations/" },
-];
+const menuItems = [{ name: "AuctionConfigurations", link: "/auction_configurations/" }];
 </script>
