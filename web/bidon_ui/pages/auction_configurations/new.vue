@@ -1,6 +1,13 @@
 <template>
   <Toast />
-  <AuctionConfigurationForm :value="resource" @submit="handleSubmit" />
+  <PageContainer>
+    <NavigationContainer>
+      <NuxtLink to="/auction_configurations/">
+        <Button label="Go back" icon="pi pi-arrow-left" severity="secondary" text />
+      </NuxtLink>
+    </NavigationContainer>
+    <AuctionConfigurationForm :value="resource" @submit="handleSubmit" />
+  </PageContainer>
 </template>
 
 <script setup>
@@ -12,7 +19,10 @@ const toast = useToast();
 const handleSubmit = (event) => {
   axios
     .post("/auction_configurations", event)
-    .then(() => {
+    .then(async (response) => {
+      const id = response.data.id;
+      await navigateTo(`/auction_configurations/${id}`);
+
       toast.add({
         severity: "success",
         summary: "Success",

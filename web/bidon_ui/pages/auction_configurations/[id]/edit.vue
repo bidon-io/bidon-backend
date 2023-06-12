@@ -1,13 +1,13 @@
 <template>
   <Toast />
-  <div class="flex-1 mx-auto w-full">
-    <div class="flex mb-4 items-start space-x-2">
+  <PageContainer>
+    <NavigationContainer>
       <NuxtLink to="/auction_configurations/">
         <Button label="Go back" icon="pi pi-arrow-left" severity="secondary" text />
       </NuxtLink>
-    </div>
+    </NavigationContainer>
     <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
-  </div>
+  </PageContainer>
 </template>
 
 <script setup>

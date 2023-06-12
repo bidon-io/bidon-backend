@@ -1,11 +1,11 @@
 <template>
   <Toast />
   <ConfirmDialog />
-  <div class="flex mb-6 items-start space-x-2">
+  <NavigationContainer>
     <NuxtLink to="/auction_configurations/new">
       <Button label="New Auction Configuration" icon="pi pi-plus" class="p-button-success" />
     </NuxtLink>
-  </div>
+  </NavigationContainer>
   <DataTable
     v-model:selection="selectedConfigurations"
     :value="configurations"
