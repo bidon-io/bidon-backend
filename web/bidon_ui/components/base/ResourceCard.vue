@@ -1,29 +1,27 @@
 <template>
-  <div class="flex-1 p-6 mx-auto w-full">
-    <Card class="p-6">
-      <template #title>Auction Config {{ localResource.id }}</template>
-      <template #content>
-        <div class="divide-y">
-          <div v-for="field in fields" :key="field.key" class="flex flex-row py-2">
-            <div class="w-1/4 px-6">
-              <div class="font-semibold text-gray-500">{{ field.label }}</div>
-            </div>
-            <div class="px-6">
-              <div v-if="!field.type" class="text-gray-900">{{ localResource[field.key] }}</div>
-              <NuxtLink v-if="field.type === 'link'" :to="field.link">{{ localResource[field.key] }}</NuxtLink>
-              <Textarea
-                v-if="field.type === 'textarea'"
-                :value="JSON.stringify(localResource[field.key])"
-                rows="5"
-                cols="80"
-                disabled
-              />
-            </div>
+  <Card class="p-6">
+    <template #title>Auction Config</template>
+    <template #content>
+      <div class="divide-y">
+        <div v-for="field in fields" :key="field.key" class="flex flex-row py-2">
+          <div class="w-1/4 px-6">
+            <div class="font-semibold text-gray-500">{{ field.label }}</div>
+          </div>
+          <div class="px-6">
+            <div v-if="!field.type" class="text-gray-900">{{ localResource[field.key] }}</div>
+            <NuxtLink v-if="field.type === 'link'" :to="field.link">{{ localResource[field.key] }}</NuxtLink>
+            <Textarea
+              v-if="field.type === 'textarea'"
+              :value="JSON.stringify(localResource[field.key])"
+              rows="5"
+              cols="80"
+              disabled
+            />
           </div>
         </div>
-      </template>
-    </Card>
-  </div>
+      </div>
+    </template>
+  </Card>
 </template>
 
 <script setup>

@@ -1,18 +1,15 @@
 <template>
-  <form class="flex-1 p-6 mx-auto w-full" @submit.prevent="handleSubmit">
+  <form @submit.prevent="handleSubmit">
     <Card class="p-6">
-      <template #title>Auction Config {{ resource.id }}</template>
+      <template #title>Auction Config</template>
       <template #content>
         <div class="divide-y">
-          <div class="my-4">
-            <Button type="submit" label="Save" icon="pi pi-save" class="p-button-success" />
-          </div>
           <div class="flex flex-row py-2">
             <div class="w-1/4 px-6">
               <div class="font-semibold text-gray-500">Name</div>
             </div>
             <div class="px-6">
-              <InputText v-model="resource.name" type="text" />
+              <InputText v-model="resource.name" type="text" placeholder="Name" />
             </div>
           </div>
 
@@ -48,7 +45,7 @@
 
           <div class="flex flex-row py-2">
             <div class="w-1/4 px-6">
-              <div class="font-semibold text-gray-500">Pricefloor</div>
+              <div class="font-semibold text-gray-500">Price floor</div>
             </div>
             <div class="px-6">
               <InputNumber
@@ -56,7 +53,7 @@
                 input-id="pricefloor"
                 :min-fraction-digits="2"
                 :max-fraction-digits="5"
-                placeholder="PriceFloor"
+                placeholder="Price floor"
               />
             </div>
           </div>
@@ -69,6 +66,9 @@
               <Textarea v-model="rounds" rows="10" cols="80" />
             </div>
           </div>
+        </div>
+        <div class="my-4">
+          <Button type="submit" label="Save" icon="pi pi-save" class="p-button-success" />
         </div>
       </template>
     </Card>
@@ -94,7 +94,6 @@ axios
   .get("/apps")
   .then((response) => {
     apps.value = response.data;
-    console.log("apps", apps.value);
   })
   .catch((error) => {
     console.error(error);
@@ -114,7 +113,6 @@ const rounds = computed({
 });
 
 function handleSubmit() {
-  console.log("handleSubmit FORM");
   emit("submit", resource.value);
 }
 </script>

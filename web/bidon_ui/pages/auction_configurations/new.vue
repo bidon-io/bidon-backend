@@ -10,11 +10,9 @@ const resource = {};
 
 const toast = useToast();
 const handleSubmit = (event) => {
-  console.log("event is", event);
   axios
     .post("/auction_configurations", event)
-    .then((response) => {
-      console.log(response);
+    .then(() => {
       toast.add({
         severity: "success",
         summary: "Success",

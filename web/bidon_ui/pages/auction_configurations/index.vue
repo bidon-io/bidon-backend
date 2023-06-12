@@ -1,6 +1,11 @@
 <template>
   <Toast />
   <ConfirmDialog />
+  <div class="flex mb-6 items-start space-x-2">
+    <NuxtLink to="/auction_configurations/new">
+      <Button label="New Auction Configuration" icon="pi pi-plus" class="p-button-success" />
+    </NuxtLink>
+  </div>
   <DataTable
     v-model:selection="selectedConfigurations"
     :value="configurations"
@@ -37,32 +42,14 @@
 <script setup>
 import { ref } from "vue";
 import axios from "@/services/ApiService.js";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
 
-const response = await axios.get("/auction_configurations");
+const path = "/auction_configurations";
+const response = await axios.get(path);
 const configurations = ref(response.data);
 const selectedConfigurations = ref([]);
 
-const confirm = useConfirm();
-const toast = useToast();
-async function deleteResource(id, callback) {
-  await axios.delete(`/auction_configurations/${id}`);
-  configurations.value = configurations.value.filter((item) => item.id !== id);
-  callback();
-}
-const deleteHandle = (id) => {
-  console.log(id);
-  confirm.require({
-    message: "Do you want to delete this record?",
-    header: "Delete Confirmation",
-    icon: "pi pi-info-circle",
-    acceptClass: "p-button-danger",
-    accept: () => {
-      deleteResource(id, () => {
-        toast.add({ severity: "info", summary: "Confirmed", detail: "Record deleted", life: 3000 });
-      });
-    },
-  });
-};
+const deleteHandle = useDeleteResource(
+  path,
+  (id) => (configurations.value = configurations.value.filter((item) => item.id !== id))
+);
 </script>

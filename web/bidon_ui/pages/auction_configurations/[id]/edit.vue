@@ -1,6 +1,13 @@
 <template>
   <Toast />
-  <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
+  <div class="flex-1 mx-auto w-full">
+    <div class="flex mb-4 items-start space-x-2">
+      <NuxtLink to="/auction_configurations/">
+        <Button label="Go back" icon="pi pi-arrow-left" severity="secondary" text />
+      </NuxtLink>
+    </div>
+    <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
+  </div>
 </template>
 
 <script setup>
@@ -20,8 +27,7 @@ const toast = useToast();
 const handleSubmit = () => {
   axios
     .patch(`/auction_configurations/${id}`, resource.value)
-    .then((response) => {
-      console.log(response);
+    .then(() => {
       toast.add({
         severity: "success",
         summary: "Success",
