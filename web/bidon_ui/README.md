@@ -19,6 +19,7 @@ yarn dev
 ```
 
 ## Local api
+
 ```bash
 go run cmd/bidon-admin/main.go
 ```
@@ -30,10 +31,13 @@ Frontend can be built statically, and that's how the production version works: f
 Run `yarn generate` inside `./web/bidon_ui/`
 
 Copy static files to embed them into Go binary
+
 ```bash
 cp -rf web/bidon_ui/.output/public/ .cmd/bidon-admin/web/ui # assume you are in the root dir
 ```
+
 Run backend
+
 ```bash
 go run cmd/bidon-admin/main.go
 ```

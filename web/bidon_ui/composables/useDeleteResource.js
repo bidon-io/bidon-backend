@@ -20,7 +20,7 @@ export default function (path, onDelete) {
       accept: () => {
         deleteResource(id, () => {
           onDelete(id);
-          toast.add({ severity: "info", summary: "Confirmed", detail: "Record deleted", life: 3000 });
+          toast.add({ severity: "info", summary: "Success", detail: "Record deleted", life: 3000 });
         });
       },
     });

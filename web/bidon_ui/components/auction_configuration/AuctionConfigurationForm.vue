@@ -34,9 +34,7 @@
       <FormField lable="Rounds">
         <Textarea v-model="rounds" rows="10" cols="80" />
       </FormField>
-      <div class="my-4 py-4">
-        <Button type="submit" label="Save" icon="pi pi-save" class="p-button-success" />
-      </div>
+      <FormSubmitButton />
     </FormCard>
   </form>
 </template>
@@ -72,9 +70,7 @@ const rounds = computed({
   set: (newValue) => {
     try {
       resource.value.rounds = JSON.parse(newValue);
-    } catch (error) {
-      console.error("Error parsing JSON:", error);
-    }
+    } catch {}
   },
 });
 
