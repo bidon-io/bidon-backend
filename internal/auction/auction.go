@@ -1,34 +1,19 @@
 package auction
 
-import (
-	"github.com/bidon-io/bidon-backend/internal/ad"
-	"github.com/bidon-io/bidon-backend/internal/device"
-)
-
+type Auction struct {
+	ConfigID  int64         `json:"auction_configuration_id"`
+	Rounds    []RoundConfig `json:"rounds"`
+	LineItems []LineItem    `json:"line_items"`
+}
 type Config struct {
 	ID     int64
 	Rounds []RoundConfig
 }
 
-type BuildParams struct {
-	AppID      int64
-	AdType     ad.Type
-	AdFormat   ad.Format
-	DeviceType device.Type
-	PriceFloor float64
-	Adapters   []string
-}
-
-type Auction struct {
-	ConfigID   int64         `json:"config_id"`
-	Rounds     []RoundConfig `json:"rounds"`
-	LineItems  []LineItem    `json:"line_items"`
-	Token      string        `json:"token"`
-	PriceFloor float64       `json:"pricefloor"`
-}
-
 type RoundConfig struct {
-	Demands []string
+	ID      string   `json:"id"`
+	Demands []string `json:"demands"`
+	Timeout int      `json:"timeout"`
 }
 
 type LineItem struct {

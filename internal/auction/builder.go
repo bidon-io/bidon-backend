@@ -9,16 +9,26 @@ import (
 )
 
 type Builder struct {
-	ConfigMatcher   ConfigMatcher
-	LineItemMatcher LineItemsMatcher
+	ConfigMatcher    ConfigMatcher
+	LineItemsMatcher LineItemsMatcher
 }
+
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks_test.go . ConfigMatcher LineItemsMatcher
 
 type ConfigMatcher interface {
 	Match(ctx context.Context, appID int64, adType ad.Type) (*Config, error)
 }
 
 type LineItemsMatcher interface {
-	Match(ctx context.Context, appID int64, adType ad.Type, adFormats []ad.Format, adapters []string) ([]LineItem, error)
+	Match(ctx context.Context, params *BuildParams) ([]LineItem, error)
+}
+
+type BuildParams struct {
+	AppID      int64
+	AdType     ad.Type
+	AdFormat   ad.Format
+	DeviceType device.Type
+	Adapters   []string
 }
 
 func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, error) {
@@ -27,18 +37,15 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 		return nil, err
 	}
 
-	adFormats := resolveAdFormats(params.AdType, params.AdFormat, params.DeviceType)
-	lineItems, err := b.LineItemMatcher.Match(ctx, params.AppID, params.AdType, adFormats, params.Adapters)
+	lineItems, err := b.LineItemsMatcher.Match(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 
 	auction := Auction{
-		Rounds:     filterRounds(config.Rounds, params.Adapters),
-		LineItems:  lineItems,
-		Token:      "{}",
-		PriceFloor: params.PriceFloor,
-		ConfigID:   config.ID,
+		ConfigID:  config.ID,
+		Rounds:    filterRounds(config.Rounds, params.Adapters),
+		LineItems: lineItems,
 	}
 
 	return &auction, nil
@@ -63,27 +70,4 @@ func filterRounds(rounds []RoundConfig, adapters []string) []RoundConfig {
 	}
 
 	return filteredRounds
-}
-
-func resolveAdFormats(adType ad.Type, adFormat ad.Format, deviceType device.Type) (adFormats []ad.Format) {
-	if adType != ad.BannerType {
-		return
-	}
-	if !slices.Contains(ad.BannerFormats, adFormat) {
-		return
-	}
-
-	adFormats = append(adFormats, adFormat)
-
-	if adFormat != ad.AdaptiveFormat {
-		return
-	}
-
-	if deviceType == device.TabletType {
-		adFormats = append(adFormats, ad.LeaderboardFormat)
-	} else {
-		adFormats = append(adFormats, ad.BannerFormat)
-	}
-
-	return
 }
