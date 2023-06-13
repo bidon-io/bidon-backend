@@ -32,6 +32,7 @@ func (m auctionConfigurationMapper) dbModel(c *admin.AuctionConfigurationAttrs) 
 		AdType:     db.AdTypeFromDomain(c.AdType),
 		Rounds:     c.Rounds,
 		Pricefloor: c.Pricefloor,
+		SegmentID:  c.SegmentID,
 	}
 }
 
@@ -45,6 +46,7 @@ func (m auctionConfigurationMapper) resource(c *db.AuctionConfiguration) admin.A
 			AdType:     c.AdType.Domain(),
 			Rounds:     c.Rounds,
 			Pricefloor: c.Pricefloor,
+			SegmentID:  c.SegmentID,
 		},
 	}
 }
