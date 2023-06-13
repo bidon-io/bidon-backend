@@ -24,7 +24,7 @@ COPY internal internal
 
 FROM base AS test
 
-CMD [ "go", "test", "./..." ]
+CMD [ "go", "test", "-p", "1", "./..." ]
 
 FROM base AS builder
 
