@@ -40,7 +40,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from "vue";
 import axios from "@/services/ApiService.js";
 
 const props = defineProps({
