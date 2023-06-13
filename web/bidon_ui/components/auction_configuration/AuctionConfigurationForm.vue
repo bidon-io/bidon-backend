@@ -34,6 +34,16 @@
       <FormField lable="Rounds">
         <Textarea v-model="rounds" rows="10" cols="80" />
       </FormField>
+      <FormField lable="Segment">
+        <Dropdown
+          v-model="resource.segment_id"
+          :options="segments"
+          option-label="name"
+          option-value="id"
+          class="w-full md:w-14rem"
+          placeholder="Select Segment"
+        />
+      </FormField>
       <FormSubmitButton />
     </FormCard>
   </form>
@@ -58,6 +68,16 @@ axios
   .get("/apps")
   .then((response) => {
     apps.value = response.data;
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+
+const segments = ref([]);
+axios
+  .get("/segments")
+  .then((response) => {
+    segments.value = response.data;
   })
   .catch((error) => {
     console.error(error);

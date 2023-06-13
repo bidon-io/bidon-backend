@@ -21,6 +21,7 @@
     <Column field="name" header="Name"></Column>
     <Column field="adType" header="AdType"></Column>
     <Column field="priceFloor" header="PriceFloor"></Column>
+    <Column field="segment" header="Segment"></Column>
     <Column style="width: 10%; min-width: 8rem" body-style="text-align:center">
       <template #body="slotProps">
         <div class="flex justify-between">
