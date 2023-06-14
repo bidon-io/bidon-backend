@@ -19,6 +19,7 @@
 
 <script setup>
 import axios from "@/services/ApiService.js";
+
 const route = useRoute();
 const id = route.params.id;
 const deleteHandle = useDeleteResource(
