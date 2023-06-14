@@ -24,6 +24,8 @@ COPY internal internal
 
 FROM base AS test
 
+# Run tests for each package sequantially, because each test package that accesses the db runs db.AutoMigrate.
+# Fix this by running migrations before tests as a separate test.
 CMD [ "go", "test", "-p", "1", "./..." ]
 
 FROM base AS builder
