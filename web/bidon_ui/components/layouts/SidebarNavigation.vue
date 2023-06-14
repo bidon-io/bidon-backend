@@ -13,7 +13,7 @@
 
 <script setup>
 const menuItems = [
-  { name: "AuctionConfigurations", link: "/auction_configurations" },
+  { name: "Auction Configurations", link: "/auction_configurations" },
   { name: "Segments", link: "/segments" },
 ];
 </script>

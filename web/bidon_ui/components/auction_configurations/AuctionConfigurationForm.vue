@@ -1,27 +1,11 @@
 <template>
-  <form @submit.prevent="handleSubmit">
+  <form @submit.prevent="emit('submit', resource)">
     <FormCard title="Auction Configuration">
       <FormField lable="Name">
         <InputText v-model="resource.name" type="text" placeholder="Name" />
       </FormField>
-      <FormField lable="App">
-        <Dropdown
-          v-model="resource.app_id"
-          :options="apps"
-          option-label="package_name"
-          option-value="id"
-          class="w-full md:w-14rem"
-          placeholder="Select App"
-        />
-      </FormField>
-      <FormField lable="AD Type">
-        <Dropdown
-          v-model="resource.ad_type"
-          :options="adTypes"
-          class="w-full md:w-14rem"
-          placeholder="Select Ad Type"
-        />
-      </FormField>
+      <AppDropdown v-model="resource.app_id" />
+      <AdTypeDropdown v-model="resource.ad_type" />
       <FormField lable="Price floor">
         <InputNumber
           v-model="resource.pricefloor"
@@ -32,7 +16,7 @@
         />
       </FormField>
       <FormField lable="Rounds">
-        <Textarea v-model="rounds" rows="10" cols="80" />
+        <TextareaJSON v-model="resource.rounds" rows="5" cols="50" />
       </FormField>
       <FormSubmitButton />
     </FormCard>
@@ -40,8 +24,6 @@
 </template>
 
 <script setup>
-import axios from "@/services/ApiService.js";
-
 const props = defineProps({
   value: {
     type: Object,
@@ -49,31 +31,5 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(["submit"]);
-
 const resource = ref(props.value);
-
-const apps = ref([]);
-axios
-  .get("/apps")
-  .then((response) => {
-    apps.value = response.data;
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-const adTypes = ref(["banner", "interstitial", "rewarded"]);
-
-const rounds = computed({
-  get: () => JSON.stringify(resource.value.rounds, null, 2),
-  set: (newValue) => {
-    try {
-      resource.value.rounds = JSON.parse(newValue);
-    } catch {}
-  },
-});
-
-function handleSubmit() {
-  emit("submit", resource.value);
-}
 </script>

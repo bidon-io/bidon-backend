@@ -8,7 +8,7 @@
         <Textarea v-model="resource.description" rows="5" cols="50" />
       </FormField>
       <FormField lable="Filters">
-        <InputJSON v-model="resource.filters" type="text" placeholder="Filters" style="min-width: 400px" />
+        <InputJSON v-model="resource.filters" placeholder="Filters" style="min-width: 400px" />
       </FormField>
       <FormField lable="Enabled">
         <Checkbox v-model="resource.enabled" :binary="true" />
@@ -26,6 +26,6 @@ const props = defineProps({
     required: true,
   },
 });
-const resource = ref(props.value);
 const emit = defineEmits(["submit"]);
+const resource = ref(props.value);
 </script>

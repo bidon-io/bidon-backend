@@ -18,8 +18,10 @@ const route = useRoute();
 const id = route.params.id;
 const resourcesPath = "/segments";
 const deleteHandle = useDeleteResource(resourcesPath, async () => await navigateTo(resourcesPath));
+
 const response = await axios.get(`${resourcesPath}/${id}`);
 const resource = response.data;
+
 const fields = [
   { label: "ID", key: "id" },
   { label: "Name", key: "name" },
