@@ -45,7 +45,7 @@ func (db *DB) AutoMigrate() error {
 	)
 }
 
-// Model different than default gorm.Model, because we already have schema from Rails
+// Model is different from default gorm.Model, because we already have schema from Rails
 type Model struct {
 	ID        int64     `gorm:"primaryKey;column:id;type:bigint"`
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp(6);not null"`

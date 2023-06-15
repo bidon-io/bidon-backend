@@ -41,12 +41,11 @@ func (m auctionConfigurationMapper) resource(c *db.AuctionConfiguration) admin.A
 	return admin.AuctionConfiguration{
 		ID: c.ID,
 		AuctionConfigurationAttrs: admin.AuctionConfigurationAttrs{
-			Name:       c.Name.String,
-			AppID:      c.AppID,
-			AdType:     c.AdType.Domain(),
-			Rounds:     c.Rounds,
-			Pricefloor: c.Pricefloor,
-			SegmentID:  c.SegmentID,
+			Name:      c.Name.String,
+			AppID:     c.AppID,
+			AdType:    c.AdType.Domain(),
+			Rounds:    c.Rounds,
+			SegmentID: c.SegmentID,
 		},
 	}
 }
