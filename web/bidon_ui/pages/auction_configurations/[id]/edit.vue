@@ -4,7 +4,7 @@
     <NavigationContainer>
       <GoBackButton :path="resourcesPath" />
     </NavigationContainer>
-    <SegmentForm v-if="isReady" :value="resource" @submit="handleSubmit" />
+    <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
   </PageContainer>
 </template>
 
