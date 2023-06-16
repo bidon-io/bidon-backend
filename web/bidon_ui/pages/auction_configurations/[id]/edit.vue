@@ -2,7 +2,7 @@
   <Toast />
   <PageContainer>
     <NavigationContainer>
-      <GoBackButton :path="resourcesPath" />
+      <GoBackButton" />
     </NavigationContainer>
     <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
   </PageContainer>
