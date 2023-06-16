@@ -12,12 +12,12 @@ import axios from "@/services/ApiService";
 
 const route = useRoute();
 const id = route.params.id;
-const resourcesPath = "/auction_configurations";
+const resourcePath = `/auction_configurations/${id}`;
 
 const { state: resource, isReady } = useAsyncState(async () => {
-  const response = await axios.get(`${resourcesPath}/${id}`);
+  const response = await axios.get(resourcePath);
   return response.data;
 });
 
-const handleSubmit = useFormSubmit(resourcesPath, "Auction Configuration Updated!");
+const handleSubmit = useFormSubmit(resourcePath, "patch", "Auction Configuration Updated!");
 </script>
