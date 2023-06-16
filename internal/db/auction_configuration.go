@@ -12,10 +12,10 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 	query := tx.Model(&AuctionConfiguration{}).
 		Where("app_id = ? AND ad_type = ?", ac.AppID, ac.AdType)
 
-	if ac.SegmentID == nil {
-		query = query.Where("segment_id IS NULL")
+	if ac.SegmentID != nil && ac.SegmentID.Valid {
+		query = query.Where("segment_id = ?", ac.SegmentID.Int64)
 	} else {
-		query = query.Where("segment_id = ?", ac.SegmentID)
+		query = query.Where("segment_id IS NULL")
 	}
 
 	query = query.Not(ac.ID).Count(&count)
