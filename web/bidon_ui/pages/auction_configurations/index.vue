@@ -10,7 +10,7 @@ const columns = [
   { field: "name", header: "Name" },
   { field: "ad_type", header: "Ad Type" },
   { field: "pricefloor", header: "Price Floor" },
-  { field: "segment", header: "Segment" },
+  { field: "segment_id", header: "Segment" },
 ];
 const resourcesPath = "/auction_configurations";
 </script>

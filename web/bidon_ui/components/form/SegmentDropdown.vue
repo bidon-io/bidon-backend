@@ -6,7 +6,7 @@
       option-label="name"
       option-value="id"
       class="w-full md:w-14rem"
-      placeholder="Select Segment"
+      placeholder="None"
     />
   </FormField>
 </template>
@@ -17,7 +17,6 @@ import axios from "@/services/ApiService";
 
 const props = defineProps({
   modelValue: {
-    type: Number,
     required: true,
   },
 });
@@ -37,6 +36,7 @@ axios
   .get("/segments")
   .then((response) => {
     segments.value = response.data;
+    segments.value.unshift({ name: 'None', id: null });
   })
   .catch((error) => {
     console.error(error);
