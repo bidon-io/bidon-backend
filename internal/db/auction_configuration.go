@@ -18,7 +18,7 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 		query = query.Where("segment_id IS NULL")
 	}
 
-	query = query.Not(ac.ID).Count(&count)
+	query = query.Not(ac.Model.ID).Count(&count)
 
 	if query.Error != nil {
 		return query.Error

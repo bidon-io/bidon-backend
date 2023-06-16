@@ -18,6 +18,7 @@ import axios from "@/services/ApiService";
 const props = defineProps({
   modelValue: {
     type: [Number, null],
+    default: null,
   },
 });
 const emit = defineEmits(["update:modelValue"]);
@@ -35,8 +36,7 @@ const segments = ref([]);
 axios
   .get("/segments")
   .then((response) => {
-    segments.value = response.data;
-    segments.value.unshift({ name: "None", id: null });
+    segments.value = [{ name: "None", id: null }, ...response.data];
   })
   .catch((error) => {
     console.error(error);
