@@ -3,7 +3,7 @@
   <ConfirmDialog />
   <PageContainer>
     <NavigationContainer>
-      <GoBackButton :path="resourcesPath" />
+      <GoBackButton />
       <DestroyButton :handler="() => deleteHandle(id)" />
       <EditButton :path="`${resourcesPath}/${id}/edit`" />
     </NavigationContainer>
