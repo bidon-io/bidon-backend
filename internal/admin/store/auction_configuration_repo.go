@@ -2,7 +2,6 @@ package store
 
 import (
 	"database/sql"
-
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
@@ -19,7 +18,7 @@ func NewAuctionConfigurationRepo(db *db.DB) *AuctionConfigurationRepo {
 type auctionConfigurationMapper struct{}
 
 //lint:ignore U1000 this method is used by generic struct
-func (m auctionConfigurationMapper) dbModel(c *admin.AuctionConfigurationAttrs) *db.AuctionConfiguration {
+func (m auctionConfigurationMapper) dbModel(c *admin.AuctionConfigurationAttrs, id int64) *db.AuctionConfiguration {
 	name := sql.NullString{}
 	if c.Name != "" {
 		name.String = c.Name
@@ -32,6 +31,7 @@ func (m auctionConfigurationMapper) dbModel(c *admin.AuctionConfigurationAttrs) 
 	}
 
 	return &db.AuctionConfiguration{
+		Model:      db.Model{ID: id},
 		Name:       name,
 		AppID:      c.AppID,
 		AdType:     db.AdTypeFromDomain(c.AdType),
