@@ -3,6 +3,5 @@ export default function ({ path, message }) {
     path,
     message,
     method: "patch",
-    showToastLater: false,
   });
 }

@@ -3,8 +3,3 @@
     <slot></slot>
   </div>
 </template>
-
-<script setup>
-const showToasts = useShowToasts();
-onMounted(showToasts);
-</script>

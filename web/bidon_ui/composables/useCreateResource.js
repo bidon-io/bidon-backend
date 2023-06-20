@@ -4,6 +4,5 @@ export default function ({ path, message }) {
     message,
     method: "post",
     hook: async (id) => await navigateTo(`${path}/${id}`),
-    showToastLater: true,
   });
 }

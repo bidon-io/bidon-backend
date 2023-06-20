@@ -18,7 +18,7 @@ const resourcesPath = "/auction_configurations";
 const deleteHandle = useDeleteResource({
   path: resourcesPath,
   hook: async () => await navigateTo(resourcesPath),
-  showToastLater: true,
+  showToastLater: false,
 });
 
 const response = await axios.get(`${resourcesPath}/${id}`);
