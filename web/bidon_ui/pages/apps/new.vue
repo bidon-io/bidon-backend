@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-const resource = {};
+const resource = { settings: {} };
 const resourcesPath = "/apps";
 const handleSubmit = useCreateResource({ path: resourcesPath, message: "App created!" });
 </script>

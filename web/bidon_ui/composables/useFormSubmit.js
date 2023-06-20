@@ -19,6 +19,7 @@ export default function ({
           severity: "success",
           summary: "Success",
           detail: message,
+          live: 3000,
         });
       })
       .catch((error) => {

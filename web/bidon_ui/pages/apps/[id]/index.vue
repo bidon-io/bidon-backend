@@ -18,7 +18,6 @@ const resourcesPath = "/apps";
 const deleteHandle = useDeleteResource({
   path: resourcesPath,
   hook: async () => await navigateTo(resourcesPath),
-  showToastLater: true,
 });
 
 const response = await axios.get(`${resourcesPath}/${id}`);
