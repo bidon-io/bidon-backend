@@ -5,23 +5,23 @@ import (
 	"log"
 	"os"
 
+	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/bidon-io/bidon-backend/internal/echoconf"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
-	"github.com/bidon-io/bidon-backend/internal/sentryconf"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	err := sentry.Init(sentryconf.ClientOptions)
+	sentryConf := config.Sentry()
+	err := sentry.Init(sentryConf.ClientOptions)
 	if err != nil {
-		log.Fatalf("sentry.Init(%+v): %v", sentryconf.ClientOptions, err)
+		log.Fatalf("sentry.Init(%+v): %v", sentryConf.ClientOptions, err)
 	}
-	defer sentry.Flush(sentryconf.FlushTimeout)
+	defer sentry.Flush(sentryConf.FlushTimeout)
 
 	dbURL := os.Getenv("DATABASE_URL")
 	db, err := db.Open(dbURL)
@@ -37,7 +37,7 @@ func main() {
 		AppFetcher: &sdkapistore.AppFetcher{DB: db},
 	}
 
-	e := echoconf.NewEcho()
+	e := config.Echo()
 
 	e.Use(sdkapi.CheckBidonHeader)
 

@@ -1,19 +1,17 @@
-// Package echoutil provides common Echo configuration for Bidon services
-package echoconf
+package config
 
 import (
 	"errors"
 	"net/http"
-	"os"
 
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewEcho() *echo.Echo {
+func Echo() *echo.Echo {
 	e := echo.New()
-	e.Debug = os.Getenv("ENVIRONMENT") != "production"
+	e.Debug = Env != ProdEnv
 	e.HTTPErrorHandler = HTTPErrorHandler
 
 	e.Use(middleware.Logger())
