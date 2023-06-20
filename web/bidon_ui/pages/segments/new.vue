@@ -1,5 +1,4 @@
 <template>
-  <Toast />
   <PageContainer>
     <NavigationContainer>
       <GoBackButton />

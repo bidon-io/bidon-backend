@@ -1,6 +1,4 @@
 <template>
-  <Toast />
-  <ConfirmDialog />
   <PageContainer>
     <NavigationContainer>
       <GoBackButton :path="resourcesPath" />

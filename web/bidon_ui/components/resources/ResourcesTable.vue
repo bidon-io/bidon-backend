@@ -1,6 +1,4 @@
 <template>
-  <Toast />
-  <ConfirmDialog />
   <DataTable
     v-model:selection="selectedResources"
     :value="resources"

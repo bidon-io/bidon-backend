@@ -1,7 +1,5 @@
 <template>
   <PageContainer>
-    <Toast />
-    <ConfirmDialog />
     <NavigationContainer>
       <GoBackButton />
       <DestroyButton :handler="() => deleteHandle(id)" />
@@ -13,8 +11,6 @@
 
 <script setup>
 import axios from "@/services/ApiService.js";
-const showToasts = useShowToasts();
-onMounted(showToasts);
 
 const route = useRoute();
 const id = route.params.id;

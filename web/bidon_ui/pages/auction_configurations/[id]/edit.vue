@@ -1,5 +1,4 @@
-<template>
-  <Toast />
+<template>  
   <PageContainer>
     <NavigationContainer> <GoBackButton /> </NavigationContainer>
     <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
