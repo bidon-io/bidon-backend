@@ -21,5 +21,5 @@ const { state: resource, isReady } = useAsyncState(async () => {
   return response.data;
 });
 
-const handleSubmit = useFormSubmit(resourcePath, "patch", "Segment Updated!");
+const handleSubmit = useUpdateResource({ path: resourcePath, message: "Segment Updated!" });
 </script>
