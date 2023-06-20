@@ -19,8 +19,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY cmd cmd
-COPY internal internal
+COPY . .
 
 FROM base AS test
 
