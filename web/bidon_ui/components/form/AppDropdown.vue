@@ -1,5 +1,5 @@
 <template>
-  <FormField lable="App">
+  <FormField label="App">
     <Dropdown
       v-model="value"
       :options="apps"
