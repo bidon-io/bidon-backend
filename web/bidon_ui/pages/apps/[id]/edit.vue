@@ -1,7 +1,9 @@
 <template>
   <PageContainer>
-    <NavigationContainer> <GoBackButton /> </NavigationContainer>
-    <AuctionConfigurationForm v-if="isReady" :value="resource" @submit="handleSubmit" />
+    <NavigationContainer>
+      <GoBackButton />
+    </NavigationContainer>
+    <AppForm v-if="isReady" :value="resource" @submit="handleSubmit" />
   </PageContainer>
 </template>
 
@@ -11,12 +13,12 @@ import axios from "@/services/ApiService";
 
 const route = useRoute();
 const id = route.params.id;
-const resourcePath = `/auction_configurations/${id}`;
+const resourcePath = `/apps/${id}`;
 
 const { state: resource, isReady } = useAsyncState(async () => {
   const response = await axios.get(resourcePath);
   return response.data;
 });
 
-const handleSubmit = useUpdateResource({ path: resourcePath, message: "Auction Configuration Updated!" });
+const handleSubmit = useUpdateResource({ path: resourcePath, message: "App Updated!" });
 </script>
