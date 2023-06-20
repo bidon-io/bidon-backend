@@ -17,8 +17,8 @@ import axios from "@/services/ApiService";
 
 const props = defineProps({
   modelValue: {
-    type: Number,
-    required: true,
+    type: [Number, null],
+    default: null,
   },
 });
 const emit = defineEmits(["update:modelValue"]);
