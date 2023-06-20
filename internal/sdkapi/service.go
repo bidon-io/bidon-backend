@@ -63,6 +63,10 @@ func (s *Service) HandleAuction(c echo.Context) error {
 		return err
 	}
 
+	if len(auc.Rounds) == 0 {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, "No ads found")
+	}
+
 	response := &AuctionResponse{
 		Auction:    *auc,
 		Token:      "{}",

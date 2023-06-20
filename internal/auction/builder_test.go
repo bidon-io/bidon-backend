@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
+	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/google/go-cmp/cmp"
 )
@@ -13,10 +14,32 @@ func TestBuilder_Build(t *testing.T) {
 	config := &auction.Config{
 		ID: 1,
 		Rounds: []auction.RoundConfig{
-			{ID: "ROUND_1", Demands: []string{"applovin", "bidmachine"}, Timeout: 15000},
-			{ID: "ROUND_2", Demands: []string{"unityads", "bidmachine"}, Timeout: 15000},
-			{ID: "ROUND_3", Demands: []string{"applovin"}, Timeout: 15000},
-			{ID: "ROUND_4", Demands: []string{"unityads", "applovin"}, Timeout: 15000},
+			{
+				ID:      "ROUND_1",
+				Demands: []adapter.AdapterName{adapter.ApplovinAdapter, adapter.BidmachineAdapter},
+				Timeout: 15000,
+			},
+			{
+				ID:      "ROUND_2",
+				Demands: []adapter.AdapterName{adapter.UnityAdsAdapter},
+				Bidding: []adapter.AdapterName{adapter.BidmachineAdapter},
+				Timeout: 15000,
+			},
+			{
+				ID:      "ROUND_3",
+				Demands: []adapter.AdapterName{adapter.ApplovinAdapter},
+				Timeout: 15000,
+			},
+			{
+				ID:      "ROUND_4",
+				Demands: []adapter.AdapterName{adapter.UnityAdsAdapter, adapter.ApplovinAdapter},
+				Timeout: 15000,
+			},
+			{
+				ID:      "ROUND_5",
+				Bidding: []adapter.AdapterName{adapter.BidmachineAdapter},
+				Timeout: 15000,
+			},
 		},
 	}
 	lineItems := []auction.LineItem{
@@ -39,35 +62,40 @@ func TestBuilder_Build(t *testing.T) {
 	}
 
 	testCases := []struct {
+		name   string
 		params *auction.BuildParams
 		want   *auction.Auction
 	}{
 		{
-			params: &auction.BuildParams{Adapters: []string{"unityads", "bidmachine"}},
+			name:   "One round empty",
+			params: &auction.BuildParams{Adapters: []adapter.AdapterName{adapter.UnityAdsAdapter, adapter.BidmachineAdapter}},
 			want: &auction.Auction{
 				ConfigID:  config.ID,
 				LineItems: lineItems,
 				Rounds: []auction.RoundConfig{
-					{ID: "ROUND_1", Demands: []string{"bidmachine"}, Timeout: 15000},
-					{ID: "ROUND_2", Demands: []string{"unityads", "bidmachine"}, Timeout: 15000},
-					{ID: "ROUND_4", Demands: []string{"unityads"}, Timeout: 15000},
+					{ID: "ROUND_1", Demands: []adapter.AdapterName{adapter.BidmachineAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
+					{ID: "ROUND_2", Demands: []adapter.AdapterName{adapter.UnityAdsAdapter}, Bidding: []adapter.AdapterName{adapter.BidmachineAdapter}, Timeout: 15000},
+					{ID: "ROUND_4", Demands: []adapter.AdapterName{adapter.UnityAdsAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
+					{ID: "ROUND_5", Demands: []adapter.AdapterName{}, Bidding: []adapter.AdapterName{adapter.BidmachineAdapter}, Timeout: 15000},
 				},
 			},
 		},
 		{
-			params: &auction.BuildParams{Adapters: []string{"applovin"}},
+			name:   "Single adapter available",
+			params: &auction.BuildParams{Adapters: []adapter.AdapterName{adapter.ApplovinAdapter}},
 			want: &auction.Auction{
 				ConfigID:  config.ID,
 				LineItems: lineItems,
 				Rounds: []auction.RoundConfig{
-					{ID: "ROUND_1", Demands: []string{"applovin"}, Timeout: 15000},
-					{ID: "ROUND_3", Demands: []string{"applovin"}, Timeout: 15000},
-					{ID: "ROUND_4", Demands: []string{"applovin"}, Timeout: 15000},
+					{ID: "ROUND_1", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
+					{ID: "ROUND_3", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
+					{ID: "ROUND_4", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
 				},
 			},
 		},
 		{
-			params: &auction.BuildParams{Adapters: []string{}},
+			name:   "Empty Response",
+			params: &auction.BuildParams{Adapters: []adapter.AdapterName{}},
 			want: &auction.Auction{
 				ConfigID:  config.ID,
 				LineItems: lineItems,
@@ -80,7 +108,7 @@ func TestBuilder_Build(t *testing.T) {
 		got, _ := builder.Build(context.Background(), tC.params)
 
 		if diff := cmp.Diff(tC.want, got); diff != "" {
-			t.Errorf("builder.Build(ctx, %+v) mismatch (-want, +got)\n%s", tC.params, diff)
+			t.Errorf("builder.Build -> %+v mismatch \n(-want, +got)\n%s", tC.name, diff)
 		}
 	}
 }

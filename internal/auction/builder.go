@@ -5,8 +5,9 @@ import (
 	"errors"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
+	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/device"
-	"golang.org/x/exp/slices"
+	intersect "github.com/juliangruber/go-intersect/v2"
 )
 
 type Builder struct {
@@ -31,7 +32,7 @@ type BuildParams struct {
 	AdType     ad.Type
 	AdFormat   ad.Format
 	DeviceType device.Type
-	Adapters   []string
+	Adapters   []adapter.AdapterName
 }
 
 func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, error) {
@@ -54,21 +55,19 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 	return &auction, nil
 }
 
-func filterRounds(rounds []RoundConfig, adapters []string) []RoundConfig {
+func filterRounds(rounds []RoundConfig, adapters []adapter.AdapterName) []RoundConfig {
 	filteredRounds := []RoundConfig{}
 
 	for _, round := range rounds {
-		filteredDemands := []string{}
-		for _, demand := range round.Demands {
-			if slices.Contains(adapters, demand) {
-				filteredDemands = append(filteredDemands, demand)
-			}
-		}
-		if len(filteredDemands) == 0 {
+		demands := intersect.HashGeneric(round.Demands, adapters)
+		bidding := intersect.HashGeneric(round.Bidding, adapters)
+
+		if len(demands) == 0 && len(bidding) == 0 {
 			continue
 		}
 
-		round.Demands = filteredDemands
+		round.Demands = demands
+		round.Bidding = bidding
 		filteredRounds = append(filteredRounds, round)
 	}
 
