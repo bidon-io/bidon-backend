@@ -52,12 +52,16 @@ const props = defineProps<{
   columns: Column[];
 }>();
 
+const showToasts = useShowToasts();
+onMounted(showToasts);
+
 const response = await axios.get(props.resourcesPath);
 const resources = ref(response.data);
 const selectedResources = ref([]);
 
-const deleteHandle = useDeleteResource(
-  props.resourcesPath,
-  (id: number) => (resources.value = resources.value.filter((item: { id: number }) => item.id !== id))
-);
+const deleteHandle = useDeleteResource({
+  path: props.resourcesPath,
+  hook: (id: number) => (resources.value = resources.value.filter((item: { id: number }) => item.id !== id)),
+  showToastLater: false,
+});
 </script>

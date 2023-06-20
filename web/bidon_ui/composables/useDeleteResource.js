@@ -1,10 +1,20 @@
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import axios from "@/services/ApiService.js";
+import { useToastStore } from "@/store/toast";
 
-export default function (path, onDelete) {
+export default function ({ path, hook, showToastLater = false }) {
   const confirm = useConfirm();
-  const toast = useToast();
+
+  let showToast;
+  const toastMessage = { severity: "info", summary: "Success", detail: "Record deleted", life: 3000 };
+  if (showToastLater) {
+    const { addToast } = useToastStore();
+    showToast = () => addToast(toastMessage);
+  } else {
+    const toastService = useToast();
+    showToast = () => toastService.add(toastMessage);
+  }
 
   async function deleteResource(id, callback) {
     await axios.delete(`${path}/${id}`);
@@ -19,8 +29,8 @@ export default function (path, onDelete) {
       acceptClass: "p-button-danger",
       accept: () => {
         deleteResource(id, () => {
-          onDelete(id);
-          toast.add({ severity: "info", summary: "Success", detail: "Record deleted", life: 3000 });
+          hook(id);
+          showToast();
         });
       },
     });

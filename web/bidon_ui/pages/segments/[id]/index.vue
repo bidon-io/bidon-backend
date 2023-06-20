@@ -17,7 +17,11 @@ import axios from "@/services/ApiService.js";
 const route = useRoute();
 const id = route.params.id;
 const resourcesPath = "/segments";
-const deleteHandle = useDeleteResource(resourcesPath, async () => await navigateTo(resourcesPath));
+const deleteHandle = useDeleteResource({
+  path: resourcesPath,
+  hook: async () => await navigateTo(resourcesPath),
+  showToastLater: true,
+});
 
 const response = await axios.get(`${resourcesPath}/${id}`);
 const resource = response.data;
