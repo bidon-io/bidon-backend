@@ -30,3 +30,17 @@ func (f *AppFetcher) Fetch(ctx context.Context, appKey, appBundle string) (*sdka
 
 	return &sdkapi.App{ID: dbApp.ID}, nil
 }
+
+type SegmentFetcher struct {
+	DB *db.DB
+}
+
+func (f *SegmentFetcher) Fetch(ctx context.Context, appID int64) ([]db.Segment, error) {
+	var dbSegments []db.Segment
+
+	if err := f.DB.WithContext(ctx).Find(&dbSegments, map[string]any{"app_id": appID}).Error; err != nil {
+		return nil, err
+	}
+
+	return dbSegments, nil
+}

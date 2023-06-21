@@ -3,6 +3,8 @@ package sdkapi
 import (
 	"context"
 	"errors"
+	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -14,6 +16,7 @@ import (
 type Service struct {
 	AuctionBuilder *auction.Builder
 	AppFetcher     AppFetcher
+	SegmentFetcher SegmentFetcher
 }
 
 // App represents an app for the purposes of the SDK API
@@ -26,6 +29,10 @@ var ErrNoAdsFound = echo.NewHTTPError(http.StatusUnprocessableEntity, "No ads fo
 
 type AppFetcher interface {
 	Fetch(ctx context.Context, appKey, appBundle string) (*App, error)
+}
+
+type SegmentFetcher interface {
+	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
 }
 
 type AuctionResponse struct {
@@ -48,14 +55,28 @@ func (s *Service) HandleAuction(c echo.Context) error {
 		return err
 	}
 
-	params := &auction.BuildParams{
+	segmentParams := &segment.Params{
+		Country: request.Geo.Country,
+		Ext:     request.Segment.Ext,
+	}
+	sgmnts, _ := s.SegmentFetcher.Fetch(ctx, app.ID)
+	sgmnt := segment.Match(sgmnts, segmentParams)
+	var segmentID *int64
+	if sgmnt == nil {
+		segmentID = nil
+	} else {
+		segmentID = &sgmnt.ID
+	}
+
+	auctionParams := &auction.BuildParams{
 		AppID:      app.ID,
 		AdType:     request.AdType,
 		AdFormat:   request.AdObject.AdFormat(),
 		DeviceType: request.Device.Type,
 		Adapters:   maps.Keys(request.Adapters),
+		SegmentID:  segmentID,
 	}
-	auc, err := s.AuctionBuilder.Build(ctx, params)
+	auc, err := s.AuctionBuilder.Build(ctx, auctionParams)
 	if err != nil {
 		if errors.Is(err, auction.ErrNoAdsFound) {
 			err = ErrNoAdsFound

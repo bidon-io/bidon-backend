@@ -14,14 +14,15 @@ type ConfigMatcher struct {
 	DB *db.DB
 }
 
-func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type) (*auction.Config, error) {
+func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, segmentID *int64) (*auction.Config, error) {
 	dbConfig := &db.AuctionConfiguration{}
 	err := m.DB.
 		WithContext(ctx).
 		Select("id", "rounds").
 		Where(map[string]any{
-			"app_id":  appID,
-			"ad_type": db.AdTypeFromDomain(adType),
+			"app_id":    appID,
+			"ad_type":   db.AdTypeFromDomain(adType),
+			"segmentID": segmentID,
 		}).
 		Order("created_at DESC").
 		Take(dbConfig).

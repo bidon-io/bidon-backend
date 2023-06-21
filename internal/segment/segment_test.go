@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 
@@ -9,18 +10,16 @@ import (
 
 func TestMatch(t *testing.T) {
 	// Define test segments and params
-	segments := []admin.Segment{
+	segments := []db.Segment{
 		{
-			SegmentAttrs: admin.SegmentAttrs{
-				Filters: []admin.SegmentFilter{
-					{Type: "country", Operator: "IN", Values: []string{"US", "CA"}},
-				}},
+			Filters: []admin.SegmentFilter{
+				{Type: "country", Operator: "IN", Values: []string{"US", "CA"}},
+			},
 		},
 		{
-			SegmentAttrs: admin.SegmentAttrs{
-				Filters: []admin.SegmentFilter{
-					{Type: "country", Operator: "NOT IN", Values: []string{"UK", "DE"}},
-				}},
+			Filters: []admin.SegmentFilter{
+				{Type: "country", Operator: "NOT IN", Values: []string{"UK", "DE"}},
+			},
 		},
 	}
 
@@ -30,7 +29,7 @@ func TestMatch(t *testing.T) {
 
 	// Test case 1: Matching segment exists
 	expected := &segments[0]
-	result := Match(segments, params)
+	result := Match(segments, &params)
 	if diff := cmp.Diff(result, expected); diff != "" {
 		t.Errorf("Match returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
@@ -94,9 +93,9 @@ func TestMatchCustomString(t *testing.T) {
 		Values:   []string{"Winnie Pooh"},
 	}
 
-	customProps := `{"best_friend":"Winnie Pooh"}`
+	ext := "{\"custom_attributes\":{\"best_friend\":\"Winnie Pooh\"}}"
 	expected := true
-	result := matchCustomString(filter, customProps)
+	result := matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
@@ -108,9 +107,9 @@ func TestMatchCustomString(t *testing.T) {
 		Values:   []string{"Winnie Pooh"},
 	}
 
-	customProps = `{"best_friend":"Tigger"}`
+	ext = "{\"custom_attributes\":{\"best_friend\":\"Tigger\"}}"
 	expected = false
-	result = matchCustomString(filter, customProps)
+	result = matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
@@ -122,9 +121,9 @@ func TestMatchCustomString(t *testing.T) {
 		Values:   []string{"Winnie Pooh"},
 	}
 
-	customProps = `{"best_friend":"Tigger"}`
+	ext = "{\"custom_attributes\":{\"best_friend\":\"Tigger\"}}"
 	expected = true
-	result = matchCustomString(filter, customProps)
+	result = matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
@@ -136,9 +135,9 @@ func TestMatchCustomString(t *testing.T) {
 		Values:   []string{"Winnie Pooh"},
 	}
 
-	customProps = `{"best_friend":"Winnie Pooh"}`
+	ext = "{\"custom_attributes\":{\"best_friend\":\"Winnie Pooh\"}}"
 	expected = false
-	result = matchCustomString(filter, customProps)
+	result = matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}
@@ -149,9 +148,9 @@ func TestMatchCustomString(t *testing.T) {
 		Name:     "key1",
 		Values:   []string{"value1"},
 	}
-	customProps = `invalid JSON`
+	ext = `invalid JSON`
 	expected = false
-	result = matchCustomString(filter, customProps)
+	result = matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
 	}

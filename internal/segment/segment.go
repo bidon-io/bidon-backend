@@ -3,27 +3,37 @@ package segment
 import (
 	"encoding/json"
 	"github.com/bidon-io/bidon-backend/internal/admin"
+	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
-type Params struct {
-	Country     string `json:"country"`
-	CustomProps string `json:"custom_props"`
+type SegmentExt struct {
+	Gender            string                 `json:"gender"`
+	TotalInAppsAmount int                    `json:"total_in_apps_amount"`
+	IsPaying          bool                   `json:"is_paying"`
+	GameLevel         int                    `json:"game_level"`
+	Age               int                    `json:"age"`
+	CustomAttributes  map[string]interface{} `json:"custom_attributes"`
 }
 
-func Match(segments []admin.Segment, params Params) *admin.Segment {
-	for _, segment := range segments {
+type Params struct {
+	Country string `json:"country"`
+	Ext     string `json:"ext"`
+}
+
+func Match(sgmnts []db.Segment, params *Params) *db.Segment {
+	for _, sgmnt := range sgmnts {
 		isMatched := false
 
-		for _, filter := range segment.Filters {
+		for _, filter := range sgmnt.Filters {
 			switch filter.Type {
 			case "country":
 				isMatched = matchCountry(filter, params.Country)
 			case "custom_string":
-				isMatched = matchCustomString(filter, params.CustomProps)
+				isMatched = matchCustomString(filter, params.Ext)
 			}
 
 			if isMatched {
-				return &segment
+				return &sgmnt
 			}
 		}
 	}
@@ -42,18 +52,18 @@ func matchCountry(filter admin.SegmentFilter, country string) bool {
 	}
 }
 
-func matchCustomString(filter admin.SegmentFilter, customProps string) bool {
-	var parsedProps map[string]string
+func matchCustomString(filter admin.SegmentFilter, Ext string) bool {
+	var parsedExt SegmentExt
 
-	if err := json.Unmarshal([]byte(customProps), &parsedProps); err != nil {
+	if err := json.Unmarshal([]byte(Ext), &parsedExt); err != nil {
 		return false
 	}
 
 	switch filter.Operator {
 	case "==":
-		return filter.Values[0] == parsedProps[filter.Name]
+		return filter.Values[0] == parsedExt.CustomAttributes[filter.Name]
 	case "!=":
-		return filter.Values[0] != parsedProps[filter.Name]
+		return filter.Values[0] != parsedExt.CustomAttributes[filter.Name]
 	default:
 		return false
 	}
