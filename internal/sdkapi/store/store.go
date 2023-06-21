@@ -38,7 +38,7 @@ type SegmentFetcher struct {
 func (f *SegmentFetcher) Fetch(ctx context.Context, appID int64) ([]db.Segment, error) {
 	var dbSegments []db.Segment
 
-	if err := f.DB.WithContext(ctx).Find(&dbSegments, map[string]any{"app_id": appID}).Error; err != nil {
+	if err := f.DB.WithContext(ctx).Find(&dbSegments, map[string]any{"app_id": appID}).Order("priority ASC").Error; err != nil {
 		return nil, err
 	}
 

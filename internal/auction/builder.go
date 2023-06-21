@@ -50,6 +50,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 		ConfigID:  config.ID,
 		Rounds:    filterRounds(config.Rounds, params.Adapters),
 		LineItems: lineItems,
+		Segment:   Segment{ID: params.SegmentID},
 	}
 
 	if len(auction.Rounds) == 0 {

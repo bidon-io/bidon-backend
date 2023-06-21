@@ -8,6 +8,7 @@ type Auction struct {
 	ConfigID  int64         `json:"auction_configuration_id"`
 	Rounds    []RoundConfig `json:"rounds"`
 	LineItems []LineItem    `json:"line_items"`
+	Segment   Segment       `json:"segment"`
 }
 type Config struct {
 	ID     int64
@@ -25,4 +26,8 @@ type LineItem struct {
 	ID         string  `json:"id"`
 	PriceFloor float64 `json:"pricefloor"`
 	AdUnitID   string  `json:"ad_unit_id"`
+}
+
+type Segment struct {
+	ID *int64 `json:"id"`
 }
