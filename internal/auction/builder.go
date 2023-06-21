@@ -7,7 +7,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/device"
-	intersect "github.com/juliangruber/go-intersect/v2"
 )
 
 type Builder struct {
@@ -32,7 +31,7 @@ type BuildParams struct {
 	AdType     ad.Type
 	AdFormat   ad.Format
 	DeviceType device.Type
-	Adapters   []adapter.AdapterName
+	Adapters   []adapter.Key
 }
 
 func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, error) {
@@ -52,18 +51,22 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 		LineItems: lineItems,
 	}
 
+	if len(auction.Rounds) == 0 {
+		return nil, ErrNoAdsFound
+	}
+
 	return &auction, nil
 }
 
-func filterRounds(rounds []RoundConfig, adapters []adapter.AdapterName) []RoundConfig {
+func filterRounds(rounds []RoundConfig, sdk_adapters []adapter.Key) []RoundConfig {
 	filteredRounds := []RoundConfig{}
 
 	for _, round := range rounds {
-		demands := intersect.HashGeneric(round.Demands, adapters)
-		bidding := intersect.HashGeneric(round.Bidding, adapters)
+		demands := adapter.GetCommonAdapters(round.Demands, sdk_adapters)
+		bidding := adapter.GetCommonAdapters(round.Bidding, sdk_adapters)
 
 		if len(demands) == 0 && len(bidding) == 0 {
-			continue
+			continue // If both demands and bidding arrays empty => remove this round from Auction
 		}
 
 		round.Demands = demands

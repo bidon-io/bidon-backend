@@ -23,21 +23,21 @@ func TestAuctionConfigurationRepo_List(t *testing.T) {
 			Name:       "Config 1",
 			AppID:      1,
 			AdType:     ad.BannerType,
-			Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.AdapterName{"demand1", "demand2"}, Timeout: 10}},
+			Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.Key{"demand1", "demand2"}, Timeout: 10}},
 			Pricefloor: 0.5,
 		},
 		{
 			Name:       "Config 2",
 			AppID:      2,
 			AdType:     ad.InterstitialType,
-			Rounds:     []auction.RoundConfig{{ID: "2", Demands: []adapter.AdapterName{"demand3", "demand4"}, Timeout: 20}},
+			Rounds:     []auction.RoundConfig{{ID: "2", Demands: []adapter.Key{"demand3", "demand4"}, Timeout: 20}},
 			Pricefloor: 0.75,
 		},
 		{
 			Name:       "Config 3",
 			AppID:      3,
 			AdType:     ad.RewardedType,
-			Rounds:     []auction.RoundConfig{{ID: "3", Demands: []adapter.AdapterName{"demand5", "demand6"}, Timeout: 30}},
+			Rounds:     []auction.RoundConfig{{ID: "3", Demands: []adapter.Key{"demand5", "demand6"}, Timeout: 30}},
 			Pricefloor: 1.0,
 		},
 	}
@@ -72,7 +72,7 @@ func TestAuctionConfigurationRepo_Find(t *testing.T) {
 		Name:       "Config 1",
 		AppID:      1,
 		AdType:     ad.BannerType,
-		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.AdapterName{"demand1", "demand2"}, Timeout: 10}},
+		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.Key{"demand1", "demand2"}, Timeout: 10}},
 		Pricefloor: 0.5,
 	}
 
@@ -101,7 +101,7 @@ func TestAuctionConfigurationRepo_Update(t *testing.T) {
 		Name:       "Config 1",
 		AppID:      1,
 		AdType:     ad.BannerType,
-		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.AdapterName{"demand1", "demand2"}, Timeout: 10}},
+		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.Key{"demand1", "demand2"}, Timeout: 10}},
 		Pricefloor: 0.5,
 	}
 
@@ -136,7 +136,7 @@ func TestAuctionConfigurationRepo_Delete(t *testing.T) {
 		Name:       "Config 1",
 		AppID:      1,
 		AdType:     ad.BannerType,
-		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.AdapterName{"demand1", "demand2"}, Timeout: 10}},
+		Rounds:     []auction.RoundConfig{{ID: "1", Demands: []adapter.Key{"demand1", "demand2"}, Timeout: 10}},
 		Pricefloor: 0.5,
 	}
 	config, err := repo.Create(context.Background(), attrs)

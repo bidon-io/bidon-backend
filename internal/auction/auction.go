@@ -15,10 +15,10 @@ type Config struct {
 }
 
 type RoundConfig struct {
-	ID      string                `json:"id"`
-	Demands []adapter.AdapterName `json:"demands"`
-	Bidding []adapter.AdapterName `json:"bidding"`
-	Timeout int                   `json:"timeout"`
+	ID      string        `json:"id"`
+	Demands []adapter.Key `json:"demands"`
+	Bidding []adapter.Key `json:"bidding"`
+	Timeout int           `json:"timeout"`
 }
 
 type LineItem struct {

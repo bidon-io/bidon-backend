@@ -126,7 +126,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.BannerType,
 				AdFormat:   ad.EmptyFormat,
 				DeviceType: device.PhoneType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey},
 			},
 			want: []auction.LineItem{},
 		},
@@ -136,7 +136,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.BannerType,
 				AdFormat:   ad.AdaptiveFormat,
 				DeviceType: device.PhoneType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey},
 			},
 			want: []auction.LineItem{
 				{ID: "applovin", PriceFloor: 0.1, AdUnitID: "applovin-banner-banner"},
@@ -149,7 +149,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.BannerType,
 				AdFormat:   ad.AdaptiveFormat,
 				DeviceType: device.TabletType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey},
 			},
 			want: []auction.LineItem{
 				{ID: "applovin", PriceFloor: 0.2, AdUnitID: "applovin-banner-adaptive"},
@@ -162,7 +162,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.BannerType,
 				AdFormat:   ad.AdaptiveFormat,
 				DeviceType: device.UnknownType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey},
 			},
 			want: []auction.LineItem{
 				{ID: "applovin", PriceFloor: 0.2, AdUnitID: "applovin-banner-adaptive"},
@@ -174,7 +174,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.InterstitialType,
 				AdFormat:   ad.EmptyFormat,
 				DeviceType: device.PhoneType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter, adapter.BidmachineAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
 			},
 			want: []auction.LineItem{
 				{ID: "applovin", PriceFloor: 0.3, AdUnitID: "applovin-interstitial"},
@@ -187,7 +187,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				AdType:     ad.BannerType,
 				AdFormat:   ad.MRECFormat,
 				DeviceType: device.PhoneType,
-				Adapters:   []adapter.AdapterName{adapter.ApplovinAdapter},
+				Adapters:   []adapter.Key{adapter.ApplovinKey},
 			},
 			want: []auction.LineItem{
 				{ID: "applovin", PriceFloor: 0.4, AdUnitID: "app2-applovin-banner-mrec"},

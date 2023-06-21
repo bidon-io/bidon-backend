@@ -7,18 +7,18 @@ import (
 )
 
 type Request struct {
-	AdType      ad.Type                         `param:"ad_type"`
-	AdObject    AdObject                        `json:"ad_object"`
-	Device      Device                          `json:"device"`
-	Session     Session                         `json:"session"`
-	App         App                             `json:"app"`
-	User        User                            `json:"user"`
-	Geo         *Geo                            `json:"geo"`
-	Regulations *Regulations                    `json:"regs"`
-	Adapters    map[adapter.AdapterName]Adapter `json:"adapters"`
-	Segment     Segment                         `json:"segment"`
-	Token       string                          `json:"token"`
-	Ext         string                          `json:"ext"`
+	AdType      ad.Type                 `param:"ad_type"`
+	AdObject    AdObject                `json:"ad_object"`
+	Device      Device                  `json:"device"`
+	Session     Session                 `json:"session"`
+	App         App                     `json:"app"`
+	User        User                    `json:"user"`
+	Geo         *Geo                    `json:"geo"`
+	Regulations *Regulations            `json:"regs"`
+	Adapters    map[adapter.Key]Adapter `json:"adapters"`
+	Segment     Segment                 `json:"segment"`
+	Token       string                  `json:"token"`
+	Ext         string                  `json:"ext"`
 }
 
 type Geo struct {

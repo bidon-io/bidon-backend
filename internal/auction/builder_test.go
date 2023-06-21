@@ -16,28 +16,28 @@ func TestBuilder_Build(t *testing.T) {
 		Rounds: []auction.RoundConfig{
 			{
 				ID:      "ROUND_1",
-				Demands: []adapter.AdapterName{adapter.ApplovinAdapter, adapter.BidmachineAdapter},
+				Demands: []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
 				Timeout: 15000,
 			},
 			{
 				ID:      "ROUND_2",
-				Demands: []adapter.AdapterName{adapter.UnityAdsAdapter},
-				Bidding: []adapter.AdapterName{adapter.BidmachineAdapter},
+				Demands: []adapter.Key{adapter.UnityAdsKey},
+				Bidding: []adapter.Key{adapter.BidmachineKey},
 				Timeout: 15000,
 			},
 			{
 				ID:      "ROUND_3",
-				Demands: []adapter.AdapterName{adapter.ApplovinAdapter},
+				Demands: []adapter.Key{adapter.ApplovinKey},
 				Timeout: 15000,
 			},
 			{
 				ID:      "ROUND_4",
-				Demands: []adapter.AdapterName{adapter.UnityAdsAdapter, adapter.ApplovinAdapter},
+				Demands: []adapter.Key{adapter.UnityAdsKey, adapter.ApplovinKey},
 				Timeout: 15000,
 			},
 			{
 				ID:      "ROUND_5",
-				Bidding: []adapter.AdapterName{adapter.BidmachineAdapter},
+				Bidding: []adapter.Key{adapter.BidmachineKey},
 				Timeout: 15000,
 			},
 		},
@@ -68,39 +68,35 @@ func TestBuilder_Build(t *testing.T) {
 	}{
 		{
 			name:   "One round empty",
-			params: &auction.BuildParams{Adapters: []adapter.AdapterName{adapter.UnityAdsAdapter, adapter.BidmachineAdapter}},
+			params: &auction.BuildParams{Adapters: []adapter.Key{adapter.UnityAdsKey, adapter.BidmachineKey}},
 			want: &auction.Auction{
 				ConfigID:  config.ID,
 				LineItems: lineItems,
 				Rounds: []auction.RoundConfig{
-					{ID: "ROUND_1", Demands: []adapter.AdapterName{adapter.BidmachineAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
-					{ID: "ROUND_2", Demands: []adapter.AdapterName{adapter.UnityAdsAdapter}, Bidding: []adapter.AdapterName{adapter.BidmachineAdapter}, Timeout: 15000},
-					{ID: "ROUND_4", Demands: []adapter.AdapterName{adapter.UnityAdsAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
-					{ID: "ROUND_5", Demands: []adapter.AdapterName{}, Bidding: []adapter.AdapterName{adapter.BidmachineAdapter}, Timeout: 15000},
+					{ID: "ROUND_1", Demands: []adapter.Key{adapter.BidmachineKey}, Bidding: []adapter.Key{}, Timeout: 15000},
+					{ID: "ROUND_2", Demands: []adapter.Key{adapter.UnityAdsKey}, Bidding: []adapter.Key{adapter.BidmachineKey}, Timeout: 15000},
+					{ID: "ROUND_4", Demands: []adapter.Key{adapter.UnityAdsKey}, Bidding: []adapter.Key{}, Timeout: 15000},
+					{ID: "ROUND_5", Demands: []adapter.Key{}, Bidding: []adapter.Key{adapter.BidmachineKey}, Timeout: 15000},
 				},
 			},
 		},
 		{
 			name:   "Single adapter available",
-			params: &auction.BuildParams{Adapters: []adapter.AdapterName{adapter.ApplovinAdapter}},
+			params: &auction.BuildParams{Adapters: []adapter.Key{adapter.ApplovinKey}},
 			want: &auction.Auction{
 				ConfigID:  config.ID,
 				LineItems: lineItems,
 				Rounds: []auction.RoundConfig{
-					{ID: "ROUND_1", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
-					{ID: "ROUND_3", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
-					{ID: "ROUND_4", Demands: []adapter.AdapterName{adapter.ApplovinAdapter}, Bidding: []adapter.AdapterName{}, Timeout: 15000},
+					{ID: "ROUND_1", Demands: []adapter.Key{adapter.ApplovinKey}, Bidding: []adapter.Key{}, Timeout: 15000},
+					{ID: "ROUND_3", Demands: []adapter.Key{adapter.ApplovinKey}, Bidding: []adapter.Key{}, Timeout: 15000},
+					{ID: "ROUND_4", Demands: []adapter.Key{adapter.ApplovinKey}, Bidding: []adapter.Key{}, Timeout: 15000},
 				},
 			},
 		},
 		{
 			name:   "Empty Response",
-			params: &auction.BuildParams{Adapters: []adapter.AdapterName{}},
-			want: &auction.Auction{
-				ConfigID:  config.ID,
-				LineItems: lineItems,
-				Rounds:    []auction.RoundConfig{},
-			},
+			params: &auction.BuildParams{Adapters: []adapter.Key{}},
+			want:   nil,
 		},
 	}
 

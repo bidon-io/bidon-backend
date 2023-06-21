@@ -22,6 +22,7 @@ type App struct {
 }
 
 var ErrAppNotValid = echo.NewHTTPError(http.StatusUnprocessableEntity, "App is not valid")
+var ErrNoAdsFound = echo.NewHTTPError(http.StatusUnprocessableEntity, "No ads found")
 
 type AppFetcher interface {
 	Fetch(ctx context.Context, appKey, appBundle string) (*App, error)
@@ -57,14 +58,10 @@ func (s *Service) HandleAuction(c echo.Context) error {
 	auc, err := s.AuctionBuilder.Build(ctx, params)
 	if err != nil {
 		if errors.Is(err, auction.ErrNoAdsFound) {
-			err = echo.NewHTTPError(http.StatusUnprocessableEntity, "No ads found")
+			err = ErrNoAdsFound
 		}
 
 		return err
-	}
-
-	if len(auc.Rounds) == 0 {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, "No ads found")
 	}
 
 	response := &AuctionResponse{
