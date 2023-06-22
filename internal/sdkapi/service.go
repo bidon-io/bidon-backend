@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bidon-io/bidon-backend/internal/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
@@ -54,9 +55,10 @@ func (s *Service) HandleAuction(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	geoData, _ := geocoder.OfflineGeocoderInstance().FindGeoData(ctx, c.RealIP())
 
 	segmentParams := &segment.Params{
-		Country: request.Geo.Country,
+		Country: geoData.CountryCode,
 		Ext:     request.Segment.Ext,
 	}
 	sgmnts, _ := s.SegmentFetcher.Fetch(ctx, app.ID)
