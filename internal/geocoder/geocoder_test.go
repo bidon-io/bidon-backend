@@ -2,11 +2,15 @@ package geocoder
 
 import (
 	"context"
+	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 	"github.com/oschwald/maxminddb-golang"
 	"net"
+	"os"
 	"testing"
 )
+
+var testDB *db.DB
 
 // MockDB is a mock implementation of the DB interface.
 type MockDB struct{}
@@ -24,15 +28,21 @@ func (m *MockDB) First(dest interface{}) error {
 	return nil
 }
 
+func TestMain(m *testing.M) {
+	testDB = dbtest.Prepare()
+
+	os.Exit(m.Run())
+}
+
 func TestFindGeoData(t *testing.T) {
 	// Create a test database connection
-	testDB := dbtest.Prepare()
-	defer testDB.Rollback()
+	tx := testDB.Begin()
+	defer tx.Rollback()
 
 	// Create an instance of OfflineGeocoder using the test database connection
 	geocoder := &OfflineGeocoder{
 		MaxMindDB: &maxminddb.Reader{},
-		DB:        testDB,
+		DB:        tx,
 	}
 
 	// Define the test case input
@@ -101,12 +111,12 @@ func TestCountryCodeFor(t *testing.T) {
 
 func TestFindCachedCountry(t *testing.T) {
 	// Create a test database connection
-	testDB := dbtest.Prepare()
-	defer testDB.Rollback()
+	tx := testDB.Begin()
+	defer tx.Rollback()
 
 	// Create an instance of OfflineGeocoder using the test database connection
 	geocoder := &OfflineGeocoder{
-		DB: testDB,
+		DB: tx,
 	}
 
 	// Define the test case input
