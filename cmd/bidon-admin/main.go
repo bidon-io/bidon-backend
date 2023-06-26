@@ -23,6 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("config.NewLogger(): %v", err)
 	}
+	defer logger.Sync()
 
 	sentryConf := config.Sentry()
 	err = sentry.Init(sentryConf.ClientOptions)
