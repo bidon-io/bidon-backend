@@ -20,9 +20,9 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 		WithContext(ctx).
 		Select("id", "external_win_notifications", "rounds").
 		Where(map[string]any{
-			"app_id":    appID,
-			"ad_type":   db.AdTypeFromDomain(adType),
-			"segmentID": segmentID,
+			"app_id":     appID,
+			"ad_type":    db.AdTypeFromDomain(adType),
+			"segment_id": segmentID,
 		}).
 		Order("created_at DESC").
 		Take(dbConfig).

@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"context"
+	"github.com/bidon-io/bidon-backend/internal/db"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -14,6 +15,10 @@ type BaseHandler struct {
 
 type AppFetcher interface {
 	Fetch(ctx context.Context, appKey, appBundle string) (*App, error)
+}
+
+type SegmentFetcher interface {
+	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
 }
 
 func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {

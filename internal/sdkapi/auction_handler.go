@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"errors"
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -10,6 +11,7 @@ import (
 
 type AuctionHandler struct {
 	*BaseHandler
+	SegmentFetcher SegmentFetcher
 	AuctionBuilder *auction.Builder
 }
 
@@ -26,12 +28,27 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		return err
 	}
 
+	segmentParams := &segment.Params{
+		Country: req.raw.Geo.Country,
+		Ext:     req.raw.Segment.Ext,
+	}
+
+	sgmnts, _ := h.SegmentFetcher.Fetch(c.Request().Context(), req.app.ID)
+	sgmnt := segment.Match(sgmnts, segmentParams)
+	var segmentID *int64
+	if sgmnt == nil {
+		segmentID = nil
+	} else {
+		segmentID = &sgmnt.ID
+	}
+
 	params := &auction.BuildParams{
 		AppID:      req.app.ID,
 		AdType:     req.raw.AdType,
 		AdFormat:   req.adFormat(),
 		DeviceType: req.raw.Device.Type,
 		Adapters:   req.adapterKeys(),
+		SegmentID:  segmentID,
 	}
 	auc, err := h.AuctionBuilder.Build(c.Request().Context(), params)
 	if err != nil {

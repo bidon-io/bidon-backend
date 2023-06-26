@@ -51,7 +51,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 		ExternalWinNotifications: config.ExternalWinNotifications,
 		Rounds:                   filterRounds(config.Rounds, params.Adapters),
 		LineItems:                lineItems,
-		Segment:   Segment{ID: params.SegmentID},
+		Segment:                  Segment{ID: params.SegmentID},
 	}
 
 	if len(auction.Rounds) == 0 {
