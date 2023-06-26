@@ -12,6 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type DB struct {
@@ -29,6 +30,10 @@ func Open(databaseURL string) (*DB, error) {
 
 func (db *DB) Begin(opts ...*sql.TxOptions) *DB {
 	return &DB{db.DB.Begin(opts...)}
+}
+
+func (db *DB) SetDebug() {
+	db.Logger = db.Logger.LogMode(logger.Info)
 }
 
 func (db *DB) AutoMigrate() error {
@@ -54,9 +59,10 @@ type Model struct {
 
 type AppDemandProfile struct {
 	Model
-	AppID          int64          `gorm:"column:app_id;type:bigint;not null"`
-	AccountType    string         `gorm:"column:account_type;type:varchar;not null"`
-	AccountID      int64          `gorm:"column:account_id;type:bigint;not null"`
+	AppID          int64  `gorm:"column:app_id;type:bigint;not null"`
+	AccountType    string `gorm:"column:account_type;type:varchar;not null"`
+	AccountID      int64  `gorm:"column:account_id;type:bigint;not null"`
+	Account        DemandSourceAccount
 	DemandSourceID int64          `gorm:"column:demand_source_id;type:bigint;not null"`
 	Data           map[string]any `gorm:"column:data;type:jsonb;default:'{}';serializer:json"`
 }
@@ -73,12 +79,13 @@ type App struct {
 
 type AuctionConfiguration struct {
 	Model
-	Name       sql.NullString        `gorm:"column:name;type:varchar"`
-	AppID      int64                 `gorm:"column:app_id;type:bigint;not null"`
-	AdType     AdType                `gorm:"column:ad_type;type:integer;not null"`
-	Rounds     []auction.RoundConfig `gorm:"column:rounds;type:jsonb;default:'[]';serializer:json"`
-	Pricefloor float64               `gorm:"column:pricefloor;type:double precision;not null"`
-	SegmentID  *sql.NullInt64        `gorm:"column:segment_id;type:bigint"`
+	Name                     sql.NullString        `gorm:"column:name;type:varchar"`
+	AppID                    int64                 `gorm:"column:app_id;type:bigint;not null"`
+	AdType                   AdType                `gorm:"column:ad_type;type:integer;not null"`
+	Rounds                   []auction.RoundConfig `gorm:"column:rounds;type:jsonb;default:'[]';serializer:json"`
+	Pricefloor               float64               `gorm:"column:pricefloor;type:double precision;not null"`
+	SegmentID                *sql.NullInt64        `gorm:"column:segment_id;type:bigint"`
+	ExternalWinNotifications *bool                 `gorm:"column:external_win_notifications;type:boolean;default:false;not null"`
 }
 
 type Country struct {
