@@ -16,8 +16,8 @@ func Echo(logger *zap.Logger) *echo.Echo {
 	e.HTTPErrorHandler = HTTPErrorHandler
 
 	e.Use(middleware.RequestID())
-	e.Use(echoBodyDump(logger))
 	e.Use(echoRequestLogger(logger))
+	e.Use(echoBodyDump(logger))
 	e.Use(middleware.Recover())
 
 	e.Use(sentryecho.New(sentryecho.Options{
@@ -64,15 +64,8 @@ func HTTPErrorHandler(err error, c echo.Context) {
 
 func echoBodyDump(logger *zap.Logger) echo.MiddlewareFunc {
 	return middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		id := c.Request().Header.Get(echo.HeaderXRequestID)
-		if id == "" {
-			id = c.Response().Header().Get(echo.HeaderXRequestID)
-		}
-		logger.Info("request body dump",
-			zap.String("id", id),
-			zap.ByteString("request_body", reqBody),
-			zap.ByteString("response_body", resBody),
-		)
+		c.Set("reqBody", reqBody)
+		c.Set("resBody", resBody)
 	})
 }
 
@@ -88,6 +81,9 @@ func echoRequestLogger(logger *zap.Logger) echo.MiddlewareFunc {
 		LogError:     true,
 		LogLatency:   true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			reqBody, _ := c.Get("reqBody").([]byte)
+			resBody, _ := c.Get("resBody").([]byte)
+
 			logger.Info("request",
 				zap.String("id", v.RequestID),
 				zap.String("remote_ip", v.RemoteIP),
@@ -98,6 +94,8 @@ func echoRequestLogger(logger *zap.Logger) echo.MiddlewareFunc {
 				zap.Int("status", v.Status),
 				zap.NamedError("error", v.Error),
 				zap.Duration("latency", v.Latency),
+				zap.ByteString("request_body", reqBody),
+				zap.ByteString("response_body", resBody),
 			)
 
 			return nil
