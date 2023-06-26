@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/geocoder"
+	"github.com/oschwald/maxminddb-golang"
 	"log"
 	"os"
 
@@ -39,8 +41,15 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
+	maxMindDB, err := maxminddb.Open(os.Getenv("MAXMIND_GEOIP_FILE_PATH"))
+	if err != nil {
+		panic(err)
+	}
+
 	baseHandler := sdkapi.BaseHandler{
-		AppFetcher: &sdkapistore.AppFetcher{DB: db},
+		AppFetcher:      &sdkapistore.AppFetcher{DB: db},
+		SegmentFetcher:  &sdkapistore.SegmentFetcher{DB: db},
+		OfflineGeocoder: &geocoder.OfflineGeocoder{DB: db, MaxMindDB: maxMindDB},
 	}
 	auctionHandler := sdkapi.AuctionHandler{
 		BaseHandler: &baseHandler,

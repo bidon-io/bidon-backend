@@ -2,7 +2,6 @@ package sdkapi
 
 import (
 	"errors"
-	"github.com/bidon-io/bidon-backend/internal/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
@@ -12,7 +11,6 @@ import (
 
 type AuctionHandler struct {
 	*BaseHandler
-	SegmentFetcher SegmentFetcher
 	AuctionBuilder *auction.Builder
 }
 
@@ -29,7 +27,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	country, _ := geocoder.OfflineGeocoderInstance().FindGeoData(c.Request().Context(), c.RealIP())
+	country, _ := h.OfflineGeocoder.FindGeoData(c.Request().Context(), c.RealIP())
 
 	segmentParams := &segment.Params{
 		Country: country.CountryCode,

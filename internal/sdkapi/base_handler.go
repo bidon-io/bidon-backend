@@ -3,6 +3,7 @@ package sdkapi
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bidon-io/bidon-backend/internal/geocoder"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -10,7 +11,9 @@ import (
 
 // BaseHandler provides common functionality between sdkapi handlers
 type BaseHandler struct {
-	AppFetcher AppFetcher
+	AppFetcher      AppFetcher
+	SegmentFetcher  SegmentFetcher
+	OfflineGeocoder OfflineGeocoder
 }
 
 type AppFetcher interface {
@@ -19,6 +22,10 @@ type AppFetcher interface {
 
 type SegmentFetcher interface {
 	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
+}
+
+type OfflineGeocoder interface {
+	FindGeoData(ctx context.Context, ipString string) (*geocoder.Result, error)
 }
 
 func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {

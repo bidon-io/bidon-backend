@@ -3,16 +3,13 @@ package geocoder
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"net"
-	"os"
-	"sync"
-
 	"github.com/oschwald/maxminddb-golang"
+	"net"
 )
 
 // OfflineGeocoder represents an offline geocoder.
 type OfflineGeocoder struct {
-	maxMindDB *maxminddb.Reader
+	MaxMindDB *maxminddb.Reader
 	DB        *db.DB
 }
 
@@ -58,34 +55,15 @@ type GeoData struct {
 	}
 }
 
-var (
-	offlineGeocoderInstance *OfflineGeocoder
-	offlineGeocoderOnce     sync.Once
-)
-
 const (
 	MAX_MIND_PROVIDER_CODE = 3
-	UNKNOWN_COUNTRY_CODE   = "UNKNOWN"
-	UNKNOWN_COUNTRY_CODE3  = "UNKNOWN_CODE3"
+	UNKNOWN_COUNTRY_CODE   = "ZZ"
+	UNKNOWN_COUNTRY_CODE3  = "ZZZ"
 )
 
 var DEFAULT_COUNTRY_CODES_FOR_CONTINENTS = map[string]string{
 	"Europe": "FR",
 	"Asia":   "ID",
-}
-
-// OfflineGeocoderInstance returns the singleton instance of OfflineGeocoder.
-func OfflineGeocoderInstance() *OfflineGeocoder {
-	offlineGeocoderOnce.Do(func() {
-		maxMindDB, err := maxminddb.Open(os.Getenv("MAXMIND_GEOIP_FILE_PATH"))
-		if err != nil {
-			panic(err)
-		}
-		offlineGeocoderInstance = &OfflineGeocoder{
-			maxMindDB: maxMindDB,
-		}
-	})
-	return offlineGeocoderInstance
 }
 
 // FindGeoData finds the geolocation data for the given IP address.
@@ -119,7 +97,7 @@ func (g *OfflineGeocoder) FindGeoData(ctx context.Context, ipString string) (*Re
 }
 
 func (g *OfflineGeocoder) lookupIP(ip net.IP, geoData GeoData) error {
-	err := g.maxMindDB.Lookup(ip, &geoData)
+	err := g.MaxMindDB.Lookup(ip, &geoData)
 	if err != nil {
 		return err
 	}
@@ -141,7 +119,7 @@ func (g *OfflineGeocoder) countryCodeFor(geoData GeoData) string {
 func (g *OfflineGeocoder) findCachedCountry(ctx context.Context, countryCode string) (*db.Country, error) {
 	var dbCountry db.Country
 
-	if err := g.DB.WithContext(ctx).Find(&dbCountry, map[string]any{"country_code": countryCode}).Error; err != nil {
+	if err := g.DB.WithContext(ctx).Where("alpha_2_code = ?", countryCode).First(&dbCountry).Error; err != nil {
 		return nil, err
 	}
 
