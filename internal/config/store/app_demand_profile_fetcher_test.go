@@ -9,7 +9,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/config/store"
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/google/go-cmp/cmp"
-	"github.com/labstack/gommon/log"
 )
 
 func TestAppDemandProfileFetcher_Fetch(t *testing.T) {
@@ -119,7 +118,7 @@ func TestAppDemandProfileFetcher_Fetch(t *testing.T) {
 	for _, tC := range testCases {
 		got, err := fetcher.Fetch(context.Background(), tC.appID, tC.adapterKeys)
 		if err != nil {
-			log.Fatalf("failed to fetch app demand profiles: %v", err)
+			t.Fatalf("failed to fetch app demand profiles: %v", err)
 		}
 
 		if diff := cmp.Diff(tC.want, got); diff != "" {

@@ -7,7 +7,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/config"
 	"github.com/google/go-cmp/cmp"
-	"github.com/labstack/gommon/log"
 )
 
 func TestAdaptersBuilder_Build(t *testing.T) {
@@ -86,7 +85,7 @@ func TestAdaptersBuilder_Build(t *testing.T) {
 
 		got, err := builder.Build(context.Background(), 0, tC.adapterKeys)
 		if err != nil {
-			log.Errorf("builder.Build -> %v: %v", tC.name, err)
+			t.Errorf("builder.Build -> %v: %v", tC.name, err)
 		}
 
 		if diff := cmp.Diff(tC.want, got); diff != "" {
