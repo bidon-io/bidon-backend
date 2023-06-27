@@ -2,7 +2,7 @@ name: Scan repo
 on:
   push:
     branches:
-#     - master
+      - master
 jobs:
   trivy:
     name: Vulnerability scanning
