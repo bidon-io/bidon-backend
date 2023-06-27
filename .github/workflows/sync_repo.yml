@@ -1,0 +1,13 @@
+name: Sync repo
+on:
+  push:
+    branches:
+      - "DO-1474/Repo_sync"
+
+jobs:
+  sync-repo:
+    name: Sync repo
+    uses: bidon-io/bidon-repo-sync/.github/workflows/shared-repo-sync.yml@DO-1474/Configure_replacer
+    with:
+      repo: ${{ github.event.repository.name }}
+    secrets: inherit
