@@ -1,6 +1,7 @@
 package sdkapi
 
 import (
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/config"
@@ -16,7 +17,11 @@ type ConfigResponse struct {
 	Init       ConfigResponseInit `json:"init"`
 	Placements []any              `json:"placements"`
 	Token      string             `json:"token"`
-	SegmentID  string             `json:"segment_id"`
+	Segment    Segment            `json:"segment"`
+}
+
+type Segment struct {
+	ID *int64 `json:"id"`
 }
 
 type ConfigResponseInit struct {
@@ -28,6 +33,22 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 	req, err := h.resolveRequest(c)
 	if err != nil {
 		return err
+	}
+
+	country, _ := h.OfflineGeocoder.FindGeoData(c.Request().Context(), c.RealIP())
+
+	segmentParams := &segment.Params{
+		Country: country.CountryCode,
+		Ext:     req.raw.Segment.Ext,
+	}
+
+	sgmnts, _ := h.SegmentFetcher.Fetch(c.Request().Context(), req.app.ID)
+	sgmnt := segment.Match(sgmnts, segmentParams)
+	var segmentID *int64
+	if sgmnt == nil {
+		segmentID = nil
+	} else {
+		segmentID = &sgmnt.ID
 	}
 
 	adapters, err := h.AdaptersBuilder.Build(c.Request().Context(), req.app.ID, req.adapterKeys())
@@ -45,7 +66,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		},
 		Placements: []any{},
 		Token:      "{}",
-		SegmentID:  "",
+		Segment:    Segment{ID: segmentID},
 	}
 
 	return c.JSON(http.StatusOK, resp)
