@@ -3,7 +3,7 @@ package sdkapi
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/bidon-io/bidon-backend/internal/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"

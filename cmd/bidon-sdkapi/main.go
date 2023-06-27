@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bidon-io/bidon-backend/internal/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/oschwald/maxminddb-golang"
 	"log"
 	"os"
