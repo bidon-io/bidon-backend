@@ -3,7 +3,7 @@
     <div class="w-1/4 px-6">
       <div class="font-semibold text-gray-500">{{ props.label }}</div>
     </div>
-    <div class="px-6">
+    <div class="px-6 w-3/4">
       <slot></slot>
     </div>
   </div>
@@ -17,3 +17,10 @@ const props = defineProps({
   },
 });
 </script>
+
+<style scoped>
+:deep input,
+textarea {
+  min-width: 100%;
+}
+</style>

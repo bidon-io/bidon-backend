@@ -8,8 +8,8 @@ const columns = [
   { field: "id", header: "Id", sortable: true },
   { field: "user_id", header: "User" },
   { field: "type", header: "Type" },
-  { field: "demand_source", header: "Demand Source" },
-  { field: "bidding", header: "Bidding" },
+  { field: "demand_source_id", header: "Demand Source" },
+  { field: "is_bidding", header: "Bidding" },
 ];
 const resourcesPath = "/demand_source_accounts";
 </script>

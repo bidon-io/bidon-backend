@@ -8,7 +8,7 @@
         <Textarea v-model="resource.description" rows="5" cols="50" />
       </FormField>
       <FormField label="Filters">
-        <InputJSON v-model="resource.filters" placeholder="Filters" style="min-width: 400px" />
+        <InputJSON v-model="resource.filters" placeholder="Filters" />
       </FormField>
       <FormField label="Enabled">
         <Checkbox v-model="resource.enabled" :binary="true" />
