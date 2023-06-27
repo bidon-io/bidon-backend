@@ -1,0 +1,18 @@
+name: Scan repo
+on:
+  push:
+    branches:
+     - master
+jobs:
+  trivy:
+    name: Vulnerability scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v3
+
+      - name: Run trivy 
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          format: 'table'
