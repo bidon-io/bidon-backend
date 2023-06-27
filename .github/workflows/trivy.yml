@@ -15,11 +15,17 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+      - name: Download JUnit template
+        run: wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/junit.tpl
+
+      - name: Generate JUnit report
+        run: docker run --rm -v $(pwd):/opt/project aquasec/trivy fs --scanners vuln --format template --template "@junit.tpl" -o junit-report.xml /opt/project
+
+      - name: Publish tests results
+        uses: mikepenz/action-junit-report@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          report_paths: junit-report.xml
+          check_name: Trivy vulnerability report
+          annotate_only: true
