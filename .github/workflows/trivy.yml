@@ -21,7 +21,7 @@ jobs:
         run: wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/junit.tpl
 
       - name: Generate JUnit report
-        run: docker run --rm -v $(pwd):/opt/project aquasec/trivy fs --scanners vuln --format template --template "@junit.tpl" -o junit-report.xml /opt/project
+        run: docker run --rm -v $(pwd):/opt/project aquasec/trivy fs --scanners vuln --format template --template "@/opt/project/junit.tpl" -o junit-report.xml /opt/project
 
       - name: Publish tests results
         uses: mikepenz/action-junit-report@v3
