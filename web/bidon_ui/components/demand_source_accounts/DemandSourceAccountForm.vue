@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="onSubmit">
+  <form @submit="onSubmit">
     <FormCard title="Demand source account">
       <UserDropdown v-model="userId" :error="errors.userId" required />
       <DemandSourceTypeDropdown v-model="type" :error="errors.type" required />
@@ -16,7 +16,6 @@
 </template>
 
 <script setup>
-import { useForm } from "vee-validate";
 import * as yup from "yup";
 
 const props = defineProps({

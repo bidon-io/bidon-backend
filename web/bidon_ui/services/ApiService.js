@@ -28,7 +28,6 @@ api.interceptors.request.use((config) => {
 
   if (config.data) {
     newConfig.data = decamelizeKeys(config.data);
-    console.log(newConfig.data);
   }
 
   return newConfig;
