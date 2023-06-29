@@ -1,16 +1,16 @@
 <template>
   <form @submit.prevent="emit('submit', resource)">
     <FormCard title="Appp">
-      <PlatformIdDropdown v-model="resource.platform_id" />
+      <PlatformIdDropdown v-model="resource.platformId" />
       <FormField label="Human Name">
-        <InputText v-model="resource.human_name" type="text" placeholder="Name" />
+        <InputText v-model="resource.humanName" type="text" placeholder="Name" />
       </FormField>
       <FormField label="Package Name">
-        <InputText v-model="resource.package_name" type="text" placeholder="Name" />
+        <InputText v-model="resource.packageName" type="text" placeholder="Name" />
       </FormField>
-      <UserDropdown v-model="resource.user_id" />
+      <UserDropdown v-model="resource.userId" />
       <FormField label="App Key">
-        <InputText v-model="resource.app_key" type="text" placeholder="Name" />
+        <InputText v-model="resource.appKey" type="text" placeholder="Name" />
       </FormField>
       <FormField label="Settings">
         <TextareaJSON v-model="resource.settings" rows="5" cols="50" />

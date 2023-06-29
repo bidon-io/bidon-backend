@@ -4,8 +4,8 @@
       <FormField label="Name">
         <InputText v-model="resource.name" type="text" placeholder="Name" />
       </FormField>
-      <AppDropdown v-model="resource.app_id" />
-      <AdTypeDropdown v-model="resource.ad_type" />
+      <AppDropdown v-model="resource.appId" />
+      <AdTypeDropdown v-model="resource.adType" />
       <FormField label="Price floor">
         <InputNumber
           v-model="resource.pricefloor"

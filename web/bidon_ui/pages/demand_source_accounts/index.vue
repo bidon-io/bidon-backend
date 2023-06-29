@@ -6,10 +6,10 @@
 <script setup>
 const columns = [
   { field: "id", header: "Id", sortable: true },
-  { field: "user_id", header: "User" },
+  { field: "userId", header: "User" },
   { field: "type", header: "Type" },
-  { field: "demand_source_id", header: "Demand Source" },
-  { field: "is_bidding", header: "Bidding" },
+  { field: "demandSourceId", header: "Demand Source" },
+  { field: "isBidding", header: "Bidding" },
 ];
 const resourcesPath = "/demand_source_accounts";
 </script>

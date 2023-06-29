@@ -29,6 +29,6 @@ const fields = [
   { label: "Description", key: "description" },
   { label: "Filters", key: "filters" },
   { label: "Enabled", key: "enabled" },
-  { label: "App", key: "app_id", type: "link", link: `/apps/${resource.app_id}` },
+  { label: "App", key: "appId", type: "link", link: `/apps/${resource.app_id}` },
 ];
 </script>

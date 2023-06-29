@@ -13,7 +13,7 @@
       <FormField label="Enabled">
         <Checkbox v-model="resource.enabled" :binary="true" />
       </FormField>
-      <AppDropdown v-model="resource.app_id" />
+      <AppDropdown v-model="resource.appId" />
       <FormSubmitButton />
     </FormCard>
   </form>

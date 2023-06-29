@@ -3,7 +3,7 @@
     <Dropdown
       v-model="value"
       :options="apps"
-      option-label="package_name"
+      option-label="packageName"
       option-value="id"
       class="w-full md:w-14rem"
       placeholder="Select App"
