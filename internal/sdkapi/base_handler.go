@@ -2,8 +2,9 @@ package sdkapi
 
 import (
 	"context"
-	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/segment"
+	"os"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -11,9 +12,8 @@ import (
 
 // BaseHandler provides common functionality between sdkapi handlers
 type BaseHandler struct {
-	AppFetcher      AppFetcher
-	SegmentFetcher  SegmentFetcher
-	OfflineGeocoder OfflineGeocoder
+	AppFetcher AppFetcher
+	Geocoder   Geocoder
 }
 
 type AppFetcher interface {
@@ -21,11 +21,11 @@ type AppFetcher interface {
 }
 
 type SegmentFetcher interface {
-	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
+	Fetch(ctx context.Context, params *segment.Params) (segment.Segment, error)
 }
 
-type OfflineGeocoder interface {
-	FindGeoData(ctx context.Context, ipString string) (*geocoder.Result, error)
+type Geocoder interface {
+	FindGeoData(ctx context.Context, ipString string) (*geocoder.GeoData, error)
 }
 
 func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {
@@ -39,8 +39,20 @@ func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {
 		return nil, err
 	}
 
+	var country *Country
+	if os.Getenv("USE_GEOCODING") == "true" {
+		geoData, err := b.Geocoder.FindGeoData(c.Request().Context(), c.RealIP())
+		if err != nil {
+			return nil, err
+		}
+		country = &Country{ID: geoData.CountryID, CountryCode: geoData.CountryCode}
+	} else {
+		country = &Country{ID: 0, CountryCode: raw.Geo.Country}
+	}
+
 	return &request{
-		raw: raw,
-		app: app,
+		raw:     raw,
+		app:     app,
+		country: country,
 	}, nil
 }

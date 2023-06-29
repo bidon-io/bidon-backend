@@ -37,13 +37,13 @@ func TestFindGeoData(t *testing.T) {
 		t.Fatalf("Error creating configs: %v", err)
 	}
 
-	maxMindDB, err := maxminddb.Open("../../../public/GeoIP2-City-Test.mmdb")
+	maxMindDB, err := maxminddb.Open("testdata/GeoIP2-City-Test.mmdb")
 	if err != nil {
-		panic(err)
+		t.Fatalf("maxminddb.Open: %v", err)
 	}
 
-	// Create an instance of OfflineGeocoder using the test database connection
-	geocoder := &OfflineGeocoder{
+	// Create an instance of Geocoder using the test database connection
+	geocoder := &Geocoder{
 		MaxMindDB: maxMindDB,
 		DB:        tx,
 	}
@@ -70,19 +70,19 @@ func TestFindGeoData(t *testing.T) {
 func TestLookupIP(t *testing.T) {
 	// Create a mock instance of maxminddb.Reader
 
-	maxMindDB, err := maxminddb.Open("../../../public/GeoIP2-City-Test.mmdb")
+	maxMindDB, err := maxminddb.Open("testdata/GeoIP2-City-Test.mmdb")
 	if err != nil {
-		panic(err)
+		t.Fatalf("maxminddb.Open: %v", err)
 	}
 
-	// Create an instance of OfflineGeocoder using the mock dependencies
-	geocoder := &OfflineGeocoder{
+	// Create an instance of Geocoder using the mock dependencies
+	geocoder := &Geocoder{
 		MaxMindDB: maxMindDB,
 	}
 
 	// Define the test case input
 	ip := net.ParseIP("127.0.0.1")
-	var geoData GeoData
+	var geoData MmdbGeoData
 
 	// Call the method being tested
 	err = geocoder.lookupIP(ip, geoData)
@@ -97,11 +97,11 @@ func TestLookupIP(t *testing.T) {
 }
 
 func TestCountryCodeFor(t *testing.T) {
-	// Create an instance of OfflineGeocoder
-	geocoder := &OfflineGeocoder{}
+	// Create an instance of Geocoder
+	geocoder := &Geocoder{}
 
 	// Define the test case input
-	var geoData GeoData
+	var geoData MmdbGeoData
 
 	// Call the method being tested
 	countryCode := geocoder.countryCodeFor(geoData)
@@ -134,8 +134,8 @@ func TestFindCachedCountry(t *testing.T) {
 		t.Fatalf("Error creating configs: %v", err)
 	}
 
-	// Create an instance of OfflineGeocoder using the test database connection
-	geocoder := &OfflineGeocoder{
+	// Create an instance of Geocoder using the test database connection
+	geocoder := &Geocoder{
 		DB: tx,
 	}
 
@@ -144,17 +144,17 @@ func TestFindCachedCountry(t *testing.T) {
 	countryCode := "US"
 
 	// Call the method being tested
-	country, err := geocoder.findCachedCountry(ctx, countryCode)
+	country, err := geocoder.findCountry(ctx, countryCode)
 
 	// Perform assertions on the country and error
 	// Example assertions:
 	if err != nil {
-		t.Errorf("findCachedCountry returned an unexpected error: %v", err)
+		t.Errorf("findCountry returned an unexpected error: %v", err)
 	}
 
 	if country == nil {
-		t.Error("findCachedCountry returned nil country, expected non-nil country")
+		t.Error("findCountry returned nil country, expected non-nil country")
 	}
 
-	// Add more specific assertions based on the expected behavior of findCachedCountry
+	// Add more specific assertions based on the expected behavior of findCountry
 }

@@ -1,12 +1,13 @@
 package segment
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
-type SegmentExt struct {
+type Ext struct {
 	Gender            string                 `json:"gender"`
 	TotalInAppsAmount int                    `json:"total_in_apps_amount"`
 	IsPaying          bool                   `json:"is_paying"`
@@ -18,13 +19,33 @@ type SegmentExt struct {
 type Params struct {
 	Country string `json:"country"`
 	Ext     string `json:"ext"`
+	AppID   int64  `json:"app_id"`
 }
 
-func Match(sgmnts []db.Segment, params *Params) *db.Segment {
-	for _, sgmnt := range sgmnts {
+type Segment struct {
+	ID int64 `json:"id"`
+}
+
+type Fetcher struct {
+	DB *db.DB
+}
+
+func (f *Fetcher) Fetch(ctx context.Context, params *Params) (Segment, error) {
+	var dbSgmnts []db.Segment
+	err := f.DB.WithContext(ctx).Where("app_id = ?", params.AppID).Order("priority ASC").Find(&dbSgmnts).Error
+
+	if err != nil {
+		return Segment{ID: 0}, err
+	}
+
+	return Match(dbSgmnts, params), nil
+}
+
+func Match(dbSgmnts []db.Segment, params *Params) Segment {
+	for _, dbSgmnt := range dbSgmnts {
 		isMatched := false
 
-		for _, filter := range sgmnt.Filters {
+		for _, filter := range dbSgmnt.Filters {
 			switch filter.Type {
 			case "country":
 				isMatched = matchCountry(filter, params.Country)
@@ -33,12 +54,12 @@ func Match(sgmnts []db.Segment, params *Params) *db.Segment {
 			}
 
 			if isMatched {
-				return &sgmnt
+				return Segment{ID: dbSgmnt.ID}
 			}
 		}
 	}
 
-	return nil
+	return Segment{ID: 0}
 }
 
 func matchCountry(filter admin.SegmentFilter, country string) bool {
@@ -52,10 +73,10 @@ func matchCountry(filter admin.SegmentFilter, country string) bool {
 	}
 }
 
-func matchCustomString(filter admin.SegmentFilter, Ext string) bool {
-	var parsedExt SegmentExt
+func matchCustomString(filter admin.SegmentFilter, ext string) bool {
+	var parsedExt Ext
 
-	if err := json.Unmarshal([]byte(Ext), &parsedExt); err != nil {
+	if err := json.Unmarshal([]byte(ext), &parsedExt); err != nil {
 		return false
 	}
 

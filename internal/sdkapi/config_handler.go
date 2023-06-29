@@ -1,16 +1,17 @@
 package sdkapi
 
 import (
-	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/config"
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
 
 type ConfigHandler struct {
 	*BaseHandler
 	AdaptersBuilder *config.AdaptersBuilder
+	SegmentFetcher  SegmentFetcher
 }
 
 type ConfigResponse struct {
@@ -35,20 +36,21 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	country, _ := h.OfflineGeocoder.FindGeoData(c.Request().Context(), c.RealIP())
-
 	segmentParams := &segment.Params{
-		Country: country.CountryCode,
+		Country: req.country.CountryCode,
 		Ext:     req.raw.Segment.Ext,
 	}
 
-	sgmnts, _ := h.SegmentFetcher.Fetch(c.Request().Context(), req.app.ID)
-	sgmnt := segment.Match(sgmnts, segmentParams)
+	sgmnt, err := h.SegmentFetcher.Fetch(c.Request().Context(), segmentParams)
+	if err != nil {
+		return err
+	}
+
 	var segmentID *int64
-	if sgmnt == nil {
-		segmentID = nil
-	} else {
+	if sgmnt.ID != 0 {
 		segmentID = &sgmnt.ID
+	} else {
+		segmentID = nil
 	}
 
 	adapters, err := h.AdaptersBuilder.Build(c.Request().Context(), req.app.ID, req.adapterKeys())

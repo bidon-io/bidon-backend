@@ -14,19 +14,26 @@ type ConfigMatcher struct {
 	DB *db.DB
 }
 
-func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, segmentID *int64) (*auction.Config, error) {
+func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
 	dbConfig := &db.AuctionConfiguration{}
-	err := m.DB.
+
+	query := m.DB.
 		WithContext(ctx).
 		Select("id", "external_win_notifications", "rounds").
 		Where(map[string]any{
-			"app_id":     appID,
-			"ad_type":    db.AdTypeFromDomain(adType),
-			"segment_id": segmentID,
+			"app_id":  appID,
+			"ad_type": db.AdTypeFromDomain(adType),
 		}).
 		Order("created_at DESC").
-		Take(dbConfig).
-		Error
+		Take(dbConfig)
+
+	if segmentID != 0 {
+		query = query.Where("segment_id = ?", segmentID)
+	} else {
+		query = query.Where("segment_id IS NULL")
+	}
+
+	err := query.Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = auction.ErrNoAdsFound

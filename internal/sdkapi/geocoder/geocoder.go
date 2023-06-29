@@ -7,14 +7,14 @@ import (
 	"net"
 )
 
-// OfflineGeocoder represents an offline geocoder.
-type OfflineGeocoder struct {
+// Geocoder represents an geocoder.
+type Geocoder struct {
 	MaxMindDB *maxminddb.Reader
 	DB        *db.DB
 }
 
-// Result represents the geolocation data.
-type Result struct {
+// GeoData represents the geolocation data.
+type GeoData struct {
 	CountryCode    string
 	CountryID      int64
 	CountryCode3   string
@@ -29,7 +29,7 @@ type Result struct {
 	UnknownCountry bool
 }
 
-type GeoData struct {
+type MmdbGeoData struct {
 	Country struct {
 		ISOCode string `maxminddb:"iso_code"`
 	} `maxminddb:"country"`
@@ -67,56 +67,59 @@ var DEFAULT_COUNTRY_CODES_FOR_CONTINENTS = map[string]string{
 }
 
 // FindGeoData finds the geolocation data for the given IP address.
-func (g *OfflineGeocoder) FindGeoData(ctx context.Context, ipString string) (*Result, error) {
-	var result Result
+func (g *Geocoder) FindGeoData(ctx context.Context, ipString string) (*GeoData, error) {
 	var geoData GeoData
+	var mmdbGeoData MmdbGeoData
 	ip := net.ParseIP(ipString)
 
-	err := g.lookupIP(ip, geoData)
+	err := g.lookupIP(ip, mmdbGeoData)
 	if err != nil {
 		return nil, err
 	}
 
-	countryCode := g.countryCodeFor(geoData)
-	country, _ := g.findCachedCountry(ctx, countryCode)
+	countryCode := g.countryCodeFor(mmdbGeoData)
+	country, err := g.findCountry(ctx, countryCode)
+	if err != nil {
+		return nil, err
+	}
 
-	result.CountryCode = countryCode
-	result.CountryCode3 = country.Alpha3Code
-	result.UnknownCountry = countryCode == UNKNOWN_COUNTRY_CODE
-	result.CountryID = country.ID
-	result.CityName = geoData.City.Name
-	result.RegionName = geoData.Subdivisions.MostSpecific.Name
-	result.RegionCode = geoData.Subdivisions.MostSpecific.ISOCode
-	result.Lat = geoData.Location.Latitude
-	result.Lon = geoData.Location.Longitude
-	result.Accuracy = geoData.Location.AccuracyRadius * 1000 // convert kilometers to meters
-	result.ZipCode = geoData.Postal.Code
-	result.IPService = MAX_MIND_PROVIDER_CODE
+	geoData.CountryCode = countryCode
+	geoData.CountryCode3 = country.Alpha3Code
+	geoData.UnknownCountry = countryCode == UNKNOWN_COUNTRY_CODE
+	geoData.CountryID = country.ID
+	geoData.CityName = mmdbGeoData.City.Name
+	geoData.RegionName = mmdbGeoData.Subdivisions.MostSpecific.Name
+	geoData.RegionCode = mmdbGeoData.Subdivisions.MostSpecific.ISOCode
+	geoData.Lat = mmdbGeoData.Location.Latitude
+	geoData.Lon = mmdbGeoData.Location.Longitude
+	geoData.Accuracy = mmdbGeoData.Location.AccuracyRadius * 1000 // convert kilometers to meters
+	geoData.ZipCode = mmdbGeoData.Postal.Code
+	geoData.IPService = MAX_MIND_PROVIDER_CODE
 
-	return &result, nil
+	return &geoData, nil
 }
 
-func (g *OfflineGeocoder) lookupIP(ip net.IP, geoData GeoData) error {
-	err := g.MaxMindDB.Lookup(ip, &geoData)
+func (g *Geocoder) lookupIP(ip net.IP, mmdbGeoData MmdbGeoData) error {
+	err := g.MaxMindDB.Lookup(ip, &mmdbGeoData)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (g *OfflineGeocoder) countryCodeFor(geoData GeoData) string {
-	if geoData.Country.ISOCode != "" {
-		return geoData.Country.ISOCode
+func (g *Geocoder) countryCodeFor(mmdbGeoData MmdbGeoData) string {
+	if mmdbGeoData.Country.ISOCode != "" {
+		return mmdbGeoData.Country.ISOCode
 	}
 
-	if code, ok := DEFAULT_COUNTRY_CODES_FOR_CONTINENTS[geoData.Continent.Name]; ok {
+	if code, ok := DEFAULT_COUNTRY_CODES_FOR_CONTINENTS[mmdbGeoData.Continent.Name]; ok {
 		return code
 	}
 
 	return UNKNOWN_COUNTRY_CODE
 }
 
-func (g *OfflineGeocoder) findCachedCountry(ctx context.Context, countryCode string) (*db.Country, error) {
+func (g *Geocoder) findCountry(ctx context.Context, countryCode string) (*db.Country, error) {
 	var dbCountry db.Country
 
 	if err := g.DB.WithContext(ctx).Where("alpha_2_code = ?", countryCode).First(&dbCountry).Error; err != nil {

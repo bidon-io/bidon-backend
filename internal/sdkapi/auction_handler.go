@@ -2,16 +2,17 @@ package sdkapi
 
 import (
 	"errors"
-	"github.com/bidon-io/bidon-backend/internal/segment"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
 
 type AuctionHandler struct {
 	*BaseHandler
 	AuctionBuilder *auction.Builder
+	SegmentFetcher SegmentFetcher
 }
 
 type AuctionResponse struct {
@@ -27,20 +28,15 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	country, _ := h.OfflineGeocoder.FindGeoData(c.Request().Context(), c.RealIP())
-
 	segmentParams := &segment.Params{
-		Country: country.CountryCode,
+		Country: req.country.CountryCode,
 		Ext:     req.raw.Segment.Ext,
+		AppID:   req.app.ID,
 	}
 
-	sgmnts, _ := h.SegmentFetcher.Fetch(c.Request().Context(), req.app.ID)
-	sgmnt := segment.Match(sgmnts, segmentParams)
-	var segmentID *int64
-	if sgmnt == nil {
-		segmentID = nil
-	} else {
-		segmentID = &sgmnt.ID
+	sgmnt, err := h.SegmentFetcher.Fetch(c.Request().Context(), segmentParams)
+	if err != nil {
+		return err
 	}
 
 	params := &auction.BuildParams{
@@ -49,7 +45,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		AdFormat:   req.adFormat(),
 		DeviceType: req.raw.Device.Type,
 		Adapters:   req.adapterKeys(),
-		SegmentID:  segmentID,
+		SegmentID:  sgmnt.ID,
 	}
 	auc, err := h.AuctionBuilder.Build(c.Request().Context(), params)
 	if err != nil {

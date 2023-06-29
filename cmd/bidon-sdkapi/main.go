@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/oschwald/maxminddb-golang"
 	"log"
 	"os"
@@ -41,25 +42,30 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
-	maxMindDB, err := maxminddb.Open(os.Getenv("MAXMIND_GEOIP_FILE_PATH"))
-	if err != nil {
-		panic(err)
+	var maxMindDB *maxminddb.Reader
+
+	if os.Getenv("USE_GEOCODING") == "true" {
+		maxMindDB, err = maxminddb.Open(os.Getenv("MAXMIND_GEOIP_FILE_PATH"))
+		if err != nil {
+			log.Fatalf("maxminddb.Open(%v): %v", os.Getenv("MAXMIND_GEOIP_FILE_PATH"), err)
+		}
 	}
 
 	baseHandler := sdkapi.BaseHandler{
-		AppFetcher:      &sdkapistore.AppFetcher{DB: db},
-		SegmentFetcher:  &sdkapistore.SegmentFetcher{DB: db},
-		OfflineGeocoder: &geocoder.OfflineGeocoder{DB: db, MaxMindDB: maxMindDB},
+		AppFetcher: &sdkapistore.AppFetcher{DB: db},
+		Geocoder:   &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB},
 	}
 	auctionHandler := sdkapi.AuctionHandler{
-		BaseHandler: &baseHandler,
+		BaseHandler:    &baseHandler,
+		SegmentFetcher: &segment.Fetcher{DB: db},
 		AuctionBuilder: &auction.Builder{
 			ConfigMatcher:    &auctionstore.ConfigMatcher{DB: db},
 			LineItemsMatcher: &auctionstore.LineItemsMatcher{DB: db},
 		},
 	}
 	configHandler := sdkapi.ConfigHandler{
-		BaseHandler: &baseHandler,
+		BaseHandler:    &baseHandler,
+		SegmentFetcher: &segment.Fetcher{DB: db},
 		AdaptersBuilder: &bidonconfig.AdaptersBuilder{
 			AppDemandProfileFetcher: &configstore.AppDemandProfileFetcher{DB: db},
 		},

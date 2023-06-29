@@ -9,13 +9,20 @@ import (
 
 // request wraps raw schema.Request and includes additional data that is needed for all sdkapi handlers
 type request struct {
-	raw schema.Request
-	app *App
+	raw     schema.Request
+	app     *App
+	country *Country
 }
 
 // App represents an app for the purposes of the SDK API
 type App struct {
 	ID int64
+}
+
+// Country represents a country for the purposes of the SDK API
+type Country struct {
+	ID          int64
+	CountryCode string
 }
 
 func (r *request) adFormat() ad.Format {
