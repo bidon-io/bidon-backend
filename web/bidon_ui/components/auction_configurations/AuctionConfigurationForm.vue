@@ -1,12 +1,12 @@
 <template>
   <form @submit.prevent="emit('submit', resource)">
     <FormCard title="Auction Configuration">
-      <FormField label="Name">
+      <FormField label="Name" required>
         <InputText v-model="resource.name" type="text" placeholder="Name" />
       </FormField>
-      <AppDropdown v-model="resource.appId" />
-      <AdTypeDropdown v-model="resource.adType" />
-      <FormField label="Price floor">
+      <AppDropdown v-model="resource.appId" required />
+      <AdTypeDropdown v-model="resource.adType" required />
+      <FormField label="Price floor" required>
         <InputNumber
           v-model="resource.pricefloor"
           input-id="pricefloor"
@@ -15,7 +15,7 @@
           placeholder="Price floor"
         />
       </FormField>
-      <FormField label="Rounds">
+      <FormField label="Rounds" required>
         <TextareaJSON v-model="resource.rounds" rows="5" cols="50" />
       </FormField>
       <SegmentDropdown v-model="resource.segment_id" />

@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="emit('submit', resource)">
     <FormCard title="Segment">
-      <FormField label="Name">
+      <FormField label="Name" required>
         <InputText v-model="resource.name" type="text" placeholder="Name" />
       </FormField>
       <FormField label="Description">
