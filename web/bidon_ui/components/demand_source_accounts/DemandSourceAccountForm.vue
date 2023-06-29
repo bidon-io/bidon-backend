@@ -2,11 +2,8 @@
   <form @submit.prevent="onSubmit">
     <FormCard title="Demand source account">
       <UserDropdown v-model="userId" :error="errors.userId" required />
-      <DemandSourceTypeDropdown v-model="demandSourceType" :error="errors.demandSourceType" required />
+      <DemandSourceTypeDropdown v-model="type" :error="errors.type" required />
       <DemandSourceDropdown v-model="demandSourceId" :error="errors.demandSourceId" required />
-      <FormField label="Human Name" :error="errors.humanName" required>
-        <InputText v-model="humanName" type="text" placeholder="Name" />
-      </FormField>
       <FormField label="Bidding">
         <Checkbox v-model="isBidding" :binary="true" />
       </FormField>
@@ -34,26 +31,23 @@ const resource = ref(props.value);
 const { errors, useFieldModel, handleSubmit } = useForm({
   validationSchema: yup.object({
     userId: yup.number().required().label("User Id"),
-    demandSourceType: yup.string().required().label("Demand Source Type"),
+    type: yup.string().required().label("Demand Source Type"),
     demandSourceId: yup.number().required().label("Deamand Source Id"),
-    humanName: yup.string().required().label("Human Name"),
     isBidding: yup.boolean(),
     extra: yup.object(),
   }),
   initialValues: {
     userId: resource.value.userId || null,
-    demandSourceType: resource.value.demandSourceType || "",
+    type: resource.value.type || "",
     demandSourceId: resource.value.demandSourceId || null,
-    humanName: resource.value.humanName || "",
     isBidding: resource.value.isBidding || false,
     extra: resource.value.extra || {},
   },
 });
 
 const userId = useFieldModel("userId");
-const demandSourceType = useFieldModel("demandSourceType");
+const type = useFieldModel("type");
 const demandSourceId = useFieldModel("demandSourceId");
-const humanName = useFieldModel("humanName");
 const isBidding = useFieldModel("isBidding");
 const extra = useFieldModel("extra");
 
