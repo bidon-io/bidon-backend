@@ -8,12 +8,17 @@
     </div>
     <div class="px-6 w-3/4">
       <slot></slot>
+      <small v-if="error" class="p-error">{{ error }}</small>
     </div>
   </div>
 </template>
 
 <script setup>
 const props = defineProps({
+  error: {
+    type: String,
+    default: "",
+  },
   label: {
     type: String,
     required: true,

@@ -1,5 +1,5 @@
 <template>
-  <FormField label="Demand Source Type" :required="required">
+  <FormField label="Demand Source Type" :error="error" :required="required">
     <Dropdown
       v-model="value"
       :options="options"
@@ -15,6 +15,10 @@
 import { computed } from "vue";
 
 const props = defineProps({
+  error: {
+    type: String,
+    default: "",
+  },
   required: {
     type: Boolean,
     default: false,
