@@ -1,7 +1,10 @@
 <template>
   <div class="flex flex-row py-2">
     <div class="w-1/4 px-6">
-      <div class="font-semibold text-gray-500">{{ props.label }}</div>
+      <div class="font-semibold text-gray-500">
+        <span class="font-semibold text-gray-500">{{ props.label }}</span>
+        <span v-if="required" class="text-red-600 ml-1">*</span>
+      </div>
     </div>
     <div class="px-6 w-3/4">
       <slot></slot>
@@ -15,11 +18,15 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  required: {
+    type: Boolean,
+    default: false,
+  },
 });
 </script>
 
-<style scoped>
-:deep input,
+<style>
+input,
 textarea {
   min-width: 100%;
 }

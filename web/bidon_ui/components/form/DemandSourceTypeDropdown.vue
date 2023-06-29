@@ -1,5 +1,5 @@
 <template>
-  <FormField label="Demand Source Type">
+  <FormField label="Demand Source Type" :required="required">
     <Dropdown
       v-model="value"
       :options="options"
@@ -15,6 +15,10 @@
 import { computed } from "vue";
 
 const props = defineProps({
+  required: {
+    type: Boolean,
+    default: false,
+  },
   modelValue: {
     type: [String, null],
     default: null,
@@ -32,9 +36,9 @@ const value = computed({
 });
 const options = ref([
   { label: "BidmachineAccount", value: "DemandSourceAccount::BidMachine" },
-  { label: "AdmobAccount:", valuse: "DemandSourceAccount::Admob" },
-  { label: "ApplovinAccount", valuse: "DemandSourceAccount::Applovin" },
-  { label: "DTExchangeAccount", valuse: "DemandSourceAccount::DtExchange" },
-  { label: "UnityAdsAccount", valuse: "DemandSourceAccount::UnityAds" },
+  { label: "AdmobAccount", value: "DemandSourceAccount::Admob" },
+  { label: "ApplovinAccount", value: "DemandSourceAccount::Applovin" },
+  { label: "DTExchangeAccount", value: "DemandSourceAccount::DtExchange" },
+  { label: "UnityAdsAccount", value: "DemandSourceAccount::UnityAds" },
 ]);
 </script>

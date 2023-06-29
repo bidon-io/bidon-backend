@@ -1,9 +1,9 @@
 <template>
-  <FormField label="Demand source">
+  <FormField label="Demand source" :required="required">
     <Dropdown
       v-model="value"
       :options="options"
-      option-label="human_name"
+      option-label="humanName"
       option-value="id"
       class="w-full md:w-14rem"
       placeholder="Select Demand source"
@@ -16,6 +16,10 @@ import { computed } from "vue";
 import axios from "@/services/ApiService";
 
 const props = defineProps({
+  required: {
+    type: Boolean,
+    default: false,
+  },
   modelValue: {
     type: [Number, null],
     default: null,
