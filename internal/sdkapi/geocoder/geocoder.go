@@ -2,9 +2,11 @@ package geocoder
 
 import (
 	"context"
+	"fmt"
+	"net"
+
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/oschwald/maxminddb-golang"
-	"net"
 )
 
 // Geocoder represents an geocoder.
@@ -68,6 +70,10 @@ var DEFAULT_COUNTRY_CODES_FOR_CONTINENTS = map[string]string{
 
 // FindGeoData finds the geolocation data for the given IP address.
 func (g *Geocoder) FindGeoData(ctx context.Context, ipString string) (*GeoData, error) {
+	if g.MaxMindDB == nil {
+		return nil, fmt.Errorf("maxminddb not set")
+	}
+
 	var geoData GeoData
 	var mmdbGeoData MmdbGeoData
 	ip := net.ParseIP(ipString)

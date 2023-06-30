@@ -29,7 +29,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	}
 
 	segmentParams := &segment.Params{
-		Country: req.geoData.CountryCode,
+		Country: req.countryCode(),
 		Ext:     req.raw.Segment.Ext,
 		AppID:   req.app.ID,
 	}
