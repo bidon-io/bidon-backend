@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/bidon-io/bidon-backend/internal/segment"
-
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
 )
@@ -18,10 +16,6 @@ type BaseHandler struct {
 
 type AppFetcher interface {
 	Fetch(ctx context.Context, appKey, appBundle string) (*App, error)
-}
-
-type SegmentFetcher interface {
-	Fetch(ctx context.Context, appID int64) ([]segment.Segment, error)
 }
 
 type Geocoder interface {
