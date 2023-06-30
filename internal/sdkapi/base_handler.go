@@ -2,9 +2,9 @@ package sdkapi
 
 import (
 	"context"
+
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/segment"
-	"os"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -39,14 +39,9 @@ func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {
 		return nil, err
 	}
 
-	var geoData *geocoder.GeoData
-	if os.Getenv("USE_GEOCODING") == "true" {
-		geoData, err = b.Geocoder.FindGeoData(c.Request().Context(), c.RealIP())
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		geoData = &geocoder.GeoData{CountryID: 0, CountryCode: raw.Geo.Country}
+	geoData, err := b.Geocoder.FindGeoData(c.Request().Context(), c.RealIP())
+	if err != nil {
+		c.Logger().Infof("Failed to lookup ip: %v", err)
 	}
 
 	return &request{

@@ -32,3 +32,19 @@ func (r *request) adFormat() ad.Format {
 func (r *request) adapterKeys() []adapter.Key {
 	return maps.Keys(r.raw.Adapters)
 }
+
+func (r *request) countryCode() string {
+	if r.geoData == nil {
+		var countryCode string
+
+		if r.raw.Device.Geo != nil {
+			countryCode = r.raw.Device.Geo.Country
+		} else if r.raw.Geo != nil {
+			countryCode = r.raw.Geo.Country
+		}
+
+		return countryCode
+	}
+
+	return r.geoData.CountryCode
+}
