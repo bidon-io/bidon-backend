@@ -2,13 +2,11 @@ package segment
 
 import (
 	"testing"
-
-	"github.com/bidon-io/bidon-backend/internal/admin"
 )
 
 func TestMatchCountry(t *testing.T) {
 	// Test case 1: IN operator, country in values
-	filter := admin.SegmentFilter{
+	filter := Filter{
 		Operator: "IN",
 		Values:   []string{"US", "CA"},
 	}
@@ -20,7 +18,7 @@ func TestMatchCountry(t *testing.T) {
 	}
 
 	// Test case 2: IN operator, country not in values
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "IN",
 		Values:   []string{"US", "CA"},
 	}
@@ -32,7 +30,7 @@ func TestMatchCountry(t *testing.T) {
 	}
 
 	// Test case 3: NOT IN operator, country in values
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "NOT IN",
 		Values:   []string{"UK", "DE"},
 	}
@@ -44,7 +42,7 @@ func TestMatchCountry(t *testing.T) {
 	}
 
 	// Test case 4: NOT IN operator, country not in values
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "NOT IN",
 		Values:   []string{"UK", "DE"},
 	}
@@ -58,7 +56,7 @@ func TestMatchCountry(t *testing.T) {
 
 func TestMatchCustomString(t *testing.T) {
 	// Test case 1: == operator, prop eq value
-	filter := admin.SegmentFilter{
+	filter := Filter{
 		Operator: "==",
 		Name:     "best_friend",
 		Values:   []string{"Winnie Pooh"},
@@ -72,7 +70,7 @@ func TestMatchCustomString(t *testing.T) {
 	}
 
 	// Test case 2: == operator, prop not eq value
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "==",
 		Name:     "best_friend",
 		Values:   []string{"Winnie Pooh"},
@@ -86,7 +84,7 @@ func TestMatchCustomString(t *testing.T) {
 	}
 
 	// Test case 3: != operator, prop not eq value
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "!=",
 		Name:     "best_friend",
 		Values:   []string{"Winnie Pooh"},
@@ -100,7 +98,7 @@ func TestMatchCustomString(t *testing.T) {
 	}
 
 	// Test case 4: != operator, prop eq value
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "!=",
 		Name:     "best_friend",
 		Values:   []string{"Winnie Pooh"},
@@ -114,7 +112,7 @@ func TestMatchCustomString(t *testing.T) {
 	}
 
 	// Test case 5: Invalid customProps JSON
-	filter = admin.SegmentFilter{
+	filter = Filter{
 		Operator: "==",
 		Name:     "key1",
 		Values:   []string{"value1"},

@@ -16,6 +16,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
+	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -56,7 +57,7 @@ func main() {
 		Geocoder:   &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB},
 	}
 	segmentMatcher := segment.Matcher{
-		Fetcher: &sdkapistore.SegmentFetcher{DB: db},
+		Fetcher: &segmentstore.SegmentFetcher{DB: db},
 	}
 	auctionHandler := sdkapi.AuctionHandler{
 		BaseHandler:    &baseHandler,

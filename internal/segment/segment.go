@@ -3,8 +3,6 @@ package segment
 import (
 	"context"
 	"encoding/json"
-	"github.com/bidon-io/bidon-backend/internal/admin"
-	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
 type Ext struct {
@@ -23,7 +21,15 @@ type Params struct {
 }
 
 type Segment struct {
-	ID int64 `json:"id"`
+	ID      int64    `json:"id"`
+	Filters []Filter `json:"filters"`
+}
+
+type Filter struct {
+	Type     string   `json:"type"`
+	Name     string   `json:"name"`
+	Operator string   `json:"operator"`
+	Values   []string `json:"values"`
 }
 
 type Matcher struct {
@@ -31,7 +37,7 @@ type Matcher struct {
 }
 
 type Fetcher interface {
-	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
+	Fetch(ctx context.Context, appID int64) ([]Segment, error)
 }
 
 func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
@@ -60,7 +66,7 @@ func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
 	return Segment{ID: 0}
 }
 
-func matchCountry(filter admin.SegmentFilter, country string) bool {
+func matchCountry(filter Filter, country string) bool {
 	switch filter.Operator {
 	case "IN":
 		return containsString(filter.Values, country)
@@ -71,7 +77,7 @@ func matchCountry(filter admin.SegmentFilter, country string) bool {
 	}
 }
 
-func matchCustomString(filter admin.SegmentFilter, ext string) bool {
+func matchCustomString(filter Filter, ext string) bool {
 	var parsedExt Ext
 
 	if err := json.Unmarshal([]byte(ext), &parsedExt); err != nil {
