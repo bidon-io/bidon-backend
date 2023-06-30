@@ -21,7 +21,7 @@ type AppFetcher interface {
 }
 
 type SegmentFetcher interface {
-	Fetch(ctx context.Context, params *segment.Params) (segment.Segment, error)
+	Fetch(ctx context.Context, appID int64) ([]segment.Segment, error)
 }
 
 type Geocoder interface {
@@ -39,20 +39,19 @@ func (b *BaseHandler) resolveRequest(c echo.Context) (*request, error) {
 		return nil, err
 	}
 
-	var country *Country
+	var geoData *geocoder.GeoData
 	if os.Getenv("USE_GEOCODING") == "true" {
-		geoData, err := b.Geocoder.FindGeoData(c.Request().Context(), c.RealIP())
+		geoData, err = b.Geocoder.FindGeoData(c.Request().Context(), c.RealIP())
 		if err != nil {
 			return nil, err
 		}
-		country = &Country{ID: geoData.CountryID, CountryCode: geoData.CountryCode}
 	} else {
-		country = &Country{ID: 0, CountryCode: raw.Geo.Country}
+		geoData = &geocoder.GeoData{CountryID: 0, CountryCode: raw.Geo.Country}
 	}
 
 	return &request{
 		raw:     raw,
 		app:     app,
-		country: country,
+		geoData: geoData,
 	}, nil
 }

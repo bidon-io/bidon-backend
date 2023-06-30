@@ -1,41 +1,10 @@
 package segment
 
 import (
-	"github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/google/go-cmp/cmp"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 )
-
-func TestMatch(t *testing.T) {
-	// Define test segments and params
-	segments := []db.Segment{
-		{
-			Filters: []admin.SegmentFilter{
-				{Type: "country", Operator: "IN", Values: []string{"US", "CA"}},
-			},
-			Model: db.Model{ID: 1},
-		},
-		{
-			Filters: []admin.SegmentFilter{
-				{Type: "country", Operator: "NOT IN", Values: []string{"UK", "DE"}},
-			},
-			Model: db.Model{ID: 2},
-		},
-	}
-
-	params := Params{
-		Country: "US",
-	}
-
-	// Test case 1: Matching segment exists
-	expected := Segment{ID: 1}
-	result := Match(segments, &params)
-	if diff := cmp.Diff(result, expected); diff != "" {
-		t.Errorf("Match returned unexpected result. Expected: %v, Got: %v", expected, result)
-	}
-}
 
 func TestMatchCountry(t *testing.T) {
 	// Test case 1: IN operator, country in values

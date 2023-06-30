@@ -3,6 +3,7 @@ package sdkapi
 import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"golang.org/x/exp/maps"
 )
@@ -11,18 +12,12 @@ import (
 type request struct {
 	raw     schema.Request
 	app     *App
-	country *Country
+	geoData *geocoder.GeoData
 }
 
 // App represents an app for the purposes of the SDK API
 type App struct {
 	ID int64
-}
-
-// Country represents a country for the purposes of the SDK API
-type Country struct {
-	ID          int64
-	CountryCode string
 }
 
 func (r *request) adFormat() ad.Format {

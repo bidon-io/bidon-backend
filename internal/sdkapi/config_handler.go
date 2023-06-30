@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/config"
 	"github.com/bidon-io/bidon-backend/internal/segment"
@@ -11,7 +12,7 @@ import (
 type ConfigHandler struct {
 	*BaseHandler
 	AdaptersBuilder *config.AdaptersBuilder
-	SegmentFetcher  SegmentFetcher
+	SegmentMatcher  *segment.Matcher
 }
 
 type ConfigResponse struct {
@@ -22,7 +23,7 @@ type ConfigResponse struct {
 }
 
 type Segment struct {
-	ID *int64 `json:"id"`
+	ID string `json:"id"`
 }
 
 type ConfigResponseInit struct {
@@ -37,20 +38,17 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 	}
 
 	segmentParams := &segment.Params{
-		Country: req.country.CountryCode,
+		Country: req.geoData.CountryCode,
 		Ext:     req.raw.Segment.Ext,
 	}
 
-	sgmnt, err := h.SegmentFetcher.Fetch(c.Request().Context(), segmentParams)
-	if err != nil {
-		return err
-	}
+	sgmnt := h.SegmentMatcher.Match(c.Request().Context(), segmentParams)
 
-	var segmentID *int64
+	var segmentID string
 	if sgmnt.ID != 0 {
-		segmentID = &sgmnt.ID
+		segmentID = strconv.Itoa(int(sgmnt.ID))
 	} else {
-		segmentID = nil
+		segmentID = ""
 	}
 
 	adapters, err := h.AdaptersBuilder.Build(c.Request().Context(), req.app.ID, req.adapterKeys())

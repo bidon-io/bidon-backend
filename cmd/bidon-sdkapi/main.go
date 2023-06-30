@@ -55,9 +55,12 @@ func main() {
 		AppFetcher: &sdkapistore.AppFetcher{DB: db},
 		Geocoder:   &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB},
 	}
+	segmentMatcher := segment.Matcher{
+		Fetcher: &sdkapistore.SegmentFetcher{DB: db},
+	}
 	auctionHandler := sdkapi.AuctionHandler{
 		BaseHandler:    &baseHandler,
-		SegmentFetcher: &segment.Fetcher{DB: db},
+		SegmentMatcher: &segmentMatcher,
 		AuctionBuilder: &auction.Builder{
 			ConfigMatcher:    &auctionstore.ConfigMatcher{DB: db},
 			LineItemsMatcher: &auctionstore.LineItemsMatcher{DB: db},
@@ -65,7 +68,7 @@ func main() {
 	}
 	configHandler := sdkapi.ConfigHandler{
 		BaseHandler:    &baseHandler,
-		SegmentFetcher: &segment.Fetcher{DB: db},
+		SegmentMatcher: &segmentMatcher,
 		AdaptersBuilder: &bidonconfig.AdaptersBuilder{
 			AppDemandProfileFetcher: &configstore.AppDemandProfileFetcher{DB: db},
 		},

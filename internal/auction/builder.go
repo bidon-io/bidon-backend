@@ -3,6 +3,7 @@ package auction
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -46,11 +47,11 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Auction, err
 		return nil, err
 	}
 
-	var segmentID *int64
+	var segmentID string
 	if params.SegmentID != 0 {
-		segmentID = &params.SegmentID
+		segmentID = strconv.Itoa(int(params.SegmentID))
 	} else {
-		segmentID = nil
+		segmentID = ""
 	}
 
 	auction := Auction{

@@ -12,7 +12,7 @@ import (
 type AuctionHandler struct {
 	*BaseHandler
 	AuctionBuilder *auction.Builder
-	SegmentFetcher SegmentFetcher
+	SegmentMatcher *segment.Matcher
 }
 
 type AuctionResponse struct {
@@ -29,15 +29,12 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	}
 
 	segmentParams := &segment.Params{
-		Country: req.country.CountryCode,
+		Country: req.geoData.CountryCode,
 		Ext:     req.raw.Segment.Ext,
 		AppID:   req.app.ID,
 	}
 
-	sgmnt, err := h.SegmentFetcher.Fetch(c.Request().Context(), segmentParams)
-	if err != nil {
-		return err
-	}
+	sgmnt := h.SegmentMatcher.Match(c.Request().Context(), segmentParams)
 
 	params := &auction.BuildParams{
 		AppID:      req.app.ID,

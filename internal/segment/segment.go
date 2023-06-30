@@ -26,22 +26,20 @@ type Segment struct {
 	ID int64 `json:"id"`
 }
 
-type Fetcher struct {
-	DB *db.DB
+type Matcher struct {
+	Fetcher Fetcher
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, params *Params) (Segment, error) {
-	var dbSgmnts []db.Segment
-	err := f.DB.WithContext(ctx).Where("app_id = ?", params.AppID).Order("priority ASC").Find(&dbSgmnts).Error
+type Fetcher interface {
+	Fetch(ctx context.Context, appID int64) ([]db.Segment, error)
+}
 
+func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
+	dbSgmnts, err := m.Fetcher.Fetch(ctx, params.AppID)
 	if err != nil {
-		return Segment{ID: 0}, err
+		return Segment{ID: 0}
 	}
 
-	return Match(dbSgmnts, params), nil
-}
-
-func Match(dbSgmnts []db.Segment, params *Params) Segment {
 	for _, dbSgmnt := range dbSgmnts {
 		isMatched := false
 

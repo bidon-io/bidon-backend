@@ -24,8 +24,7 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 			"app_id":  appID,
 			"ad_type": db.AdTypeFromDomain(adType),
 		}).
-		Order("created_at DESC").
-		Take(dbConfig)
+		Order("created_at DESC")
 
 	if segmentID != 0 {
 		query = query.Where("segment_id = ?", segmentID)
@@ -33,7 +32,7 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 		query = query.Where("segment_id IS NULL")
 	}
 
-	err := query.Error
+	err := query.Take(dbConfig).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = auction.ErrNoAdsFound
