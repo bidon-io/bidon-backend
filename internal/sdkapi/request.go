@@ -41,6 +41,8 @@ func (r *request) countryCode() string {
 			countryCode = r.raw.Device.Geo.Country
 		} else if r.raw.Geo != nil {
 			countryCode = r.raw.Geo.Country
+		} else {
+			countryCode = geocoder.UNKNOWN_COUNTRY_CODE
 		}
 
 		return countryCode
