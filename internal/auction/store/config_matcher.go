@@ -24,7 +24,6 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 			"app_id":  appID,
 			"ad_type": db.AdTypeFromDomain(adType),
 		}).
-		Order("segment_id ASC").
 		Order("created_at DESC")
 
 	if segmentID != 0 {
