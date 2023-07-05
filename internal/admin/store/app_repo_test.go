@@ -16,7 +16,7 @@ func TestAppRepo_List(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	users := dbtest.CreateUsersList(context.Background(), tx, 2)
+	users := dbtest.CreateUsersList(t, tx, 2)
 	apps := []admin.AppAttrs{
 		{
 			PlatformID:  admin.IOSPlatformID,
@@ -63,7 +63,7 @@ func TestAppRepo_Find(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := dbtest.CreateUser(context.Background(), tx, 1)
+	user := dbtest.CreateUser(t, tx, 1)
 	attrs := &admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
@@ -95,7 +95,7 @@ func TestAppRepo_Update(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := dbtest.CreateUser(context.Background(), tx, 1)
+	user := dbtest.CreateUser(t, tx, 1)
 	attrs := admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
@@ -132,7 +132,7 @@ func TestAppRepo_Delete(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := dbtest.CreateUser(context.Background(), tx, 1)
+	user := dbtest.CreateUser(t, tx, 1)
 	attrs := &admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
