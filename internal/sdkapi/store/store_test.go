@@ -9,6 +9,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
+	"github.com/bidon-io/bidon-backend/internal/testutils"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -24,7 +25,9 @@ func TestAppFetcher_Fetch(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
+	user := testutils.CreateUser(t, tx, 1)
 	app := &db.App{
+		UserID:      user.ID,
 		AppKey:      sql.NullString{String: "asdf", Valid: true},
 		PackageName: sql.NullString{String: "com.example.app", Valid: true},
 	}
