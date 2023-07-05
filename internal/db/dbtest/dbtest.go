@@ -2,6 +2,8 @@
 package dbtest
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -31,4 +33,24 @@ func Prepare() *db.DB {
 	}
 
 	return testDB
+}
+
+func CreateUser(ctx context.Context, tx *db.DB, index int) *db.User {
+	user := &db.User{
+		Email: fmt.Sprintf("test%d@email.com", index),
+	}
+
+	if err := tx.WithContext(ctx).Create(user).Error; err != nil {
+		log.Fatalf("Failed to create user: %v", err)
+	}
+	return user
+}
+
+func CreateUsersList(ctx context.Context, tx *db.DB, usersCount int) []*db.User {
+	users := make([]*db.User, usersCount)
+	for i := range users {
+		users[i] = CreateUser(ctx, tx, i)
+	}
+
+	return users
 }

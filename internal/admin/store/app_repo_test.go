@@ -6,7 +6,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/store"
-	"github.com/bidon-io/bidon-backend/internal/testutils"
+	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -16,7 +16,7 @@ func TestAppRepo_List(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	users := testutils.CreateUsersList(t, tx, 2)
+	users := dbtest.CreateUsersList(context.Background(), tx, 2)
 	apps := []admin.AppAttrs{
 		{
 			PlatformID:  admin.IOSPlatformID,
@@ -44,7 +44,7 @@ func TestAppRepo_List(t *testing.T) {
 		}
 
 		want[i] = *app
-		want[i].User = *users[i]
+		want[i].User = *store.UserResource(users[i])
 	}
 
 	got, err := repo.List(context.Background())
@@ -63,7 +63,7 @@ func TestAppRepo_Find(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := testutils.CreateUser(t, tx, 1)
+	user := dbtest.CreateUser(context.Background(), tx, 1)
 	attrs := &admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
@@ -77,7 +77,7 @@ func TestAppRepo_Find(t *testing.T) {
 	if err != nil {
 		t.Fatalf("repo.Create(ctx, %+v) = %v, %q; want %T, %v", attrs, nil, err, want, nil)
 	}
-	want.User = *user
+	want.User = *store.UserResource(user)
 
 	got, err := repo.Find(context.Background(), want.ID)
 	if err != nil {
@@ -95,7 +95,7 @@ func TestAppRepo_Update(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := testutils.CreateUser(t, tx, 1)
+	user := dbtest.CreateUser(context.Background(), tx, 1)
 	attrs := admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
@@ -132,7 +132,7 @@ func TestAppRepo_Delete(t *testing.T) {
 
 	repo := store.NewAppRepo(tx)
 
-	user := testutils.CreateUser(t, tx, 1)
+	user := dbtest.CreateUser(context.Background(), tx, 1)
 	attrs := &admin.AppAttrs{
 		PlatformID:  admin.IOSPlatformID,
 		HumanName:   "App 1",
