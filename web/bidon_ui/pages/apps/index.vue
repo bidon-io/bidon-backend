@@ -9,7 +9,11 @@ const columns = [
   { field: "platformId", header: "Platform Id" },
   { field: "humanName", header: "Human Name" },
   { field: "packageName", header: "Package Name" },
-  { field: "userId", header: "User" },
+  {
+    field: "user_id",
+    header: "User",
+    link: { basePath: "users", textField: "email", dataField: "user" },
+  },
   { field: "appKey", header: "App Key" },
 ];
 const resourcesPath = "/apps";

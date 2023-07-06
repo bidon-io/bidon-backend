@@ -28,7 +28,12 @@ const fields = [
   { label: "Platform Id", key: "platformId" },
   { label: "Human Name", key: "humanName" },
   { label: "Package Name", key: "packageName" },
-  { label: "User", key: "userId" },
+  {
+    label: "User",
+    key: "userId",
+    type: "link",
+    link: { basePath: "users", textField: "email", dataField: "user" },
+  },
   { label: "App Key", key: "appKey" },
   { label: "Settings", key: "settings", type: "textarea" },
 ];
