@@ -1,10 +1,12 @@
 package sdkapi
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/config"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
@@ -14,6 +16,7 @@ type ConfigHandler struct {
 	*BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]
 	AdaptersBuilder *config.AdaptersBuilder
 	SegmentMatcher  *segment.Matcher
+	EventLogger     *event.Logger
 }
 
 type ConfigResponse struct {
@@ -36,6 +39,11 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 	req, err := h.resolveRequest(c)
 	if err != nil {
 		return err
+	}
+
+	event := event.New(c, event.ConfigTopic, &req.raw, req.geoData)
+	if err := h.EventLogger.Log(c, event); err != nil {
+		logError(c, fmt.Errorf("log config event: %v", err))
 	}
 
 	segmentParams := &segment.Params{
