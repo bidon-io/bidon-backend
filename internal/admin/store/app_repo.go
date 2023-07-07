@@ -50,10 +50,8 @@ func (m appMapper) resource(a *db.App) admin.App {
 		ID:       a.ID,
 		AppAttrs: m.resourceAttrs(a),
 		User: admin.User{
-			ID: a.User.ID,
-			UserAttrs: admin.UserAttrs{
-				Email: a.User.Email,
-			},
+			ID:        a.User.ID,
+			UserAttrs: userMapper{}.resourceAttrs(&a.User),
 		},
 	}
 }
