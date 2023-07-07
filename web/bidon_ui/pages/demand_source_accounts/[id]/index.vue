@@ -32,8 +32,6 @@ const fields = [
   {
     label: "User",
     key: "userId",
-    type: "link",
-    link: `/users/${resource.userId}`,
   },
   { label: "Type", key: "type" },
   { label: "Demand Source", key: "demandSourceId" },

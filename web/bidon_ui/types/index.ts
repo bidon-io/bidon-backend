@@ -1,4 +1,4 @@
-export { ResourceLink } ;
+export { ResourceLink };
 
 declare global {
   type SomeType = [boolean, string, number];

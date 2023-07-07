@@ -29,12 +29,11 @@ const resource = response.data;
 
 const fields = [
   { label: "ID", key: "id" },
-  { label: "App", key: "appId", type: "link", link: `/apps/${resource.appId}` },
+  { label: "App", key: "appId" },
   { label: "Demand Source", key: "demandSourceId" },
   {
     label: "Account",
     key: "accountId",
-    link: `/demand_source_accounts/${resource.accountId}`,
   },
   { label: "Data", key: "data", type: "textarea" },
   { label: "Account Type", key: "accountType" },

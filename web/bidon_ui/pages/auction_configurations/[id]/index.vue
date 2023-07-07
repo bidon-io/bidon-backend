@@ -32,8 +32,6 @@ const fields = [
   {
     label: "App",
     key: "appId",
-    type: "link",
-    link: `/apps/${resource.app_id}`,
   },
   { label: "Name", key: "name" },
   { label: "Ad type", key: "adType" },
