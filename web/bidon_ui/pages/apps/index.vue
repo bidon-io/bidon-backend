@@ -10,7 +10,7 @@ const columns = [
   { field: "humanName", header: "Human Name" },
   { field: "packageName", header: "Package Name" },
   {
-    field: "user_id",
+    field: "userId",
     header: "User",
     link: { basePath: "users", textField: "email", dataField: "user" },
   },

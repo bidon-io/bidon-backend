@@ -15,6 +15,6 @@ const linkData = props.link.dataField
   ? props.data[props.link.dataField]
   : props.data;
 const linkPath = `${props.link.basePath}/${linkData?.id}`;
-const linkText = linkData[props.link.textField];
+const linkText = linkData && linkData[props.link.textField];
 /* eslint-enable @typescript-eslint/no-explicit-any */
 </script>

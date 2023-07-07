@@ -3,7 +3,6 @@
     v-model:selection="selectedResources"
     :value="resources"
     data-key="id"
-    sort-field="id"
     paginator
     :rows="12"
     :rows-per-page-options="[12, 24, 36, 48]"

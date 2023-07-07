@@ -32,11 +32,18 @@ const fields = [
   {
     label: "App",
     key: "appId",
+    type: "link",
+    link: { basePath: "apps", textField: "packageName", dataField: "app" },
   },
   { label: "Name", key: "name" },
   { label: "Ad type", key: "adType" },
   { label: "Price floor", key: "pricefloor" },
   { label: "Rounds", key: "rounds", type: "textarea" },
-  { label: "Segment", key: "segmentId" },
+  {
+    label: "Segment",
+    key: "segmentId",
+    type: "link",
+    link: { basePath: "segments", textField: "name", dataField: "segment" },
+  },
 ];
 </script>
