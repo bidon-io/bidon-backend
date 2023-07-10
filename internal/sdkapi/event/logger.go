@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/labstack/echo/v4"
 	"golang.org/x/exp/slices"
 )
 
@@ -15,26 +14,19 @@ type Logger struct {
 }
 
 type LoggerEngine interface {
-	Produce(ctx context.Context, topic Topic, message []byte, errorCb func(error)) error
+	Produce(ctx context.Context, topic Topic, message []byte, handleErr func(error))
 }
 
-func (l *Logger) Log(c echo.Context, event Event) error {
+func (l *Logger) Log(ctx context.Context, event Event, handleErr func(error)) {
 	payload := make(map[string]any)
 	smashMap(payload, event.Payload)
 
 	message, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("marshal payload: %v", err)
+		handleErr(fmt.Errorf("marshal event payload: %v", err))
 	}
 
-	err = l.Engine.Produce(c.Request().Context(), event.Topic, message, func(err error) {
-		logError(c, fmt.Errorf("async produce message: %v", err))
-	})
-	if err != nil {
-		return fmt.Errorf("produce message: %v", err)
-	}
-
-	return nil
+	l.Engine.Produce(ctx, event.Topic, message, handleErr)
 }
 
 func smashMap(dst, src map[string]any, nesting ...string) {

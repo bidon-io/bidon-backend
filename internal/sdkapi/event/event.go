@@ -6,9 +6,6 @@ import (
 	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
-	"github.com/labstack/echo/v4"
 	"golang.org/x/exp/maps"
 )
 
@@ -20,7 +17,7 @@ type Event struct {
 type Topic string
 
 const (
-	UnknownTopic Topic = "unknown"
+	UnknownTopic Topic = ""
 	ConfigTopic  Topic = "config"
 )
 
@@ -28,26 +25,22 @@ type RequestMapper interface {
 	Map() map[string]any
 }
 
-// New creates new Event for Logger to log.
-// TODO: We need to add application specific `context`, because we need to be able
-// to log error to Sentry from different parts of application, and right now we can't do this without echo.Context
-func New(c echo.Context, topic Topic, mapper RequestMapper, geoData geocoder.GeoData) Event {
+// Prepare creates new Event for Logger to log.
+// It is safe to use created Event when error is returned.
+func Prepare(topic Topic, mapper RequestMapper, geoData geocoder.GeoData) (Event, error) {
 	payload := mapper.Map()
 
 	payload["timestamp"] = float64(time.Now().UnixNano()) / 1e9
 	payload["geo"] = eventGeo(payload["geo"], geoData)
 
 	ext, err := eventExt(payload["ext"])
-	if err != nil {
-		logError(c, err)
-	}
 
 	payload["ext"] = ext
 
 	return Event{
 		Topic:   topic,
 		Payload: payload,
-	}
+	}, err
 }
 
 func eventGeo(geo any, geoData geocoder.GeoData) map[string]any {
@@ -86,18 +79,4 @@ func eventExt(ext any) (map[string]any, error) {
 	}
 
 	return eventExt, nil
-}
-
-func logError(c echo.Context, err error) {
-	c.Logger().Error(err)
-
-	hub := sentryecho.GetHubFromContext(c)
-	if hub != nil {
-		client, scope := hub.Client(), hub.Scope()
-		client.CaptureException(
-			err,
-			&sentry.EventHint{Context: c.Request().Context()},
-			scope,
-		)
-	}
 }
