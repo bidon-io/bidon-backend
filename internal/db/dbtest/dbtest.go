@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/segment"
@@ -101,27 +102,59 @@ func CreateDemandSourcesList(t *testing.T, tx *db.DB, count int) []*db.DemandSou
 	return demandSources
 }
 
-func CreateDemandSourceAccount(t *testing.T, tx *db.DB, index int, user *db.User, demandSource *db.DemandSource) *db.DemandSourceAccount {
+type DemandSourceAccountOption func(*db.DemandSourceAccount)
+
+func WithDemandSourceAccountOptions(optAccount *db.DemandSourceAccount) DemandSourceAccountOption {
+	return func(account *db.DemandSourceAccount) {
+		if optAccount.DemandSourceID != 0 {
+			account.DemandSourceID = optAccount.DemandSourceID
+		}
+		if optAccount.UserID != 0 {
+			account.UserID = optAccount.UserID
+		}
+		if optAccount.Type != "" {
+			account.Type = optAccount.Type
+		}
+		if optAccount.Extra != nil {
+			account.Extra = optAccount.Extra
+		}
+		if optAccount.IsBidding != nil {
+			account.IsBidding = optAccount.IsBidding
+		}
+		if optAccount.IsDefault.Valid {
+			account.IsDefault = optAccount.IsDefault
+		}
+		if optAccount.DemandSource != (db.DemandSource{}) {
+			account.DemandSource = optAccount.DemandSource
+		}
+	}
+}
+
+func CreateDemandSourceAccount(t *testing.T, tx *db.DB, opts ...DemandSourceAccountOption) *db.DemandSourceAccount {
 	t.Helper()
 
-	if user == nil {
-		user = CreateUser(t, tx, index)
-	}
-
-	if demandSource == nil {
-		demandSource = CreateDemandSource(t, tx, index)
-	}
-
 	account := &db.DemandSourceAccount{
-		DemandSourceID: demandSource.ID,
-		UserID:         user.ID,
-		Type:           "DemandSourceAccount::Admob",
-		Extra:          map[string]any{},
-		IsBidding:      new(bool),
+		Type:      "DemandSourceAccount::Admob",
+		Extra:     map[string]any{},
+		IsBidding: new(bool),
 		IsDefault: sql.NullBool{
 			Valid: true,
 			Bool:  true,
 		},
+	}
+
+	for _, opt := range opts {
+		opt(account)
+	}
+
+	index := int(time.Now().UnixNano())
+
+	if account.UserID == 0 {
+		account.UserID = CreateUser(t, tx, index).ID
+	}
+
+	if account.DemandSourceID == 0 {
+		account.DemandSourceID = CreateDemandSource(t, tx, index).ID
 	}
 
 	if err := tx.Create(account).Error; err != nil {
@@ -135,7 +168,7 @@ func CreateDemandSourceAccountsList(t *testing.T, tx *db.DB, count int) []*db.De
 
 	accounts := make([]*db.DemandSourceAccount, count)
 	for i := range accounts {
-		accounts[i] = CreateDemandSourceAccount(t, tx, i, nil, nil)
+		accounts[i] = CreateDemandSourceAccount(t, tx)
 	}
 
 	return accounts

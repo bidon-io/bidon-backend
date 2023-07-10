@@ -25,7 +25,10 @@ func TestAppDemandProfileRepo_List(t *testing.T) {
 	demandSources := dbtest.CreateDemandSourcesList(t, tx, 2)
 	accounts := make([]*db.DemandSourceAccount, 2)
 	for i := range accounts {
-		accounts[i] = dbtest.CreateDemandSourceAccount(t, tx, i, user, demandSources[i])
+		accounts[i] = dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
+			UserID:         user.ID,
+			DemandSourceID: demandSources[i].ID,
+		}))
 	}
 	profiles := []admin.AppDemandProfileAttrs{
 		{
@@ -76,7 +79,10 @@ func TestAppDemandProfileRepo_Find(t *testing.T) {
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
 	demandSource := dbtest.CreateDemandSource(t, tx, 1)
-	account := dbtest.CreateDemandSourceAccount(t, tx, 1, user, demandSource)
+	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
+		UserID:         user.ID,
+		DemandSourceID: demandSource.ID,
+	}))
 	attrs := &admin.AppDemandProfileAttrs{
 		AppID:          app.ID,
 		DemandSourceID: demandSource.ID,
@@ -112,7 +118,10 @@ func TestAppDemandProfileRepo_Update(t *testing.T) {
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
 	demandSource := dbtest.CreateDemandSource(t, tx, 1)
-	account := dbtest.CreateDemandSourceAccount(t, tx, 1, user, demandSource)
+	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
+		UserID:         user.ID,
+		DemandSourceID: demandSource.ID,
+	}))
 	attrs := admin.AppDemandProfileAttrs{
 		AppID:          app.ID,
 		DemandSourceID: demandSource.ID,
@@ -151,7 +160,10 @@ func TestAppDemandProfileRepo_Delete(t *testing.T) {
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
 	demandSource := dbtest.CreateDemandSource(t, tx, 1)
-	account := dbtest.CreateDemandSourceAccount(t, tx, 1, user, demandSource)
+	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
+		UserID:         user.ID,
+		DemandSourceID: demandSource.ID,
+	}))
 	attrs := &admin.AppDemandProfileAttrs{
 		AppID:          app.ID,
 		DemandSourceID: demandSource.ID,
