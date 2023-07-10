@@ -76,6 +76,71 @@ func CreateAppsList(t *testing.T, tx *db.DB, count int) []*db.App {
 	return apps
 }
 
+func CreateDemandSource(t *testing.T, tx *db.DB, index int) *db.DemandSource {
+	t.Helper()
+
+	demandSource := &db.DemandSource{
+		APIKey:    fmt.Sprintf("apikey%d", index),
+		HumanName: "demandsource",
+	}
+
+	if err := tx.Create(demandSource).Error; err != nil {
+		t.Fatalf("Failed to create demand source: %v", err)
+	}
+	return demandSource
+}
+
+func CreateDemandSourcesList(t *testing.T, tx *db.DB, count int) []*db.DemandSource {
+	t.Helper()
+
+	demandSources := make([]*db.DemandSource, count)
+	for i := range demandSources {
+		demandSources[i] = CreateDemandSource(t, tx, i)
+	}
+
+	return demandSources
+}
+
+func CreateDemandSourceAccount(t *testing.T, tx *db.DB, index int, user *db.User, demandSource *db.DemandSource) *db.DemandSourceAccount {
+	t.Helper()
+
+	if user == nil {
+		user = CreateUser(t, tx, index)
+	}
+
+	if demandSource == nil {
+		demandSource = CreateDemandSource(t, tx, index)
+	}
+
+	account := &db.DemandSourceAccount{
+		DemandSourceID: demandSource.ID,
+		UserID:         user.ID,
+		Type:           "DemandSourceAccount::Admob",
+		Extra:          map[string]any{},
+		IsBidding:      new(bool),
+		IsDefault: sql.NullBool{
+			Valid: true,
+			Bool:  true,
+		},
+	}
+
+	if err := tx.Create(account).Error; err != nil {
+		t.Fatalf("Failed to create demand source account: %v", err)
+	}
+	return account
+}
+
+func CreateDemandSourceAccountsList(t *testing.T, tx *db.DB, count int) []*db.DemandSourceAccount {
+	t.Helper()
+
+	accounts := make([]*db.DemandSourceAccount, count)
+	for i := range accounts {
+		accounts[i] = CreateDemandSourceAccount(t, tx, i, nil, nil)
+	}
+
+	return accounts
+}
+
 func CreateSegment(t *testing.T, tx *db.DB, index int, app *db.App) *db.Segment {
 	t.Helper()
 

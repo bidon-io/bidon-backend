@@ -32,13 +32,17 @@ func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id
 //lint:ignore U1000 this method is used by generic struct
 func (m demandSourceAccountMapper) resource(a *db.DemandSourceAccount) admin.DemandSourceAccount {
 	return admin.DemandSourceAccount{
-		ID: a.ID,
-		DemandSourceAccountAttrs: admin.DemandSourceAccountAttrs{
-			UserID:         a.UserID,
-			Type:           a.Type,
-			DemandSourceID: a.DemandSourceID,
-			IsBidding:      a.IsBidding,
-			Extra:          a.Extra,
-		},
+		ID:                       a.ID,
+		DemandSourceAccountAttrs: m.resourceAttrs(a),
+	}
+}
+
+func (m demandSourceAccountMapper) resourceAttrs(a *db.DemandSourceAccount) admin.DemandSourceAccountAttrs {
+	return admin.DemandSourceAccountAttrs{
+		UserID:         a.UserID,
+		Type:           a.Type,
+		DemandSourceID: a.DemandSourceID,
+		IsBidding:      a.IsBidding,
+		Extra:          a.Extra,
 	}
 }

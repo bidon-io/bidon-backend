@@ -65,12 +65,14 @@ type Model struct {
 
 type AppDemandProfile struct {
 	Model
-	AppID          int64  `gorm:"column:app_id;type:bigint;not null"`
-	AccountType    string `gorm:"column:account_type;type:varchar;not null"`
-	AccountID      int64  `gorm:"column:account_id;type:bigint;not null"`
-	Account        DemandSourceAccount
-	DemandSourceID int64          `gorm:"column:demand_source_id;type:bigint;not null"`
-	Data           map[string]any `gorm:"column:data;type:jsonb;default:'{}';serializer:json"`
+	AppID          int64               `gorm:"column:app_id;type:bigint;not null"`
+	App            App                 `gorm:"foreignKey:AppID"`
+	AccountType    string              `gorm:"column:account_type;type:varchar;not null"`
+	AccountID      int64               `gorm:"column:account_id;type:bigint;not null"`
+	Account        DemandSourceAccount `gorm:"foreignKey:AccountID"`
+	DemandSourceID int64               `gorm:"column:demand_source_id;type:bigint;not null"`
+	DemandSource   DemandSource        `gorm:"foreignKey:DemandSourceID"`
+	Data           map[string]any      `gorm:"column:data;type:jsonb;default:'{}';serializer:json"`
 }
 
 type App struct {
