@@ -144,6 +144,7 @@ type Segment struct {
 	Filters     []segment.Filter `gorm:"column:filters;type:jsonb;not null;default:'[]';serializer:json"`
 	Enabled     *bool            `gorm:"column:enabled;type:bool;not null;default:true"`
 	AppID       int64            `gorm:"column:app_id;type:bigint;not null"`
+	App         App              `gorm:"foreignKey:AppID"`
 	Priority    int32            `gorm:"column:priority;type:integer;default:0;not null"`
 }
 
