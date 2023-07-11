@@ -4,16 +4,14 @@
 </template>
 
 <script setup>
+import { ResourceTableFields } from "@/constants";
+
 const columns = [
-  { field: "id", header: "Id", sortable: true },
+  ResourceTableFields.Id,
   { field: "platformId", header: "Platform Id" },
   { field: "humanName", header: "Human Name" },
   { field: "packageName", header: "Package Name" },
-  {
-    field: "userId",
-    header: "User",
-    link: { basePath: "users", textField: "email", dataField: "user" },
-  },
+  ResourceTableFields.User,
   { field: "appKey", header: "App Key" },
 ];
 const resourcesPath = "/apps";

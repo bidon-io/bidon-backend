@@ -5,7 +5,10 @@ declare global {
 
   interface ResourceLink {
     basePath: string;
-    textField: string;
-    dataField?: string;
+    extractLinkData: (data: any) => {
+      linkText: string;
+      id: number;
+      isValid: boolean;
+    };
   }
 }

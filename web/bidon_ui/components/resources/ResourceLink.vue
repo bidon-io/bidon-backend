@@ -1,5 +1,5 @@
 <template>
-  <NuxtLink v-if="linkData" :to="linkPath" class="text-blue-500">
+  <NuxtLink v-if="isValid" :to="`${link.basePath}/${id}`" class="text-blue-500">
     {{ linkText }}
   </NuxtLink>
 </template>
@@ -10,11 +10,6 @@ const props = defineProps<{
   link: ResourceLink;
   data: any;
 }>();
-
-const linkData = props.link.dataField
-  ? props.data[props.link.dataField]
-  : props.data;
-const linkPath = `${props.link.basePath}/${linkData?.id}`;
-const linkText = linkData && linkData[props.link.textField];
+const { isValid, linkText, id } = props.link.extractLinkData(props.data);
 /* eslint-enable @typescript-eslint/no-explicit-any */
 </script>
