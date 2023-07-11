@@ -35,11 +35,11 @@ func (m demandSourceAccountMapper) resource(a *db.DemandSourceAccount) admin.Dem
 		ID:                       a.ID,
 		DemandSourceAccountAttrs: m.resourceAttrs(a),
 		User: admin.User{
-			ID:        a.UserID,
+			ID:        a.User.ID,
 			UserAttrs: userMapper{}.resourceAttrs(&a.User),
 		},
 		DemandSource: admin.DemandSource{
-			ID:                a.DemandSourceID,
+			ID:                a.DemandSource.ID,
 			DemandSourceAttrs: demandSourceMapper{}.resourceAttrs(&a.DemandSource),
 		},
 	}

@@ -11,21 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func createDemandSource(t *testing.T, tx *db.DB, APIKey string) *db.DemandSource {
-	t.Helper()
-
-	demandSource := &db.DemandSource{
-		APIKey:    APIKey,
-		HumanName: APIKey,
-	}
-	err := tx.Create(demandSource).Error
-	if err != nil {
-		t.Fatalf("Error creating demand source: %v", err)
-	}
-
-	return demandSource
-}
-
 func TestDemandSourceAccountRepo_List(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
