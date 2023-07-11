@@ -11,7 +11,7 @@ func NewDemandSourceAccountRepo(db *db.DB) *DemandSourceAccountRepo {
 	return &DemandSourceAccountRepo{
 		db:           db,
 		mapper:       demandSourceAccountMapper{},
-		associations: []string{},
+		associations: []string{"User", "DemandSource"},
 	}
 }
 
@@ -34,6 +34,14 @@ func (m demandSourceAccountMapper) resource(a *db.DemandSourceAccount) admin.Dem
 	return admin.DemandSourceAccount{
 		ID:                       a.ID,
 		DemandSourceAccountAttrs: m.resourceAttrs(a),
+		User: admin.User{
+			ID:        a.UserID,
+			UserAttrs: userMapper{}.resourceAttrs(&a.User),
+		},
+		DemandSource: admin.DemandSource{
+			ID:                a.DemandSourceID,
+			DemandSourceAttrs: demandSourceMapper{}.resourceAttrs(&a.DemandSource),
+		},
 	}
 }
 

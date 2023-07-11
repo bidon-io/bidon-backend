@@ -78,7 +78,7 @@ func TestAppDemandProfileRepo_Find(t *testing.T) {
 
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
-	demandSource := dbtest.CreateDemandSource(t, tx, 1)
+	demandSource := dbtest.CreateDemandSource(t, tx)
 	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
 		UserID:         user.ID,
 		DemandSourceID: demandSource.ID,
@@ -117,7 +117,7 @@ func TestAppDemandProfileRepo_Update(t *testing.T) {
 
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
-	demandSource := dbtest.CreateDemandSource(t, tx, 1)
+	demandSource := dbtest.CreateDemandSource(t, tx)
 	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
 		UserID:         user.ID,
 		DemandSourceID: demandSource.ID,
@@ -159,7 +159,7 @@ func TestAppDemandProfileRepo_Delete(t *testing.T) {
 
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
-	demandSource := dbtest.CreateDemandSource(t, tx, 1)
+	demandSource := dbtest.CreateDemandSource(t, tx)
 	account := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
 		UserID:         user.ID,
 		DemandSourceID: demandSource.ID,

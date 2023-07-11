@@ -77,12 +77,29 @@ func CreateAppsList(t *testing.T, tx *db.DB, count int) []*db.App {
 	return apps
 }
 
-func CreateDemandSource(t *testing.T, tx *db.DB, index int) *db.DemandSource {
+type DemandSourceOption func(db *db.DemandSource)
+
+func WithDemandSourceOptions(opt *db.DemandSource) DemandSourceOption {
+	return func(demandSource *db.DemandSource) {
+		if opt.HumanName != "" {
+			demandSource.HumanName = opt.HumanName
+		}
+		if opt.APIKey != "" {
+			demandSource.APIKey = opt.APIKey
+		}
+	}
+}
+
+func CreateDemandSource(t *testing.T, tx *db.DB, opts ...DemandSourceOption) *db.DemandSource {
 	t.Helper()
 
 	demandSource := &db.DemandSource{
-		APIKey:    fmt.Sprintf("apikey%d", index),
+		APIKey:    fmt.Sprintf("apikey%d", time.Now().UnixNano()),
 		HumanName: "demandsource",
+	}
+
+	for _, opt := range opts {
+		opt(demandSource)
 	}
 
 	if err := tx.Create(demandSource).Error; err != nil {
@@ -96,7 +113,7 @@ func CreateDemandSourcesList(t *testing.T, tx *db.DB, count int) []*db.DemandSou
 
 	demandSources := make([]*db.DemandSource, count)
 	for i := range demandSources {
-		demandSources[i] = CreateDemandSource(t, tx, i)
+		demandSources[i] = CreateDemandSource(t, tx)
 	}
 
 	return demandSources
@@ -154,7 +171,7 @@ func CreateDemandSourceAccount(t *testing.T, tx *db.DB, opts ...DemandSourceAcco
 	}
 
 	if account.DemandSourceID == 0 {
-		account.DemandSourceID = CreateDemandSource(t, tx, index).ID
+		account.DemandSourceID = CreateDemandSource(t, tx).ID
 	}
 
 	if err := tx.Create(account).Error; err != nil {
