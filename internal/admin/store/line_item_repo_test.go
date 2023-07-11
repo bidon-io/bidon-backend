@@ -19,7 +19,6 @@ func TestLineItemRepo_List(t *testing.T) {
 
 	repo := store.NewLineItemRepo(tx)
 
-	// applovinAccount := createDemandSourceAccount(t, tx, "DemandSourceAccount::Applovin")
 	user := dbtest.CreateUser(t, tx, 1)
 	app := dbtest.CreateApp(t, tx, 1, user)
 
@@ -28,9 +27,10 @@ func TestLineItemRepo_List(t *testing.T) {
 		HumanName: "applovin",
 	}))
 	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		UserID:       user.ID,
-		DemandSource: *applovinDemandSource,
-		Type:         "DemandSourceAccount::Applovin",
+		UserID:         user.ID,
+		DemandSourceID: applovinDemandSource.ID,
+		DemandSource:   *applovinDemandSource,
+		Type:           "DemandSourceAccount::Applovin",
 	}))
 
 	bidmachineDemandSource := dbtest.CreateDemandSource(t, tx, dbtest.WithDemandSourceOptions(&db.DemandSource{
@@ -38,9 +38,10 @@ func TestLineItemRepo_List(t *testing.T) {
 		HumanName: "bidmachine",
 	}))
 	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		UserID:       user.ID,
-		DemandSource: *bidmachineDemandSource,
-		Type:         "DemandSourceAccount::Bidmachine",
+		UserID:         user.ID,
+		DemandSourceID: bidmachineDemandSource.ID,
+		DemandSource:   *bidmachineDemandSource,
+		Type:           "DemandSourceAccount::Bidmachine",
 	}))
 
 	unityAdsDemandSource := dbtest.CreateDemandSource(t, tx, dbtest.WithDemandSourceOptions(&db.DemandSource{
@@ -48,9 +49,10 @@ func TestLineItemRepo_List(t *testing.T) {
 		HumanName: "unityads",
 	}))
 	unityAdsAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		UserID:       user.ID,
-		DemandSource: *unityAdsDemandSource,
-		Type:         "DemandSourceAccount::UnityAds",
+		UserID:         user.ID,
+		DemandSourceID: unityAdsDemandSource.ID,
+		DemandSource:   *unityAdsDemandSource,
+		Type:           "DemandSourceAccount::UnityAds",
 	}))
 
 	items := []admin.LineItemAttrs{
@@ -121,8 +123,9 @@ func TestLineItemRepo_Find(t *testing.T) {
 		HumanName: "applovin",
 	}))
 	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		DemandSource: *applovinDemandSource,
-		Type:         "DemandSourceAccount::Applovin",
+		DemandSourceID: applovinDemandSource.ID,
+		DemandSource:   *applovinDemandSource,
+		Type:           "DemandSourceAccount::Applovin",
 	}))
 
 	attrs := &admin.LineItemAttrs{
@@ -164,8 +167,9 @@ func TestLineItemRepo_Update(t *testing.T) {
 		HumanName: "applovin",
 	}))
 	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		DemandSource: *applovinDemandSource,
-		Type:         "DemandSourceAccount::Applovin",
+		DemandSourceID: applovinDemandSource.ID,
+		DemandSource:   *applovinDemandSource,
+		Type:           "DemandSourceAccount::Applovin",
 	}))
 
 	attrs := admin.LineItemAttrs{
@@ -217,8 +221,9 @@ func TestLineItemRepo_Delete(t *testing.T) {
 		HumanName: "applovin",
 	}))
 	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, dbtest.WithDemandSourceAccountOptions(&db.DemandSourceAccount{
-		DemandSource: *applovinDemandSource,
-		Type:         "DemandSourceAccount::Applovin",
+		DemandSourceID: applovinDemandSource.ID,
+		DemandSource:   *applovinDemandSource,
+		Type:           "DemandSourceAccount::Applovin",
 	}))
 	attrs := &admin.LineItemAttrs{
 		HumanName:   "banner",
