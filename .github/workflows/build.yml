@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'task/DO-1487/sentry-releases'
   release:
     types: [published]
 
@@ -72,6 +73,10 @@ jobs:
     name: Create Sentry release
     needs: [tag, build]
     if: github.event_name == 'release'
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [bidon-admin, bidon-sdkapi]
     runs-on: [self-hosted]
     steps:
       - name: Create Sentry release
@@ -79,8 +84,9 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
           SENTRY_ORG: sentry
-          SENTRY_PROJECT: bidon-admin,bidon-sdkapi
+          SENTRY_PROJECT: ${{ matrix.project }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
         with:
           environment: production
-          version: ${{ github.ref }}
+          version: v2307.2.0
+            #version: ${{ github.ref }}
