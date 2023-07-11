@@ -13,6 +13,7 @@ type Logger struct {
 	Engine LoggerEngine
 }
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks_test.go . LoggerEngine
 type LoggerEngine interface {
 	Produce(ctx context.Context, topic Topic, message []byte, handleErr func(error))
 }
