@@ -116,11 +116,11 @@ func TestAuctionHandler_OK(t *testing.T) {
 	handler := testHelperAuctionHandler(t)
 
 	// Read request and response from file
-	requestJson, err := os.ReadFile("testdata/valid_request.json")
+	requestJson, err := os.ReadFile("testdata/auction/valid_request.json")
 	if err != nil {
 		t.Fatalf("Error reading request file: %v", err)
 	}
-	expectedResponseJson, err := os.ReadFile("testdata/valid_response.json")
+	expectedResponseJson, err := os.ReadFile("testdata/auction/valid_response.json")
 	if err != nil {
 		t.Fatalf("Error reading response file: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestAuctionHandler_ErrNoAdsFound(t *testing.T) {
 	handler := testHelperAuctionHandler(t)
 
 	// Read request and response from file
-	requestJson, err := os.ReadFile("testdata/noads_request.json")
+	requestJson, err := os.ReadFile("testdata/auction/noads_request.json")
 	if err != nil {
 		t.Fatalf("Error reading request file: %v", err)
 	}
