@@ -35,11 +35,11 @@
     "w": 1080
   },
   "app": {
-    "bundle": "com.newpubco.merge",
+    "bundle": "com.app.name",
     "framework": "unity",
     "framework_version": "2020.3.48f1",
     "key": "23f1181b191f34a04f4a74840c09d116028a98ed3721de6b",
-    "version": "2.6.42"
+    "version": "22.66.33"
   },
   "token": "{}",
   "session": {
@@ -65,7 +65,7 @@
     "idfa": "0d95325a-71b7-4334-8816-9e2935ec0eef",
     "tracking_authorization_status": "AUTHORIZED"
   },
-  "ext": "{\"appodeal_segment_id\":20194,\"appodeal_session_id\":\"c6c5ce3e-b8cd-492c-ae7f-15f0e679883b\",\"appodeal_token\":{\"id\":1687857767,\"last_init\":1687863971,\"signature\":\"RXVQdjhUdUE4Q1UyZkVKVkdYN3hKMGU0YzREa29JNGFleDk3SFg0NmlmS2FuWDF0bFVVSUpZWVVJZFE3ZUIvZy0tRHlmSFNNT2Q3M01MQU9zbWc5L2o4QT09--a9b3ccac217e3a2f4be477f2f15dbb5785c0747f\"},\"ext\":{\"sample_key\":\"sample_value\"}}",
+  "ext": "{}",
   "ad_object": {
     "auction_id": "fe91db30-013d-40ff-b9b8-2e99519dd5e0",
     "interstitial": {},
