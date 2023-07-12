@@ -49,31 +49,35 @@ func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
 	}
 
 	for _, sgmnt := range sgmnts {
-		var isMatched bool
-
-		if len(sgmnt.Filters) == 0 {
-			isMatched = false
-		} else {
-			isMatched = true
-		}
-
-		for _, filter := range sgmnt.Filters {
-			switch filter.Type {
-			case "country":
-				isMatched = isMatched && matchCountry(filter, params.Country)
-			case "custom_string":
-				isMatched = isMatched && matchCustomString(filter, params.Ext)
-			default:
-				isMatched = false
-			}
-		}
-
-		if isMatched {
+		if isSegmentMatch(sgmnt, params) {
 			return Segment{ID: sgmnt.ID}
 		}
 	}
 
 	return Segment{ID: 0}
+}
+
+func isSegmentMatch(sgmnt Segment, params *Params) bool {
+	if len(sgmnt.Filters) == 0 {
+		return false
+	}
+
+	for _, filter := range sgmnt.Filters {
+		switch filter.Type {
+		case "country":
+			if !matchCountry(filter, params.Country) {
+				return false
+			}
+		case "custom_string":
+			if !matchCustomString(filter, params.Ext) {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+
+	return true
 }
 
 func matchCountry(filter Filter, country string) bool {
