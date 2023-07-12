@@ -43,25 +43,33 @@ type Fetcher interface {
 }
 
 func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
-	dbSgmnts, err := m.Fetcher.Fetch(ctx, params.AppID)
+	sgmnts, err := m.Fetcher.Fetch(ctx, params.AppID)
 	if err != nil {
 		return Segment{ID: 0}
 	}
 
-	for _, dbSgmnt := range dbSgmnts {
-		isMatched := false
+	for _, sgmnt := range sgmnts {
+		var isMatched bool
 
-		for _, filter := range dbSgmnt.Filters {
+		if len(sgmnt.Filters) == 0 {
+			isMatched = false
+		} else {
+			isMatched = true
+		}
+
+		for _, filter := range sgmnt.Filters {
 			switch filter.Type {
 			case "country":
-				isMatched = matchCountry(filter, params.Country)
+				isMatched = isMatched && matchCountry(filter, params.Country)
 			case "custom_string":
-				isMatched = matchCustomString(filter, params.Ext)
+				isMatched = isMatched && matchCustomString(filter, params.Ext)
+			default:
+				isMatched = false
 			}
+		}
 
-			if isMatched {
-				return Segment{ID: dbSgmnt.ID}
-			}
+		if isMatched {
+			return Segment{ID: sgmnt.ID}
 		}
 	}
 

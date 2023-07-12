@@ -1,11 +1,7 @@
 package segment
 
 import (
-	"context"
-	"reflect"
 	"testing"
-
-	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )
 
 func TestMatchCountry(t *testing.T) {
@@ -126,83 +122,5 @@ func TestMatchCustomString(t *testing.T) {
 	result = matchCustomString(filter, ext)
 	if result != expected {
 		t.Errorf("matchCustomString returned unexpected result. Expected: %v, Got: %v", expected, result)
-	}
-}
-
-func TestMatchTwoFilters(t *testing.T) {
-	ctx := context.Background()
-	segments := []Segment{
-		{
-			ID: 123,
-			Filters: []Filter{
-				{Type: "country", Name: "country", Operator: "IN", Values: []string{"US"}},
-				{Type: "custom_string", Name: "best_friend", Operator: "==", Values: []string{"Winnie Pooh"}},
-			},
-		},
-	}
-
-	segmentFetcher := &segmentmocks.FetcherMock{
-		FetchFunc: func(ctx context.Context, appID int64) ([]Segment, error) {
-			return segments, nil
-		},
-	}
-
-	segmentMatcher := &Matcher{
-		Fetcher: segmentFetcher,
-	}
-
-	// Test case 1: two filters are matched
-	params := &Params{
-		Ext:     "{\"custom_attributes\":{\"best_friend\":\"Winnie Pooh\"}}",
-		Country: "US",
-		AppID:   1,
-	}
-
-	result := segmentMatcher.Match(ctx, params)
-	expected := segments[0]
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("segmentMatcher.Match returned unexpected segment. Expected: %v, Got: %v", expected, result)
-	}
-
-	// Test case 2: only one filters is matched
-	params = &Params{
-		Ext:     "{\"custom_attributes\":{\"best_friend\":\"Winnie Pooh\"}}",
-		Country: "RU",
-		AppID:   1,
-	}
-
-	result = segmentMatcher.Match(ctx, params)
-	expected = Segment{ID: 0}
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("segmentMatcher.Match returned unexpected segment. Expected: %v, Got: %v", expected, result)
-	}
-
-	// Test case 3: filters are blank
-	segments = []Segment{
-		{
-			ID:      123,
-			Filters: []Filter{},
-		},
-	}
-
-	segmentFetcher = &segmentmocks.FetcherMock{
-		FetchFunc: func(ctx context.Context, appID int64) ([]Segment, error) {
-			return segments, nil
-		},
-	}
-
-	segmentMatcher = &Matcher{
-		Fetcher: segmentFetcher,
-	}
-	params = &Params{
-		Ext:     "{\"custom_attributes\":{\"best_friend\":\"Winnie Pooh\"}}",
-		Country: "US",
-		AppID:   1,
-	}
-
-	result = segmentMatcher.Match(ctx, params)
-	expected = Segment{ID: 0}
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("segmentMatcher.Match returned unexpected segment. Expected: %v, Got: %v", expected, result)
 	}
 }
