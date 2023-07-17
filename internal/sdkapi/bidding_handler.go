@@ -10,7 +10,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
-	"github.com/gofrs/uuid/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,21 +25,13 @@ type BiddingResponse struct {
 	Status string `json:"status"`
 }
 
-type BiddingLogObject struct {
-	Status    int
-	Errors    []error
-	Request   *schema.BiddingRequest
-	Response  *BiddingResponse
-	StartTime time.Time
-}
-
 type Bid struct {
-	ID       uuid.UUID              `json:"id"`
-	ImpID    uuid.UUID              `json:"impid"`
+	ID       string                 `json:"id"`
+	ImpID    string                 `json:"impid"`
 	Price    float64                `json:"price"`
 	Payload  string                 `json:"payload"`
 	DemandID adapter.Key            `json:"demand_id"`
-	Ext      map[string]interface{} `json:"ext"`
+	Ext      map[string]interface{} `json:"ext,omitempty"` // TODO: remove interface{} with concrete type
 }
 
 func (h *BiddingHandler) Handle(c echo.Context) error {
@@ -50,12 +41,6 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 	}
 
 	start := time.Now()
-
-	// lo := BiddingLogObject{
-	// 	Status:    http.StatusOK,
-	// 	Errors:    make([]error, 0),
-	// 	StartTime: start,
-	// }
 
 	ctx := c.Request().Context()
 
@@ -85,7 +70,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		GeoData:        req.geoData,
 		AdapterConfigs: adapterConfigs,
 	}
-	bid, err := h.BiddingBuilder.HoldAuction(ctx, params)
+	result, err := h.BiddingBuilder.HoldAuction(ctx, params)
 	if err != nil && err != bidding.ErrNoBids {
 		return err
 	}
@@ -94,15 +79,13 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		Status: "NO_BID",
 	}
 
-	if bid.IsBid() {
-		id, _ := uuid.NewV4()    // Temporary stub
-		impid, _ := uuid.NewV4() // Temporary stub
+	if result.IsBid() {
 		response.Bid = &Bid{
-			ID:       id,
-			ImpID:    impid,
-			Price:    bid.Price,
-			Payload:  "Some payload",
-			DemandID: adapter.BidmachineKey,
+			ID:       result.Bid.ID,
+			ImpID:    result.Bid.ImpID,
+			Price:    result.Bid.Price,
+			Payload:  result.Bid.Payload,
+			DemandID: result.Bid.DemandID,
 		}
 		response.Status = "SUCCESS"
 

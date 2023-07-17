@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
@@ -20,12 +22,6 @@ import (
 type bidmachineAdapter struct {
 	sellerID string
 	endpoint string
-}
-
-type ExtImpBidmachine struct {
-	Host     string `json:"host"`
-	Path     string `json:"path"`
-	SellerID string `json:"seller_id"`
 }
 
 var bannerFormats = map[string][2]int64{
@@ -60,7 +56,7 @@ func (a *bidmachineAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 }
 
 func (a *bidmachineAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Imp {
-	size := fullscreenFormats[string(br.Imp.Format())]
+	size := fullscreenFormats[string(br.Device.Type)]
 	w, h := size[0], size[1]
 	if !br.Imp.IsPortrait() {
 		w, h = h, w
@@ -74,12 +70,11 @@ func (a *bidmachineAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Im
 			BAttr: []adcom1.CreativeAttribute{},
 			Pos:   adcom1.PositionFullScreen.Ptr(),
 		},
-		Ext: json.RawMessage(`{"rewarded":1}`),
 	}
 }
 
 func (a *bidmachineAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
-	size := fullscreenFormats[string(br.Imp.Format())]
+	size := fullscreenFormats[string(br.Device.Type)]
 	w, h := size[0], size[1]
 	if !br.Imp.IsPortrait() {
 		w, h = h, w
@@ -93,17 +88,13 @@ func (a *bidmachineAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 			BAttr: []adcom1.CreativeAttribute{16},
 			Pos:   adcom1.PositionFullScreen.Ptr(),
 		},
-		Ext: json.RawMessage(`{"rewarded":1}`),
+		Ext: json.RawMessage(`{"rewarded": 1}`),
 	}
 }
 
 func (a *bidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
 	var errs []error
 	secure := int8(1)
-	headers := http.Header{}
-	headers.Add("Content-Type", "application/json")
-	headers.Add("Accept", "application/json")
-	headers.Add("X-Openrtb-Version", "2.5")
 
 	var imp *openrtb2.Imp
 	switch br.Imp.Type() {
@@ -117,18 +108,20 @@ func (a *bidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schem
 		return request, []error{errors.New("unknown impression type")}
 	}
 
-	imp.ID = "1"
+	impId, _ := uuid.NewV4()
+	imp.ID = impId.String()
 	imp.DisplayManager = string(adapter.BidmachineKey)
-	imp.DisplayManagerVer = "123"
+	imp.DisplayManagerVer = br.Adapters[adapter.BidmachineKey].SDKVersion
 	imp.Secure = &secure
-	imp.BidFloor = 0.1
+	imp.BidFloor = br.Imp.BidFloor
+	request.App.Publisher.ID = a.sellerID
 
-	mapStructure := &map[string]interface{}{}
-	_ = json.Unmarshal(imp.Ext, mapStructure)
+	extStructure := &map[string]interface{}{}
+	_ = json.Unmarshal(imp.Ext, extStructure)
 
-	(*mapStructure)["bid_token"] = "asd"
+	(*extStructure)["bid_token"] = br.Imp.Demands[adapter.BidmachineKey]["token"]
 
-	raw, _ := json.Marshal(mapStructure)
+	raw, _ := json.Marshal(extStructure)
 
 	imp.Ext = raw
 
@@ -146,16 +139,21 @@ func (a *bidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 		dr.Error = err
 		return dr
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", a.endpoint, bytes.NewBuffer(requestBody))
+	dr.RawRequest = string(requestBody)
+
+	url := "https://api-eu.bidmachine.io/auction/prebid/bidon"
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
 		return dr
 	}
+	httpReq.Header.Add("Content-Type", "application/json")
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			// doTimeoutNotification if bidder support, eg FB
+			fmt.Println("Timeout")
+			// TODO: Send Timeout Notification if bidder support, eg FB
 		}
 		dr.Error = err
 		return dr
@@ -167,64 +165,53 @@ func (a *bidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 		return dr
 	}
 	defer httpResp.Body.Close()
-
-	fmt.Println(string(respBody))
+	dr.RawResponse = string(respBody)
+	dr.Status = httpResp.StatusCode
 
 	return dr
 }
 
-func (a *bidmachineAdapter) ParseBids(internalRequest openrtb2.BidResponse) []error {
-	var errs []error
+func (a *bidmachineAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
+	switch dr.Status {
+	case http.StatusNoContent:
+		return dr, nil
+	case http.StatusServiceUnavailable:
+		fallthrough
+	case http.StatusBadRequest:
+		fallthrough
+	case http.StatusUnauthorized:
+		fallthrough
+	case http.StatusForbidden:
+		return dr, fmt.Errorf("unauthorized request: " + strconv.Itoa(dr.Status))
+	case http.StatusOK:
+		break
+	default:
+		return dr, fmt.Errorf("unexpected status code: " + strconv.Itoa(dr.Status))
+	}
 
-	// switch responseData.StatusCode {
-	// case http.StatusNoContent:
-	// 	return nil, nil
-	// case http.StatusServiceUnavailable:
-	// 	fallthrough
-	// case http.StatusBadRequest:
-	// 	fallthrough
-	// case http.StatusUnauthorized:
-	// 	fallthrough
-	// case http.StatusForbidden:
-	// 	return nil, []error{&errortypes.BadInput{
-	// 		Message: "unexpected status code: " + strconv.Itoa(responseData.StatusCode) + " " + string(responseData.Body),
-	// 	}}
-	// case http.StatusOK:
-	// 	break
-	// default:
-	// 	return nil, []error{&errortypes.BadServerResponse{
-	// 		Message: "unexpected status code: " + strconv.Itoa(responseData.StatusCode) + " " + string(responseData.Body),
-	// 	}}
-	// }
+	var bidResponse openrtb2.BidResponse
+	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
+	if err != nil {
+		return dr, err
+	}
 
-	// var bidResponse openrtb2.BidResponse
-	// err := json.Unmarshal(responseData.Body, &bidResponse)
-	// if err != nil {
-	// 	return nil, []error{&errortypes.BadServerResponse{
-	// 		Message: err.Error(),
-	// 	}}
-	// }
+	seat := bidResponse.SeatBid[0]
+	bid := seat.Bid[0]
 
-	// response := adapters.NewBidderResponseWithBidsCapacity(len(request.Imp))
+	dr.Bid = &adapters.BidDemandResponse{
+		ID:       bid.ID,
+		ImpID:    bid.ImpID,
+		Price:    bid.Price,
+		Payload:  bid.AdM,
+		DemandID: adapter.BidmachineKey,
+		AdID:     bid.AdID,
+		SeatID:   seat.Seat,
+		LURL:     bid.LURL,
+		NURL:     bid.NURL,
+		BURL:     bid.BURL,
+	}
 
-	// for _, seatBid := range bidResponse.SeatBid {
-	// 	for _, bid := range seatBid.Bid {
-	// 		thisBid := bid
-	// 		bidType := GetMediaTypeForImp(bid.ImpID, request.Imp)
-	// 		if bidType == UndefinedMediaType {
-	// 			errs = append(errs, &errortypes.BadServerResponse{
-	// 				Message: "ignoring bid id=" + bid.ID + ", request doesn't contain any valid impression with id=" + bid.ImpID,
-	// 			})
-	// 			continue
-	// 		}
-	// 		response.Bids = append(response.Bids, &adapters.TypedBid{
-	// 			Bid:     &thisBid,
-	// 			BidType: bidType,
-	// 		})
-	// 	}
-	// }
-
-	return errs
+	return dr, nil
 }
 
 // Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.

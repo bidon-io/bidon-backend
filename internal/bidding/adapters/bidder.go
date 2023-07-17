@@ -19,7 +19,7 @@ type BidderInterface interface {
 	ExecuteRequest(context.Context, *http.Client, openrtb2.BidRequest) *DemandResponse
 
 	// ParseBids unpacks the server's response into Bids.
-	ParseBids(openrtb2.BidResponse) []error
+	ParseBids(*DemandResponse) (*DemandResponse, error)
 }
 
 type Bidder struct {
@@ -49,7 +49,7 @@ type BidDemandResponse struct {
 	ImpID    string
 	AdID     string
 	SeatID   string
-	DemandID string
+	DemandID adapter.Key
 	Price    float64
 	LURL     string
 	NURL     string

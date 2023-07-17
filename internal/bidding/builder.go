@@ -3,7 +3,7 @@ package bidding
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -13,6 +13,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/device"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/gofrs/uuid/v5"
 	"golang.org/x/exp/maps"
 
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -57,20 +58,24 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		return response, err
 	}
 
+	bidId, err := uuid.NewV4()
+	if err != nil {
+		return response, err
+	}
 	baseBidRequest := openrtb2.BidRequest{
-		ID:   "123",
+		ID:   bidId.String(),
 		Test: *bool2int(&br.Test),
 		AT:   1,
 		TMax: 5000,
 		App: &openrtb2.App{
 			Ver:    br.App.Version,
 			Bundle: br.App.Bundle,
-			ID:     string(params.AppID),
+			ID:     strconv.FormatInt(params.AppID, 10),
 			Publisher: &openrtb2.Publisher{
 				ID: "SELLER_ID",
 			},
 		},
-		Device: b.BuildDevice(br.Device, br.User, params.GeoData.IPString),
+		Device: b.BuildDevice(br.Device, br.User, params.GeoData),
 		Imp:    []openrtb2.Imp{},
 		Regs: &openrtb2.Regs{
 			COPPA: *bool2int(&br.Regulations.COPPA),
@@ -89,14 +94,16 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 	if roundConfig == nil {
 		return response, errors.New("round not found")
 	}
-	adapters := adapter.GetCommonAdapters(roundConfig.Bidding, br.Adapters.Keys())
-	adapters = adapter.GetCommonAdapters(adapters, maps.Keys(br.Imp.Demands))
+	adapterKeys := adapter.GetCommonAdapters(roundConfig.Bidding, br.Adapters.Keys())
+	adapterKeys = adapter.GetCommonAdapters(adapterKeys, maps.Keys(br.Imp.Demands))
 
-	if len(adapters) == 0 {
+	if len(adapterKeys) == 0 {
 		return response, ErrNoBids
 	}
 
-	for _, adapterKey := range adapters {
+	var responses []*adapters.DemandResponse
+
+	for _, adapterKey := range adapterKeys {
 		// adapter build bid request from baseBidRequest
 		// adapter send bid request
 		// adapter parse bid response
@@ -104,21 +111,29 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		if err != nil {
 			return response, err
 		}
-		fmt.Println(bidder)
-		fmt.Println(baseBidRequest)
 		bidRequest, _ := bidder.Adapter.CreateRequest(baseBidRequest, &br)
 
 		demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
-		fmt.Println(demandResponse)
-		// bidder.Adapter.ParseBids(demandResponse)
+		resp, err := bidder.Adapter.ParseBids(demandResponse)
+		if err != nil {
+			return response, err
+		}
+		responses = append(responses, resp)
 	}
 
-	return response, nil
+	result := responses[0]
+	for _, resp := range responses {
+		if result.Price < resp.Price {
+			result = resp
+		}
+	}
+
+	return *result, nil
 }
 
-func (b *Builder) BuildDevice(device schema.Device, user schema.User, ip string) *openrtb2.Device {
+func (b *Builder) BuildDevice(device schema.Device, user schema.User, geo geocoder.GeoData) *openrtb2.Device {
 	return &openrtb2.Device{
-		IP:             ip,
+		IP:             geo.IPString,
 		W:              int64(device.Width),
 		H:              int64(device.Height),
 		JS:             int8(*device.JS),
@@ -134,6 +149,17 @@ func (b *Builder) BuildDevice(device schema.Device, user schema.User, ip string)
 		PPI:            int64(device.PPI),
 		Model:          device.Model,
 		IFA:            user.IDFA,
+		Geo: &openrtb2.Geo{
+			Lat:       geo.Lat,
+			Lon:       geo.Lon,
+			Type:      adcom1.LocationIP,
+			Accuracy:  int64(geo.Accuracy),
+			IPService: adcom1.LocationServiceMaxMind,
+			Country:   geo.CountryCode3,
+			City:      geo.CityName,
+			ZIP:       geo.ZipCode,
+			Region:    geo.RegionCode,
+		},
 	}
 }
 
