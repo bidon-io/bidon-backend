@@ -25,3 +25,19 @@ func (o *Imp) Format() ad.Format {
 
 	return ad.EmptyFormat
 }
+
+func (o *Imp) Type() ad.Type {
+	if o.Rewarded != nil {
+		return ad.RewardedType
+	}
+
+	if o.Interstitial != nil {
+		return ad.InterstitialType
+	}
+
+	return ad.BannerType
+}
+
+func (o *Imp) IsPortrait() bool {
+	return o.Orientation == "PORTRAIT"
+}

@@ -9,7 +9,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
-	"github.com/bidon-io/bidon-backend/internal/device"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 )
 
 type mockConfigMatcher struct {
@@ -26,7 +26,7 @@ func TestBuilder_Build(t *testing.T) {
 		name           string
 		configMatcher  bidding.ConfigMatcher
 		buildParams    *bidding.BuildParams
-		expectedResult *bidding.DemandResponse
+		expectedResult adapters.DemandResponse
 		expectedError  error
 	}{
 		{
@@ -50,14 +50,10 @@ func TestBuilder_Build(t *testing.T) {
 				err: nil,
 			},
 			buildParams: &bidding.BuildParams{
-				AppID:      1,
-				AdType:     ad.BannerType,
-				AdFormat:   ad.BannerFormat,
-				DeviceType: device.PhoneType,
-				Adapters:   []adapter.Key{adapter.ApplovinKey},
-				SegmentID:  1,
+				AppID:     1,
+				SegmentID: 1,
 			},
-			expectedResult: &bidding.DemandResponse{
+			expectedResult: adapters.DemandResponse{
 				Price: 0,
 			},
 			expectedError: nil,
@@ -69,15 +65,13 @@ func TestBuilder_Build(t *testing.T) {
 				err:    errors.New("config matcher error"),
 			},
 			buildParams: &bidding.BuildParams{
-				AppID:      1,
-				AdType:     ad.BannerType,
-				AdFormat:   ad.BannerFormat,
-				DeviceType: device.PhoneType,
-				Adapters:   []adapter.Key{adapter.ApplovinKey},
-				SegmentID:  1,
+				AppID:     1,
+				SegmentID: 1,
 			},
-			expectedResult: nil,
-			expectedError:  errors.New("config matcher error"),
+			expectedResult: adapters.DemandResponse{
+				Price: 0,
+			},
+			expectedError: errors.New("config matcher error"),
 		},
 	}
 
@@ -87,7 +81,7 @@ func TestBuilder_Build(t *testing.T) {
 				ConfigMatcher: tt.configMatcher,
 			}
 
-			result, err := builder.Build(context.Background(), tt.buildParams)
+			result, err := builder.HoldAuction(context.Background(), tt.buildParams)
 
 			if err != nil && tt.expectedError == nil {
 				t.Errorf("unexpected error: %v", err)
@@ -97,11 +91,7 @@ func TestBuilder_Build(t *testing.T) {
 				t.Errorf("expected error: %v, but got nil", tt.expectedError)
 			}
 
-			if result != nil && tt.expectedResult == nil {
-				t.Errorf("unexpected result: %v", result)
-			}
-
-			if result == nil && tt.expectedResult != nil {
+			if result != tt.expectedResult {
 				t.Errorf("expected result: %v, but got nil", tt.expectedResult)
 			}
 		})
