@@ -9,7 +9,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
 	"github.com/bidon-io/bidon-backend/internal/device"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -22,15 +21,19 @@ import (
 
 type Builder struct {
 	ConfigMatcher   ConfigMatcher
-	AdaptersBuilder adapters_builder.AdaptersBuilder
+	AdaptersBuilder AdaptersBuilder
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks_test.go . ConfigMatcher
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . ConfigMatcher AdaptersBuilder
 
 var ErrNoBids = errors.New("no bids")
 
 type ConfigMatcher interface {
 	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error)
+}
+
+type AdaptersBuilder interface {
+	Build(adapterKey adapter.Key, cfg adapter.Config) (adapters.Bidder, error)
 }
 
 type BuildParams struct {
@@ -64,7 +67,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 	}
 	baseBidRequest := openrtb2.BidRequest{
 		ID:   bidId.String(),
-		Test: *bool2int(&br.Test),
+		Test: *bool2int(br.Test),
 		AT:   1,
 		TMax: 5000,
 		App: &openrtb2.App{
@@ -78,8 +81,8 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		Device: b.BuildDevice(br.Device, br.User, params.GeoData),
 		Imp:    []openrtb2.Imp{},
 		Regs: &openrtb2.Regs{
-			COPPA: *bool2int(&br.Regulations.COPPA),
-			GDPR:  bool2int(&br.Regulations.GDPR),
+			COPPA: *bool2int(br.GetRegulations().COPPA),
+			GDPR:  bool2int(br.GetRegulations().GDPR),
 		},
 	}
 
@@ -132,11 +135,16 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 }
 
 func (b *Builder) BuildDevice(device schema.Device, user schema.User, geo geocoder.GeoData) *openrtb2.Device {
+	js := int8(0)
+	if device.JS != nil {
+		js = int8(*device.JS)
+	}
+
 	return &openrtb2.Device{
 		IP:             geo.IPString,
 		W:              int64(device.Width),
 		H:              int64(device.Height),
-		JS:             int8(*device.JS),
+		JS:             js,
 		DeviceType:     toAdcomDeviceType(device.Type),
 		ConnectionType: toAdcomConnType(device.ConnectionType),
 		OS:             device.OS,
@@ -163,12 +171,9 @@ func (b *Builder) BuildDevice(device schema.Device, user schema.User, geo geocod
 	}
 }
 
-func bool2int(b *bool) *int8 {
-	if b == nil {
-		return nil
-	}
+func bool2int(b bool) *int8 {
 	result := int8(0)
-	if *b {
+	if b {
 		result = 1
 	}
 	return &result

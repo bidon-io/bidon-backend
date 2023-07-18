@@ -27,7 +27,7 @@ type AdaptersBuilder struct {
 	Client      *http.Client
 }
 
-func (b *AdaptersBuilder) Build(adapterKey adapter.Key, cfg adapter.Config) (adapters.Bidder, error) {
+func (b AdaptersBuilder) Build(adapterKey adapter.Key, cfg adapter.Config) (adapters.Bidder, error) {
 	if f, ok := b.AdaptersMap[adapterKey]; ok {
 		return f(cfg, b.Client)
 	}
@@ -43,7 +43,7 @@ func BuildBiddingAdapters(client *http.Client) AdaptersBuilder {
 	}
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks_test.go . AppDemandProfileFetcher
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AppDemandProfileFetcher
 
 type AppDemandProfileFetcher interface {
 	// Fetch is used get one profile per adapter key, if present

@@ -94,10 +94,6 @@ func main() {
 	segmentMatcher := segment.Matcher{
 		Fetcher: &segmentstore.SegmentFetcher{DB: db},
 	}
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.MaxIdleConns = 50
-	t.MaxConnsPerHost = 50
-	t.MaxIdleConnsPerHost = 50
 
 	biddingHttpClient := &http.Client{
 		Timeout: 5 * time.Second,

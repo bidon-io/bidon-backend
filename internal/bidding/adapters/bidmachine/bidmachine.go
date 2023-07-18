@@ -19,9 +19,9 @@ import (
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
-type bidmachineAdapter struct {
-	sellerID string
-	endpoint string
+type BidmachineAdapter struct {
+	SellerID string
+	Endpoint string
 }
 
 var bannerFormats = map[string][2]int64{
@@ -37,7 +37,7 @@ var fullscreenFormats = map[string][2]int64{
 	"TABLET": {768, 1024},
 }
 
-func (a *bidmachineAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
+func (a *BidmachineAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := bannerFormats[string(br.Imp.Format())]
 	w, h := size[0], size[1]
 	if !br.Imp.IsPortrait() {
@@ -55,7 +55,7 @@ func (a *bidmachineAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	}
 }
 
-func (a *bidmachineAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Imp {
+func (a *BidmachineAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := fullscreenFormats[string(br.Device.Type)]
 	w, h := size[0], size[1]
 	if !br.Imp.IsPortrait() {
@@ -73,7 +73,7 @@ func (a *bidmachineAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Im
 	}
 }
 
-func (a *bidmachineAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
+func (a *BidmachineAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := fullscreenFormats[string(br.Device.Type)]
 	w, h := size[0], size[1]
 	if !br.Imp.IsPortrait() {
@@ -92,7 +92,7 @@ func (a *bidmachineAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 	}
 }
 
-func (a *bidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
+func (a *BidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
 	var errs []error
 	secure := int8(1)
 
@@ -114,7 +114,7 @@ func (a *bidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schem
 	imp.DisplayManagerVer = br.Adapters[adapter.BidmachineKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = br.Imp.BidFloor
-	request.App.Publisher.ID = a.sellerID
+	request.App.Publisher.ID = a.SellerID
 
 	extStructure := &map[string]interface{}{}
 	_ = json.Unmarshal(imp.Ext, extStructure)
@@ -130,7 +130,7 @@ func (a *bidmachineAdapter) CreateRequest(request openrtb2.BidRequest, br *schem
 	return request, errs
 }
 
-func (a *bidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb2.BidRequest) *adapters.DemandResponse {
+func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb2.BidRequest) *adapters.DemandResponse {
 	dr := &adapters.DemandResponse{
 		DemandID: adapter.BidmachineKey,
 	}
@@ -171,7 +171,7 @@ func (a *bidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 	return dr
 }
 
-func (a *bidmachineAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
+func (a *BidmachineAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
 	switch dr.Status {
 	case http.StatusNoContent:
 		return dr, nil
@@ -218,9 +218,9 @@ func (a *bidmachineAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.De
 func Builder(cfg adapter.Config, client *http.Client) (adapters.Bidder, error) {
 	bmCfg := cfg[adapter.BidmachineKey]
 
-	adpt := &bidmachineAdapter{
-		endpoint: bmCfg["endpoint"].(string),
-		sellerID: bmCfg["seller_id"].(string),
+	adpt := &BidmachineAdapter{
+		Endpoint: bmCfg["endpoint"].(string),
+		SellerID: bmCfg["seller_id"].(string),
 	}
 
 	bidder := adapters.Bidder{
