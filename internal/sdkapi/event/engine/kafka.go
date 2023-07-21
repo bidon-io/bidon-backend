@@ -15,8 +15,8 @@ type Kafka struct {
 
 func (e *Kafka) Produce(message event.LogMessage, handleErr func(error)) {
 	topic := message.Topic
-	topicStr, ok := e.Topics[topic]
-	if !ok {
+	topicStr := e.Topics[topic]
+	if topicStr == "" {
 		handleErr(fmt.Errorf("unknown topic: %v", topic))
 	}
 
