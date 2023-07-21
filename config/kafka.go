@@ -2,12 +2,12 @@ package config
 
 import (
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -51,8 +51,14 @@ func Kafka() (conf KafkaConfig, err error) {
 		return conf, fmt.Errorf("empty KAFKA_CONFIG_TOPIC: %v", err)
 	}
 
+	statsTopic := os.Getenv("KAFKA_STATS_TOPIC")
+	if statsTopic == "" {
+		return conf, fmt.Errorf("empty KAFKA_STATS_TOPIC: %v", err)
+	}
+
 	conf.Topics = map[event.Topic]string{
 		event.ConfigTopic: configTopic,
+		event.StatsTopic:  statsTopic,
 	}
 
 	return
