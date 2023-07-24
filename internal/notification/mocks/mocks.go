@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/notification"
-	"github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"sync"
 )
@@ -21,7 +20,7 @@ var _ notification.AuctionResultRepo = &AuctionResultRepoMock{}
 //
 //		// make and configure a mocked notification.AuctionResultRepo
 //		mockedAuctionResultRepo := &AuctionResultRepoMock{
-//			CreateOrUpdateFunc: func(ctx context.Context, imp *schema.Imp, bids []store.Bid) error {
+//			CreateOrUpdateFunc: func(ctx context.Context, imp *schema.Imp, bids []notification.Bid) error {
 //				panic("mock out the CreateOrUpdate method")
 //			},
 //		}
@@ -32,7 +31,7 @@ var _ notification.AuctionResultRepo = &AuctionResultRepoMock{}
 //	}
 type AuctionResultRepoMock struct {
 	// CreateOrUpdateFunc mocks the CreateOrUpdate method.
-	CreateOrUpdateFunc func(ctx context.Context, imp *schema.Imp, bids []store.Bid) error
+	CreateOrUpdateFunc func(ctx context.Context, imp *schema.Imp, bids []notification.Bid) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -43,21 +42,21 @@ type AuctionResultRepoMock struct {
 			// Imp is the imp argument value.
 			Imp *schema.Imp
 			// Bids is the bids argument value.
-			Bids []store.Bid
+			Bids []notification.Bid
 		}
 	}
 	lockCreateOrUpdate sync.RWMutex
 }
 
 // CreateOrUpdate calls CreateOrUpdateFunc.
-func (mock *AuctionResultRepoMock) CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []store.Bid) error {
+func (mock *AuctionResultRepoMock) CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []notification.Bid) error {
 	if mock.CreateOrUpdateFunc == nil {
 		panic("AuctionResultRepoMock.CreateOrUpdateFunc: method is nil but AuctionResultRepo.CreateOrUpdate was just called")
 	}
 	callInfo := struct {
 		Ctx  context.Context
 		Imp  *schema.Imp
-		Bids []store.Bid
+		Bids []notification.Bid
 	}{
 		Ctx:  ctx,
 		Imp:  imp,
@@ -76,12 +75,12 @@ func (mock *AuctionResultRepoMock) CreateOrUpdate(ctx context.Context, imp *sche
 func (mock *AuctionResultRepoMock) CreateOrUpdateCalls() []struct {
 	Ctx  context.Context
 	Imp  *schema.Imp
-	Bids []store.Bid
+	Bids []notification.Bid
 } {
 	var calls []struct {
 		Ctx  context.Context
 		Imp  *schema.Imp
-		Bids []store.Bid
+		Bids []notification.Bid
 	}
 	mock.lockCreateOrUpdate.RLock()
 	calls = mock.calls.CreateOrUpdate

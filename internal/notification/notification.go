@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -19,16 +18,16 @@ type Handler struct {
 //go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AuctionResultRepo
 
 type AuctionResultRepo interface {
-	CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []store.Bid) error
+	CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []Bid) error
 }
 
 // HandleRound is used to handle bidding round, it is called after all adapters have responded with bids or errors
 // Results saved to redis
 func (h Handler) HandleRound(ctx context.Context, imp *schema.Imp, responses []*adapters.DemandResponse) error {
-	var bids []store.Bid
+	var bids []Bid
 	for _, resp := range responses {
 		if resp.IsBid() {
-			bids = append(bids, store.Bid{
+			bids = append(bids, Bid{
 				ID:       resp.Bid.ID,
 				ImpID:    resp.Bid.ImpID,
 				Price:    resp.Bid.Price,

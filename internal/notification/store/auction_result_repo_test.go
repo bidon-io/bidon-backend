@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/go-redis/redismock/v9"
@@ -18,15 +19,15 @@ func TestAuctionResultRepo_CreateOrUpdate(t *testing.T) {
 		RoundID:   "round-1",
 		BidFloor:  0.5,
 	}
-	bids := []store.Bid{
+	bids := []notification.Bid{
 		{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
 		{ID: "bid-2", ImpID: "imp-1", Price: 4.56},
 		{ID: "bid-3", ImpID: "imp-2", Price: 7.89},
 		{ID: "bid-4", ImpID: "imp-1", Price: 0.12},
 	}
-	expectedAuctionResult := &store.AuctionResult{
+	expectedAuctionResult := &notification.AuctionResult{
 		AuctionID: "auction-1",
-		Rounds: []store.Round{
+		Rounds: []notification.Round{
 			{
 				RoundID:  "round-1",
 				Bids:     bids,
@@ -56,15 +57,15 @@ func TestAuctionResultRepo_CreateOrUpdate_DuplicateRound(t *testing.T) {
 		RoundID:   "round-1",
 		BidFloor:  0.5,
 	}
-	bids := []store.Bid{
+	bids := []notification.Bid{
 		{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
 		{ID: "bid-2", ImpID: "imp-1", Price: 4.56},
 		{ID: "bid-3", ImpID: "imp-2", Price: 7.89},
 		{ID: "bid-4", ImpID: "imp-1", Price: 0.12},
 	}
-	existingAuctionResult := &store.AuctionResult{
+	existingAuctionResult := &notification.AuctionResult{
 		AuctionID: "auction-1",
-		Rounds: []store.Round{
+		Rounds: []notification.Round{
 			{
 				RoundID:  "round-1",
 				Bids:     bids,
@@ -89,12 +90,12 @@ func TestAuctionResultRepo_CreateOrUpdate_DuplicateRound(t *testing.T) {
 
 func TestAuctionResultRepo_Find(t *testing.T) {
 	ctx := context.Background()
-	expectedAuctionResult := &store.AuctionResult{
+	expectedAuctionResult := &notification.AuctionResult{
 		AuctionID: "auction-1",
-		Rounds: []store.Round{
+		Rounds: []notification.Round{
 			{
 				RoundID:  "round-1",
-				Bids:     []store.Bid{},
+				Bids:     []notification.Bid{},
 				BidFloor: 0.5,
 			},
 		},
@@ -138,59 +139,26 @@ func TestAuctionResultRepo_Find_NotFound(t *testing.T) {
 
 func TestAuctionResult_Save(t *testing.T) {
 	ctx := context.Background()
-	auctionResult := &store.AuctionResult{
+	auctionResult := &notification.AuctionResult{
 		AuctionID: "auction-1",
-		Rounds: []store.Round{
+		Rounds: []notification.Round{
 			{
 				RoundID:  "round-1",
-				Bids:     []store.Bid{},
+				Bids:     []notification.Bid{},
 				BidFloor: 0.5,
 			},
 		},
 	}
 	rdb, mock := redismock.NewClientMock()
 	mock.ExpectSet("auction-1", auctionResult, 24*time.Hour).SetVal("OK")
+	repo := store.AuctionResultRepo{Redis: rdb}
 
-	err := auctionResult.Save(ctx, rdb)
+	err := repo.Save(ctx, auctionResult)
 
 	if mock.ExpectationsWereMet() != nil {
 		t.Errorf("expectation not met: %v", mock.ExpectationsWereMet())
 	}
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
-	}
-}
-
-func TestAuctionResult_WinningBid(t *testing.T) {
-	auctionResult := &store.AuctionResult{
-		AuctionID: "auction-1",
-		Rounds: []store.Round{
-			{
-				RoundID: "round-1",
-				Bids: []store.Bid{
-					{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
-					{ID: "bid-2", ImpID: "imp-1", Price: 4.56},
-					{ID: "bid-3", ImpID: "imp-2", Price: 7.89},
-					{ID: "bid-4", ImpID: "imp-1", Price: 0.12},
-				},
-				BidFloor: 0.5,
-			},
-			{
-				RoundID: "round-2",
-				Bids: []store.Bid{
-					{ID: "bid-5", ImpID: "imp-1", Price: 2.34},
-					{ID: "bid-6", ImpID: "imp-1", Price: 5.67},
-					{ID: "bid-7", ImpID: "imp-2", Price: 8.9},
-					{ID: "bid-8", ImpID: "imp-1", Price: 0.23},
-				},
-				BidFloor: 0.5,
-			},
-		},
-	}
-
-	winningBid := auctionResult.WinningBid()
-
-	if winningBid != 8.9 {
-		t.Errorf("expected winningBid 8.9, got %f", winningBid)
 	}
 }
