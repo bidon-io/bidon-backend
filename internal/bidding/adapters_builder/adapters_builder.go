@@ -8,10 +8,12 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bidmachine"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bigoads"
 )
 
 var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.BidmachineKey: bidmachine.Builder,
+	adapter.BigoAdsKey:    bigoads.Builder,
 	// adapter.AdmobKey: admob.Builder,
 	// adapter.ApplovinKey: applovin.Builder,
 	// adapter.DTExchangeKey: dtexchange.Builder,
@@ -57,6 +59,7 @@ type AdaptersConfigBuilder struct {
 type AppDemandProfile struct {
 	AdapterKey   adapter.Key
 	AccountExtra map[string]any
+	AppData      map[string]any
 }
 
 func NewAdapters(keys []adapter.Key) adapter.Config {
@@ -79,6 +82,7 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 	for _, profile := range profiles {
 		key := profile.AdapterKey
 		extra := profile.AccountExtra
+		appData := profile.AppData
 		switch key {
 		case adapter.ApplovinKey:
 			adapters[key]["app_key"] = extra["api_key"] // notice the "app" and "api" difference
@@ -86,6 +90,9 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 			adapters[key]["seller_id"] = extra["seller_id"]
 			adapters[key]["endpoint"] = extra["endpoint"]
 			adapters[key]["mediation_config"] = extra["mediation_config"]
+		case adapter.BigoAdsKey:
+			adapters[key]["app_id"] = appData["app_id"]
+			adapters[key]["endpoint"] = extra["endpoint"]
 		default:
 			adapters[key] = extra
 		}
