@@ -116,6 +116,12 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 		},
 	}
 
+	lineItemsMatcher := &auctionmocks.LineItemsMatcherMock{
+		MatchFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
+			return []auction.LineItem{}, nil
+		},
+	}
+
 	// Create a new AuctionHandler instance
 
 	handler := sdkapi.BiddingHandler{
@@ -130,6 +136,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 		},
 		AdaptersConfigBuilder: &adapters_builder.AdaptersConfigBuilder{
 			AppDemandProfileFetcher: profileFetcher,
+			LineItemsMatcher:        lineItemsMatcher,
 		},
 	}
 	return handler
