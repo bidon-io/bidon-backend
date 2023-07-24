@@ -1,4 +1,4 @@
-package bigoads
+package mintegral
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ import (
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
-type BigoAdsAdapter struct {
+type MintegralAdapter struct {
 	SellerID string
 	Endpoint string
 	AppID    string
@@ -27,14 +27,24 @@ type BigoAdsAdapter struct {
 }
 
 var bannerFormats = map[string][2]int64{
-	"BANNER": {320, 50},
-	"MREC":   {300, 250},
-	"":       {320, 50}, // Default
+	"BANNER":      {320, 50},
+	"LEADERBOARD": {728, 90},
+	"MREC":        {300, 250},
+	"ADAPTIVE":    {0, 50},
+	"":            {320, 50}, // Default
 }
 
-func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
+var fullscreenFormats = map[string][2]int64{
+	"PHONE":  {320, 480},
+	"TABLET": {768, 1024},
+}
+
+func (a *MintegralAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := bannerFormats[string(br.Imp.Format())]
 	w, h := size[0], size[1]
+	if !br.Imp.IsPortrait() {
+		w, h = h, w
+	}
 	return &openrtb2.Imp{
 		Instl: 0,
 		Banner: &openrtb2.Banner{
@@ -42,31 +52,43 @@ func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 			H:   &h,
 			Pos: adcom1.PositionAboveFold.Ptr(),
 		},
-		Ext: json.RawMessage(`{"adtype": 2}`),
 	}
 }
 
-func (a *BigoAdsAdapter) interstitial() *openrtb2.Imp {
+func (a *MintegralAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Imp {
+	size := fullscreenFormats[string(br.Device.Type)]
+	w, h := size[0], size[1]
+	if !br.Imp.IsPortrait() {
+		w, h = h, w
+	}
 	return &openrtb2.Imp{
 		Instl: 1,
 		Banner: &openrtb2.Banner{
-			Pos: adcom1.PositionAboveFold.Ptr(),
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionFullScreen.Ptr(),
 		},
-		Ext: json.RawMessage(`{"adtype": 3}`),
 	}
 }
 
-func (a *BigoAdsAdapter) rewarded() *openrtb2.Imp {
+func (a *MintegralAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
+	size := fullscreenFormats[string(br.Device.Type)]
+	w, h := size[0], size[1]
+	if !br.Imp.IsPortrait() {
+		w, h = h, w
+	}
 	return &openrtb2.Imp{
 		Instl: 0,
 		Video: &openrtb2.Video{
-			MIMEs: []string{"video/mp4"},
+			W:   w,
+			H:   h,
+			Pos: adcom1.PositionFullScreen.Ptr(),
 		},
-		Ext: json.RawMessage(`{"adtype": 4}`),
+		Ext: json.RawMessage(`{"is_rewarded": true}`),
 	}
 }
 
-func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
+func (a *MintegralAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
 	var errs []error
 	secure := int8(1)
 
@@ -75,9 +97,9 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 	case ad.BannerType:
 		imp = a.banner(br)
 	case ad.InterstitialType:
-		imp = a.interstitial()
+		imp = a.interstitial(br)
 	case ad.RewardedType:
-		imp = a.rewarded()
+		imp = a.rewarded(br)
 	default:
 		return request, []error{errors.New("unknown impression type")}
 	}
@@ -90,25 +112,35 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 	}
 	imp.TagID = a.TagID
 
-	imp.DisplayManager = string(adapter.BigoAdsKey)
-	imp.DisplayManagerVer = br.Adapters[adapter.BigoAdsKey].SDKVersion
+	imp.DisplayManager = string(adapter.MintegralKey)
+	imp.DisplayManagerVer = br.Adapters[adapter.MintegralKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = br.Imp.BidFloor
+	imp.BidFloorCur = "USD"
 
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
 	request.User = &openrtb2.User{
-		BuyerUID: br.Imp.Demands[adapter.BigoAdsKey]["token"].(string),
+		BuyerUID: br.Imp.Demands[adapter.MintegralKey]["token"].(string),
 	}
 	request.App.Publisher.ID = a.SellerID
 	request.App.ID = a.AppID
 
+	extStructure := &map[string]interface{}{}
+	_ = json.Unmarshal(imp.Ext, extStructure)
+
+	(*extStructure)["orientation"] = 1
+
+	raw, _ := json.Marshal(extStructure)
+
+	request.App.Ext = raw
+
 	return request, errs
 }
 
-func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb2.BidRequest) *adapters.DemandResponse {
+func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb2.BidRequest) *adapters.DemandResponse {
 	dr := &adapters.DemandResponse{
-		DemandID: adapter.BigoAdsKey,
+		DemandID: adapter.MintegralKey,
 	}
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -117,13 +149,14 @@ func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 	}
 	dr.RawRequest = string(requestBody)
 
-	url := "https://api.gov-static.tech/Ad/GetUniAdS2s?id=200104"
+	url := "http://hb.rayjump.com/bid"
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
+	httpReq.Header.Add("openrtb", "2.5")
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
@@ -147,7 +180,7 @@ func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 	return dr
 }
 
-func (a *BigoAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
+func (a *MintegralAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
 	switch dr.Status {
 	case http.StatusNoContent:
 		return dr, nil
@@ -179,7 +212,7 @@ func (a *BigoAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Deman
 		ImpID:    bid.ImpID,
 		Price:    bid.Price,
 		Payload:  bid.AdM,
-		DemandID: adapter.BigoAdsKey,
+		DemandID: adapter.MintegralKey,
 		AdID:     bid.AdID,
 		SeatID:   seat.Seat,
 		LURL:     bid.LURL,
@@ -190,11 +223,11 @@ func (a *BigoAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Deman
 	return dr, nil
 }
 
-// Builder builds a new instance of the BigoAds adapter for the given bidder with the given config.
+// Builder builds a new instance of the Mintegral adapter for the given bidder with the given config.
 func Builder(cfg adapter.Config, client *http.Client) (adapters.Bidder, error) {
-	bmCfg := cfg[adapter.BigoAdsKey]
+	bmCfg := cfg[adapter.MintegralKey]
 
-	adpt := &BigoAdsAdapter{
+	adpt := &MintegralAdapter{
 		Endpoint: bmCfg["endpoint"].(string),
 		SellerID: bmCfg["seller_id"].(string),
 		AppID:    bmCfg["app_id"].(string),
