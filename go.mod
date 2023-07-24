@@ -6,12 +6,14 @@ require (
 	github.com/getsentry/sentry-go v0.22.0
 	github.com/getsentry/sentry-go/otel v0.22.0
 	github.com/go-playground/validator/v10 v10.14.1
+	github.com/go-redis/redismock/v9 v9.0.3
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/oschwald/maxminddb-golang v1.11.0
 	github.com/prebid/openrtb/v19 v19.0.0
+	github.com/redis/go-redis/v9 v9.0.5
 	github.com/shopspring/decimal v1.3.1
 	github.com/twmb/franz-go v1.13.6
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.2.2
@@ -22,7 +24,6 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.1
-	github.com/redis/go-redis/v9 v9.0.5
 )
 
 require (
@@ -45,7 +46,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
-	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.4.0 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.2.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

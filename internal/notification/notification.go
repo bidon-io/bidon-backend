@@ -16,6 +16,8 @@ type Handler struct {
 	AuctionResultRepo AuctionResultRepo
 }
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AuctionResultRepo
+
 type AuctionResultRepo interface {
 	CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []store.Bid) error
 }

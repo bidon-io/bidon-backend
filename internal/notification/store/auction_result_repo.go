@@ -20,6 +20,14 @@ type AuctionResult struct {
 	Rounds    []Round `json:"rounds"`
 }
 
+func (a AuctionResult) MarshalBinary() ([]byte, error) {
+	return json.Marshal(a)
+}
+
+func (a *AuctionResult) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, a)
+}
+
 type Round struct {
 	RoundID  string  `json:"round_id"`
 	Bids     []Bid   `json:"bids"`
@@ -91,32 +99,22 @@ func (r AuctionResultRepo) FinalizeResult(ctx context.Context, statsRequest *sch
 }
 
 func (r AuctionResultRepo) Find(ctx context.Context, auctionID string) (*AuctionResult, error) {
-	bytes, err := r.Redis.Get(ctx, auctionID).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-
 	auctionResult := &AuctionResult{}
-	err = json.Unmarshal([]byte(bytes), auctionResult)
-	if err != nil {
+	err := r.Redis.Get(ctx, auctionID).Scan(auctionResult)
+	switch err {
+	case redis.Nil: // Key does not exist
+		return nil, nil
+	case nil:
+		return auctionResult, nil
+	default:
 		return nil, err
 	}
-	return auctionResult, nil
 }
 
 var TTL time.Duration = 24 * time.Hour
 
 func (a *AuctionResult) Save(ctx context.Context, rdb *redis.Client) error {
-	bytes, err := json.Marshal(a)
-	if err != nil {
-		return err
-	}
-
-	err = rdb.Set(ctx, a.AuctionID, bytes, TTL).Err()
+	err := rdb.Set(ctx, a.AuctionID, a, TTL).Err()
 	if err != nil {
 		return err
 	}
