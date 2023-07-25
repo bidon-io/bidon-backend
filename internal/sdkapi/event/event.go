@@ -41,11 +41,20 @@ func NewStats(request *schema.StatsRequest, geoData geocoder.GeoData) Event {
 	}
 }
 
+func NewClick(request *schema.ClickRequest, geoData geocoder.GeoData) Event {
+	return &clickEvent{
+		timestamp: generateTimestamp(),
+		request:   request,
+		geoData:   geoData,
+	}
+}
+
 type Topic string
 
 const (
 	ConfigTopic Topic = "config"
 	ShowTopic   Topic = "show"
+	ClickTopic  Topic = "click"
 	StatsTopic  Topic = "stats"
 )
 
@@ -88,6 +97,30 @@ func (e *showEvent) Payload() (map[string]any, error) {
 }
 
 func (e *showEvent) Children() []Event {
+	return nil
+}
+
+type clickEvent struct {
+	timestamp float64
+	request   *schema.ClickRequest
+	geoData   geocoder.GeoData
+}
+
+func (e *clickEvent) Topic() Topic {
+	return ClickTopic
+}
+
+func (e *clickEvent) Payload() (map[string]any, error) {
+	payload, err := prepareEventPayload(e.timestamp, e.request, e.geoData)
+
+	if _, found := payload["show"]; !found {
+		payload["show"] = payload["bid"]
+	}
+
+	return payload, err
+}
+
+func (e *clickEvent) Children() []Event {
 	return nil
 }
 
