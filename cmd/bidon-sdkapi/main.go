@@ -175,6 +175,13 @@ func main() {
 		},
 		EventLogger: eventLogger,
 	}
+	rewardHandler := sdkapi.RewardHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger: eventLogger,
+	}
 
 	e := config.Echo("bidon-sdkapi", logger)
 
@@ -190,6 +197,8 @@ func main() {
 	e.POST("/:ad_type/show", showHandler.Handle)
 	e.POST("/click/:ad_type", clickHandler.Handle)
 	e.POST("/:ad_type/click", clickHandler.Handle)
+	e.POST("/reward/:ad_type", rewardHandler.Handle)
+	e.POST("/:ad_type/reward", rewardHandler.Handle)
 
 	port := os.Getenv("PORT")
 	if port == "" {
