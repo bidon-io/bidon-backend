@@ -23,6 +23,7 @@ type BigoAdsAdapter struct {
 	SellerID string
 	Endpoint string
 	AppID    string
+	TagID    string
 }
 
 var bannerFormats = map[string][2]int64{
@@ -84,8 +85,11 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 	impId, _ := uuid.NewV4()
 	imp.ID = impId.String()
 
-	//TODO get tag_id from impression
-	imp.TagID = "10182906-10022215"
+	if a.TagID == "" {
+		return request, []error{errors.New("TagID is empty")}
+	}
+	imp.TagID = a.TagID
+
 	imp.DisplayManager = string(adapter.BigoAdsKey)
 	imp.DisplayManagerVer = br.Adapters[adapter.BigoAdsKey].SDKVersion
 	imp.Secure = &secure
@@ -193,6 +197,7 @@ func Builder(cfg adapter.Config, client *http.Client) (adapters.Bidder, error) {
 		Endpoint: bmCfg["endpoint"].(string),
 		SellerID: bmCfg["seller_id"].(string),
 		AppID:    bmCfg["app_id"].(string),
+		TagID:    bmCfg["tag_id"].(string),
 	}
 
 	bidder := adapters.Bidder{
