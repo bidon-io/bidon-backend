@@ -19,7 +19,7 @@ import (
 	auctionmocks "github.com/bidon-io/bidon-backend/internal/auction/mocks"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
-	demandfetchermocks "github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder/mocks"
+	adaptersbuildermocks "github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder/mocks"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	sdkapimocks "github.com/bidon-io/bidon-backend/internal/sdkapi/mocks"
@@ -99,7 +99,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 		},
 	}
 
-	profileFetcher := &demandfetchermocks.AppDemandProfileFetcherMock{
+	profileFetcher := &adaptersbuildermocks.AppDemandProfileFetcherMock{
 		FetchFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key) ([]adapters_builder.AppDemandProfile, error) {
 			return []adapters_builder.AppDemandProfile{
 				{
@@ -116,7 +116,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 		},
 	}
 
-	lineItemsMatcher := &auctionmocks.LineItemsMatcherMock{
+	lineItemsMatcher := &adaptersbuildermocks.LineItemsMatcherMock{
 		MatchFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
 			return []auction.LineItem{}, nil
 		},

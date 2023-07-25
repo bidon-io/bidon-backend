@@ -47,7 +47,7 @@ func BuildBiddingAdapters(client *http.Client) AdaptersBuilder {
 	}
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AppDemandProfileFetcher
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AppDemandProfileFetcher LineItemsMatcher
 
 type AppDemandProfileFetcher interface {
 	// Fetch is used get one profile per adapter key, if present
