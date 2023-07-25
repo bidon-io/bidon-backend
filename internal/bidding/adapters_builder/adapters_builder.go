@@ -54,9 +54,13 @@ type AppDemandProfileFetcher interface {
 	Fetch(ctx context.Context, appID int64, adapterKeys []adapter.Key) ([]AppDemandProfile, error)
 }
 
+type LineItemsMatcher interface {
+	Match(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error)
+}
+
 type AdaptersConfigBuilder struct {
 	AppDemandProfileFetcher AppDemandProfileFetcher
-	LineItemsMatcher        auction.LineItemsMatcher
+	LineItemsMatcher        LineItemsMatcher
 }
 
 type AppDemandProfile struct {
