@@ -2,8 +2,8 @@ package schema
 
 type Bid struct {
 	AuctionID              string                `json:"auction_id" validate:"required"`
-	AuctionConfigurationID string                `json:"auction_configuration_id" validate:"required"`
-	ImpID                  string                `json:"impid" validate:"required"`
+	AuctionConfigurationID int                   `json:"auction_configuration_id" validate:"required"`
+	ImpID                  string                `json:"imp_id" validate:"required"`
 	DemandID               string                `json:"demand_id" validate:"required"`
 	RoundID                string                `json:"round_id"`
 	AdUnitID               string                `json:"ad_unit_id"`
