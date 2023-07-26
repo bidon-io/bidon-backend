@@ -28,15 +28,15 @@ type MintegralAdapter struct {
 
 var bannerFormats = map[string][2]int64{
 	"BANNER":      {320, 50},
-	"LEADERBOARD": {728, 90},
+	"LEADERBOARD": {320, 50},
 	"MREC":        {300, 250},
-	"ADAPTIVE":    {0, 50},
+	"ADAPTIVE":    {320, 50},
 	"":            {320, 50}, // Default
 }
 
 var fullscreenFormats = map[string][2]int64{
 	"PHONE":  {320, 480},
-	"TABLET": {768, 1024},
+	"TABLET": {320, 480},
 }
 
 func (a *MintegralAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
@@ -156,6 +156,7 @@ func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Clie
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
+	// It's important to set openrtb header to 2.5
 	httpReq.Header.Add("openrtb", "2.5")
 
 	httpResp, err := client.Do(httpReq)
