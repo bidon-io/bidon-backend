@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/oschwald/maxminddb-golang"
+	"github.com/redis/go-redis/v9"
 	"github.com/twmb/franz-go/pkg/kgo"
 
 	"github.com/bidon-io/bidon-backend/config"
@@ -25,6 +27,7 @@ import (
 	bidonconfig "github.com/bidon-io/bidon-backend/internal/config"
 	configstore "github.com/bidon-io/bidon-backend/internal/config/store"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	notificationstore "github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
@@ -53,6 +56,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
+
+	redisURL := os.Getenv("REDIS_URL")
+	rdb := redis.NewClient(&redis.Options{
+		Addr: redisURL,
+	})
 
 	var maxMindDB *maxminddb.Reader
 
@@ -88,11 +96,15 @@ func main() {
 	} else {
 		loggerEngine = &engine.Log{}
 	}
+	eventLogger := &event.Logger{Engine: loggerEngine}
 
 	appFetcher := &sdkapistore.AppFetcher{DB: db}
 	geocoder := &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB}
 	segmentMatcher := segment.Matcher{
 		Fetcher: &segmentstore.SegmentFetcher{DB: db},
+	}
+	notificationHandler := notification.Handler{
+		AuctionResultRepo: notificationstore.AuctionResultRepo{Redis: rdb},
 	}
 
 	biddingHttpClient := &http.Client{
@@ -103,6 +115,7 @@ func main() {
 			MaxIdleConnsPerHost: 50, // TODO: Move to config
 		},
 	}
+
 	auctionHandler := sdkapi.AuctionHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
 			AppFetcher: appFetcher,
@@ -123,7 +136,7 @@ func main() {
 		AdaptersBuilder: &bidonconfig.AdaptersBuilder{
 			AppDemandProfileFetcher: &configstore.AppDemandProfileFetcher{DB: db},
 		},
-		EventLogger: &event.Logger{Engine: loggerEngine},
+		EventLogger: eventLogger,
 	}
 	biddingHandler := sdkapi.BiddingHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]{
@@ -132,13 +145,43 @@ func main() {
 		},
 		SegmentMatcher: &segmentMatcher,
 		BiddingBuilder: &bidding.Builder{
-			ConfigMatcher:   &auctionstore.ConfigMatcher{DB: db},
-			AdaptersBuilder: adapters_builder.BuildBiddingAdapters(biddingHttpClient),
+			ConfigMatcher:       &auctionstore.ConfigMatcher{DB: db},
+			AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHttpClient),
+			NotificationHandler: notificationHandler,
 		},
 		AdaptersConfigBuilder: &adapters_builder.AdaptersConfigBuilder{
 			AppDemandProfileFetcher: &biddingstore.AppDemandProfileFetcher{DB: db},
 			LineItemsMatcher:        &auctionstore.LineItemsMatcher{DB: db},
 		},
+	}
+	statsHandler := sdkapi.StatsHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger:         eventLogger,
+		NotificationHandler: notificationHandler,
+	}
+	showHandler := sdkapi.ShowHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger: eventLogger,
+	}
+	clickHandler := sdkapi.ClickHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger: eventLogger,
+	}
+	rewardHandler := sdkapi.RewardHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger: eventLogger,
 	}
 
 	e := config.Echo("bidon-sdkapi", logger)
@@ -149,6 +192,14 @@ func main() {
 	e.POST("/auction/:ad_type", auctionHandler.Handle)
 	e.POST("/:ad_type/auction", auctionHandler.Handle)
 	e.POST("/bidding/:ad_type", biddingHandler.Handle)
+	e.POST("/stats/:ad_type", statsHandler.Handle)
+	e.POST("/:ad_type/stats", statsHandler.Handle)
+	e.POST("/show/:ad_type", showHandler.Handle)
+	e.POST("/:ad_type/show", showHandler.Handle)
+	e.POST("/click/:ad_type", clickHandler.Handle)
+	e.POST("/:ad_type/click", clickHandler.Handle)
+	e.POST("/reward/:ad_type", rewardHandler.Handle)
+	e.POST("/:ad_type/reward", rewardHandler.Handle)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -54,18 +54,26 @@ func TestBuilder_Build(t *testing.T) {
 		},
 	}
 
+	notificationHanler := &mocks.NotificationHandlerMock{
+		HandleRoundFunc: func(ctx context.Context, imp *schema.Imp, responses []adapters.DemandResponse) error {
+			return nil
+		},
+	}
+
 	tests := []struct {
-		name            string
-		configMatcher   bidding.ConfigMatcher
-		adaptersBuilder bidding.AdaptersBuilder
-		buildParams     *bidding.BuildParams
-		expectedResult  adapters.DemandResponse
-		expectedError   error
+		name                string
+		configMatcher       bidding.ConfigMatcher
+		adaptersBuilder     bidding.AdaptersBuilder
+		notificationHandler bidding.NotificationHandler
+		buildParams         *bidding.BuildParams
+		expectedResult      adapters.DemandResponse
+		expectedError       error
 	}{
 		{
-			name:            "successful build",
-			configMatcher:   configMatcher,
-			adaptersBuilder: adaptersBuilder,
+			name:                "successful build",
+			configMatcher:       configMatcher,
+			adaptersBuilder:     adaptersBuilder,
+			notificationHandler: notificationHanler,
 			buildParams: &bidding.BuildParams{
 				AppID:     1,
 				SegmentID: 1,
@@ -114,8 +122,9 @@ func TestBuilder_Build(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			builder := &bidding.Builder{
-				ConfigMatcher:   tt.configMatcher,
-				AdaptersBuilder: tt.adaptersBuilder,
+				ConfigMatcher:       tt.configMatcher,
+				AdaptersBuilder:     tt.adaptersBuilder,
+				NotificationHandler: tt.notificationHandler,
 			}
 
 			result, err := builder.HoldAuction(context.Background(), tt.buildParams)
@@ -128,7 +137,7 @@ func TestBuilder_Build(t *testing.T) {
 				t.Errorf("expected error: %v, but got nil", tt.expectedError)
 			}
 
-			if result.Status != tt.expectedResult.Status {
+			if result[0].Status != tt.expectedResult.Status {
 				t.Errorf("expected result: %+v, but got %+v", tt.expectedResult, result)
 			}
 		})

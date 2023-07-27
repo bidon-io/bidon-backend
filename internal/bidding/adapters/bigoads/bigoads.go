@@ -32,8 +32,12 @@ var bannerFormats = map[string][2]int64{
 	"":       {320, 50}, // Default
 }
 
-func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
-	size := bannerFormats[string(br.Imp.Format())]
+func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) (*openrtb2.Imp, error) {
+	size, ok := bannerFormats[string(br.Imp.Format())]
+	if !ok {
+		return nil, errors.New("unknown banner format")
+	}
+
 	w, h := size[0], size[1]
 	return &openrtb2.Imp{
 		Instl: 0,
@@ -43,7 +47,7 @@ func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 			Pos: adcom1.PositionAboveFold.Ptr(),
 		},
 		Ext: json.RawMessage(`{"adtype": 2}`),
-	}
+	}, nil
 }
 
 func (a *BigoAdsAdapter) interstitial() *openrtb2.Imp {
@@ -73,7 +77,11 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 	var imp *openrtb2.Imp
 	switch br.Imp.Type() {
 	case ad.BannerType:
-		imp = a.banner(br)
+		bannerImp, err := a.banner(br)
+		if err != nil {
+			return request, []error{err}
+		}
+		imp = bannerImp
 	case ad.InterstitialType:
 		imp = a.interstitial()
 	case ad.RewardedType:
@@ -94,7 +102,6 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 	imp.DisplayManagerVer = br.Adapters[adapter.BigoAdsKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = br.Imp.BidFloor
-
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
 	request.User = &openrtb2.User{

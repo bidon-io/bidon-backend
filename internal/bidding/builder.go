@@ -19,11 +19,12 @@ import (
 )
 
 type Builder struct {
-	ConfigMatcher   ConfigMatcher
-	AdaptersBuilder AdaptersBuilder
+	ConfigMatcher       ConfigMatcher
+	AdaptersBuilder     AdaptersBuilder
+	NotificationHandler NotificationHandler
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . ConfigMatcher AdaptersBuilder
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . ConfigMatcher AdaptersBuilder NotificationHandler
 
 var ErrNoBids = errors.New("no bids")
 
@@ -35,6 +36,10 @@ type AdaptersBuilder interface {
 	Build(adapterKey adapter.Key, cfg adapter.Config) (adapters.Bidder, error)
 }
 
+type NotificationHandler interface {
+	HandleRound(context.Context, *schema.Imp, []adapters.DemandResponse) error
+}
+
 type BuildParams struct {
 	AppID          int64
 	BiddingRequest schema.BiddingRequest
@@ -43,7 +48,7 @@ type BuildParams struct {
 	AdapterConfigs adapter.Config
 }
 
-func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapters.DemandResponse, error) {
+func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) ([]adapters.DemandResponse, error) {
 	// get config
 	// build openrtb request
 	// filter adapters
@@ -51,9 +56,9 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 	// build requests and send them to adapters in parallel
 	// collect results
 	// build response
-	response := adapters.DemandResponse{
+	response := []adapters.DemandResponse{{
 		Price: 0,
-	}
+	}}
 	br := params.BiddingRequest
 	config, err := b.ConfigMatcher.Match(ctx, params.AppID, br.AdType, params.SegmentID)
 	if err != nil {
@@ -103,7 +108,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		return response, ErrNoBids
 	}
 
-	var responses []*adapters.DemandResponse
+	var responses []adapters.DemandResponse
 
 	for _, adapterKey := range adapterKeys {
 		// adapter build bid request from baseBidRequest
@@ -120,7 +125,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		if err != nil {
 			return response, err
 		}
-		responses = append(responses, resp)
+		responses = append(responses, *resp)
 	}
 
 	result := responses[0]
@@ -130,7 +135,9 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (adapter
 		}
 	}
 
-	return *result, nil
+	b.NotificationHandler.HandleRound(ctx, &br.Imp, responses)
+
+	return responses, nil
 }
 
 func (b *Builder) BuildDevice(device schema.Device, user schema.User, geo geocoder.GeoData) *openrtb2.Device {

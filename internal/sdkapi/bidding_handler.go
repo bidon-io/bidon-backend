@@ -21,17 +21,22 @@ type BiddingHandler struct {
 }
 
 type BiddingResponse struct {
-	Bid    *Bid   `json:"bid,omitempty"`
+	Bids   []Bid  `json:"bids,omitempty"`
 	Status string `json:"status"`
 }
 
 type Bid struct {
-	ID       string                 `json:"id"`
-	ImpID    string                 `json:"impid"`
-	Price    float64                `json:"price"`
-	Payload  string                 `json:"payload"`
-	DemandID adapter.Key            `json:"demand_id"`
-	Ext      map[string]interface{} `json:"ext,omitempty"` // TODO: remove interface{} with concrete type
+	ID      string                 `json:"id"`
+	ImpID   string                 `json:"impid"`
+	Price   float64                `json:"price"`
+	Demands map[adapter.Key]Demand `json:"demands"`
+	Ext     map[string]interface{} `json:"ext,omitempty"` // TODO: remove interface{} with concrete type
+}
+
+type Demand struct {
+	Payload     string `json:"payload"`
+	UnitID      string `json:"unit_id,omitempty"`
+	PlacementID string `json:"placement_id,omitempty"`
 }
 
 func (h *BiddingHandler) Handle(c echo.Context) error {
@@ -70,25 +75,27 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		GeoData:        req.geoData,
 		AdapterConfigs: adapterConfigs,
 	}
-	result, err := h.BiddingBuilder.HoldAuction(ctx, params)
+	demandResponses, err := h.BiddingBuilder.HoldAuction(ctx, params)
 	if err != nil && err != bidding.ErrNoBids {
 		return err
 	}
 
-	response := &BiddingResponse{
+	response := BiddingResponse{
 		Status: "NO_BID",
 	}
 
-	if result.IsBid() {
-		response.Bid = &Bid{
-			ID:       result.Bid.ID,
-			ImpID:    result.Bid.ImpID,
-			Price:    result.Bid.Price,
-			Payload:  result.Bid.Payload,
-			DemandID: result.Bid.DemandID,
+	for _, result := range demandResponses {
+		if result.IsBid() {
+			response.Bids = append(response.Bids, Bid{
+				ID:    result.Bid.ID,
+				ImpID: result.Bid.ImpID,
+				Price: result.Bid.Price,
+				Demands: map[adapter.Key]Demand{
+					result.DemandID: {Payload: result.Bid.Payload},
+				},
+			})
+			response.Status = "SUCCESS"
 		}
-		response.Status = "SUCCESS"
-
 	}
 
 	return c.JSON(http.StatusOK, response)

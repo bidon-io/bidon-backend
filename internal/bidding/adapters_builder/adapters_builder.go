@@ -102,18 +102,17 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 			adapters[key]["endpoint"] = extra["endpoint"]
 			adapters[key]["mediation_config"] = extra["mediation_config"]
 		case adapter.BigoAdsKey:
+			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["seller_id"]
 			adapters[key]["endpoint"] = extra["endpoint"]
-			adapters[key]["seller_id"] = extra["seller_id"]
-			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["tag_id"] = ""
 			if lineItem, ok := lineItemsMap[key]; ok {
 				adapters[key]["tag_id"] = lineItem.AdUnitID
 			}
 		case adapter.MintegralKey:
+			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["seller_id"]
 			adapters[key]["endpoint"] = extra["endpoint"]
-			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["tag_id"] = ""
 			if lineItem, ok := lineItemsMap[key]; ok {
 				adapters[key]["tag_id"] = lineItem.AdUnitID

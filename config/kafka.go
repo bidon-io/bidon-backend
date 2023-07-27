@@ -46,13 +46,12 @@ func Kafka() (conf KafkaConfig, err error) {
 		conf.ClientOpts = append(conf.ClientOpts, kgo.ProducerLinger(time.Second*time.Duration(value)))
 	}
 
-	configTopic := os.Getenv("KAFKA_CONFIG_TOPIC")
-	if configTopic == "" {
-		return conf, fmt.Errorf("empty KAFKA_CONFIG_TOPIC: %v", err)
-	}
-
 	conf.Topics = map[event.Topic]string{
-		event.ConfigTopic: configTopic,
+		event.ConfigTopic: os.Getenv("KAFKA_CONFIG_TOPIC"),
+		event.ShowTopic:   os.Getenv("KAFKA_SHOW_TOPIC"),
+		event.ClickTopic:  os.Getenv("KAFKA_CLICK_TOPIC"),
+		event.RewardTopic: os.Getenv("KAFKA_REWARD_TOPIC"),
+		event.StatsTopic:  os.Getenv("KAFKA_STATS_TOPIC"),
 	}
 
 	return
