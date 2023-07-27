@@ -151,7 +151,7 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 						H:   ptr(int64(250)),
 						Pos: adcom1.PositionAboveFold.Ptr(),
 					},
-					Ext: json.RawMessage(`{"adtype": 2}`),
+					Ext: json.RawMessage(`{"adtype":2,"networkid":{"appid":"10182906","placementid":"10182906-10192212"}}`),
 				}),
 				Err: nil,
 			},
@@ -173,7 +173,7 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 						H:   ptr(int64(50)),
 						Pos: adcom1.PositionAboveFold.Ptr(),
 					},
-					Ext: json.RawMessage(`{"adtype": 2}`),
+					Ext: json.RawMessage(`{"adtype":2,"networkid":{"appid":"10182906","placementid":"10182906-10192212"}}`),
 				}),
 				Err: nil,
 			},
@@ -203,9 +203,9 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 				Request: buildWantRequest(openrtb2.Imp{
 					Instl: 1,
 					Banner: &openrtb2.Banner{
-						Pos: adcom1.PositionAboveFold.Ptr(),
+						Pos: adcom1.PositionFullScreen.Ptr(),
 					},
-					Ext: json.RawMessage(`{"adtype": 3}`),
+					Ext: json.RawMessage(`{"adtype":3,"networkid":{"appid":"10182906","placementid":"10182906-10192212"}}`),
 				}),
 				Err: nil,
 			},
@@ -223,7 +223,7 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 					Video: &openrtb2.Video{
 						MIMEs: []string{"video/mp4"},
 					},
-					Ext: json.RawMessage(`{"adtype": 4}`),
+					Ext: json.RawMessage(`{"adtype":4,"networkid":{"appid":"10182906","placementid":"10182906-10192212"}}`),
 				}),
 				Err: nil,
 			},

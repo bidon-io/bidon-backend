@@ -46,7 +46,6 @@ func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) (*openrtb2.Imp, error
 			H:   &h,
 			Pos: adcom1.PositionAboveFold.Ptr(),
 		},
-		Ext: json.RawMessage(`{"adtype": 2}`),
 	}, nil
 }
 
@@ -54,9 +53,8 @@ func (a *BigoAdsAdapter) interstitial() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 1,
 		Banner: &openrtb2.Banner{
-			Pos: adcom1.PositionAboveFold.Ptr(),
+			Pos: adcom1.PositionFullScreen.Ptr(),
 		},
-		Ext: json.RawMessage(`{"adtype": 3}`),
 	}
 }
 
@@ -66,15 +64,19 @@ func (a *BigoAdsAdapter) rewarded() *openrtb2.Imp {
 		Video: &openrtb2.Video{
 			MIMEs: []string{"video/mp4"},
 		},
-		Ext: json.RawMessage(`{"adtype": 4}`),
 	}
 }
 
 func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
+	if a.TagID == "" {
+		return request, []error{errors.New("TagID is empty")}
+	}
+
 	var errs []error
 	secure := int8(1)
 
 	var imp *openrtb2.Imp
+	var impAdType int
 	switch br.Imp.Type() {
 	case ad.BannerType:
 		bannerImp, err := a.banner(br)
@@ -82,21 +84,33 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 			return request, []error{err}
 		}
 		imp = bannerImp
+		impAdType = 2
 	case ad.InterstitialType:
 		imp = a.interstitial()
+		impAdType = 3
 	case ad.RewardedType:
 		imp = a.rewarded()
+		impAdType = 4
 	default:
 		return request, []error{errors.New("unknown impression type")}
 	}
 
 	impId, _ := uuid.NewV4()
 	imp.ID = impId.String()
-
-	if a.TagID == "" {
-		return request, []error{errors.New("TagID is empty")}
-	}
 	imp.TagID = a.TagID
+
+	impExt, err := json.Marshal(map[string]any{
+		"adtype": impAdType,
+		"networkid": map[string]any{
+			"appid":       a.AppID,
+			"placementid": a.TagID,
+		},
+	})
+	if err != nil {
+		return request, []error{err}
+	}
+
+	imp.Ext = json.RawMessage(impExt)
 
 	imp.DisplayManager = string(adapter.BigoAdsKey)
 	imp.DisplayManagerVer = br.Adapters[adapter.BigoAdsKey].SDKVersion
