@@ -80,9 +80,9 @@ func (a *MintegralAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 0,
 		Video: &openrtb2.Video{
-			W:   w,
-			H:   h,
-			Pos: adcom1.PositionFullScreen.Ptr(),
+			W:     w,
+			H:     h,
+			MIMEs: []string{"video/mp4"},
 		},
 		Ext: json.RawMessage(`{"is_rewarded": true}`),
 	}
@@ -126,13 +126,13 @@ func (a *MintegralAdapter) CreateRequest(request openrtb2.BidRequest, br *schema
 	request.App.Publisher.ID = a.SellerID
 	request.App.ID = a.AppID
 
-	extStructure := &map[string]interface{}{}
-	_ = json.Unmarshal(imp.Ext, extStructure)
-
-	(*extStructure)["orientation"] = 1
-
-	raw, _ := json.Marshal(extStructure)
-
+	appExtStructure := &map[string]interface{}{}
+	if br.Imp.IsPortrait() {
+		(*appExtStructure)["orientation"] = 1
+	} else {
+		(*appExtStructure)["orientation"] = 2
+	}
+	raw, _ := json.Marshal(appExtStructure)
 	request.App.Ext = raw
 
 	return request, errs
@@ -226,13 +226,13 @@ func (a *MintegralAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dem
 
 // Builder builds a new instance of the Mintegral adapter for the given bidder with the given config.
 func Builder(cfg adapter.Config, client *http.Client) (adapters.Bidder, error) {
-	bmCfg := cfg[adapter.MintegralKey]
+	mCfg := cfg[adapter.MintegralKey]
 
 	adpt := &MintegralAdapter{
-		Endpoint: bmCfg["endpoint"].(string),
-		SellerID: bmCfg["seller_id"].(string),
-		AppID:    bmCfg["app_id"].(string),
-		TagID:    bmCfg["tag_id"].(string),
+		Endpoint: mCfg["endpoint"].(string),
+		SellerID: mCfg["seller_id"].(string),
+		AppID:    mCfg["app_id"].(string),
+		TagID:    mCfg["tag_id"].(string),
 	}
 
 	bidder := adapters.Bidder{
