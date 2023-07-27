@@ -109,7 +109,7 @@ func TestBigoAds_CreateRequestTest(t *testing.T) {
 		want   createRequestTestOutput
 	}{
 		{
-			name: "Bannner MREC",
+			name: "Banner MREC",
 			params: buildTestParams(
 				schema.Imp{
 					Banner: &schema.BannerAdObject{
@@ -131,7 +131,7 @@ func TestBigoAds_CreateRequestTest(t *testing.T) {
 			},
 		},
 		{
-			name: "Bannner BANNER",
+			name: "Banner BANNER",
 			params: buildTestParams(
 				schema.Imp{
 					Banner: &schema.BannerAdObject{
@@ -164,6 +164,42 @@ func TestBigoAds_CreateRequestTest(t *testing.T) {
 			want: createRequestTestOutput{
 				Request: buildBaseRequest(),
 				Err:     []error{errors.New("unknown banner format")},
+			},
+		},
+		{
+			name: "Interstitial",
+			params: buildTestParams(
+				schema.Imp{
+					Interstitial: &schema.InterstitialAdObject{},
+				},
+			),
+			want: createRequestTestOutput{
+				Request: buildWantRequest(openrtb2.Imp{
+					Instl: 1,
+					Banner: &openrtb2.Banner{
+						Pos: adcom1.PositionAboveFold.Ptr(),
+					},
+					Ext: json.RawMessage(`{"adtype": 3}`),
+				}),
+				Err: nil,
+			},
+		},
+		{
+			name: "Rewarded",
+			params: buildTestParams(
+				schema.Imp{
+					Rewarded: &schema.RewardedAdObject{},
+				},
+			),
+			want: createRequestTestOutput{
+				Request: buildWantRequest(openrtb2.Imp{
+					Instl: 0,
+					Video: &openrtb2.Video{
+						MIMEs: []string{"video/mp4"},
+					},
+					Ext: json.RawMessage(`{"adtype": 4}`),
+				}),
+				Err: nil,
 			},
 		},
 	}
