@@ -39,6 +39,9 @@ func (a *BigoAdsAdapter) banner(br *schema.BiddingRequest) (*openrtb2.Imp, error
 	}
 
 	w, h := size[0], size[1]
+	if !br.Imp.IsPortrait() {
+		w, h = h, w
+	}
 	return &openrtb2.Imp{
 		Instl: 0,
 		Banner: &openrtb2.Banner{

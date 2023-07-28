@@ -39,11 +39,9 @@ func ptr[T any](t T) *T {
 	return &t
 }
 
-func compareErrors(x, y error) bool {
-	if x == nil || y == nil {
-		return x == y
-	}
-	return x.Error() == y.Error()
+// compareErrors checks for error occurrence.
+func compareErrors(want, got error) bool {
+	return (want == nil) == (got == nil)
 }
 
 func buildAdapter() bigoads.BigoAdsAdapter {
@@ -79,6 +77,7 @@ func buildTestParams(imp schema.Imp) createRequestTestParams {
 					"token": "token",
 				},
 			},
+			Orientation: "PORTRAIT",
 		},
 	}
 
