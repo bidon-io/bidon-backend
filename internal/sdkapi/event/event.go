@@ -73,6 +73,15 @@ func NewLoss(request *schema.LossRequest, geoData geocoder.GeoData) Event {
 	}
 }
 
+func NewWin(request *schema.WinRequest, geoData geocoder.GeoData) Event {
+	return &simpleEvent[*schema.WinRequest]{
+		timestamp: generateTimestamp(),
+		topic:     WinTopic,
+		request:   request,
+		geoData:   geoData,
+	}
+}
+
 type Topic string
 
 const (
@@ -82,6 +91,7 @@ const (
 	RewardTopic Topic = "reward"
 	StatsTopic  Topic = "stats"
 	LossTopic   Topic = "loss"
+	WinTopic    Topic = "win"
 )
 
 type simpleEvent[T mapper] struct {

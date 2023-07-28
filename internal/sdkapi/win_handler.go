@@ -9,21 +9,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type LossHandler struct {
-	*BaseHandler[schema.LossRequest, *schema.LossRequest]
+type WinHandler struct {
+	*BaseHandler[schema.WinRequest, *schema.WinRequest]
 	EventLogger         *event.Logger
 	NotificationHandler NotificationHandler
 }
 
-func (h *LossHandler) Handle(c echo.Context) error {
+func (h *WinHandler) Handle(c echo.Context) error {
 	req, err := h.resolveRequest(c)
 	if err != nil {
 		return err
 	}
 
-	lossEvent := event.NewLoss(&req.raw, req.geoData)
-	h.EventLogger.Log(lossEvent, func(err error) {
-		logError(c, fmt.Errorf("log loss event: %v", err))
+	winEvent := event.NewWin(&req.raw, req.geoData)
+	h.EventLogger.Log(winEvent, func(err error) {
+		logError(c, fmt.Errorf("log win event: %v", err))
 	})
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})

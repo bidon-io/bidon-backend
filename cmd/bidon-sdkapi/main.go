@@ -187,7 +187,16 @@ func main() {
 			AppFetcher: appFetcher,
 			Geocoder:   geocoder,
 		},
-		EventLogger: eventLogger,
+		EventLogger:         eventLogger,
+		NotificationHandler: notificationHandler,
+	}
+	winHandler := sdkapi.WinHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.WinRequest, *schema.WinRequest]{
+			AppFetcher: appFetcher,
+			Geocoder:   geocoder,
+		},
+		EventLogger:         eventLogger,
+		NotificationHandler: notificationHandler,
 	}
 
 	e := config.Echo("bidon-sdkapi", logger)
@@ -202,6 +211,7 @@ func main() {
 	e.POST("/click/:ad_type", clickHandler.Handle)
 	e.POST("/reward/:ad_type", rewardHandler.Handle)
 	e.POST("/loss/:ad_type", lossHandler.Handle)
+	e.POST("/win/:ad_type", winHandler.Handle)
 
 	// Legacy endpoints
 	e.POST("/:ad_type/auction", auctionHandler.Handle)
