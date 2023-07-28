@@ -166,7 +166,8 @@ func main() {
 			AppFetcher: appFetcher,
 			Geocoder:   geocoder,
 		},
-		EventLogger: eventLogger,
+		EventLogger:         eventLogger,
+		NotificationHandler: notificationHandler,
 	}
 	clickHandler := sdkapi.ClickHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{

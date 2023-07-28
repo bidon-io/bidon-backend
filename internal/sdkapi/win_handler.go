@@ -1,9 +1,11 @@
 package sdkapi
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -12,7 +14,11 @@ import (
 type WinHandler struct {
 	*BaseHandler[schema.WinRequest, *schema.WinRequest]
 	EventLogger         *event.Logger
-	NotificationHandler NotificationHandler
+	NotificationHandler WinNotificationHandler
+}
+
+type WinNotificationHandler interface {
+	HandleWin(context.Context, *schema.Imp, []*adapters.DemandResponse) error
 }
 
 func (h *WinHandler) Handle(c echo.Context) error {

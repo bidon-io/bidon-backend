@@ -1,9 +1,11 @@
 package sdkapi
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/labstack/echo/v4"
@@ -12,7 +14,11 @@ import (
 type LossHandler struct {
 	*BaseHandler[schema.LossRequest, *schema.LossRequest]
 	EventLogger         *event.Logger
-	NotificationHandler NotificationHandler
+	NotificationHandler LossNotificationHandler
+}
+
+type LossNotificationHandler interface {
+	HandleLoss(context.Context, *schema.Imp, []*adapters.DemandResponse) error
 }
 
 func (h *LossHandler) Handle(c echo.Context) error {
