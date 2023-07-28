@@ -17,6 +17,7 @@ type WinHandler struct {
 	NotificationHandler WinNotificationHandler
 }
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/win_mocks.go -pkg mocks . WinNotificationHandler
 type WinNotificationHandler interface {
 	HandleWin(context.Context, *schema.Imp, []*adapters.DemandResponse) error
 }

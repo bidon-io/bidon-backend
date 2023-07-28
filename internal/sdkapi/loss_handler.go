@@ -17,6 +17,7 @@ type LossHandler struct {
 	NotificationHandler LossNotificationHandler
 }
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/loss_mocks.go -pkg mocks . LossNotificationHandler
 type LossNotificationHandler interface {
 	HandleLoss(context.Context, *schema.Imp, []*adapters.DemandResponse) error
 }
