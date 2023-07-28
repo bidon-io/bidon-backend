@@ -213,13 +213,13 @@ func (a *BigoAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Deman
 
 // Builder builds a new instance of the BigoAds adapter for the given bidder with the given config.
 func Builder(cfg adapter.Config, client *http.Client) (adapters.Bidder, error) {
-	bmCfg := cfg[adapter.BigoAdsKey]
+	bigoCfg := cfg[adapter.BigoAdsKey]
 
 	adpt := &BigoAdsAdapter{
-		Endpoint: bmCfg["endpoint"].(string),
-		SellerID: bmCfg["seller_id"].(string),
-		AppID:    bmCfg["app_id"].(string),
-		TagID:    bmCfg["tag_id"].(string),
+		Endpoint: bigoCfg["endpoint"].(string),
+		SellerID: bigoCfg["seller_id"].(string),
+		AppID:    bigoCfg["app_id"].(string),
+		TagID:    bigoCfg["tag_id"].(string),
 	}
 
 	bidder := adapters.Bidder{

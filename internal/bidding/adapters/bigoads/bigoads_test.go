@@ -3,6 +3,7 @@ package bigoads_test
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -341,5 +342,29 @@ func TestBigoAds_ParseBids(t *testing.T) {
 		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
 			t.Errorf("%s: adapter.ParseBids(ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
+	}
+}
+
+func TestBigoAds_Builder(t *testing.T) {
+	client := &http.Client{}
+	bigoCfg := adapter.Config{
+		adapter.BigoAdsKey: map[string]any{
+			"seller_id": "1",
+			"endpoint":  "https://bigoads.com",
+			"app_id":    "10182906",
+			"tag_id":    "10182906-10192212",
+		},
+	}
+	bidder, err := bigoads.Builder(bigoCfg, client)
+	wantAdapter := buildAdapter()
+	wantBidder := adapters.Bidder{
+		Adapter: &wantAdapter,
+		Client:  client,
+	}
+	if err != nil {
+		t.Errorf("Error building adapter: %v", err)
+	}
+	if diff := cmp.Diff(wantBidder, bidder); diff != "" {
+		t.Errorf("builder(bigoCfg, client) mismatch (-want, +got):\n%s", diff)
 	}
 }
