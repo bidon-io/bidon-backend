@@ -52,6 +52,7 @@ func Kafka() (conf KafkaConfig, err error) {
 		event.ClickTopic:  os.Getenv("KAFKA_CLICK_TOPIC"),
 		event.RewardTopic: os.Getenv("KAFKA_REWARD_TOPIC"),
 		event.StatsTopic:  os.Getenv("KAFKA_STATS_TOPIC"),
+		event.LossTopic:   os.Getenv("KAFKA_LOSS_TOPIC"),
 	}
 
 	return
