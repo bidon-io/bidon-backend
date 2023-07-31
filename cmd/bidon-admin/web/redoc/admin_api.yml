@@ -223,7 +223,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppDemandProfile'
+                  $ref: '#/components/schemas/AppDemandProfileDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -250,7 +250,11 @@ paths:
       summary: Get app demand profile
       responses:
         '200':
-          $ref: '#/components/responses/AppDemandProfileResponse'
+          description: An app demand profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppDemandProfileDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -727,7 +731,7 @@ components:
           type: boolean
         extra:
           type: object
-    AppDemandProfile:
+    AppDemandProfile: &app_demand_profile
       allOf:
         - $ref: '#/components/schemas/AppDemandProfileProps'
         - required:
@@ -737,6 +741,17 @@ components:
             - account_id
             - account_type
             - data
+    AppDemandProfileDetailed:
+        allOf:
+            - *app_demand_profile
+            - type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/App'
+                demand_source:
+                  $ref: '#/components/schemas/DemandSource'
+                account:
+                  $ref: '#/components/schemas/DemandSourceAccount'
     AppDemandProfileProps:
       type: object
       properties:
