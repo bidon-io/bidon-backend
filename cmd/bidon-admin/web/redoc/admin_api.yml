@@ -302,7 +302,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LineItem'
+                  $ref: '#/components/schemas/LineItemDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -329,7 +329,11 @@ paths:
       summary: Get line item
       responses:
         '200':
-          $ref: '#/components/responses/LineItemResponse'
+          description: A line item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineItemDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -792,7 +796,7 @@ components:
           minLength: 1
         data:
           type: object
-    LineItem:
+    LineItem: &line_item
       allOf:
         - $ref: '#/components/schemas/LineItemProps'
         - required:
@@ -806,6 +810,15 @@ components:
             - account_type
             - code
             - extra
+    LineItemDetailed:
+        allOf:
+            - *line_item
+            - type: object
+              properties:
+                app:
+                  $ref: '#/components/schemas/App'
+                account:
+                  $ref: '#/components/schemas/DemandSourceAccount'
     LineItemProps:
       type: object
       properties:
