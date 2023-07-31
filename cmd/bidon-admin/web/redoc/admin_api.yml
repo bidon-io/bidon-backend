@@ -574,7 +574,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Segment'
+                  $ref: '#/components/schemas/SegmentDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -601,7 +601,11 @@ paths:
       summary: Get segment
       responses:
         '200':
-          $ref: '#/components/responses/SegmentResponse'
+          description: A segment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -906,7 +910,7 @@ components:
         email:
           type: string
           format: email
-    Segment:
+    Segment: &segment
       allOf:
         - $ref: '#/components/schemas/SegmentProps'
         - required:
@@ -916,6 +920,13 @@ components:
             - filters
             - enabled
             - app_id
+    SegmentDetailed:
+        allOf:
+            - *segment
+            - type: object
+              properties:
+                app:
+                  $ref: '#/components/schemas/App'
     SegmentProps:
       type: object
       properties:
