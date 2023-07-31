@@ -89,7 +89,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/App'
+                  $ref: '#/components/schemas/AppDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -116,7 +116,11 @@ paths:
       summary: Get app
       responses:
         '200':
-          $ref: '#/components/responses/AppResponse'
+          description: An app
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -673,7 +677,7 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
-    App:
+    App: &app
       allOf:
         - $ref: '#/components/schemas/AppProps'
         - required:
@@ -684,6 +688,13 @@ components:
             - user_id
             - app_key
             - settings
+    AppDetailed:
+        allOf:
+          - *app
+          - type: object
+            properties:
+              user:
+                $ref: '#/components/schemas/User'
     AppProps:
       type: object
       properties:
