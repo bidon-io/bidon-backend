@@ -160,7 +160,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DemandSourceAccount'
+                  $ref: '#/components/schemas/DemandSourceAccountDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -187,7 +187,11 @@ paths:
       summary: Get demand source account
       responses:
         '200':
-          $ref: '#/components/responses/DemandSourceAccountResponse'
+          description: A demand source account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemandSourceAccountDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -716,7 +720,7 @@ components:
           minLength: 1
         settings:
           type: object
-    DemandSourceAccount:
+    DemandSourceAccount: &demand_source_account
       allOf:
         - $ref: '#/components/schemas/DemandSourceAccountProps'
         - required:
@@ -726,6 +730,15 @@ components:
             - demand_source_id
             - is_bidding
             - extra
+    DemandSourceAccountDetailed:
+        allOf:
+            - *demand_source_account
+            - type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/User'
+                demand_source:
+                  $ref: '#/components/schemas/DemandSource'
     DemandSourceAccountProps:
       type: object
       properties:
