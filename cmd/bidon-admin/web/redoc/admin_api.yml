@@ -18,7 +18,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AuctionConfiguration'
+                  $ref: '#/components/schemas/AuctionConfigurationDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -37,7 +37,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /auction_configurations/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -45,7 +45,11 @@ paths:
       summary: Get auction configuration
       responses:
         '200':
-          $ref: '#/components/responses/AuctionConfigurationResponse'
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuctionConfigurationDetailed'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -104,7 +108,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /apps/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -171,7 +175,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /demand_source_accounts/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -238,7 +242,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /app_demand_profiles/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -305,7 +309,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /line_items/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -372,7 +376,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /demand_sources/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -439,7 +443,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /countries/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -506,7 +510,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /users/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -573,7 +577,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
   /segments/{id}:
-    parameters: 
+    parameters:
       - $ref: '#/components/parameters/idParam'
     get:
       tags:
@@ -610,7 +614,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 components:
   schemas:
-    AuctionConfiguration:
+    AuctionConfiguration: &auction_configuration
       allOf:
         - $ref: '#/components/schemas/AuctionConfigurationProps'
         - required:
@@ -620,6 +624,13 @@ components:
           - ad_type
           - rounds
           - pricefloor
+    AuctionConfigurationDetailed:
+        allOf:
+            - *auction_configuration
+            - type: object
+              properties:
+                app:
+                  $ref: '#/components/schemas/App'
     AuctionConfigurationProps:
       type: object
       properties:
