@@ -108,8 +108,8 @@ func buildDemandInfo(demandResponse adapters.DemandResponse) Demand {
 	case adapter.MintegralKey:
 		return Demand{
 			Payload:     demandResponse.Bid.Payload,
-			UnitID:      demandResponse.Bid.UnitID,
-			PlacementID: demandResponse.Bid.PlacementID,
+			UnitID:      demandResponse.TagID,
+			PlacementID: demandResponse.PlacementID,
 		}
 	case adapter.BidmachineKey:
 		return Demand{
@@ -118,12 +118,12 @@ func buildDemandInfo(demandResponse adapters.DemandResponse) Demand {
 	case adapter.BigoAdsKey:
 		return Demand{
 			Payload: demandResponse.Bid.Payload,
-			SlotID:  demandResponse.Bid.UnitID,
+			SlotID:  demandResponse.TagID,
 		}
 	default:
 		return Demand{
 			Payload:     demandResponse.Bid.Payload,
-			PlacementID: demandResponse.Bid.UnitID,
+			PlacementID: demandResponse.TagID,
 		}
 	}
 }
