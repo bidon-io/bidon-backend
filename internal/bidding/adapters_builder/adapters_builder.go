@@ -3,6 +3,7 @@ package adapters_builder
 import (
 	"context"
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/meta"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -13,18 +14,17 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bidmachine"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bigoads"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vungle"
 )
 
 var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.BidmachineKey: bidmachine.Builder,
 	adapter.BigoAdsKey:    bigoads.Builder,
 	adapter.MintegralKey:  mintegral.Builder,
-	adapter.VungleKey:     vungle.Builder,
+	adapter.VungleKey:     meta.Builder,
+	adapter.MetaKey:       meta.Builder,
 	// adapter.AdmobKey: admob.Builder,
 	// adapter.ApplovinKey: applovin.Builder,
 	// adapter.DTExchangeKey: dtexchange.Builder,
-	// adapter.MetaKey: meta.Builder,
 	// adapter.MobileFuseKey: mobilefuse.Builder,
 	// adapter.UnityAdsKey: unityads.Builder,
 }
@@ -114,6 +114,14 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 				adapters[key]["placement_id"] = lineItem.PlacementID
 			}
 		case adapter.VungleKey:
+			adapters[key]["app_id"] = appData["app_id"]
+			adapters[key]["seller_id"] = extra["seller_id"]
+			adapters[key]["tag_id"] = ""
+
+			if lineItem, ok := lineItemsMap[key]; ok {
+				adapters[key]["tag_id"] = lineItem.AdUnitID
+			}
+		case adapter.MetaKey:
 			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["seller_id"]
 			adapters[key]["tag_id"] = ""
