@@ -47,11 +47,9 @@ func (a *VungleAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 0,
 		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{1, 2, 5, 8, 9, 14, 17},
-			Pos:   adcom1.PositionAboveFold.Ptr(),
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionAboveFold.Ptr(),
 		},
 	}
 }
@@ -65,11 +63,9 @@ func (a *VungleAdapter) interstitial(br *schema.BiddingRequest) *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 1,
 		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionFullScreen.Ptr(),
 		},
 	}
 }
@@ -81,13 +77,10 @@ func (a *VungleAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 		w, h = h, w
 	}
 	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{16},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
+		Video: &openrtb2.Video{
+			W:     w,
+			H:     h,
+			MIMEs: []string{"video/mp4"},
 		},
 		Ext: json.RawMessage(`{"rewarded": 1}`),
 	}
@@ -153,7 +146,7 @@ func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	}
 	dr.RawRequest = string(requestBody)
 
-	url := "https://rtb.api.vungle.com/bid/t/test"
+	url := "https://rtb.ads.vungle.com/bid/t/8ea3e9a"
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
@@ -161,7 +154,7 @@ func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
 	// It's important to set  X-OpenRTB-Version header to 2.5
-	httpReq.Header.Add(" X-OpenRTB-Version", "2.5")
+	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
