@@ -14,6 +14,7 @@ import (
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 	"golang.org/x/exp/maps"
+	"strconv"
 )
 
 type Builder struct {
@@ -75,8 +76,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) ([]adapt
 		App: &openrtb2.App{
 			Ver:    br.App.Version,
 			Bundle: br.App.Bundle,
-			ID:     "64ba73df5bb311e368070864",
-			//ID: strconv.FormatInt(params.AppID, 10),
+			ID:     strconv.FormatInt(params.AppID, 10),
 			Publisher: &openrtb2.Publisher{
 				ID: "SELLER_ID",
 			},
