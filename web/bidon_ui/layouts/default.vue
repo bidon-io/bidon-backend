@@ -1,10 +1,6 @@
 <template>
   <div class="flex h-screen bg-gray-100">
-    <div class="bg-white w-64 md:w-1/4 lg:w-1/5 h-full overflow-y-auto">
-      <Logo />
-      <SidebarNavigation />
-    </div>
-
+    <Sidebar />
     <div class="flex flex-col flex-1">
       <Header></Header>
       <Toast />
@@ -14,6 +10,7 @@
           <slot></slot>
         </div>
       </main>
+      <Footer />
     </div>
   </div>
 </template>
