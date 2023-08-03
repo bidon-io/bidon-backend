@@ -1,3 +1,5 @@
+import { FilterMatchMode } from "primevue/api";
+
 export const ResourceTableFields = {
   Id: { field: "id", header: "Id", sortable: true },
   App: {
@@ -12,6 +14,23 @@ export const ResourceTableFields = {
         id: app?.id,
         linkText: `${app?.packageName} (${app?.platformId})`,
       }),
+    },
+    filter: {
+      field: "appId",
+      type: "select",
+      matchMode: FilterMatchMode.EQUALS,
+      placeholder: "App",
+      extractOptions: (records) => [
+        ...new Map(
+          records.map(({ app }) => [
+            app?.id,
+            {
+              label: `${app?.packageName} (${app?.platformId})`,
+              value: app?.id,
+            },
+          ])
+        ).values(),
+      ],
     },
   },
   AccountType: { field: "accountType", header: "Account Type" },

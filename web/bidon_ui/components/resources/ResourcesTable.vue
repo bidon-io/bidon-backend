@@ -1,11 +1,13 @@
 <template>
   <DataTable
     v-model:selection="selectedResources"
+    v-model:filters="filters"
     :value="resources"
     data-key="id"
     paginator
     :rows="12"
     :rows-per-page-options="[12, 24, 36, 48]"
+    filter-display="row"
     table-style="min-width: 50rem"
   >
     <template #empty> No data found. </template>
@@ -16,9 +18,33 @@
       :field="column.field"
       :header="column.header"
       :sortable="column.sortable"
+      :filter-field="column.filter?.field"
+      :show-filter-menu="false"
     >
       <template v-if="column.link" #body="{ data }">
         <ResourceLink :link="column.link" :data="data" />
+      </template>
+      <template v-if="column.filter" #filter="{ filterModel, filterCallback }">
+        <InputText
+          v-if="column.filter.type === 'input'"
+          v-model="filterModel.value"
+          type="text"
+          class="p-column-filter"
+          :placeholder="column.filter.placeholder"
+          @input="filterCallback()"
+        />
+        <Dropdown
+          v-if="column.filter.type === 'select'"
+          v-model="filterModel.value"
+          :options="filtersOptions[column.filter.field as keyof typeof filtersOptions]"
+          option-label="label"
+          option-value="value"
+          :placeholder="column.filter.placeholder"
+          class="p-column-filter"
+          style="max-width: 12rem"
+          :show-clear="true"
+          @change="filterCallback()"
+        />
       </template>
     </Column>
     <Column style="width: 10%; min-width: 8rem" body-style="text-align:center">
@@ -51,12 +77,28 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { FilterMatchModeOptions } from "primevue/api";
+
 import axios from "@/services/ApiService.js";
 import useDeleteResource from "@/composables/useDeleteResource";
+
+interface Filter {
+  field: string;
+  value?: string;
+  matchMode: keyof FilterMatchModeOptions;
+  type: "input" | "select";
+  placeholder: string;
+}
+
+interface SelectFilter extends Filter {
+  type: "select";
+  extractOptions: (records: object[]) => { label: string; value: object }[];
+}
 
 interface Column {
   header: string;
   field: string;
+  filter?: Filter;
   sortable?: boolean;
   link?: ResourceLink;
 }
@@ -69,6 +111,35 @@ const props = defineProps<{
 const response = await axios.get(props.resourcesPath);
 const resources = ref(response.data);
 const selectedResources = ref([]);
+
+const filters = ref(
+  props.columns
+    .filter((column) => column.filter)
+    .map((column) => column.filter as Filter)
+    .reduce(
+      (result, filter) => ({
+        ...result,
+        [filter.field || ""]: {
+          matchMode: filter.matchMode,
+          value: filter?.value,
+        },
+      }),
+      {}
+    )
+);
+
+const filtersOptions = ref(
+  props.columns
+    .filter((column) => column.filter && column.filter.type === "select")
+    .map((column) => column.filter as SelectFilter)
+    .reduce(
+      (result, filter) => ({
+        ...result,
+        [filter.field || ""]: filter.extractOptions(resources.value) || [],
+      }),
+      {}
+    )
+);
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
