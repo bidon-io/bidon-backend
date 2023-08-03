@@ -112,7 +112,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.B
 		return request, err
 	}
 
-	imp.Ext = json.RawMessage(impExt)
+	imp.Ext = impExt
 
 	imp.DisplayManager = string(adapter.BigoAdsKey)
 	imp.DisplayManagerVer = br.Adapters[adapter.BigoAdsKey].SDKVersion

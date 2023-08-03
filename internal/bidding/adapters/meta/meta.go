@@ -3,6 +3,9 @@ package meta
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,9 +23,10 @@ import (
 )
 
 type MetaAdapter struct {
-	SellerID string
-	AppID    string
-	TagID    string
+	SellerID  string
+	AppID     string
+	AppSecret string
+	TagID     string
 }
 
 var bannerFormats = map[string][2]int64{
@@ -37,6 +41,8 @@ var fullscreenFormats = map[string][2]int64{
 	"PHONE":  {320, 480},
 	"TABLET": {768, 1024},
 }
+
+const platformID = "687579938617452"
 
 func (a *MetaAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := bannerFormats[string(br.Imp.Format())]
@@ -124,6 +130,18 @@ func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.Bidd
 	request.App.Publisher.ID = a.SellerID
 	request.App.ID = a.AppID
 
+	ext, err := json.Marshal(map[string]any{
+		"platformid":        platformID,
+		"authentication_id": calculateHMACSHA256(request.ID, a.AppSecret),
+		"security_app_id":   a.AppID,
+		"s2s_version":       "1",
+	})
+	if err != nil {
+		return request, []error{err}
+	}
+
+	request.Ext = ext
+
 	return request, errs
 }
 
@@ -139,15 +157,13 @@ func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, r
 	}
 	dr.RawRequest = string(requestBody)
 
-	url := "https://rtb.ads.meta.com/bid/t/8ea3e9a"
+	url := "https://an.facebook.com/" + platformID + "/placementbid.ortb"
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
-	// It's important to set  X-OpenRTB-Version header to 2.5
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
@@ -226,11 +242,16 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 	if !ok || appID == "" {
 		return nil, fmt.Errorf("missing app_id param for %s adapter", adapter.MintegralKey)
 	}
+	appSecret, ok := mCfg["app_secret"].(string)
+	if !ok || appID == "" {
+		return nil, fmt.Errorf("missing app_secret param for %s adapter", adapter.MintegralKey)
+	}
 
 	adpt := &MetaAdapter{
-		SellerID: sellerID,
-		AppID:    appID,
-		TagID:    mCfg["tag_id"].(string),
+		SellerID:  sellerID,
+		AppID:     appID,
+		AppSecret: appSecret,
+		TagID:     mCfg["tag_id"].(string),
 	}
 
 	bidder := adapters.Bidder{
@@ -239,4 +260,10 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 	}
 
 	return &bidder, nil
+}
+
+func calculateHMACSHA256(data, key string) string {
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
 }
