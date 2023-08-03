@@ -1,17 +1,17 @@
-REGISTRY = "ghcr.io/bidon-io"
+REGISTRY = ghcr.io/bidon-io
 
 docker-build-push-prod-back:
 	cd bidon_back && \
 	docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --target=prod \
-	--build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $(REGISTRY)/bidon-back:latest \
+	--build-arg BUILDKIT_INLINE_CACHE=1 --cache-to=type=inline --cache-from=type=registry,ref=$(REGISTRY)/bidon-back:latest \
 	-t $(REGISTRY)/bidon-back:$(TAG) -t $(REGISTRY)/bidon-back:latest --push .
 
 docker-build-push-prod-admin:
 	docker buildx build --platform linux/amd64,linux/arm64 --provenance=false \
-	--target bidon-admin --cache-to type=inline --cache-from $(REGISTRY)/bidon-admin \
+	--target bidon-admin --cache-to=type=inline --cache-from=type=registry,ref=$(REGISTRY)/bidon-admin \
 	-t $(REGISTRY)/bidon-admin:$(TAG) -t $(REGISTRY)/bidon-admin:latest --push .
 
 docker-build-push-prod-sdkapi:
 	docker buildx build --platform linux/amd64,linux/arm64 --provenance=false \
-	--target bidon-sdkapi --cache-to type=inline --cache-from $(REGISTRY)/bidon-sdkapi \
+	--target bidon-sdkapi --cache-to=type=inline --cache-from=type=registry,ref=$(REGISTRY)/bidon-sdkapi \
 	-t $(REGISTRY)/bidon-sdkapi:$(TAG) -t $(REGISTRY)/bidon-sdkapi:latest --push .

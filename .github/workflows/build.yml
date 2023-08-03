@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'task/DO-1560/build-cache'
   release:
     types: [published]
 
@@ -63,33 +64,33 @@ jobs:
           max_attempts: 3
           command: make docker-build-push-prod-${{ matrix.component }} TAG=$TAG
 
-  deploy:
-    name: Deploy
-    needs: [tag, build]
-    if: always() && needs.build.result == 'success'
-    uses: ./.github/workflows/deploy.yml
-    with:
-      tag:  ${{ needs.tag.outputs.tag }}
-    secrets: inherit
-
-  sentry-release:
-    name: Create Sentry release
-    needs: [tag, build]
-    if: github.event_name == 'release'
-    runs-on: [self-hosted]
-    steps:
-      - name: Checout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Create Sentry release
-        uses: getsentry/action-release@v1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
-          SENTRY_ORG: sentry
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-        with:
-          environment: production
-          projects: bidon-admin bidon-sdkapi
-          version: ${{ github.ref }}
+#  deploy:
+#    name: Deploy
+#    needs: [tag, build]
+#    if: always() && needs.build.result == 'success'
+#    uses: ./.github/workflows/deploy.yml
+#    with:
+#      tag:  ${{ needs.tag.outputs.tag }}
+#    secrets: inherit
+#
+#  sentry-release:
+#    name: Create Sentry release
+#    needs: [tag, build]
+#    if: github.event_name == 'release'
+#    runs-on: [self-hosted]
+#    steps:
+#      - name: Checout repo
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Create Sentry release
+#        uses: getsentry/action-release@v1
+#        env:
+#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+#          SENTRY_ORG: sentry
+#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+#        with:
+#          environment: production
+#          projects: bidon-admin bidon-sdkapi
+#          version: ${{ github.ref }}
