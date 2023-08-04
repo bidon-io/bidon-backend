@@ -4,7 +4,7 @@ FROM node:20-alpine AS frontend-deps
 WORKDIR /app
 
 COPY web/bidon_ui/package.json web/bidon_ui/yarn.lock ./
-RUN yarn install
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install
 
 FROM frontend-deps AS frontend-builder
 
@@ -30,11 +30,11 @@ CMD [ "go", "test", "-coverprofile=testcov/coverage.out", "-p", "1", "./..." ]
 FROM base AS bidon-admin-builder
 
 COPY --from=frontend-builder /app/.output/public ./cmd/bidon-admin/web/ui
-RUN go build -o /bidon-admin ./cmd/bidon-admin
+RUN --mount=type=cache,target=/root/.cache/go-build go build -o /bidon-admin ./cmd/bidon-admin
 
 FROM base AS bidon-sdkapi-builder
 
-RUN go build -o /bidon-sdkapi ./cmd/bidon-sdkapi
+RUN --mount=type=cache,target=/root/.cache/go-build go build -o /bidon-sdkapi ./cmd/bidon-sdkapi
 
 FROM alpine:3.18 AS deploy
 
