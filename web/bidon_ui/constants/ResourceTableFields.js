@@ -34,7 +34,24 @@ export const ResourceTableFields = {
     },
   },
   AccountType: { field: "accountType", header: "Account Type" },
-  AdType: { field: "adType", header: "Ad Type" },
+  AdType: {
+    field: "adType",
+    header: "Ad Type",
+    filter: {
+      field: "adType",
+      type: "select",
+      matchMode: FilterMatchMode.EQUALS,
+      placeholder: "AdType",
+      extractOptions: (records) => [
+        ...new Map(
+          records.map(({ adType }) => [
+            adType,
+            { label: adType, value: adType },
+          ])
+        ).values(),
+      ],
+    },
+  },
   BidFloor: { field: "bidFloor", header: "Bid Floor" },
   DemandSource: {
     field: "demandSourceId",
@@ -60,7 +77,16 @@ export const ResourceTableFields = {
       }),
     },
   },
-  HumanName: { field: "humanName", header: "Human Name" },
+  HumanName: {
+    field: "humanName",
+    header: "Human Name",
+    filter: {
+      field: "humanName",
+      type: "input",
+      matchMode: FilterMatchMode.CONTAINS,
+      placeholder: "Human Name",
+    },
+  },
   Segment: {
     field: "segmentId",
     header: "Segment",

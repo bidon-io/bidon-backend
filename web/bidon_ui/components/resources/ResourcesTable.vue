@@ -8,7 +8,7 @@
     :rows="12"
     :rows-per-page-options="[12, 24, 36, 48]"
     filter-display="row"
-    table-style="min-width: 50rem"
+    class="whitespace-nowrap"
   >
     <template #empty> No data found. </template>
     <Column selection-mode="multiple" header-style="width: 3rem"></Column>
@@ -41,13 +41,15 @@
           option-value="value"
           :placeholder="column.filter.placeholder"
           class="p-column-filter"
-          style="max-width: 12rem"
           :show-clear="true"
           @change="filterCallback()"
         />
       </template>
     </Column>
-    <Column style="width: 10%; min-width: 8rem" body-style="text-align:center">
+    <Column
+      style="width: 10%; min-width: 8rem"
+      body-style="text-align:center; position: sticky; right: 0; background-color: white"
+    >
       <template #body="slotProps">
         <div class="flex justify-between">
           <NuxtLink
@@ -112,6 +114,9 @@ const response = await axios.get(props.resourcesPath);
 const resources = ref(response.data);
 const selectedResources = ref([]);
 
+const route = useRoute();
+const router = useRouter();
+
 const filters = ref(
   props.columns
     .filter((column) => column.filter)
@@ -119,14 +124,28 @@ const filters = ref(
     .reduce(
       (result, filter) => ({
         ...result,
-        [filter.field || ""]: {
+        [filter.field]: {
           matchMode: filter.matchMode,
-          value: filter?.value,
+          value: route.query[filter.field],
         },
       }),
       {}
     )
 );
+
+watch(filters, () => {
+  const query = Object.entries(filters.value)
+    .filter(([, filter]) => (filter as Filter).value)
+    .reduce(
+      (result, [key, filter]) => ({
+        ...result,
+        [key]: (filter as Filter).value,
+      }),
+      {}
+    );
+
+  router.push({ query });
+});
 
 const filtersOptions = ref(
   props.columns
