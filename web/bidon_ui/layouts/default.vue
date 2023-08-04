@@ -5,12 +5,14 @@
       <Header></Header>
       <Toast />
       <ConfirmDialog />
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
-        <div class="container mx-auto px-8 py-10">
+      <div
+        class="flex-1 flex flex-col justify-between overflow-x-hidden overflow-y-auto bg-gray-200"
+      >
+        <main class="container mx-auto px-8 py-10">
           <slot></slot>
-        </div>
-      </main>
-      <Footer />
+        </main>
+        <Footer />
+      </div>
     </div>
   </div>
 </template>
