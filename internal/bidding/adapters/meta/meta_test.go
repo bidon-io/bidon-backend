@@ -81,7 +81,7 @@ func buildWantRequest(imp openrtb2.Imp) openrtb2.BidRequest {
 	request := openrtb2.BidRequest{
 		App: &openrtb2.App{
 			ID:        "10182906",
-			Publisher: &openrtb2.Publisher{ID: "1"},
+			Publisher: &openrtb2.Publisher{ID: "10182906"},
 			Ext:       json.RawMessage(`{"orientation":1}`),
 		},
 		User: &openrtb2.User{BuyerUID: "token"},

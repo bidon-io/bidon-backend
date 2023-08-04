@@ -126,8 +126,8 @@ func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.Bidd
 	}
 	request.Cur = []string{"USD"}
 
-	request.App.Publisher.ID = a.SellerID
 	request.App.ID = a.AppID
+	request.App.Publisher.ID = a.AppID
 
 	ext, err := json.Marshal(map[string]any{
 		"platformid":        platformID,
