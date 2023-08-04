@@ -75,6 +75,23 @@ export const ResourceTableFields = {
         linkText: `${account?.type?.split("::")[1]} (${account?.id})`,
       }),
     },
+    filter: {
+      field: "accountId",
+      type: "select",
+      matchMode: FilterMatchMode.EQUALS,
+      placeholder: "Account",
+      extractOptions: (records) => [
+        ...new Map(
+          records.map(({ account }) => [
+            account?.id,
+            {
+              label: `${account?.type?.split("::")[1]} (${account?.id})`,
+              value: account?.id,
+            },
+          ])
+        ).values(),
+      ],
+    },
   },
   HumanName: {
     field: "humanName",
