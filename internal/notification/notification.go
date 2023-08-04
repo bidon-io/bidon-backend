@@ -2,7 +2,10 @@ package notification
 
 import (
 	"context"
+	"fmt"
+	"log"
 
+	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
@@ -19,6 +22,7 @@ type Handler struct {
 
 type AuctionResultRepo interface {
 	CreateOrUpdate(ctx context.Context, imp *schema.Imp, bids []Bid) error
+	Find(ctx context.Context, auctionID string) (*AuctionResult, error)
 }
 
 // HandleRound is used to handle bidding round, it is called after all adapters have responded with bids or errors
@@ -49,7 +53,44 @@ func (h Handler) HandleRound(ctx context.Context, imp *schema.Imp, responses []a
 // Finalize results of auction in redis
 // If external_win_notification is enabled - do nothing, wait /win or /loss request
 // If external_win_notification is disabled - send win/loss notifications to demands
-func (h Handler) HandleStats(ctx context.Context, imp *schema.Imp, responses []*adapters.DemandResponse) error {
+func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *auction.Config) error {
+	if config.ExternalWinNotifications {
+		return nil
+	}
+
+	// Get AuctionResult from redis
+	auctionResult, err := h.AuctionResultRepo.Find(ctx, stats.AuctionID)
+	if err != nil {
+		return err
+	}
+
+	if auctionResult == nil {
+		log.Printf("auction result not found: %s", stats.AuctionID)
+		return nil
+	}
+
+	var winner *Bid
+	loosers := []Bid{}
+	if stats.Result.IsSuccess() { // We have winner
+		winEcpm := stats.Result.ECPM
+
+		// Find all bidding rounds for this auction
+		for _, round := range auctionResult.Rounds {
+			// Find all bids for this round
+			for _, bid := range round.Bids {
+				if bid.Price == winEcpm {
+					winner = &bid
+				} else {
+					loosers = append(loosers, bid)
+				}
+			}
+		}
+
+		fmt.Println(winner)
+		fmt.Println(loosers)
+	} else { // Send lurl to all demands
+	}
+
 	return nil
 }
 

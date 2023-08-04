@@ -44,7 +44,7 @@ func TestHandler_HandleRound(t *testing.T) {
 
 func TestHandler_HandleStats(t *testing.T) {
 	ctx := context.Background()
-	imp := &schema.Imp{ID: "imp-1"}
+	imp := schema.Stats{}
 	responses := []*adapters.DemandResponse{
 		{Bid: &adapters.BidDemandResponse{ID: "bid-1", ImpID: "imp-1", Price: 1.23}},
 		{Bid: &adapters.BidDemandResponse{ID: "bid-2", ImpID: "imp-1", Price: 4.56}},
