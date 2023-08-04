@@ -7,7 +7,6 @@ export const ResourceTableFields = {
     header: "App",
     link: {
       basePath: "/apps",
-      textField: "packageName",
       dataField: "app",
       extractLinkData: ({ app }) => ({
         isValid: !!app,

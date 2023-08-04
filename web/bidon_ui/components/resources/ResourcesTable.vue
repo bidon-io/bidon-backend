@@ -21,8 +21,16 @@
       :filter-field="column.filter?.field"
       :show-filter-menu="false"
     >
-      <template v-if="column.link" #body="{ data }">
-        <ResourceLink :link="column.link" :data="data" />
+      <template
+        v-if="column.link || column.associatedResourcesLink"
+        #body="{ data }"
+      >
+        <ResourceLink v-if="column.link" :link="column.link" :data="data" />
+        <AssociatedResourcesLink
+          v-if="column.associatedResourcesLink"
+          :link="column.associatedResourcesLink"
+          :data="data"
+        />
       </template>
       <template v-if="column.filter" #filter="{ filterModel, filterCallback }">
         <InputText
@@ -103,6 +111,7 @@ interface Column {
   filter?: Filter;
   sortable?: boolean;
   link?: ResourceLink;
+  associatedResourcesLink: AssociatedResourcesLink;
 }
 
 const props = defineProps<{
