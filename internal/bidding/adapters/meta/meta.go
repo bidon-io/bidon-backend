@@ -91,8 +91,7 @@ func (a *MetaAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 	}
 }
 
-func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, []error) {
-	var errs []error
+func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.BiddingRequest) (openrtb2.BidRequest, error) {
 	secure := int8(1)
 
 	var imp *openrtb2.Imp
@@ -104,14 +103,14 @@ func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.Bidd
 	case ad.RewardedType:
 		imp = a.rewarded(br)
 	default:
-		return request, []error{errors.New("unknown impression type")}
+		return request, errors.New("unknown impression type")
 	}
 
 	impId, _ := uuid.NewV4()
 	imp.ID = impId.String()
 
 	if a.TagID == "" {
-		return request, []error{errors.New("TagID is empty")}
+		return request, errors.New("TagID is empty")
 	}
 	imp.TagID = a.TagID
 
@@ -137,12 +136,12 @@ func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.Bidd
 		"s2s_version":       "1",
 	})
 	if err != nil {
-		return request, []error{err}
+		return request, err
 	}
 
 	request.Ext = ext
 
-	return request, errs
+	return request, nil
 }
 
 func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb2.BidRequest) *adapters.DemandResponse {
