@@ -19,11 +19,11 @@ type StatsHandler struct {
 }
 
 type StatsNotificationHandler interface {
-	HandleStats(context.Context, schema.Stats, *auction.Config) error
+	HandleStats(context.Context, schema.Stats, auction.Config) error
 }
 
 type ConfigMatcher interface {
-	MatchById(ctx context.Context, appID, id int64) (*auction.Config, error)
+	MatchById(ctx context.Context, appID, id int64) *auction.Config
 }
 
 func (h *StatsHandler) Handle(c echo.Context) error {
@@ -38,11 +38,13 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 	})
 
 	ctx := c.Request().Context()
-	config, err := h.ConfigMatcher.MatchById(ctx, req.app.ID, int64(req.raw.Stats.AuctionConfigurationID))
-	if err != nil {
-		logError(c, fmt.Errorf("cannot build config: %v", err))
+	config := h.ConfigMatcher.MatchById(ctx, req.app.ID, int64(req.raw.Stats.AuctionConfigurationID))
+	if config == nil {
+		logError(c, fmt.Errorf("cannot find config: %v", req.raw.Stats.AuctionConfigurationID))
+	} else {
+		_ = ""
+		// h.NotificationHandler.HandleStats(ctx, req.raw.Stats, *config)
 	}
-	h.NotificationHandler.HandleStats(ctx, req.raw.Stats, config)
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }

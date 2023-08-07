@@ -49,7 +49,7 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 	return config, nil
 }
 
-func (m *ConfigMatcher) MatchById(ctx context.Context, appID, id int64) (*auction.Config, error) {
+func (m *ConfigMatcher) MatchById(ctx context.Context, appID, id int64) *auction.Config {
 	dbConfig := &db.AuctionConfiguration{}
 
 	err := m.DB.
@@ -63,7 +63,7 @@ func (m *ConfigMatcher) MatchById(ctx context.Context, appID, id int64) (*auctio
 		Take(dbConfig).
 		Error
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	config := &auction.Config{
@@ -72,5 +72,5 @@ func (m *ConfigMatcher) MatchById(ctx context.Context, appID, id int64) (*auctio
 		Rounds:                   dbConfig.Rounds,
 	}
 
-	return config, nil
+	return config
 }

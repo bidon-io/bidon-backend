@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"net/url"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
@@ -32,16 +34,17 @@ func (h Handler) HandleRound(ctx context.Context, imp *schema.Imp, responses []a
 	for _, resp := range responses {
 		if resp.IsBid() {
 			bids = append(bids, Bid{
-				ID:       resp.Bid.ID,
-				ImpID:    resp.Bid.ImpID,
-				Price:    resp.Bid.Price,
-				Payload:  resp.Bid.Payload,
-				DemandID: resp.Bid.DemandID,
-				AdID:     resp.Bid.AdID,
-				SeatID:   resp.Bid.SeatID,
-				LURL:     resp.Bid.LURL,
-				NURL:     resp.Bid.NURL,
-				BURL:     resp.Bid.BURL,
+				ID:        resp.Bid.ID,
+				ImpID:     resp.Bid.ImpID,
+				Price:     resp.Bid.Price,
+				Payload:   resp.Bid.Payload,
+				DemandID:  resp.Bid.DemandID,
+				AdID:      resp.Bid.AdID,
+				SeatID:    resp.Bid.SeatID,
+				LURL:      resp.Bid.LURL,
+				NURL:      resp.Bid.NURL,
+				BURL:      resp.Bid.BURL,
+				RequestID: resp.RequestID,
 			})
 		}
 	}
@@ -53,7 +56,7 @@ func (h Handler) HandleRound(ctx context.Context, imp *schema.Imp, responses []a
 // Finalize results of auction in redis
 // If external_win_notification is enabled - do nothing, wait /win or /loss request
 // If external_win_notification is disabled - send win/loss notifications to demands
-func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *auction.Config) error {
+func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config auction.Config) error {
 	if config.ExternalWinNotifications {
 		return nil
 	}
@@ -71,8 +74,11 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 
 	var winner *Bid
 	loosers := []Bid{}
-	if stats.Result.IsSuccess() { // We have winner
+	lossReason := 0
+	switch stats.Result.Status {
+	case "SUCCESS": // We have winner
 		winEcpm := stats.Result.ECPM
+		lossReason = 102
 
 		// Find all bidding rounds for this auction
 		for _, round := range auctionResult.Rounds {
@@ -88,9 +94,17 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 
 		fmt.Println(winner)
 		fmt.Println(loosers)
-	} else { // Send lurl to all demands
+	case "FAIL":
+		lossReason = 1
+		fmt.Println("FAIL")
+	case "AUCTION_CANCELLED":
+		lossReason = 2
+		fmt.Println("AUCTION_CANCELLED")
 	}
 
+	if len(loosers) > 0 {
+		notifyLoosers(ctx, loosers, lossReason)
+	}
 	return nil
 }
 
@@ -110,4 +124,50 @@ func (h Handler) HandleWin(ctx context.Context, imp *schema.Imp, responses []*ad
 // If external_win_notification is disabled - do nothing
 func (h Handler) HandleLoss(ctx context.Context, imp *schema.Imp, responses []*adapters.DemandResponse) error {
 	return nil
+}
+
+func notifyLoosers(ctx context.Context, loosers []Bid, lossReason int) {
+	for _, bid := range loosers {
+		notifyLooser(ctx, bid, lossReason)
+	}
+}
+
+func notifyLooser(ctx context.Context, bid Bid, lossReason int) {
+	u, err := url.Parse(bid.LURL)
+	if err != nil {
+		// TODO: log to error topic in kafka
+		log.Printf("failed to parse url: %s", bid.LURL)
+		return
+	}
+	macroses := macrosesMap(bid, lossReason, 0, 0)
+	params, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		log.Printf("failed to parse params: %s", u.RawQuery)
+		return
+	}
+	for param := range params {
+		if val, ok := macroses[params.Get(param)]; ok {
+			params.Set(param, val)
+		}
+	}
+	u.RawQuery = params.Encode()
+	// TODO: add retry
+	// TODO: write raw events to kafka
+	http.Get(u.String())
+}
+
+func macrosesMap(bid Bid, lossReason int, winPrice, secondPrice float64) map[string]string {
+	return map[string]string{
+		"${AUCTION_MIN_TO_WIN}":         fmt.Sprintf("%f", secondPrice),
+		"${AUCTION_MINIMUM_BID_TO_WIN}": fmt.Sprintf("%f", secondPrice),
+		"${MIN_BID_TO_WIN}":             fmt.Sprintf("%f", secondPrice),
+		"${AUCTION_ID}":                 bid.RequestID,
+		"${AUCTION_BID_ID}":             bid.ID,
+		"${AUCTION_IMP_ID}":             bid.ImpID,
+		"${AUCTION_SEAT_ID}":            bid.SeatID,
+		"${AUCTION_AD_ID}":              bid.AdID,
+		"${AUCTION_PRICE}":              fmt.Sprintf("%f", winPrice),
+		"${AUCTION_LOSS}":               fmt.Sprintf("%d", lossReason),
+		"${AUCTION_CURRENCY}":           "USD",
+	}
 }
