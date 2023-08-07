@@ -80,7 +80,7 @@ func buildTestParams(imp schema.Imp) createRequestTestParams {
 func buildWantRequest(imp openrtb2.Imp) openrtb2.BidRequest {
 	request := openrtb2.BidRequest{
 		App: &openrtb2.App{
-			ID:        "10182906",
+			ID:        "",
 			Publisher: &openrtb2.Publisher{ID: "10182906"},
 			Ext:       json.RawMessage(`{"orientation":1}`),
 		},
@@ -96,7 +96,7 @@ func buildWantRequest(imp openrtb2.Imp) openrtb2.BidRequest {
 				Secure:            ptr(int8(1)),
 			},
 		},
-		Ext: json.RawMessage(`{"authentication_id":"b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad","platformid":"687579938617452","s2s_version":"1","security_app_id":"10182906"}`),
+		Ext: json.RawMessage(`{"authentication_id":"b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad","platformid":"687579938617452"}`),
 	}
 	if imp.Banner != nil {
 		request.Imp[0].Banner = imp.Banner

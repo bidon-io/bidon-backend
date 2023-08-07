@@ -126,14 +126,11 @@ func (a *MetaAdapter) CreateRequest(request openrtb2.BidRequest, br *schema.Bidd
 	}
 	request.Cur = []string{"USD"}
 
-	request.App.ID = a.AppID
 	request.App.Publisher.ID = a.AppID
 
 	ext, err := json.Marshal(map[string]any{
 		"platformid":        platformID,
 		"authentication_id": calculateHMACSHA256(request.ID, a.AppSecret),
-		"security_app_id":   a.AppID,
-		"s2s_version":       "1",
 	})
 	if err != nil {
 		return request, err
