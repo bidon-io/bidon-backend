@@ -25,7 +25,7 @@ export const ResourceTableFields = {
             app?.id,
             {
               label: `${app?.packageName} (${app?.platformId})`,
-              value: app?.id,
+              value: String(app?.id),
             },
           ])
         ).values(),
@@ -86,7 +86,7 @@ export const ResourceTableFields = {
             account?.id,
             {
               label: `${account?.type?.split("::")[1]} (${account?.id})`,
-              value: account?.id,
+              value: String(account?.id),
             },
           ])
         ).values(),

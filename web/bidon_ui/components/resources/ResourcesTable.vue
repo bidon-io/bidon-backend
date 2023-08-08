@@ -102,7 +102,7 @@ interface Filter {
 
 interface SelectFilter extends Filter {
   type: "select";
-  extractOptions: (records: object[]) => { label: string; value: object }[];
+  extractOptions: (records: object[]) => { label: string; value: string }[];
 }
 
 interface Column {
