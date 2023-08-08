@@ -9,6 +9,7 @@
     :rows-per-page-options="[12, 24, 36, 48]"
     filter-display="row"
     class="whitespace-nowrap"
+    @filter="onFilter"
   >
     <template #empty> No data found. </template>
     <Column selection-mode="multiple" header-style="width: 3rem"></Column>
@@ -156,18 +157,23 @@ watch(filters, () => {
   router.push({ query });
 });
 
-const filtersOptions = ref(
+const getFilterOptions = (filteredResources: object[]) =>
   props.columns
     .filter((column) => column.filter && column.filter.type === "select")
     .map((column) => column.filter as SelectFilter)
     .reduce(
       (result, filter) => ({
         ...result,
-        [filter.field || ""]: filter.extractOptions(resources.value) || [],
+        [filter.field || ""]: filter.extractOptions(filteredResources) || [],
       }),
       {}
-    )
-);
+    );
+
+const filtersOptions = ref(getFilterOptions(resources.value));
+
+const onFilter = (event: { filteredValue: object[] }) => {
+  filtersOptions.value = getFilterOptions(event.filteredValue);
+};
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
