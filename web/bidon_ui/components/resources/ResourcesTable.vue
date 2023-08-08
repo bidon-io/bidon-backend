@@ -87,7 +87,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import { FilterMatchModeOptions } from "primevue/api";
 
 import axios from "@/services/ApiService.js";
@@ -143,20 +142,6 @@ const filters = ref(
     )
 );
 
-watch(filters, () => {
-  const query = Object.entries(filters.value)
-    .filter(([, filter]) => (filter as Filter).value)
-    .reduce(
-      (result, [key, filter]) => ({
-        ...result,
-        [key]: (filter as Filter).value,
-      }),
-      {}
-    );
-
-  router.push({ query });
-});
-
 const getFilterOptions = (filteredResources: object[]) =>
   props.columns
     .filter((column) => column.filter && column.filter.type === "select")
@@ -174,6 +159,20 @@ const filtersOptions = ref(getFilterOptions(resources.value));
 const onFilter = (event: { filteredValue: object[] }) => {
   filtersOptions.value = getFilterOptions(event.filteredValue);
 };
+
+watch(filters, () => {
+  const query = Object.entries(filters.value)
+    .filter(([, filter]) => (filter as Filter).value)
+    .reduce(
+      (result, [key, filter]) => ({
+        ...result,
+        [key]: (filter as Filter).value,
+      }),
+      {}
+    );
+
+  router.push({ query });
+});
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
