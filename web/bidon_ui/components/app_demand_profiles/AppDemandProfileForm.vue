@@ -17,9 +17,12 @@
         :error="errors.accountType"
         required
       />
-      <FormField label="Data">
+      <AppDemandProfileBigoAdsFields
+        v-if="accountType === 'DemandSourceAccount::BigoAds'"
+      />
+      <!-- <FormField label="Data">
         <TextareaJSON v-model="data" rows="5" />
-      </FormField>
+      </FormField> -->
       <FormSubmitButton />
     </FormCard>
   </form>
@@ -37,14 +40,24 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 const resource = ref(props.value);
 
-const { errors, useFieldModel, handleSubmit } = useForm({
-  validationSchema: yup.object({
+const dataSchemas = {
+  "DemandSourceAccount::BigoAds": yup.object({
+    appId: yup.number().required().label("App Id"),
+  }),
+};
+const dataSchema = ref(yup.object());
+const schema = computed(() =>
+  yup.object({
     appId: yup.number().required().label("App Id"),
     demandSourceId: yup.number().required().label("Deamand Source Id"),
     accountId: yup.number().required().label("Account Id"),
-    data: yup.object(),
+    data: dataSchema.value,
     accountType: yup.string().required().label("Demand Source Type"),
-  }),
+  })
+);
+
+const { errors, useFieldModel, handleSubmit } = useForm({
+  validationSchema: schema,
   initialValues: {
     appId: resource.value.appId || null,
     demandSourceId: resource.value.demandSourceId || null,
@@ -57,8 +70,12 @@ const { errors, useFieldModel, handleSubmit } = useForm({
 const appId = useFieldModel("appId");
 const demandSourceId = useFieldModel("demandSourceId");
 const accountId = useFieldModel("accountId");
-const data = useFieldModel("data");
 const accountType = useFieldModel("accountType");
+
+watch(accountType, () => {
+  dataSchemas[accountType.value] &&
+    (dataSchema.value = dataSchemas[accountType.value]);
+});
 
 const onSubmit = handleSubmit((values) => emit("submit", values));
 </script>
