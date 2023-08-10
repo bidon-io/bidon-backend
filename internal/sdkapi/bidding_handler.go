@@ -66,7 +66,8 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 	}
 
 	sgmnt := h.SegmentMatcher.Match(ctx, segmentParams)
-	adapterConfigs, err := h.AdaptersConfigBuilder.Build(ctx, req.app.ID, req.raw.Adapters.Keys(), req.raw.Imp)
+	imp := req.raw.Imp
+	adapterConfigs, err := h.AdaptersConfigBuilder.Build(ctx, req.app.ID, req.raw.Adapters.Keys(), imp)
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 	}
 
 	for _, result := range demandResponses {
-		if result.IsBid() {
+		if result.IsBid() && result.Bid.Price >= imp.GetBidFloor() {
 			response.Bids = append(response.Bids, Bid{
 				ID:    result.Bid.ID,
 				ImpID: result.Bid.ImpID,
