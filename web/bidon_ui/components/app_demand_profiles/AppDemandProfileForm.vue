@@ -17,12 +17,10 @@
         :error="errors.accountType"
         required
       />
-      <AppDemandProfileBigoAdsFields
-        v-if="accountType === 'DemandSourceAccount::BigoAds'"
+      <AppDemandProfileDataFormFields
+        v-model:schema="dataSchema"
+        :account-type="accountType"
       />
-      <!-- <FormField label="Data">
-        <TextareaJSON v-model="data" rows="5" />
-      </FormField> -->
       <FormSubmitButton />
     </FormCard>
   </form>
@@ -40,11 +38,6 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 const resource = ref(props.value);
 
-const dataSchemas = {
-  "DemandSourceAccount::BigoAds": yup.object({
-    appId: yup.number().required().label("App Id"),
-  }),
-};
 const dataSchema = ref(yup.object());
 const schema = computed(() =>
   yup.object({
@@ -71,11 +64,6 @@ const appId = useFieldModel("appId");
 const demandSourceId = useFieldModel("demandSourceId");
 const accountId = useFieldModel("accountId");
 const accountType = useFieldModel("accountType");
-
-watch(accountType, () => {
-  dataSchemas[accountType.value] &&
-    (dataSchema.value = dataSchemas[accountType.value]);
-});
 
 const onSubmit = handleSubmit((values) => emit("submit", values));
 </script>
