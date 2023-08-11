@@ -40,7 +40,7 @@ func NewLineItemService(store Store) *LineItemService {
 	s.getValidator = func(attrs *LineItemAttrs) v8n.ValidatableWithContext {
 		return &lineItemAttrsValidator{
 			attrs:                   attrs,
-			DemandSourceAccountRepo: store.DemandSourceAccounts(),
+			demandSourceAccountRepo: store.DemandSourceAccounts(),
 		}
 	}
 
@@ -49,11 +49,12 @@ func NewLineItemService(store Store) *LineItemService {
 
 type lineItemAttrsValidator struct {
 	attrs *LineItemAttrs
-	DemandSourceAccountRepo
+
+	demandSourceAccountRepo DemandSourceAccountRepo
 }
 
 func (v *lineItemAttrsValidator) ValidateWithContext(ctx context.Context) error {
-	account, err := v.DemandSourceAccountRepo.Find(ctx, v.attrs.AccountID)
+	account, err := v.demandSourceAccountRepo.Find(ctx, v.attrs.AccountID)
 	if err != nil {
 		return v8n.NewInternalError(err)
 	}
