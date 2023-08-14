@@ -37,9 +37,10 @@ func Test_demandSourceAccountValidator_ValidateWithContext(t *testing.T) {
 			&DemandSourceAccountAttrs{
 				DemandSourceID: 1,
 				Extra: map[string]any{
-					"seller_id": "154",
-					"endpoint":  "https://api.test.bidmachine.io",
-					"foo":       "bar",
+					"seller_id":        "154",
+					"endpoint":         "https://api.test.bidmachine.io",
+					"mediation_config": []string{"foo", "bar"},
+					"foo":              "bar",
 				},
 			},
 			&DemandSource{
@@ -160,7 +161,26 @@ func Test_demandSourceAccountValidator_ValidateWithContext(t *testing.T) {
 			&DemandSourceAccountAttrs{
 				DemandSourceID: 1,
 				Extra: map[string]any{
-					"endpoint": 154,
+					"seller_id":        "154",
+					"endpoint":         154,
+					"mediation_config": []string{"foo", "bar"},
+				},
+			},
+			&DemandSource{
+				DemandSourceAttrs: DemandSourceAttrs{
+					ApiKey: string(adapter.BidmachineKey),
+				},
+			},
+			true,
+		},
+		{
+			"invalid Bidmachine when mediation_config is not slice of strings",
+			&DemandSourceAccountAttrs{
+				DemandSourceID: 1,
+				Extra: map[string]any{
+					"seller_id":        "154",
+					"endpoint":         "https://api.test.bidmachine.io",
+					"mediation_config": []int{1, 2, 3},
 				},
 			},
 			&DemandSource{
