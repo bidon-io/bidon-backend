@@ -71,6 +71,7 @@ func (v *demandSourceAccountValidator) extraRule(demandSource *DemandSource) v8n
 		rule = v8n.Map(
 			v8n.Key("seller_id", v8n.Required, isString),
 			v8n.Key("endpoint", v8n.Required, is.URL),
+			v8n.Key("mediation_config", v8n.Required, v8n.Each(isString)),
 		)
 	case adapter.BigoAdsKey:
 		rule = v8n.Map(

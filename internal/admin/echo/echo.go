@@ -3,11 +3,13 @@ package adminecho
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
+	v8n "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -111,6 +113,11 @@ func (s *resourceServiceHandler[Resource, ResourceAttrs]) create(c echo.Context)
 
 	resource, err := s.service.Create(c.Request().Context(), attrs)
 	if err != nil {
+		var validationError v8n.Errors
+		if errors.As(err, &validationError) {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, validationError.Error())
+		}
+
 		return err
 	}
 
@@ -144,6 +151,11 @@ func (s *resourceServiceHandler[Resource, ResourceAttrs]) update(c echo.Context)
 
 	resource, err := s.service.Update(c.Request().Context(), int64(id), attrs)
 	if err != nil {
+		var validationError v8n.Errors
+		if errors.As(err, &validationError) {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, validationError.Error())
+		}
+
 		return err
 	}
 
