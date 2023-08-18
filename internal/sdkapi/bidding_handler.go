@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sort"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
@@ -19,6 +21,7 @@ type BiddingHandler struct {
 	BiddingBuilder        *bidding.Builder
 	SegmentMatcher        *segment.Matcher
 	AdaptersConfigBuilder AdaptersConfigBuilder
+	EventLogger           *event.Logger
 }
 
 //go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/bidding_mocks.go -pkg mocks . AdaptersConfigBuilder
@@ -84,17 +87,22 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		GeoData:        req.geoData,
 		AdapterConfigs: adapterConfigs,
 	}
-	demandResponses, err := h.BiddingBuilder.HoldAuction(ctx, params)
-	c.Logger().Printf("[BIDDING] bids: (%+v), err: (%s), took (%s)", demandResponses, err, time.Since(start))
+	auctionResult, err := h.BiddingBuilder.HoldAuction(ctx, params)
+	c.Logger().Printf("[BIDDING] bids: (%+v), err: (%s), took (%s)", auctionResult, err, time.Since(start))
 	if err != nil {
 		return err
 	}
+
+	bidRequestEvent := event.NewBidRequest(&req.raw, auctionResult, req.geoData)
+	h.EventLogger.LogBidRequest(bidRequestEvent, func(err error) {
+		logError(c, fmt.Errorf("log bid_request event: %v", err))
+	})
 
 	response := BiddingResponse{
 		Status: "NO_BID",
 	}
 
-	for _, result := range demandResponses {
+	for _, result := range auctionResult.Bids {
 		if result.IsBid() && result.Bid.Price >= imp.GetBidFloor() {
 			response.Bids = append(response.Bids, Bid{
 				ID:    result.Bid.ID,

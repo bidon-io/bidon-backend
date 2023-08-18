@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
@@ -64,6 +65,53 @@ func NewStats(request *schema.StatsRequest, geoData geocoder.GeoData) Event {
 	}
 }
 
+func NewBidRequest(request *schema.BiddingRequest, response bidding.AuctionResult, geoData geocoder.GeoData) BidRequest {
+	winnerECPM, winnerDemand := response.Winner()
+
+	return BidRequest{
+		RawRequest:                  request,
+		Timestamp:                   time.Now(),
+		EventType:                   "bid_request",
+		AdType:                      string(request.AdType),
+		AuctionID:                   request.Imp.AuctionID,
+		AuctionConfigurationID:      request.Imp.AuctionConfigID,
+		AuctionStatus:               "",
+		RoundID:                     request.Imp.RoundID,
+		RoundNumber:                 response.RoundNumber,
+		ImpID:                       request.Imp.ID,
+		DemandID:                    winnerDemand,
+		AdUnitID:                    0,
+		AdUnitCode:                  "",
+		Ecpm:                        winnerECPM,
+		PriceFloor:                  request.Imp.GetBidFloor(),
+		Manufacturer:                request.Device.Manufacturer,
+		Model:                       request.Device.Model,
+		Os:                          request.Device.OS,
+		OsVersion:                   request.Device.OSVersion,
+		ConnectionType:              request.Device.ConnectionType,
+		SessionID:                   request.Session.ID,
+		SessionUptime:               request.Session.Uptime(),
+		Bundle:                      request.App.Bundle,
+		Framework:                   request.App.Framework,
+		FrameworkVersion:            request.App.FrameworkVersion,
+		PluginVersion:               request.App.PluginVersion,
+		PackageVersion:              request.App.Version,
+		SdkVersion:                  request.App.SDKVersion,
+		IDFA:                        request.User.IDFA,
+		IDG:                         request.User.IDG,
+		IDFV:                        request.User.IDFV,
+		TrackingAuthorizationStatus: request.User.TrackingAuthorizationStatus,
+		COPPA:                       request.GetRegulations().COPPA,
+		GDPR:                        request.GetRegulations().GDPR,
+		CountryCode:                 geoData.CountryCode,
+		City:                        geoData.CityName,
+		Ip:                          geoData.IPString,
+		CountryID:                   geoData.CountryID,
+		SegmentID:                   0,
+		Ext:                         request.Ext,
+	}
+}
+
 func NewLoss(request *schema.LossRequest, geoData geocoder.GeoData) Event {
 	return &simpleEvent[*schema.LossRequest]{
 		timestamp: generateTimestamp(),
@@ -85,13 +133,15 @@ func NewWin(request *schema.WinRequest, geoData geocoder.GeoData) Event {
 type Topic string
 
 const (
-	ConfigTopic Topic = "config"
-	ShowTopic   Topic = "show"
-	ClickTopic  Topic = "click"
-	RewardTopic Topic = "reward"
-	StatsTopic  Topic = "stats"
-	LossTopic   Topic = "loss"
-	WinTopic    Topic = "win"
+	ConfigTopic     Topic = "config"
+	ShowTopic       Topic = "show"
+	ClickTopic      Topic = "click"
+	RewardTopic     Topic = "reward"
+	StatsTopic      Topic = "stats"
+	BidRequestTopic Topic = "bid_request"
+	BidTopic        Topic = "bid"
+	LossTopic       Topic = "loss"
+	WinTopic        Topic = "win"
 )
 
 type simpleEvent[T mapper] struct {

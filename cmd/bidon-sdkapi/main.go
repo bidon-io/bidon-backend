@@ -150,6 +150,7 @@ func main() {
 			ConfigurationFetcher: &adapterstore.ConfigurationFetcher{DB: db},
 			LineItemsMatcher:     &auctionstore.LineItemsMatcher{DB: db},
 		},
+		EventLogger: eventLogger,
 	}
 	statsHandler := sdkapi.StatsHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
