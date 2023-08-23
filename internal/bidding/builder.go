@@ -54,19 +54,6 @@ type AuctionResult struct {
 	RoundNumber int
 }
 
-func (a AuctionResult) Winner() (float64, string) {
-	max := float64(0)
-	demand := ""
-	for _, bid := range a.Bids {
-		if bid.IsBid() && bid.Bid.Price > max {
-			max = bid.Bid.Price
-			demand = string(bid.DemandID)
-		}
-	}
-
-	return max, demand
-}
-
 func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (AuctionResult, error) {
 	// get config
 	// build openrtb request

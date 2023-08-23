@@ -7,15 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 type Event interface {
 	Topic() Topic
-	Payload() (map[string]any, error)
 	Children() []Event
+	json.Marshaler
 }
 
 func NewConfig(request *schema.ConfigRequest, geoData geocoder.GeoData) Event {
@@ -65,25 +64,50 @@ func NewStats(request *schema.StatsRequest, geoData geocoder.GeoData) Event {
 	}
 }
 
-func NewBidRequest(request *schema.BiddingRequest, response bidding.AuctionResult, geoData geocoder.GeoData) BidRequest {
-	winnerECPM, winnerDemand := response.Winner()
+func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) RequestEvent {
+	requestEvent := newBaseRequest(request, geoData)
 
-	return BidRequest{
-		RawRequest:                  request,
-		Timestamp:                   time.Now(),
-		EventType:                   "bid_request",
-		AdType:                      string(request.AdType),
-		AuctionID:                   request.Imp.AuctionID,
-		AuctionConfigurationID:      request.Imp.AuctionConfigID,
-		AuctionStatus:               "",
-		RoundID:                     request.Imp.RoundID,
-		RoundNumber:                 response.RoundNumber,
-		ImpID:                       request.Imp.ID,
-		DemandID:                    winnerDemand,
-		AdUnitID:                    0,
-		AdUnitCode:                  "",
-		Ecpm:                        winnerECPM,
-		PriceFloor:                  request.Imp.GetBidFloor(),
+	requestEvent.EventType = adRequestParams.EventType
+	requestEvent.Status = adRequestParams.Status
+	requestEvent.AdType = adRequestParams.AdType
+	requestEvent.AuctionID = adRequestParams.AuctionID
+	requestEvent.AuctionConfigurationID = adRequestParams.AuctionConfigurationID
+	requestEvent.RoundID = adRequestParams.RoundID
+	requestEvent.RoundNumber = adRequestParams.RoundNumber
+	requestEvent.ImpID = adRequestParams.ImpID
+	requestEvent.DemandID = adRequestParams.DemandID
+	requestEvent.Bidding = adRequestParams.Bidding
+	requestEvent.AdUnitID = adRequestParams.AdUnitID
+	requestEvent.AdUnitCode = adRequestParams.AdUnitCode
+	requestEvent.Ecpm = adRequestParams.Ecpm
+	requestEvent.PriceFloor = adRequestParams.PriceFloor
+	requestEvent.RawRequest = adRequestParams.RawRequest
+	requestEvent.RawResponse = adRequestParams.RawResponse
+
+	return requestEvent
+}
+
+func NewLoss(request *schema.LossRequest, geoData geocoder.GeoData) Event {
+	return &simpleEvent[*schema.LossRequest]{
+		timestamp: generateTimestamp(),
+		topic:     LossTopic,
+		request:   request,
+		geoData:   geoData,
+	}
+}
+
+func NewWin(request *schema.WinRequest, geoData geocoder.GeoData) Event {
+	return &simpleEvent[*schema.WinRequest]{
+		timestamp: generateTimestamp(),
+		topic:     WinTopic,
+		request:   request,
+		geoData:   geoData,
+	}
+}
+
+func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) RequestEvent {
+	return RequestEvent{
+		Timestamp:                   generateTimestamp(),
 		Manufacturer:                request.Device.Manufacturer,
 		Model:                       request.Device.Model,
 		Os:                          request.Device.OS,
@@ -107,41 +131,22 @@ func NewBidRequest(request *schema.BiddingRequest, response bidding.AuctionResul
 		City:                        geoData.CityName,
 		Ip:                          geoData.IPString,
 		CountryID:                   geoData.CountryID,
-		SegmentID:                   0,
+		SegmentID:                   request.Segment.ID,
 		Ext:                         request.Ext,
-	}
-}
-
-func NewLoss(request *schema.LossRequest, geoData geocoder.GeoData) Event {
-	return &simpleEvent[*schema.LossRequest]{
-		timestamp: generateTimestamp(),
-		topic:     LossTopic,
-		request:   request,
-		geoData:   geoData,
-	}
-}
-
-func NewWin(request *schema.WinRequest, geoData geocoder.GeoData) Event {
-	return &simpleEvent[*schema.WinRequest]{
-		timestamp: generateTimestamp(),
-		topic:     WinTopic,
-		request:   request,
-		geoData:   geoData,
 	}
 }
 
 type Topic string
 
 const (
-	ConfigTopic     Topic = "config"
-	ShowTopic       Topic = "show"
-	ClickTopic      Topic = "click"
-	RewardTopic     Topic = "reward"
-	StatsTopic      Topic = "stats"
-	BidRequestTopic Topic = "bid_request"
-	BidTopic        Topic = "bid"
-	LossTopic       Topic = "loss"
-	WinTopic        Topic = "win"
+	ConfigTopic   Topic = "config"
+	ShowTopic     Topic = "show"
+	ClickTopic    Topic = "click"
+	RewardTopic   Topic = "reward"
+	StatsTopic    Topic = "stats"
+	AdEventsTopic Topic = "ad_events"
+	LossTopic     Topic = "loss"
+	WinTopic      Topic = "win"
 )
 
 type simpleEvent[T mapper] struct {
@@ -149,6 +154,15 @@ type simpleEvent[T mapper] struct {
 	topic     Topic
 	request   T
 	geoData   geocoder.GeoData
+}
+
+func (e *simpleEvent[T]) MarshalJSON() ([]byte, error) {
+	payload, err := e.Payload()
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(payload)
 }
 
 func (e *simpleEvent[T]) Topic() Topic {
@@ -218,6 +232,7 @@ func (r roundResultEvent) Payload() (map[string]any, error) {
 	payload["stats__result__ad_unit_id"] = winnerDemand.AdUnitID
 	payload["stats__result__ecpm"] = round.WinnerECPM
 	payload["round_id"] = round.ID
+	payload["round_number"] = r.roundIndex
 	payload["pricefloor"] = round.PriceFloor
 
 	return payload, err
@@ -242,9 +257,87 @@ func (r *demandResultEvent) Payload() (map[string]any, error) {
 	payload["stats__result__ad_unit_id"] = demand.AdUnitID
 	payload["stats__result__ecpm"] = demand.ECPM
 	payload["round_id"] = round.ID
+	payload["round_number"] = r.roundIndex
 	payload["pricefloor"] = round.PriceFloor
 
 	return payload, err
+}
+
+type AdRequestParams struct {
+	EventType              string
+	AdType                 string
+	AuctionID              string
+	AuctionConfigurationID int64
+	Status                 string
+	RoundID                string
+	RoundNumber            int
+	ImpID                  string
+	DemandID               string
+	Bidding                bool
+	AdUnitID               int
+	AdUnitCode             string
+	Ecpm                   float64
+	PriceFloor             float64
+	RawRequest             string
+	RawResponse            string
+}
+
+type RequestEvent struct {
+	Timestamp                   float64 `json:"timestamp"`
+	EventType                   string  `json:"event_type"`
+	AdType                      string  `json:"ad_type"`
+	AuctionID                   string  `json:"auction_id"`
+	AuctionConfigurationID      int64   `json:"auction_configuration_id"`
+	Status                      string  `json:"status"`
+	RoundID                     string  `json:"round_id"`
+	RoundNumber                 int     `json:"round_number"`
+	ImpID                       string  `json:"impid"`
+	DemandID                    string  `json:"demand_id"`
+	Bidding                     bool    `json:"bidding"`
+	AdUnitID                    int     `json:"ad_unit_id"`
+	AdUnitCode                  string  `json:"ad_unit_code"`
+	Ecpm                        float64 `json:"ecpm"`
+	PriceFloor                  float64 `json:"price_floor"`
+	RawRequest                  string  `json:"raw_request"`
+	RawResponse                 string  `json:"raw_response"`
+	Manufacturer                string  `json:"manufacturer"`
+	Model                       string  `json:"model"`
+	Os                          string  `json:"os"`
+	OsVersion                   string  `json:"os_version"`
+	ConnectionType              string  `json:"connection_type"`
+	SessionID                   string  `json:"session_id"`
+	SessionUptime               int     `json:"session_uptime"`
+	Bundle                      string  `json:"bundle"`
+	Framework                   string  `json:"framework"`
+	FrameworkVersion            string  `json:"framework_version"`
+	PluginVersion               string  `json:"plugin_version"`
+	PackageVersion              string  `json:"package_version"`
+	SdkVersion                  string  `json:"sdk_version"`
+	IDFA                        string  `json:"idfa"`
+	IDG                         string  `json:"idg"`
+	IDFV                        string  `json:"idfv"`
+	TrackingAuthorizationStatus string  `json:"tracking_authorization_status"`
+	COPPA                       bool    `json:"coppa"`
+	GDPR                        bool    `json:"gdpr"`
+	CountryCode                 string  `json:"country_code"`
+	City                        string  `json:"city"`
+	Ip                          string  `json:"ip"`
+	CountryID                   int64   `json:"country_id"`
+	SegmentID                   string  `json:"segment_id"`
+	Ext                         string  `json:"ext"`
+}
+
+func (b RequestEvent) MarshalJSON() ([]byte, error) {
+	type Alias RequestEvent
+	return json.Marshal((Alias)(b))
+}
+
+func (b RequestEvent) Topic() Topic {
+	return AdEventsTopic
+}
+
+func (b RequestEvent) Children() []Event {
+	return nil
 }
 
 func generateTimestamp() float64 {

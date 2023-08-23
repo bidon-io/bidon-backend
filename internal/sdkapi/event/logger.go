@@ -18,22 +18,6 @@ type LogMessage struct {
 	Value []byte
 }
 
-func (l *Logger) LogBidRequest(r BidRequest, handleErr func(error)) {
-	l.LogStruct(BidRequestTopic, r, handleErr)
-}
-
-func (l *Logger) LogStruct(topic Topic, payload interface{}, handleErr func(error)) {
-	message, err := json.Marshal(payload)
-	if err != nil {
-		handleErr(fmt.Errorf("marshal %q event payload: %v", topic, err))
-		return
-	}
-
-	l.Engine.Produce(LogMessage{Topic: topic, Value: message}, func(err error) {
-		handleErr(fmt.Errorf("produce %q message: %v", topic, err))
-	})
-}
-
 func (l *Logger) Log(event Event, handleErr func(error)) {
 	events := append(event.Children(), event)
 	messages := make([]LogMessage, len(events))
@@ -42,12 +26,7 @@ func (l *Logger) Log(event Event, handleErr func(error)) {
 	for i, event := range events {
 		topic := event.Topic()
 
-		payload, err := event.Payload()
-		if err != nil {
-			handleErr(fmt.Errorf("prepare %q event payload: %v", topic, err))
-		}
-
-		message, err := json.Marshal(payload)
+		message, err := json.Marshal(event)
 		if err != nil {
 			handleErr(fmt.Errorf("marshal %q event payload: %v", topic, err))
 			goodToProduce = false

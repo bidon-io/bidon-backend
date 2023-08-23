@@ -125,6 +125,7 @@ func main() {
 			ConfigMatcher:    &auctionstore.ConfigMatcher{DB: db},
 			LineItemsMatcher: &auctionstore.LineItemsMatcher{DB: db},
 		},
+		EventLogger: eventLogger,
 	}
 	configHandler := sdkapi.ConfigHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
