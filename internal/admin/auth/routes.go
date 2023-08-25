@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"github.com/bidon-io/bidon-backend/internal/admin/auth/tokenmgmt"
+	"github.com/bidon-io/bidon-backend/internal/admin/auth/usermgmt"
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -8,8 +10,8 @@ import (
 )
 
 func SetUpRoutes(e *echo.Echo, db *db.DB, jwtSecretKey []byte) {
-	userService := NewUserService(db)
-	tokenService := NewTokenService(jwtSecretKey)
+	userService := usermgmt.NewUserService(db)
+	tokenService := tokenmgmt.NewTokenService(jwtSecretKey)
 	authService := NewAuthService(userService, tokenService)
 
 	e.POST("/auth/signup", authService.SignUp)
@@ -19,7 +21,7 @@ func SetUpRoutes(e *echo.Echo, db *db.DB, jwtSecretKey []byte) {
 func ConfigureJWT(g *echo.Group, jwtSecretKey []byte) {
 	config := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(JwtCustomClaims)
+			return new(tokenmgmt.JwtCustomClaims)
 		},
 		SigningKey: jwtSecretKey,
 	}

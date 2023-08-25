@@ -4,15 +4,29 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bidon-io/bidon-backend/internal/db"
+
 	"github.com/labstack/echo/v4"
 )
 
 type AuthService struct {
-	userService  *UserService
-	tokenService *TokenService
+	userService  UserService
+	tokenService TokenService
 }
 
-func NewAuthService(userService *UserService, tokenService *TokenService) *AuthService {
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . UserService TokenService
+
+type UserService interface {
+	CreateUser(email, password string) (*db.User, error)
+	GetUserByEmail(email string) (*db.User, error)
+	ComparePassword(storedPasswordHash, password string) bool
+}
+
+type TokenService interface {
+	GenerateAccessToken(email string) (string, error)
+}
+
+func NewAuthService(userService UserService, tokenService TokenService) *AuthService {
 	return &AuthService{userService: userService, tokenService: tokenService}
 }
 
@@ -46,7 +60,7 @@ func (s *AuthService) LogIn(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("failed to get user: %v", err))
 	}
 	if !s.userService.ComparePassword(user.Password, body.Password) {
-		return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("wrong password"))
+		return echo.NewHTTPError(http.StatusUnauthorized, "wrong password")
 	}
 
 	token, err := s.tokenService.GenerateAccessToken(body.Email)
