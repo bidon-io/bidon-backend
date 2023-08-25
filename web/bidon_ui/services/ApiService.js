@@ -3,7 +3,7 @@ import { camelizeKeys, decamelizeKeys } from "humps";
 import { API_URL } from "@/constants/index.js";
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_URL}api`,
   data: {},
 });
 
