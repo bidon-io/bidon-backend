@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import axios from "axios";
 import { useToast } from "primevue/usetoast";
 import { API_URL } from "@/constants/index.js";
-import protectedApi from "@/services/ApiService.js";
 
 export const useAuthStore = defineStore("authStore", () => {
   const api = axios.create({ baseURL: API_URL });
@@ -18,9 +17,6 @@ export const useAuthStore = defineStore("authStore", () => {
     accessToken.value = response.data["access_token"];
     localStorage.setItem("user", JSON.stringify(response.data.user));
     localStorage.setItem("accessToken", response.data["access_token"]);
-    protectedApi.defaults.headers[
-      "Authorization"
-    ] = `Bearer ${accessToken.value}`;
     router.push("/");
   };
 
@@ -42,7 +38,6 @@ export const useAuthStore = defineStore("authStore", () => {
     accessToken.value = null;
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
-    protectedApi.defaults.headers["Authorization"] = null;
     router.push("/login");
   }
 
