@@ -23,13 +23,15 @@ type AppDemandProfileAttrs struct {
 	AccountType    string         `json:"account_type"`
 }
 
-type AppDemandProfileRepo = ResourceRepo[AppDemandProfile, AppDemandProfileAttrs]
-
 type AppDemandProfileService = ResourceService[AppDemandProfile, AppDemandProfileAttrs]
 
 func NewAppDemandProfileService(store Store) *AppDemandProfileService {
 	s := &AppDemandProfileService{
-		ResourceRepo: store.AppDemandProfiles(),
+		repo: store.AppDemandProfiles(),
+	}
+
+	s.policy = &appDemandProfilePolicy{
+		repo: store.AppDemandProfiles(),
 	}
 
 	s.getValidator = func(attrs *AppDemandProfileAttrs) v8n.ValidatableWithContext {
@@ -40,6 +42,46 @@ func NewAppDemandProfileService(store Store) *AppDemandProfileService {
 	}
 
 	return s
+}
+
+type AppDemandProfileRepo interface {
+	ResourceRepo[AppDemandProfile, AppDemandProfileAttrs]
+
+	ListOwnedByUser(ctx context.Context, userID int64) ([]AppDemandProfile, error)
+	FindOwnedByUser(ctx context.Context, userID int64, id int64) (*AppDemandProfile, error)
+}
+
+type appDemandProfilePolicy struct {
+	repo AppDemandProfileRepo
+}
+
+func (p *appDemandProfilePolicy) scope(authCtx AuthContext) (resourceScope[AppDemandProfile], error) {
+	return &appDemandProfileScope{
+		repo:    p.repo,
+		authCtx: authCtx,
+	}, nil
+}
+
+type appDemandProfileScope struct {
+	repo AppDemandProfileRepo
+
+	authCtx AuthContext
+}
+
+func (s *appDemandProfileScope) list(ctx context.Context) ([]AppDemandProfile, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.List(ctx)
+	}
+
+	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
+}
+
+func (s *appDemandProfileScope) find(ctx context.Context, id int64) (*AppDemandProfile, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.Find(ctx, id)
+	}
+
+	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }
 
 type appDemandProfileAttrsValidator struct {

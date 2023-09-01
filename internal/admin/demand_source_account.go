@@ -23,13 +23,15 @@ type DemandSourceAccountAttrs struct {
 	Extra          map[string]any `json:"extra"`
 }
 
-type DemandSourceAccountRepo = ResourceRepo[DemandSourceAccount, DemandSourceAccountAttrs]
-
 type DemandSourceAccountService = ResourceService[DemandSourceAccount, DemandSourceAccountAttrs]
 
 func NewDemandSourceAccountService(store Store) *DemandSourceAccountService {
 	s := &DemandSourceAccountService{
-		ResourceRepo: store.DemandSourceAccounts(),
+		repo: store.DemandSourceAccounts(),
+	}
+
+	s.policy = &demandSourceAccountPolicy{
+		repo: store.DemandSourceAccounts(),
 	}
 
 	s.getValidator = func(attrs *DemandSourceAccountAttrs) v8n.ValidatableWithContext {
@@ -40,6 +42,46 @@ func NewDemandSourceAccountService(store Store) *DemandSourceAccountService {
 	}
 
 	return s
+}
+
+type DemandSourceAccountRepo interface {
+	ResourceRepo[DemandSourceAccount, DemandSourceAccountAttrs]
+
+	ListOwnedByUserOrShared(ctx context.Context, userID int64) ([]DemandSourceAccount, error)
+	FindOwnedByUserOrShared(ctx context.Context, userID int64, id int64) (*DemandSourceAccount, error)
+}
+
+type demandSourceAccountPolicy struct {
+	repo DemandSourceAccountRepo
+}
+
+func (p *demandSourceAccountPolicy) scope(authCtx AuthContext) (resourceScope[DemandSourceAccount], error) {
+	return &demandSourceAccountScope{
+		repo:    p.repo,
+		authCtx: authCtx,
+	}, nil
+}
+
+type demandSourceAccountScope struct {
+	repo DemandSourceAccountRepo
+
+	authCtx AuthContext
+}
+
+func (s *demandSourceAccountScope) list(ctx context.Context) ([]DemandSourceAccount, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.List(ctx)
+	}
+
+	return s.repo.ListOwnedByUserOrShared(ctx, s.authCtx.UserID())
+}
+
+func (s *demandSourceAccountScope) find(ctx context.Context, id int64) (*DemandSourceAccount, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.Find(ctx, id)
+	}
+
+	return s.repo.FindOwnedByUserOrShared(ctx, s.authCtx.UserID(), id)
 }
 
 type demandSourceAccountValidator struct {

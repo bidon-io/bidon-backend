@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"context"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 )
@@ -23,12 +25,53 @@ type AuctionConfigurationAttrs struct {
 	ExternalWinNotifications *bool                 `json:"external_win_notifications"`
 }
 
-type AuctionConfigurationRepo = ResourceRepo[AuctionConfiguration, AuctionConfigurationAttrs]
-
 type AuctionConfigurationService = ResourceService[AuctionConfiguration, AuctionConfigurationAttrs]
 
 func NewAuctionConfigurationService(store Store) *AuctionConfigurationService {
 	return &AuctionConfigurationService{
-		ResourceRepo: store.AuctionConfigurations(),
+		repo: store.AuctionConfigurations(),
+		policy: &auctionConfigurationPolicy{
+			repo: store.AuctionConfigurations(),
+		},
 	}
+}
+
+type AuctionConfigurationRepo interface {
+	ResourceRepo[AuctionConfiguration, AuctionConfigurationAttrs]
+
+	ListOwnedByUser(ctx context.Context, userID int64) ([]AuctionConfiguration, error)
+	FindOwnedByUser(ctx context.Context, userID, id int64) (*AuctionConfiguration, error)
+}
+
+type auctionConfigurationPolicy struct {
+	repo AuctionConfigurationRepo
+}
+
+func (p *auctionConfigurationPolicy) scope(authCtx AuthContext) (resourceScope[AuctionConfiguration], error) {
+	return &auctionConfigurationScope{
+		repo:    p.repo,
+		authCtx: authCtx,
+	}, nil
+}
+
+type auctionConfigurationScope struct {
+	repo AuctionConfigurationRepo
+
+	authCtx AuthContext
+}
+
+func (s *auctionConfigurationScope) list(ctx context.Context) ([]AuctionConfiguration, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.List(ctx)
+	}
+
+	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
+}
+
+func (s *auctionConfigurationScope) find(ctx context.Context, id int64) (*AuctionConfiguration, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.Find(ctx, id)
+	}
+
+	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }

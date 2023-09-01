@@ -28,13 +28,15 @@ type LineItemAttrs struct {
 	Extra       map[string]any   `json:"extra"`
 }
 
-type LineItemRepo = ResourceRepo[LineItem, LineItemAttrs]
-
 type LineItemService = ResourceService[LineItem, LineItemAttrs]
 
 func NewLineItemService(store Store) *LineItemService {
 	s := &LineItemService{
-		ResourceRepo: store.LineItems(),
+		repo: store.LineItems(),
+	}
+
+	s.policy = &lineItemPolicy{
+		repo: store.LineItems(),
 	}
 
 	s.getValidator = func(attrs *LineItemAttrs) v8n.ValidatableWithContext {
@@ -45,6 +47,46 @@ func NewLineItemService(store Store) *LineItemService {
 	}
 
 	return s
+}
+
+type LineItemRepo interface {
+	ResourceRepo[LineItem, LineItemAttrs]
+
+	ListOwnedByUser(ctx context.Context, userID int64) ([]LineItem, error)
+	FindOwnedByUser(ctx context.Context, userID, id int64) (*LineItem, error)
+}
+
+type lineItemPolicy struct {
+	repo LineItemRepo
+}
+
+func (p *lineItemPolicy) scope(authCtx AuthContext) (resourceScope[LineItem], error) {
+	return &lineItemScope{
+		repo:    p.repo,
+		authCtx: authCtx,
+	}, nil
+}
+
+type lineItemScope struct {
+	repo LineItemRepo
+
+	authCtx AuthContext
+}
+
+func (s *lineItemScope) list(ctx context.Context) ([]LineItem, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.List(ctx)
+	}
+
+	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
+}
+
+func (s *lineItemScope) find(ctx context.Context, id int64) (*LineItem, error) {
+	if s.authCtx.IsAdmin() {
+		return s.repo.Find(ctx, id)
+	}
+
+	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }
 
 type lineItemAttrsValidator struct {

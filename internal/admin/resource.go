@@ -9,9 +9,19 @@ import (
 // ResourceService wraps ResourceRepo and provides additional functionality like validations, etc.
 // It is used to separate business logic from the store. This is what consumers should use.
 type ResourceService[Resource, ResourceAttrs any] struct {
-	ResourceRepo[Resource, ResourceAttrs]
+	repo   ResourceRepo[Resource, ResourceAttrs]
+	policy resourcePolicy[Resource, ResourceAttrs]
 
 	getValidator func(*ResourceAttrs) v8n.ValidatableWithContext
+}
+
+type resourceScope[Resource any] interface {
+	list(context.Context) ([]Resource, error)
+	find(context.Context, int64) (*Resource, error)
+}
+
+type resourcePolicy[Resource, ResourceAttrs any] interface {
+	scope(AuthContext) (resourceScope[Resource], error)
 }
 
 // ResourceRepo provides CRUD operations for managing a resource.
@@ -25,12 +35,35 @@ type ResourceRepo[Resource, ResourceAttrs any] interface {
 	Delete(ctx context.Context, id int64) error
 }
 
+type AuthContext interface {
+	UserID() int64
+	IsAdmin() bool
+}
+
+func (s *ResourceService[Resource, ResourceAttrs]) List(ctx context.Context, authCtx AuthContext) ([]Resource, error) {
+	scope, err := s.policy.scope(authCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	return scope.list(ctx)
+}
+
+func (s *ResourceService[Resource, ResourceAttrs]) Find(ctx context.Context, authCtx AuthContext, id int64) (*Resource, error) {
+	scope, err := s.policy.scope(authCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	return scope.find(ctx, id)
+}
+
 func (s *ResourceService[Resource, ResourceAttrs]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 	if err := s.validate(ctx, attrs); err != nil {
 		return nil, err
 	}
 
-	return s.ResourceRepo.Create(ctx, attrs)
+	return s.repo.Create(ctx, attrs)
 }
 
 func (s *ResourceService[Resource, ResourceAttrs]) Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
@@ -38,7 +71,11 @@ func (s *ResourceService[Resource, ResourceAttrs]) Update(ctx context.Context, i
 		return nil, err
 	}
 
-	return s.ResourceRepo.Update(ctx, id, attrs)
+	return s.repo.Update(ctx, id, attrs)
+}
+
+func (s *ResourceService[Resource, ResourceAttrs]) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *ResourceService[Resource, ResourceAttrs]) validate(ctx context.Context, attrs *ResourceAttrs) error {

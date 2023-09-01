@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
-	"github.com/bidon-io/bidon-backend/internal/admin/store"
+	adminstore "github.com/bidon-io/bidon-backend/internal/admin/store"
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 	"github.com/google/go-cmp/cmp"
@@ -67,6 +67,78 @@ func TestAppDemandProfileRepo_List(t *testing.T) {
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("repo.List(ctx) mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestAppDemandProfileRepo_ListOwnedByUser(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	users := dbtest.CreateList[db.User](t, tx, dbtest.UserFactory{}, 2)
+
+	firstUserApps := dbtest.CreateList[db.App](t, tx, dbtest.AppFactory{
+		User: func(i int) db.User {
+			return users[0]
+		},
+	}, 2)
+	secondUserApps := dbtest.CreateList[db.App](t, tx, dbtest.AppFactory{
+		User: func(i int) db.User {
+			return users[1]
+		},
+	}, 2)
+
+	dbFirstUserProfiles := dbtest.CreateList[db.AppDemandProfile](t, tx, dbtest.AppDemandProfileFactory{
+		App: func(i int) db.App {
+			return firstUserApps[i%len(firstUserApps)]
+		},
+	}, 4)
+	dbSecondUserProfiles := dbtest.CreateList[db.AppDemandProfile](t, tx, dbtest.AppDemandProfileFactory{
+		App: func(i int) db.App {
+			return secondUserApps[i%len(secondUserApps)]
+		},
+	}, 4)
+
+	firstUserProfiles := make([]admin.AppDemandProfile, 4)
+	secondUserProfiles := make([]admin.AppDemandProfile, 4)
+	for i := 0; i < 4; i++ {
+		firstUserProfiles[i] = adminstore.AppDemandProfileResource(&dbFirstUserProfiles[i])
+		secondUserProfiles[i] = adminstore.AppDemandProfileResource(&dbSecondUserProfiles[i])
+	}
+
+	repo := adminstore.NewAppDemandProfileRepo(tx)
+
+	tests := []struct {
+		name   string
+		userID int64
+		want   []admin.AppDemandProfile
+	}{
+		{
+			"first user",
+			users[0].ID,
+			firstUserProfiles,
+		},
+		{
+			"second user",
+			users[1].ID,
+			secondUserProfiles,
+		},
+		{
+			"non-existent user",
+			999,
+			[]admin.AppDemandProfile{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.ListOwnedByUser(context.Background(), tt.userID)
+			if err != nil {
+				t.Fatalf("repo.ListOwnedByUser(ctx, %v) = %v, %q; want %+v, %v", tt.userID, got, err, tt.want, nil)
+			}
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Fatalf("repo.ListOwnedByUser(ctx, %v) mismatch (-want, +got):\n%s", tt.userID, diff)
+			}
+		})
 	}
 }
 

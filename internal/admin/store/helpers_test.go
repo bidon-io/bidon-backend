@@ -11,6 +11,10 @@ func AppResource(dbModel *db.App) *admin.App {
 	return &resource
 }
 
+func AppDemandProfileResource(dbModel *db.AppDemandProfile) admin.AppDemandProfile {
+	return appDemandProfileMapper{}.resource(dbModel)
+}
+
 func SegmentResource(dbModel *db.Segment) *admin.Segment {
 	resource := segmentMapper{}.resource(dbModel)
 
