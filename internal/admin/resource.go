@@ -26,7 +26,7 @@ type resourcePolicy[Resource, ResourceAttrs any] interface {
 
 // ResourceRepo provides CRUD operations for managing a resource.
 //
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks_test.go . ResourceRepo
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out resource_mocks_test.go . ResourceRepo
 type ResourceRepo[Resource, ResourceAttrs any] interface {
 	List(ctx context.Context) ([]Resource, error)
 	Find(ctx context.Context, id int64) (*Resource, error)

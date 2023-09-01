@@ -44,6 +44,7 @@ func NewDemandSourceAccountService(store Store) *DemandSourceAccountService {
 	return s
 }
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out demand_source_account_mocks_test.go . DemandSourceAccountRepo
 type DemandSourceAccountRepo interface {
 	ResourceRepo[DemandSourceAccount, DemandSourceAccountAttrs]
 
