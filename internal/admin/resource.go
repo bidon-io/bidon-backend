@@ -6,6 +6,8 @@ import (
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out resource_mocks_test.go . ResourceRepo AuthContext resourcePolicy resourceScope
+
 // ResourceService wraps ResourceRepo and provides additional functionality like validations, etc.
 // It is used to separate business logic from the store. This is what consumers should use.
 type ResourceService[Resource, ResourceAttrs any] struct {
@@ -15,24 +17,22 @@ type ResourceService[Resource, ResourceAttrs any] struct {
 	getValidator func(*ResourceAttrs) v8n.ValidatableWithContext
 }
 
-type resourceScope[Resource any] interface {
-	list(context.Context) ([]Resource, error)
-	find(context.Context, int64) (*Resource, error)
-}
-
-type resourcePolicy[Resource, ResourceAttrs any] interface {
-	scope(AuthContext) (resourceScope[Resource], error)
-}
-
 // ResourceRepo provides CRUD operations for managing a resource.
-//
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out resource_mocks_test.go . ResourceRepo
 type ResourceRepo[Resource, ResourceAttrs any] interface {
 	List(ctx context.Context) ([]Resource, error)
 	Find(ctx context.Context, id int64) (*Resource, error)
 	Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error)
 	Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error)
 	Delete(ctx context.Context, id int64) error
+}
+
+type resourcePolicy[Resource, ResourceAttrs any] interface {
+	scope(AuthContext) (resourceScope[Resource], error)
+}
+
+type resourceScope[Resource any] interface {
+	list(context.Context) ([]Resource, error)
+	find(context.Context, int64) (*Resource, error)
 }
 
 type AuthContext interface {

@@ -279,3 +279,281 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) UpdateCalls() []struct {
 	mock.lockUpdate.RUnlock()
 	return calls
 }
+
+// Ensure, that AuthContextMock does implement AuthContext.
+// If this is not the case, regenerate this file with moq.
+var _ AuthContext = &AuthContextMock{}
+
+// AuthContextMock is a mock implementation of AuthContext.
+//
+//	func TestSomethingThatUsesAuthContext(t *testing.T) {
+//
+//		// make and configure a mocked AuthContext
+//		mockedAuthContext := &AuthContextMock{
+//			IsAdminFunc: func() bool {
+//				panic("mock out the IsAdmin method")
+//			},
+//			UserIDFunc: func() int64 {
+//				panic("mock out the UserID method")
+//			},
+//		}
+//
+//		// use mockedAuthContext in code that requires AuthContext
+//		// and then make assertions.
+//
+//	}
+type AuthContextMock struct {
+	// IsAdminFunc mocks the IsAdmin method.
+	IsAdminFunc func() bool
+
+	// UserIDFunc mocks the UserID method.
+	UserIDFunc func() int64
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// IsAdmin holds details about calls to the IsAdmin method.
+		IsAdmin []struct {
+		}
+		// UserID holds details about calls to the UserID method.
+		UserID []struct {
+		}
+	}
+	lockIsAdmin sync.RWMutex
+	lockUserID  sync.RWMutex
+}
+
+// IsAdmin calls IsAdminFunc.
+func (mock *AuthContextMock) IsAdmin() bool {
+	if mock.IsAdminFunc == nil {
+		panic("AuthContextMock.IsAdminFunc: method is nil but AuthContext.IsAdmin was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockIsAdmin.Lock()
+	mock.calls.IsAdmin = append(mock.calls.IsAdmin, callInfo)
+	mock.lockIsAdmin.Unlock()
+	return mock.IsAdminFunc()
+}
+
+// IsAdminCalls gets all the calls that were made to IsAdmin.
+// Check the length with:
+//
+//	len(mockedAuthContext.IsAdminCalls())
+func (mock *AuthContextMock) IsAdminCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockIsAdmin.RLock()
+	calls = mock.calls.IsAdmin
+	mock.lockIsAdmin.RUnlock()
+	return calls
+}
+
+// UserID calls UserIDFunc.
+func (mock *AuthContextMock) UserID() int64 {
+	if mock.UserIDFunc == nil {
+		panic("AuthContextMock.UserIDFunc: method is nil but AuthContext.UserID was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockUserID.Lock()
+	mock.calls.UserID = append(mock.calls.UserID, callInfo)
+	mock.lockUserID.Unlock()
+	return mock.UserIDFunc()
+}
+
+// UserIDCalls gets all the calls that were made to UserID.
+// Check the length with:
+//
+//	len(mockedAuthContext.UserIDCalls())
+func (mock *AuthContextMock) UserIDCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockUserID.RLock()
+	calls = mock.calls.UserID
+	mock.lockUserID.RUnlock()
+	return calls
+}
+
+// Ensure, that resourcePolicyMock does implement resourcePolicy.
+// If this is not the case, regenerate this file with moq.
+var _ resourcePolicy[any, any] = &resourcePolicyMock[any, any]{}
+
+// resourcePolicyMock is a mock implementation of resourcePolicy.
+//
+//	func TestSomethingThatUsesresourcePolicy(t *testing.T) {
+//
+//		// make and configure a mocked resourcePolicy
+//		mockedresourcePolicy := &resourcePolicyMock{
+//			scopeFunc: func(authContext AuthContext) (resourceScope[Resource], error) {
+//				panic("mock out the scope method")
+//			},
+//		}
+//
+//		// use mockedresourcePolicy in code that requires resourcePolicy
+//		// and then make assertions.
+//
+//	}
+type resourcePolicyMock[Resource any, ResourceAttrs any] struct {
+	// scopeFunc mocks the scope method.
+	scopeFunc func(authContext AuthContext) (resourceScope[Resource], error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// scope holds details about calls to the scope method.
+		scope []struct {
+			// AuthContext is the authContext argument value.
+			AuthContext AuthContext
+		}
+	}
+	lockscope sync.RWMutex
+}
+
+// scope calls scopeFunc.
+func (mock *resourcePolicyMock[Resource, ResourceAttrs]) scope(authContext AuthContext) (resourceScope[Resource], error) {
+	if mock.scopeFunc == nil {
+		panic("resourcePolicyMock.scopeFunc: method is nil but resourcePolicy.scope was just called")
+	}
+	callInfo := struct {
+		AuthContext AuthContext
+	}{
+		AuthContext: authContext,
+	}
+	mock.lockscope.Lock()
+	mock.calls.scope = append(mock.calls.scope, callInfo)
+	mock.lockscope.Unlock()
+	return mock.scopeFunc(authContext)
+}
+
+// scopeCalls gets all the calls that were made to scope.
+// Check the length with:
+//
+//	len(mockedresourcePolicy.scopeCalls())
+func (mock *resourcePolicyMock[Resource, ResourceAttrs]) scopeCalls() []struct {
+	AuthContext AuthContext
+} {
+	var calls []struct {
+		AuthContext AuthContext
+	}
+	mock.lockscope.RLock()
+	calls = mock.calls.scope
+	mock.lockscope.RUnlock()
+	return calls
+}
+
+// Ensure, that resourceScopeMock does implement resourceScope.
+// If this is not the case, regenerate this file with moq.
+var _ resourceScope[any] = &resourceScopeMock[any]{}
+
+// resourceScopeMock is a mock implementation of resourceScope.
+//
+//	func TestSomethingThatUsesresourceScope(t *testing.T) {
+//
+//		// make and configure a mocked resourceScope
+//		mockedresourceScope := &resourceScopeMock{
+//			findFunc: func(contextMoqParam context.Context, n int64) (*Resource, error) {
+//				panic("mock out the find method")
+//			},
+//			listFunc: func(contextMoqParam context.Context) ([]Resource, error) {
+//				panic("mock out the list method")
+//			},
+//		}
+//
+//		// use mockedresourceScope in code that requires resourceScope
+//		// and then make assertions.
+//
+//	}
+type resourceScopeMock[Resource any] struct {
+	// findFunc mocks the find method.
+	findFunc func(contextMoqParam context.Context, n int64) (*Resource, error)
+
+	// listFunc mocks the list method.
+	listFunc func(contextMoqParam context.Context) ([]Resource, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// find holds details about calls to the find method.
+		find []struct {
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// N is the n argument value.
+			N int64
+		}
+		// list holds details about calls to the list method.
+		list []struct {
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+		}
+	}
+	lockfind sync.RWMutex
+	locklist sync.RWMutex
+}
+
+// find calls findFunc.
+func (mock *resourceScopeMock[Resource]) find(contextMoqParam context.Context, n int64) (*Resource, error) {
+	if mock.findFunc == nil {
+		panic("resourceScopeMock.findFunc: method is nil but resourceScope.find was just called")
+	}
+	callInfo := struct {
+		ContextMoqParam context.Context
+		N               int64
+	}{
+		ContextMoqParam: contextMoqParam,
+		N:               n,
+	}
+	mock.lockfind.Lock()
+	mock.calls.find = append(mock.calls.find, callInfo)
+	mock.lockfind.Unlock()
+	return mock.findFunc(contextMoqParam, n)
+}
+
+// findCalls gets all the calls that were made to find.
+// Check the length with:
+//
+//	len(mockedresourceScope.findCalls())
+func (mock *resourceScopeMock[Resource]) findCalls() []struct {
+	ContextMoqParam context.Context
+	N               int64
+} {
+	var calls []struct {
+		ContextMoqParam context.Context
+		N               int64
+	}
+	mock.lockfind.RLock()
+	calls = mock.calls.find
+	mock.lockfind.RUnlock()
+	return calls
+}
+
+// list calls listFunc.
+func (mock *resourceScopeMock[Resource]) list(contextMoqParam context.Context) ([]Resource, error) {
+	if mock.listFunc == nil {
+		panic("resourceScopeMock.listFunc: method is nil but resourceScope.list was just called")
+	}
+	callInfo := struct {
+		ContextMoqParam context.Context
+	}{
+		ContextMoqParam: contextMoqParam,
+	}
+	mock.locklist.Lock()
+	mock.calls.list = append(mock.calls.list, callInfo)
+	mock.locklist.Unlock()
+	return mock.listFunc(contextMoqParam)
+}
+
+// listCalls gets all the calls that were made to list.
+// Check the length with:
+//
+//	len(mockedresourceScope.listCalls())
+func (mock *resourceScopeMock[Resource]) listCalls() []struct {
+	ContextMoqParam context.Context
+} {
+	var calls []struct {
+		ContextMoqParam context.Context
+	}
+	mock.locklist.RLock()
+	calls = mock.calls.list
+	mock.locklist.RUnlock()
+	return calls
+}
