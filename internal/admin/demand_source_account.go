@@ -56,33 +56,11 @@ type demandSourceAccountPolicy struct {
 	repo DemandSourceAccountRepo
 }
 
-func (p *demandSourceAccountPolicy) scope(authCtx AuthContext) (resourceScope[DemandSourceAccount], error) {
-	return &demandSourceAccountScope{
+func (p *demandSourceAccountPolicy) scope(authCtx AuthContext) resourceScope[DemandSourceAccount] {
+	return &ownedOrSharedResourceScope[DemandSourceAccount]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type demandSourceAccountScope struct {
-	repo DemandSourceAccountRepo
-
-	authCtx AuthContext
-}
-
-func (s *demandSourceAccountScope) list(ctx context.Context) ([]DemandSourceAccount, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.List(ctx)
 	}
-
-	return s.repo.ListOwnedByUserOrShared(ctx, s.authCtx.UserID())
-}
-
-func (s *demandSourceAccountScope) find(ctx context.Context, id int64) (*DemandSourceAccount, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.Find(ctx, id)
-	}
-
-	return s.repo.FindOwnedByUserOrShared(ctx, s.authCtx.UserID(), id)
 }
 
 type demandSourceAccountValidator struct {

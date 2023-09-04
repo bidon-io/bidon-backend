@@ -25,13 +25,13 @@ func TestResourceService_List(t *testing.T) {
 	}
 
 	s := ResourceService[TestResource, TestResourceAttrs]{
-		policy: &resourcePolicyMock[TestResource, TestResourceAttrs]{
-			scopeFunc: func(authCtx AuthContext) (resourceScope[TestResource], error) {
+		policy: &resourcePolicyMock[TestResource]{
+			scopeFunc: func(authCtx AuthContext) resourceScope[TestResource] {
 				return &resourceScopeMock[TestResource]{
 					listFunc: func(ctx context.Context) ([]TestResource, error) {
 						return want, nil
 					},
-				}, nil
+				}
 			},
 		},
 	}
@@ -42,23 +42,6 @@ func TestResourceService_List(t *testing.T) {
 	}
 }
 
-func TestResourceService_List_scopeError(t *testing.T) {
-	s := ResourceService[TestResource, TestResourceAttrs]{
-		policy: &resourcePolicyMock[TestResource, TestResourceAttrs]{
-			scopeFunc: func(authCtx AuthContext) (resourceScope[TestResource], error) {
-				return nil, errors.New("not authorized")
-			},
-		},
-	}
-
-	resources, err := s.List(context.Background(), nil)
-	if err == nil {
-		t.Errorf("List() got %v, want error", resources)
-	} else if resources != nil {
-		t.Errorf("List() got %v, want nil slice with error", resources)
-	}
-}
-
 func TestResourceService_Find(t *testing.T) {
 	want := &TestResource{
 		ID:                1,
@@ -66,8 +49,8 @@ func TestResourceService_Find(t *testing.T) {
 	}
 
 	s := ResourceService[TestResource, TestResourceAttrs]{
-		policy: &resourcePolicyMock[TestResource, TestResourceAttrs]{
-			scopeFunc: func(authCtx AuthContext) (resourceScope[TestResource], error) {
+		policy: &resourcePolicyMock[TestResource]{
+			scopeFunc: func(authCtx AuthContext) resourceScope[TestResource] {
 				return &resourceScopeMock[TestResource]{
 					findFunc: func(ctx context.Context, id int64) (*TestResource, error) {
 						if id != want.ID {
@@ -75,7 +58,7 @@ func TestResourceService_Find(t *testing.T) {
 						}
 						return want, nil
 					},
-				}, nil
+				}
 			},
 		},
 	}
@@ -83,23 +66,6 @@ func TestResourceService_Find(t *testing.T) {
 	resource, _ := s.Find(context.Background(), nil, want.ID)
 	if diff := cmp.Diff(want, resource); diff != "" {
 		t.Errorf("Find() mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestResourceService_Find_scopeError(t *testing.T) {
-	s := ResourceService[TestResource, TestResourceAttrs]{
-		policy: &resourcePolicyMock[TestResource, TestResourceAttrs]{
-			scopeFunc: func(authCtx AuthContext) (resourceScope[TestResource], error) {
-				return nil, errors.New("not authorized")
-			},
-		},
-	}
-
-	resource, err := s.Find(context.Background(), nil, 1)
-	if err == nil {
-		t.Errorf("Find() got %v, want error", resource)
-	} else if resource != nil {
-		t.Errorf("Find() got %v, want nil resource with error", resource)
 	}
 }
 

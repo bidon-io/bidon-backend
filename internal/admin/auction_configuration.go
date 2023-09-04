@@ -47,31 +47,9 @@ type auctionConfigurationPolicy struct {
 	repo AuctionConfigurationRepo
 }
 
-func (p *auctionConfigurationPolicy) scope(authCtx AuthContext) (resourceScope[AuctionConfiguration], error) {
-	return &auctionConfigurationScope{
+func (p *auctionConfigurationPolicy) scope(authCtx AuthContext) resourceScope[AuctionConfiguration] {
+	return &ownedResourceScope[AuctionConfiguration]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type auctionConfigurationScope struct {
-	repo AuctionConfigurationRepo
-
-	authCtx AuthContext
-}
-
-func (s *auctionConfigurationScope) list(ctx context.Context) ([]AuctionConfiguration, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.List(ctx)
 	}
-
-	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
-}
-
-func (s *auctionConfigurationScope) find(ctx context.Context, id int64) (*AuctionConfiguration, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.Find(ctx, id)
-	}
-
-	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }

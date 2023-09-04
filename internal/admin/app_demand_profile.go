@@ -55,33 +55,11 @@ type appDemandProfilePolicy struct {
 	repo AppDemandProfileRepo
 }
 
-func (p *appDemandProfilePolicy) scope(authCtx AuthContext) (resourceScope[AppDemandProfile], error) {
-	return &appDemandProfileScope{
+func (p *appDemandProfilePolicy) scope(authCtx AuthContext) resourceScope[AppDemandProfile] {
+	return &ownedResourceScope[AppDemandProfile]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type appDemandProfileScope struct {
-	repo AppDemandProfileRepo
-
-	authCtx AuthContext
-}
-
-func (s *appDemandProfileScope) list(ctx context.Context) ([]AppDemandProfile, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.List(ctx)
 	}
-
-	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
-}
-
-func (s *appDemandProfileScope) find(ctx context.Context, id int64) (*AppDemandProfile, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.Find(ctx, id)
-	}
-
-	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }
 
 type appDemandProfileAttrsValidator struct {

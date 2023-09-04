@@ -12,7 +12,7 @@ import (
 // It is used to separate business logic from the store. This is what consumers should use.
 type ResourceService[Resource, ResourceAttrs any] struct {
 	repo   ResourceRepo[Resource, ResourceAttrs]
-	policy resourcePolicy[Resource, ResourceAttrs]
+	policy resourcePolicy[Resource]
 
 	getValidator func(*ResourceAttrs) v8n.ValidatableWithContext
 }
@@ -26,8 +26,8 @@ type ResourceRepo[Resource, ResourceAttrs any] interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-type resourcePolicy[Resource, ResourceAttrs any] interface {
-	scope(AuthContext) (resourceScope[Resource], error)
+type resourcePolicy[Resource any] interface {
+	scope(AuthContext) resourceScope[Resource]
 }
 
 type resourceScope[Resource any] interface {
@@ -41,19 +41,13 @@ type AuthContext interface {
 }
 
 func (s *ResourceService[Resource, ResourceAttrs]) List(ctx context.Context, authCtx AuthContext) ([]Resource, error) {
-	scope, err := s.policy.scope(authCtx)
-	if err != nil {
-		return nil, err
-	}
+	scope := s.policy.scope(authCtx)
 
 	return scope.list(ctx)
 }
 
 func (s *ResourceService[Resource, ResourceAttrs]) Find(ctx context.Context, authCtx AuthContext, id int64) (*Resource, error) {
-	scope, err := s.policy.scope(authCtx)
-	if err != nil {
-		return nil, err
-	}
+	scope := s.policy.scope(authCtx)
 
 	return scope.find(ctx, id)
 }

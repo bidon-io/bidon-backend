@@ -44,31 +44,9 @@ type segmentPolicy struct {
 	repo SegmentRepo
 }
 
-func (p *segmentPolicy) scope(authCtx AuthContext) (resourceScope[Segment], error) {
-	return &segmentScope{
+func (p *segmentPolicy) scope(authCtx AuthContext) resourceScope[Segment] {
+	return &ownedResourceScope[Segment]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type segmentScope struct {
-	repo SegmentRepo
-
-	authCtx AuthContext
-}
-
-func (s *segmentScope) list(ctx context.Context) ([]Segment, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.List(ctx)
 	}
-
-	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
-}
-
-func (s *segmentScope) find(ctx context.Context, id int64) (*Segment, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.Find(ctx, id)
-	}
-
-	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }

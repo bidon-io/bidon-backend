@@ -48,31 +48,9 @@ type appPolicy struct {
 	repo AppRepo
 }
 
-func (p *appPolicy) scope(authCtx AuthContext) (resourceScope[App], error) {
-	return &appScope{
+func (p *appPolicy) scope(authCtx AuthContext) resourceScope[App] {
+	return &ownedResourceScope[App]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type appScope struct {
-	repo AppRepo
-
-	authCtx AuthContext
-}
-
-func (s *appScope) list(ctx context.Context) ([]App, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.List(ctx)
 	}
-
-	return s.repo.ListOwnedByUser(ctx, s.authCtx.UserID())
-}
-
-func (s *appScope) find(ctx context.Context, id int64) (*App, error) {
-	if s.authCtx.IsAdmin() {
-		return s.repo.Find(ctx, id)
-	}
-
-	return s.repo.FindOwnedByUser(ctx, s.authCtx.UserID(), id)
 }

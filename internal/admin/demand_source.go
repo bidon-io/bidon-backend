@@ -1,7 +1,5 @@
 package admin
 
-import "context"
-
 type DemandSource struct {
 	ID int64 `json:"id"`
 	DemandSourceAttrs
@@ -29,23 +27,8 @@ type demandSourcePolicy struct {
 	repo DemandSourceRepo
 }
 
-func (p *demandSourcePolicy) scope(authCtx AuthContext) (resourceScope[DemandSource], error) {
-	return &demandSourceScope{
-		repo:    p.repo,
-		authCtx: authCtx,
-	}, nil
-}
-
-type demandSourceScope struct {
-	repo DemandSourceRepo
-
-	authCtx AuthContext
-}
-
-func (s *demandSourceScope) list(ctx context.Context) ([]DemandSource, error) {
-	return s.repo.List(ctx)
-}
-
-func (s *demandSourceScope) find(ctx context.Context, id int64) (*DemandSource, error) {
-	return s.repo.Find(ctx, id)
+func (p *demandSourcePolicy) scope(_ AuthContext) resourceScope[DemandSource] {
+	return &publicResourceScope[DemandSource]{
+		repo: p.repo,
+	}
 }

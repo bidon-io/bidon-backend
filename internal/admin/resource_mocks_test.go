@@ -378,7 +378,7 @@ func (mock *AuthContextMock) UserIDCalls() []struct {
 
 // Ensure, that resourcePolicyMock does implement resourcePolicy.
 // If this is not the case, regenerate this file with moq.
-var _ resourcePolicy[any, any] = &resourcePolicyMock[any, any]{}
+var _ resourcePolicy[any] = &resourcePolicyMock[any]{}
 
 // resourcePolicyMock is a mock implementation of resourcePolicy.
 //
@@ -386,7 +386,7 @@ var _ resourcePolicy[any, any] = &resourcePolicyMock[any, any]{}
 //
 //		// make and configure a mocked resourcePolicy
 //		mockedresourcePolicy := &resourcePolicyMock{
-//			scopeFunc: func(authContext AuthContext) (resourceScope[Resource], error) {
+//			scopeFunc: func(authContext AuthContext) resourceScope[Resource] {
 //				panic("mock out the scope method")
 //			},
 //		}
@@ -395,9 +395,9 @@ var _ resourcePolicy[any, any] = &resourcePolicyMock[any, any]{}
 //		// and then make assertions.
 //
 //	}
-type resourcePolicyMock[Resource any, ResourceAttrs any] struct {
+type resourcePolicyMock[Resource any] struct {
 	// scopeFunc mocks the scope method.
-	scopeFunc func(authContext AuthContext) (resourceScope[Resource], error)
+	scopeFunc func(authContext AuthContext) resourceScope[Resource]
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -411,7 +411,7 @@ type resourcePolicyMock[Resource any, ResourceAttrs any] struct {
 }
 
 // scope calls scopeFunc.
-func (mock *resourcePolicyMock[Resource, ResourceAttrs]) scope(authContext AuthContext) (resourceScope[Resource], error) {
+func (mock *resourcePolicyMock[Resource]) scope(authContext AuthContext) resourceScope[Resource] {
 	if mock.scopeFunc == nil {
 		panic("resourcePolicyMock.scopeFunc: method is nil but resourcePolicy.scope was just called")
 	}
@@ -430,7 +430,7 @@ func (mock *resourcePolicyMock[Resource, ResourceAttrs]) scope(authContext AuthC
 // Check the length with:
 //
 //	len(mockedresourcePolicy.scopeCalls())
-func (mock *resourcePolicyMock[Resource, ResourceAttrs]) scopeCalls() []struct {
+func (mock *resourcePolicyMock[Resource]) scopeCalls() []struct {
 	AuthContext AuthContext
 } {
 	var calls []struct {

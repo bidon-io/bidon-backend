@@ -1,7 +1,5 @@
 package admin
 
-import "context"
-
 type Country struct {
 	ID int64 `json:"id"`
 	CountryAttrs
@@ -30,23 +28,8 @@ type countryPolicy struct {
 	repo CountryRepo
 }
 
-func (p *countryPolicy) scope(authCtx AuthContext) (resourceScope[Country], error) {
-	return &countryScope{
-		repo:    p.repo,
-		authCtx: authCtx,
-	}, nil
-}
-
-type countryScope struct {
-	repo CountryRepo
-
-	authCtx AuthContext
-}
-
-func (s *countryScope) list(ctx context.Context) ([]Country, error) {
-	return s.repo.List(ctx)
-}
-
-func (s *countryScope) find(ctx context.Context, id int64) (*Country, error) {
-	return s.repo.Find(ctx, id)
+func (p *countryPolicy) scope(_ AuthContext) resourceScope[Country] {
+	return &publicResourceScope[Country]{
+		repo: p.repo,
+	}
 }

@@ -1,10 +1,5 @@
 package admin
 
-import (
-	"context"
-	"fmt"
-)
-
 type User struct {
 	ID int64 `json:"id"`
 	UserAttrs
@@ -31,27 +26,9 @@ type userPolicy struct {
 	repo UserRepo
 }
 
-func (p *userPolicy) scope(authCtx AuthContext) (resourceScope[User], error) {
-	if !authCtx.IsAdmin() {
-		return nil, fmt.Errorf("access denied")
-	}
-
-	return &userScope{
+func (p *userPolicy) scope(authCtx AuthContext) resourceScope[User] {
+	return &privateResourceScope[User]{
 		repo:    p.repo,
 		authCtx: authCtx,
-	}, nil
-}
-
-type userScope struct {
-	repo UserRepo
-
-	authCtx AuthContext
-}
-
-func (s *userScope) list(ctx context.Context) ([]User, error) {
-	return s.repo.List(ctx)
-}
-
-func (s *userScope) find(ctx context.Context, id int64) (*User, error) {
-	return s.repo.Find(ctx, id)
+	}
 }
