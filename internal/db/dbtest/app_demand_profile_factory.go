@@ -87,7 +87,7 @@ func ValidAppDemandProfileData(t *testing.T, key adapter.Key, appID int64) []byt
 	case adapter.MobileFuseKey:
 		return []byte(`{"foo": "bar"}`)
 	case adapter.InmobiKey:
-		return []byte(`{"foo": "bar"}`)
+		return []byte(fmt.Sprintf(`{"app_key": "inmobi_app_%d", "foo": "bar"}`, appID))
 	default:
 		t.Fatalf("Invalid adapter key or missing valid APP config for adapter %q", key)
 		return nil
