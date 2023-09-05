@@ -84,7 +84,7 @@ func TestResourceService_Create(t *testing.T) {
 	}
 
 	s := ResourceService[TestResource, TestResourceAttrs]{
-		repo: &ResourceRepoMock[TestResource, TestResourceAttrs]{
+		repo: &ResourceManipulatorMock[TestResource, TestResourceAttrs]{
 			CreateFunc: func(ctx context.Context, attrs *TestResourceAttrs) (*TestResource, error) {
 				if diff := cmp.Diff(&want.TestResourceAttrs, attrs); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%s", diff)
@@ -110,7 +110,7 @@ func TestResourceService_Create(t *testing.T) {
 func TestResourceService_Create_validationError(t *testing.T) {
 	testResourceAttrs := &TestResourceAttrs{Name: "test1"}
 
-	repoMock := &ResourceRepoMock[TestResource, TestResourceAttrs]{}
+	repoMock := &ResourceManipulatorMock[TestResource, TestResourceAttrs]{}
 	s := ResourceService[TestResource, TestResourceAttrs]{
 		repo: repoMock,
 		getValidator: func(attrs *TestResourceAttrs) v8n.ValidatableWithContext {
@@ -141,7 +141,7 @@ func TestResourceService_Update(t *testing.T) {
 	}
 
 	s := ResourceService[TestResource, TestResourceAttrs]{
-		repo: &ResourceRepoMock[TestResource, TestResourceAttrs]{
+		repo: &ResourceManipulatorMock[TestResource, TestResourceAttrs]{
 			UpdateFunc: func(ctx context.Context, id int64, attrs *TestResourceAttrs) (*TestResource, error) {
 				if id != want.ID {
 					t.Errorf("Update() got %d, want %d", id, want.ID)
@@ -170,7 +170,7 @@ func TestResourceService_Update(t *testing.T) {
 func TestResourceService_Update_validationError(t *testing.T) {
 	testResourceAttrs := &TestResourceAttrs{Name: "test1"}
 
-	repoMock := &ResourceRepoMock[TestResource, TestResourceAttrs]{}
+	repoMock := &ResourceManipulatorMock[TestResource, TestResourceAttrs]{}
 	s := ResourceService[TestResource, TestResourceAttrs]{
 		repo: repoMock,
 		getValidator: func(attrs *TestResourceAttrs) v8n.ValidatableWithContext {
@@ -198,7 +198,7 @@ func TestResourceService_Delete(t *testing.T) {
 	want := int64(1)
 
 	s := ResourceService[TestResource, TestResourceAttrs]{
-		repo: &ResourceRepoMock[TestResource, TestResourceAttrs]{
+		repo: &ResourceManipulatorMock[TestResource, TestResourceAttrs]{
 			DeleteFunc: func(ctx context.Context, id int64) error {
 				if id != want {
 					t.Errorf("Delete() got %d, want %d", id, want)

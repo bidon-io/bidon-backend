@@ -6,38 +6,38 @@ import (
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out resource_mocks_test.go . ResourceRepo AuthContext resourcePolicy resourceScope
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out resource_mocks_test.go . ResourceManipulator AuthContext resourcePolicy resourceScope
 
-// ResourceService wraps ResourceRepo and provides additional functionality like validations, etc.
-// It is used to separate business logic from the store. This is what consumers should use.
+// ResourceService provides CRUD operations for managing a resource. It handles validation, authorization, and persistence.
 type ResourceService[Resource, ResourceAttrs any] struct {
-	repo   ResourceRepo[Resource, ResourceAttrs]
+	repo   ResourceManipulator[Resource, ResourceAttrs]
 	policy resourcePolicy[Resource]
 
 	getValidator func(*ResourceAttrs) v8n.ValidatableWithContext
 }
 
-// ResourceRepo provides CRUD operations for managing a resource.
-type ResourceRepo[Resource, ResourceAttrs any] interface {
-	List(ctx context.Context) ([]Resource, error)
-	Find(ctx context.Context, id int64) (*Resource, error)
+// ResourceManipulator abstracts the persistence layer for a resource. Resource repositories implement this interface.
+type ResourceManipulator[Resource, ResourceAttrs any] interface {
 	Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error)
 	Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error)
 	Delete(ctx context.Context, id int64) error
 }
 
+// AuthContext defines the authorization context when accessing a resource.
+type AuthContext interface {
+	UserID() int64
+	IsAdmin() bool
+}
+
+// resourcePolicy defines the authorization policy for a resource.
 type resourcePolicy[Resource any] interface {
 	scope(AuthContext) resourceScope[Resource]
 }
 
+// resourceScope handles visibility of resource.
 type resourceScope[Resource any] interface {
 	list(context.Context) ([]Resource, error)
 	find(context.Context, int64) (*Resource, error)
-}
-
-type AuthContext interface {
-	UserID() int64
-	IsAdmin() bool
 }
 
 func (s *ResourceService[Resource, ResourceAttrs]) List(ctx context.Context, authCtx AuthContext) ([]Resource, error) {

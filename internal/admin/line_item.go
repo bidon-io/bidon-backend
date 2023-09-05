@@ -50,10 +50,9 @@ func NewLineItemService(store Store) *LineItemService {
 }
 
 type LineItemRepo interface {
-	ResourceRepo[LineItem, LineItemAttrs]
-
-	ListOwnedByUser(ctx context.Context, userID int64) ([]LineItem, error)
-	FindOwnedByUser(ctx context.Context, userID, id int64) (*LineItem, error)
+	AllResourceQuerier[LineItem]
+	OwnedResourceQuerier[LineItem]
+	ResourceManipulator[LineItem, LineItemAttrs]
 }
 
 type lineItemPolicy struct {

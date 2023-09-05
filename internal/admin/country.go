@@ -22,7 +22,10 @@ func NewCountryService(store Store) *CountryService {
 	}
 }
 
-type CountryRepo = ResourceRepo[Country, CountryAttrs]
+type CountryRepo interface {
+	AllResourceQuerier[Country]
+	ResourceManipulator[Country, CountryAttrs]
+}
 
 type countryPolicy struct {
 	repo CountryRepo

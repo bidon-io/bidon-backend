@@ -1,5 +1,7 @@
 package admin
 
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out demand_source_mocks_test.go . DemandSourceRepo
+
 type DemandSource struct {
 	ID int64 `json:"id"`
 	DemandSourceAttrs
@@ -21,7 +23,10 @@ func NewDemandSourceService(store Store) *DemandSourceService {
 	}
 }
 
-type DemandSourceRepo = ResourceRepo[DemandSource, DemandSourceAttrs]
+type DemandSourceRepo interface {
+	AllResourceQuerier[DemandSource]
+	ResourceManipulator[DemandSource, DemandSourceAttrs]
+}
 
 type demandSourcePolicy struct {
 	repo DemandSourceRepo

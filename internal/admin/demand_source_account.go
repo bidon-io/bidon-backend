@@ -46,10 +46,9 @@ func NewDemandSourceAccountService(store Store) *DemandSourceAccountService {
 
 //go:generate go run -mod=mod github.com/matryer/moq@latest -out demand_source_account_mocks_test.go . DemandSourceAccountRepo
 type DemandSourceAccountRepo interface {
-	ResourceRepo[DemandSourceAccount, DemandSourceAccountAttrs]
-
-	ListOwnedByUserOrShared(ctx context.Context, userID int64) ([]DemandSourceAccount, error)
-	FindOwnedByUserOrShared(ctx context.Context, userID int64, id int64) (*DemandSourceAccount, error)
+	AllResourceQuerier[DemandSourceAccount]
+	OwnedOrSharedResourceQuerier[DemandSourceAccount]
+	ResourceManipulator[DemandSourceAccount, DemandSourceAccountAttrs]
 }
 
 type demandSourceAccountPolicy struct {

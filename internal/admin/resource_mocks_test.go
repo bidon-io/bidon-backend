@@ -8,49 +8,37 @@ import (
 	"sync"
 )
 
-// Ensure, that ResourceRepoMock does implement ResourceRepo.
+// Ensure, that ResourceManipulatorMock does implement ResourceManipulator.
 // If this is not the case, regenerate this file with moq.
-var _ ResourceRepo[any, any] = &ResourceRepoMock[any, any]{}
+var _ ResourceManipulator[any, any] = &ResourceManipulatorMock[any, any]{}
 
-// ResourceRepoMock is a mock implementation of ResourceRepo.
+// ResourceManipulatorMock is a mock implementation of ResourceManipulator.
 //
-//	func TestSomethingThatUsesResourceRepo(t *testing.T) {
+//	func TestSomethingThatUsesResourceManipulator(t *testing.T) {
 //
-//		// make and configure a mocked ResourceRepo
-//		mockedResourceRepo := &ResourceRepoMock{
+//		// make and configure a mocked ResourceManipulator
+//		mockedResourceManipulator := &ResourceManipulatorMock{
 //			CreateFunc: func(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 //				panic("mock out the Create method")
 //			},
 //			DeleteFunc: func(ctx context.Context, id int64) error {
 //				panic("mock out the Delete method")
 //			},
-//			FindFunc: func(ctx context.Context, id int64) (*Resource, error) {
-//				panic("mock out the Find method")
-//			},
-//			ListFunc: func(ctx context.Context) ([]Resource, error) {
-//				panic("mock out the List method")
-//			},
 //			UpdateFunc: func(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
 //				panic("mock out the Update method")
 //			},
 //		}
 //
-//		// use mockedResourceRepo in code that requires ResourceRepo
+//		// use mockedResourceManipulator in code that requires ResourceManipulator
 //		// and then make assertions.
 //
 //	}
-type ResourceRepoMock[Resource any, ResourceAttrs any] struct {
+type ResourceManipulatorMock[Resource any, ResourceAttrs any] struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, attrs *ResourceAttrs) (*Resource, error)
 
 	// DeleteFunc mocks the Delete method.
 	DeleteFunc func(ctx context.Context, id int64) error
-
-	// FindFunc mocks the Find method.
-	FindFunc func(ctx context.Context, id int64) (*Resource, error)
-
-	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context) ([]Resource, error)
 
 	// UpdateFunc mocks the Update method.
 	UpdateFunc func(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error)
@@ -71,18 +59,6 @@ type ResourceRepoMock[Resource any, ResourceAttrs any] struct {
 			// ID is the id argument value.
 			ID int64
 		}
-		// Find holds details about calls to the Find method.
-		Find []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// ID is the id argument value.
-			ID int64
-		}
-		// List holds details about calls to the List method.
-		List []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-		}
 		// Update holds details about calls to the Update method.
 		Update []struct {
 			// Ctx is the ctx argument value.
@@ -95,15 +71,13 @@ type ResourceRepoMock[Resource any, ResourceAttrs any] struct {
 	}
 	lockCreate sync.RWMutex
 	lockDelete sync.RWMutex
-	lockFind   sync.RWMutex
-	lockList   sync.RWMutex
 	lockUpdate sync.RWMutex
 }
 
 // Create calls CreateFunc.
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 	if mock.CreateFunc == nil {
-		panic("ResourceRepoMock.CreateFunc: method is nil but ResourceRepo.Create was just called")
+		panic("ResourceManipulatorMock.CreateFunc: method is nil but ResourceManipulator.Create was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
@@ -121,8 +95,8 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Create(ctx context.Contex
 // CreateCalls gets all the calls that were made to Create.
 // Check the length with:
 //
-//	len(mockedResourceRepo.CreateCalls())
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) CreateCalls() []struct {
+//	len(mockedResourceManipulator.CreateCalls())
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) CreateCalls() []struct {
 	Ctx   context.Context
 	Attrs *ResourceAttrs
 } {
@@ -137,9 +111,9 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Delete(ctx context.Context, id int64) error {
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) Delete(ctx context.Context, id int64) error {
 	if mock.DeleteFunc == nil {
-		panic("ResourceRepoMock.DeleteFunc: method is nil but ResourceRepo.Delete was just called")
+		panic("ResourceManipulatorMock.DeleteFunc: method is nil but ResourceManipulator.Delete was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
@@ -157,8 +131,8 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Delete(ctx context.Contex
 // DeleteCalls gets all the calls that were made to Delete.
 // Check the length with:
 //
-//	len(mockedResourceRepo.DeleteCalls())
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) DeleteCalls() []struct {
+//	len(mockedResourceManipulator.DeleteCalls())
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) DeleteCalls() []struct {
 	Ctx context.Context
 	ID  int64
 } {
@@ -172,78 +146,10 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) DeleteCalls() []struct {
 	return calls
 }
 
-// Find calls FindFunc.
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Find(ctx context.Context, id int64) (*Resource, error) {
-	if mock.FindFunc == nil {
-		panic("ResourceRepoMock.FindFunc: method is nil but ResourceRepo.Find was just called")
-	}
-	callInfo := struct {
-		Ctx context.Context
-		ID  int64
-	}{
-		Ctx: ctx,
-		ID:  id,
-	}
-	mock.lockFind.Lock()
-	mock.calls.Find = append(mock.calls.Find, callInfo)
-	mock.lockFind.Unlock()
-	return mock.FindFunc(ctx, id)
-}
-
-// FindCalls gets all the calls that were made to Find.
-// Check the length with:
-//
-//	len(mockedResourceRepo.FindCalls())
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) FindCalls() []struct {
-	Ctx context.Context
-	ID  int64
-} {
-	var calls []struct {
-		Ctx context.Context
-		ID  int64
-	}
-	mock.lockFind.RLock()
-	calls = mock.calls.Find
-	mock.lockFind.RUnlock()
-	return calls
-}
-
-// List calls ListFunc.
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) List(ctx context.Context) ([]Resource, error) {
-	if mock.ListFunc == nil {
-		panic("ResourceRepoMock.ListFunc: method is nil but ResourceRepo.List was just called")
-	}
-	callInfo := struct {
-		Ctx context.Context
-	}{
-		Ctx: ctx,
-	}
-	mock.lockList.Lock()
-	mock.calls.List = append(mock.calls.List, callInfo)
-	mock.lockList.Unlock()
-	return mock.ListFunc(ctx)
-}
-
-// ListCalls gets all the calls that were made to List.
-// Check the length with:
-//
-//	len(mockedResourceRepo.ListCalls())
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) ListCalls() []struct {
-	Ctx context.Context
-} {
-	var calls []struct {
-		Ctx context.Context
-	}
-	mock.lockList.RLock()
-	calls = mock.calls.List
-	mock.lockList.RUnlock()
-	return calls
-}
-
 // Update calls UpdateFunc.
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
 	if mock.UpdateFunc == nil {
-		panic("ResourceRepoMock.UpdateFunc: method is nil but ResourceRepo.Update was just called")
+		panic("ResourceManipulatorMock.UpdateFunc: method is nil but ResourceManipulator.Update was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
@@ -263,8 +169,8 @@ func (mock *ResourceRepoMock[Resource, ResourceAttrs]) Update(ctx context.Contex
 // UpdateCalls gets all the calls that were made to Update.
 // Check the length with:
 //
-//	len(mockedResourceRepo.UpdateCalls())
-func (mock *ResourceRepoMock[Resource, ResourceAttrs]) UpdateCalls() []struct {
+//	len(mockedResourceManipulator.UpdateCalls())
+func (mock *ResourceManipulatorMock[Resource, ResourceAttrs]) UpdateCalls() []struct {
 	Ctx   context.Context
 	ID    int64
 	Attrs *ResourceAttrs

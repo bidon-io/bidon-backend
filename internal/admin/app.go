@@ -1,7 +1,5 @@
 package admin
 
-import "context"
-
 type App struct {
 	ID int64 `json:"id"`
 	AppAttrs
@@ -38,10 +36,9 @@ func NewAppService(store Store) *AppService {
 }
 
 type AppRepo interface {
-	ResourceRepo[App, AppAttrs]
-
-	ListOwnedByUser(ctx context.Context, userID int64) ([]App, error)
-	FindOwnedByUser(ctx context.Context, userID int64, id int64) (*App, error)
+	AllResourceQuerier[App]
+	OwnedResourceQuerier[App]
+	ResourceManipulator[App, AppAttrs]
 }
 
 type appPolicy struct {

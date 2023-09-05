@@ -45,10 +45,9 @@ func NewAppDemandProfileService(store Store) *AppDemandProfileService {
 }
 
 type AppDemandProfileRepo interface {
-	ResourceRepo[AppDemandProfile, AppDemandProfileAttrs]
-
-	ListOwnedByUser(ctx context.Context, userID int64) ([]AppDemandProfile, error)
-	FindOwnedByUser(ctx context.Context, userID int64, id int64) (*AppDemandProfile, error)
+	AllResourceQuerier[AppDemandProfile]
+	OwnedResourceQuerier[AppDemandProfile]
+	ResourceManipulator[AppDemandProfile, AppDemandProfileAttrs]
 }
 
 type appDemandProfilePolicy struct {

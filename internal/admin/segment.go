@@ -2,8 +2,6 @@
 package admin
 
 import (
-	"context"
-
 	"github.com/bidon-io/bidon-backend/internal/segment"
 )
 
@@ -34,10 +32,9 @@ func NewSegmentService(store Store) *SegmentService {
 }
 
 type SegmentRepo interface {
-	ResourceRepo[Segment, SegmentAttrs]
-
-	ListOwnedByUser(ctx context.Context, userID int64) ([]Segment, error)
-	FindOwnedByUser(ctx context.Context, userID, id int64) (*Segment, error)
+	AllResourceQuerier[Segment]
+	OwnedResourceQuerier[Segment]
+	ResourceManipulator[Segment, SegmentAttrs]
 }
 
 type segmentPolicy struct {

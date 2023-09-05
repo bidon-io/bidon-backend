@@ -20,7 +20,10 @@ func NewUserService(store Store) *UserService {
 	}
 }
 
-type UserRepo = ResourceRepo[User, UserAttrs]
+type UserRepo interface {
+	AllResourceQuerier[User]
+	ResourceManipulator[User, UserAttrs]
+}
 
 type userPolicy struct {
 	repo UserRepo

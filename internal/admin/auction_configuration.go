@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"context"
-
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 )
@@ -37,10 +35,9 @@ func NewAuctionConfigurationService(store Store) *AuctionConfigurationService {
 }
 
 type AuctionConfigurationRepo interface {
-	ResourceRepo[AuctionConfiguration, AuctionConfigurationAttrs]
-
-	ListOwnedByUser(ctx context.Context, userID int64) ([]AuctionConfiguration, error)
-	FindOwnedByUser(ctx context.Context, userID, id int64) (*AuctionConfiguration, error)
+	AllResourceQuerier[AuctionConfiguration]
+	OwnedResourceQuerier[AuctionConfiguration]
+	ResourceManipulator[AuctionConfiguration, AuctionConfigurationAttrs]
 }
 
 type auctionConfigurationPolicy struct {
