@@ -14,16 +14,20 @@ import (
 	"testing"
 )
 
+func ptr[T any](t T) *T {
+	return &t
+}
+
 func TestLogin_OK(t *testing.T) {
 	userService := mocks.UserServiceMock{
 		CreateUserFunc: func(email string, password string) (*db.User, error) {
-			return &db.User{Email: email, PasswordHash: "pass"}, nil
+			return &db.User{Email: email, IsAdmin: ptr(true), PasswordHash: "pass"}, nil
 		},
 		ComparePasswordFunc: func(storedPasswordHash string, password string) bool {
 			return true
 		},
 		GetUserByEmailFunc: func(email string) (*db.User, error) {
-			return &db.User{Email: email, PasswordHash: "pass"}, nil
+			return &db.User{Email: email, IsAdmin: ptr(true), PasswordHash: "pass"}, nil
 		},
 	}
 	tokenService := mocks.TokenServiceMock{
@@ -57,7 +61,8 @@ func TestLogin_OK(t *testing.T) {
 
 	expectedResponse := map[string]any{
 		"user": map[string]any{
-			"email": "test@test.com",
+			"email":    "test@test.com",
+			"is_admin": true,
 		},
 		"access_token": "token",
 	}
