@@ -2,6 +2,9 @@ package adminstore_test
 
 import (
 	"context"
+	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/admin/store/mocks"
+	"github.com/bidon-io/bidon-backend/internal/db"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
@@ -17,10 +20,14 @@ func TestUserRepo_List(t *testing.T) {
 
 	users := []admin.UserAttrs{
 		{
-			Email: "user1@example.com",
+			Email:    "user1@example.com",
+			IsAdmin:  true,
+			Password: "password",
 		},
 		{
-			Email: "user2@example.com",
+			Email:    "user2@example.com",
+			IsAdmin:  false,
+			Password: "password",
 		},
 	}
 
@@ -51,7 +58,9 @@ func TestUserRepo_Find(t *testing.T) {
 	repo := adminstore.NewUserRepo(tx)
 
 	attrs := &admin.UserAttrs{
-		Email: "user1@example.com",
+		Email:    "user1@example.com",
+		IsAdmin:  true,
+		Password: "password",
 	}
 
 	want, err := repo.Create(context.Background(), attrs)
@@ -74,9 +83,16 @@ func TestUserRepo_Update(t *testing.T) {
 	defer tx.Rollback()
 
 	repo := adminstore.NewUserRepo(tx)
+	repo.PasswordGenerator = &mocks.PasswordGeneratorMock{
+		GenerateFunc: func(password string) (string, error) {
+			return fmt.Sprintf("%sHash", password), nil
+		},
+	}
 
 	attrs := admin.UserAttrs{
-		Email: "user1@example.com",
+		Email:    "user1@example.com",
+		IsAdmin:  true,
+		Password: "password",
 	}
 
 	user, err := repo.Create(context.Background(), &attrs)
@@ -86,13 +102,23 @@ func TestUserRepo_Update(t *testing.T) {
 
 	want := user
 	want.Email = "user1alt@example.com"
+	want.IsAdmin = false
 
 	updateParams := &admin.UserAttrs{
-		Email: want.Email,
+		Email:    want.Email,
+		IsAdmin:  want.IsAdmin,
+		Password: "passwordalt",
 	}
 	got, err := repo.Update(context.Background(), user.ID, updateParams)
 	if err != nil {
 		t.Fatalf("repo.Update(ctx, %+v) = %v, %q; want %T, %v", updateParams, nil, err, got, nil)
+	}
+	dbModel := &db.User{}
+	if err := tx.First(dbModel, user.ID).Error; err != nil {
+		t.Fatalf("tx.First(dbModel, %v) = %q, want %v", user.ID, err, nil)
+	}
+	if dbModel.PasswordHash != "passwordaltHash" {
+		t.Fatalf("dbModel.PasswordHash = %v, want %v", dbModel.PasswordHash, "passwordaltHash")
 	}
 
 	if diff := cmp.Diff(want, got); diff != "" {

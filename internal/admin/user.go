@@ -1,23 +1,38 @@
 package admin
 
+import (
+	"context"
+	v8n "github.com/go-ozzo/ozzo-validation/v4"
+)
+
 type User struct {
 	ID int64 `json:"id"`
 	UserAttrs
 }
 
 type UserAttrs struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
+	IsAdmin  bool   `json:"is_admin"`
+	Password string `json:"password"`
 }
 
 type UserService = ResourceService[User, UserAttrs]
 
 func NewUserService(store Store) *UserService {
-	return &UserService{
+	s := &UserService{
 		repo: store.Users(),
 		policy: &userPolicy{
 			repo: store.Users(),
 		},
 	}
+
+	s.getValidator = func(attrs *UserAttrs) v8n.ValidatableWithContext {
+		return &userAttrsValidator{
+			attrs: attrs,
+		}
+	}
+
+	return s
 }
 
 type UserRepo interface {
@@ -34,4 +49,16 @@ func (p *userPolicy) scope(authCtx AuthContext) resourceScope[User] {
 		repo:    p.repo,
 		authCtx: authCtx,
 	}
+}
+
+type userAttrsValidator struct {
+	attrs    *UserAttrs
+	userRepo UserRepo
+}
+
+func (v *userAttrsValidator) ValidateWithContext(ctx context.Context) error {
+	return v8n.ValidateStruct(v.attrs,
+		v8n.Field(&v.attrs.Email, v8n.Required, v8n.Length(1, 255)),
+		v8n.Field(&v.attrs.Password, v8n.Required, v8n.Length(6, 50)),
+	)
 }
