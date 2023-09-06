@@ -38,9 +38,6 @@
           label="Log In"
           class="p-button-primary w-full block"
         />
-        <div class="flex mt-4 justify-center">
-          <NuxtLink to="/signup" class="text-blue-500">Sign Up</NuxtLink>
-        </div>
       </template>
     </Card>
   </form>

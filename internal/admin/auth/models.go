@@ -11,5 +11,6 @@ type AuthResponse struct {
 }
 
 type PublicUser struct {
-	Email string `json:"email"`
+	Email   string `json:"email"`
+	IsAdmin *bool  `json:"is_admin"`
 }

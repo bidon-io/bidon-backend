@@ -53,7 +53,7 @@ func main() {
 	configureCORS(e)
 
 	apiGroup := e.Group("/api")
-	jwtSecretKey := []byte(os.Getenv("JWT_SECRET"))
+	jwtSecretKey := []byte(os.Getenv("APP_SECRET"))
 	auth.SetUpRoutes(e, db, jwtSecretKey)
 	auth.ConfigureJWT(apiGroup, jwtSecretKey)
 

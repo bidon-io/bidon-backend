@@ -14,7 +14,6 @@ func SetUpRoutes(e *echo.Echo, db *db.DB, jwtSecretKey []byte) {
 	tokenService := tokenmgmt.NewTokenService(jwtSecretKey)
 	authService := NewAuthService(userService, tokenService)
 
-	e.POST("/auth/signup", authService.SignUp)
 	e.POST("/auth/login", authService.LogIn)
 }
 
