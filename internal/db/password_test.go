@@ -1,11 +1,10 @@
-package admin
+package db
 
 import "testing"
 
-func TestPasswordService_Generate(t *testing.T) {
-	service := &PasswordService{}
+func TestHashPassword(t *testing.T) {
 	password := "testPassword"
-	hashedPassword, err := service.Generate(password)
+	hashedPassword, err := HashPassword(password)
 
 	if err != nil {
 		t.Fatalf("Expected no error, but got: %v", err)
@@ -16,23 +15,21 @@ func TestPasswordService_Generate(t *testing.T) {
 	}
 }
 
-func TestPasswordService_Compare(t *testing.T) {
-	service := &PasswordService{}
+func TestComparePassword(t *testing.T) {
 	password := "testPassword"
-	hashedPassword, _ := service.Generate(password)
+	hashedPassword, _ := HashPassword(password)
 
-	if !service.Compare(hashedPassword, password) {
+	if result, _ := ComparePassword(hashedPassword, password); !result {
 		t.Fatalf("Expected passwords to match, but they didn't")
 	}
 
-	if service.Compare(hashedPassword, "wrongPassword") {
+	if result, _ := ComparePassword(hashedPassword, "wrongPassword"); result {
 		t.Fatalf("Expected passwords not to match, but they did")
 	}
 }
 
-func TestPasswordService_GenerateSalt(t *testing.T) {
-	service := &PasswordService{}
-	salt, err := service.generateSalt()
+func TestGenerateSalt(t *testing.T) {
+	salt, err := generateSalt()
 
 	if err != nil {
 		t.Fatalf("Expected no error, but got: %v", err)

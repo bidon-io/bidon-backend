@@ -3,11 +3,13 @@ package admin
 import (
 	"context"
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 type User struct {
-	ID int64 `json:"id"`
-	UserAttrs
+	ID      int64  `json:"id"`
+	IsAdmin bool   `json:"is_admin"`
+	Email   string `json:"email"`
 }
 
 type UserAttrs struct {
@@ -58,7 +60,7 @@ type userAttrsValidator struct {
 
 func (v *userAttrsValidator) ValidateWithContext(ctx context.Context) error {
 	return v8n.ValidateStruct(v.attrs,
-		v8n.Field(&v.attrs.Email, v8n.Required, v8n.Length(1, 255)),
-		v8n.Field(&v.attrs.Password, v8n.Required, v8n.Length(6, 50)),
+		v8n.Field(&v.attrs.Email, is.EmailFormat),
+		v8n.Field(&v.attrs.Password, v8n.Length(6, 50)),
 	)
 }

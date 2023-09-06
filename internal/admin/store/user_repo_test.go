@@ -2,8 +2,6 @@ package adminstore_test
 
 import (
 	"context"
-	"fmt"
-	"github.com/bidon-io/bidon-backend/internal/admin/store/mocks"
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"testing"
 
@@ -83,11 +81,6 @@ func TestUserRepo_Update(t *testing.T) {
 	defer tx.Rollback()
 
 	repo := adminstore.NewUserRepo(tx)
-	repo.PasswordGenerator = &mocks.PasswordGeneratorMock{
-		GenerateFunc: func(password string) (string, error) {
-			return fmt.Sprintf("%sHash", password), nil
-		},
-	}
 
 	attrs := admin.UserAttrs{
 		Email:    "user1@example.com",
@@ -117,8 +110,12 @@ func TestUserRepo_Update(t *testing.T) {
 	if err := tx.First(dbModel, user.ID).Error; err != nil {
 		t.Fatalf("tx.First(dbModel, %v) = %q, want %v", user.ID, err, nil)
 	}
-	if dbModel.PasswordHash != "passwordaltHash" {
-		t.Fatalf("dbModel.PasswordHash = %v, want %v", dbModel.PasswordHash, "passwordaltHash")
+	result, err := db.ComparePassword(dbModel.PasswordHash, updateParams.Password)
+	if err != nil {
+		t.Fatalf("db.ComparePassword(dbModel.PasswordHash, %v) = %q, want %v", updateParams.Password, err, nil)
+	}
+	if !result {
+		t.Fatalf("db.ComparePassword(dbModel.PasswordHash, %v) = %v, want %v", updateParams.Password, result, true)
 	}
 
 	if diff := cmp.Diff(want, got); diff != "" {
