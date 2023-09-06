@@ -58,7 +58,7 @@ type userAttrsValidator struct {
 	userRepo UserRepo
 }
 
-func (v *userAttrsValidator) ValidateWithContext(ctx context.Context) error {
+func (v *userAttrsValidator) ValidateWithContext(_ context.Context) error {
 	return v8n.ValidateStruct(v.attrs,
 		v8n.Field(&v.attrs.Email, is.EmailFormat),
 		v8n.Field(&v.attrs.Password, v8n.Length(6, 50)),
