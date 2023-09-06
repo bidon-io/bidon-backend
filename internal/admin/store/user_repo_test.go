@@ -19,12 +19,12 @@ func TestUserRepo_List(t *testing.T) {
 	users := []admin.UserAttrs{
 		{
 			Email:    "user1@example.com",
-			IsAdmin:  true,
+			IsAdmin:  ptr(true),
 			Password: "password",
 		},
 		{
 			Email:    "user2@example.com",
-			IsAdmin:  false,
+			IsAdmin:  ptr(false),
 			Password: "password",
 		},
 	}
@@ -57,7 +57,7 @@ func TestUserRepo_Find(t *testing.T) {
 
 	attrs := &admin.UserAttrs{
 		Email:    "user1@example.com",
-		IsAdmin:  true,
+		IsAdmin:  ptr(true),
 		Password: "password",
 	}
 
@@ -84,7 +84,7 @@ func TestUserRepo_Update(t *testing.T) {
 
 	attrs := admin.UserAttrs{
 		Email:    "user1@example.com",
-		IsAdmin:  true,
+		IsAdmin:  ptr(true),
 		Password: "password",
 	}
 
@@ -95,7 +95,7 @@ func TestUserRepo_Update(t *testing.T) {
 
 	want := user
 	want.Email = "user1alt@example.com"
-	want.IsAdmin = false
+	want.IsAdmin = ptr(false)
 
 	updateParams := &admin.UserAttrs{
 		Email:    want.Email,

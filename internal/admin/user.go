@@ -8,13 +8,13 @@ import (
 
 type User struct {
 	ID      int64  `json:"id"`
-	IsAdmin bool   `json:"is_admin"`
+	IsAdmin *bool  `json:"is_admin"`
 	Email   string `json:"email"`
 }
 
 type UserAttrs struct {
 	Email    string `json:"email"`
-	IsAdmin  bool   `json:"is_admin"`
+	IsAdmin  *bool  `json:"is_admin"`
 	Password string `json:"password"`
 }
 
