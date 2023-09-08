@@ -1,40 +1,13 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"gorm.io/gorm"
 )
 
-func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
-	// Check if the combination of app_id, ad_type, and segment_id is already taken
-	var count int64
-
-	query := tx.Model(&AuctionConfiguration{}).
-		Where("app_id = ? AND ad_type = ?", ac.AppID, ac.AdType)
-
-	if ac.SegmentID != nil && ac.SegmentID.Valid {
-		query = query.Where("segment_id = ?", ac.SegmentID.Int64)
-	} else {
-		query = query.Where("segment_id IS NULL")
-	}
-
-	query = query.Not(ac.Model.ID).Count(&count)
-
-	if query.Error != nil {
-		return query.Error
-	}
-
-	if count > 0 {
-		return errors.New("the combination of app_id, ad_type, and segment_id already exists")
-	}
-
-	return nil
-}
-
 // AfterCreate hook to set PublicUID and ensure uniqueness
-func (ac *AuctionConfiguration) AfterCreate(tx *gorm.DB) (err error) {
+func (l *LineItem) AfterCreate(tx *gorm.DB) (err error) {
 	passedSnowflakeNode, ok := tx.Get("snowflakeNode")
 	if !ok {
 		return fmt.Errorf("error reading snowflakeNode from gorm")
@@ -51,13 +24,13 @@ func (ac *AuctionConfiguration) AfterCreate(tx *gorm.DB) (err error) {
 
 		// Check uniqueness
 		var count int64
-		if err := tx.Model(&AuctionConfiguration{}).Where("public_uid = ?", generatedUID).Count(&count).Error; err != nil {
+		if err := tx.Model(&LineItem{}).Where("public_uid = ?", generatedUID).Count(&count).Error; err != nil {
 			return err
 		}
 
 		if count == 0 {
 			// If unique, update the record with the generated PublicUID and break the loop
-			if err := tx.Model(ac).Update("public_uid", generatedUID).Error; err != nil {
+			if err := tx.Model(l).Update("public_uid", generatedUID).Error; err != nil {
 				return err
 			}
 			return nil

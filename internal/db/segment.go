@@ -10,14 +10,16 @@ import (
 func (s *Segment) AfterCreate(tx *gorm.DB) (err error) {
 	passedSnowflakeNode, ok := tx.Get("snowflakeNode")
 	if !ok {
-		return fmt.Errorf("error reading snowflakeNode from gorm instance")
+		return fmt.Errorf("error reading snowflakeNode from gorm")
 	}
 	snowflakeNode, ok := passedSnowflakeNode.(*snowflake.Node)
-	if ok {
+	if !ok {
 		return fmt.Errorf("error converting snowflakeNode from gorm instance")
 	}
-	// Attempt to generate a unique PublicUID
-	for {
+
+	// Attempt to generate a unique PublicUID with a maximum of 10 attempts
+	maxAttempts := 10
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		generatedUID := snowflakeNode.Generate().Int64()
 
 		// Check uniqueness
@@ -31,10 +33,10 @@ func (s *Segment) AfterCreate(tx *gorm.DB) (err error) {
 			if err := tx.Model(s).Update("public_uid", generatedUID).Error; err != nil {
 				return err
 			}
-			break
+			return nil
 		}
-		// If not unique, regenerate the PublicUID and try again
+		// If not unique, regenerate the PublicUID and try again, up to the maximum attempts
 	}
 
-	return nil
+	return fmt.Errorf("failed to generate a unique PublicUID after %d attempts", maxAttempts)
 }
