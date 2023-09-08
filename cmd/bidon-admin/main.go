@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/bidon-io/bidon-backend/cmd/bidon-admin/web"
@@ -49,7 +50,15 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
-	snowflakeNode, err := snowflake.NewNode(1)
+	snowflakeNodeIDStr := os.Getenv("SNOWFLAKE_NODE_ID")
+	if snowflakeNodeIDStr == "" {
+		log.Fatal("SNOWFLAKE_NODE_ID is not set or empty")
+	}
+	snowflakeNodeId, err := strconv.ParseInt(snowflakeNodeIDStr, 10, 64)
+	if err != nil {
+		log.Fatalf("Failed to parse SNOWFLAKE_NODE_ID: %v", err)
+	}
+	snowflakeNode, err := snowflake.NewNode(snowflakeNodeId)
 	if err != nil {
 		log.Fatalf("Snowflake Node error: %v", err)
 	}

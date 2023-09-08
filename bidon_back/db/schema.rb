@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_09_05_114525) do
+ActiveRecord::Schema[7.0].define(version: 2023_09_06_163017) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -79,7 +79,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_05_114525) do
     t.datetime "updated_at", null: false
     t.bigint "segment_id"
     t.boolean "external_win_notifications", default: false, null: false
+    t.bigint "public_uid"
     t.index ["app_id"], name: "index_auction_configurations_on_app_id"
+    t.index ["public_uid"], name: "index_auction_configurations_on_public_uid", unique: true
     t.index ["segment_id"], name: "index_auction_configurations_on_segment_id"
   end
 
@@ -127,8 +129,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_05_114525) do
     t.integer "width", default: 0, null: false
     t.integer "height", default: 0, null: false
     t.string "format"
+    t.bigint "public_uid"
     t.index ["account_type", "account_id"], name: "index_line_items_on_account"
     t.index ["app_id"], name: "index_line_items_on_app_id"
+    t.index ["public_uid"], name: "index_line_items_on_public_uid", unique: true
   end
 
   create_table "mmp_accounts", force: :cascade do |t|
@@ -158,7 +162,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_05_114525) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "priority", default: 0, null: false
+    t.bigint "public_uid"
     t.index ["app_id"], name: "index_segments_on_app_id"
+    t.index ["public_uid"], name: "index_segments_on_public_uid", unique: true
   end
 
   create_table "users", force: :cascade do |t|

@@ -8,13 +8,17 @@ import (
 
 // AfterCreate hook to set PublicUID and ensure uniqueness
 func (s *Segment) AfterCreate(tx *gorm.DB) (err error) {
+	passedSnowflakeNode, ok := tx.Get("snowflakeNode")
+	if !ok {
+		return fmt.Errorf("error reading snowflakeNode from gorm instance")
+	}
+	snowflakeNode, ok := passedSnowflakeNode.(*snowflake.Node)
+	if ok {
+		return fmt.Errorf("error converting snowflakeNode from gorm instance")
+	}
 	// Attempt to generate a unique PublicUID
 	for {
-		snowflakeNode, ok := tx.InstanceGet("snowflakeNode")
-		if !ok {
-			return fmt.Errorf("error reading snowflakeNode from gorm instance")
-		}
-		generatedUID := snowflakeNode.(*snowflake.Node).Generate().Int64()
+		generatedUID := snowflakeNode.Generate().Int64()
 
 		// Check uniqueness
 		var count int64
