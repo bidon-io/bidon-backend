@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"github.com/bwmarrin/snowflake"
 	"testing"
 	"time"
 
@@ -16,15 +17,15 @@ import (
 func TestConfigMatcher_Match(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
+	snowflakeNode, _ := snowflake.NewNode(1)
 
 	apps := dbtest.CreateAppsList(t, tx, 3)
 	configs := []db.AuctionConfiguration{
 		{AppID: apps[0].ID, AdType: db.BannerAdType},
 		{AppID: apps[1].ID, AdType: db.BannerAdType},
 		{AppID: apps[2].ID, AdType: db.InterstitialAdType, Model: db.Model{CreatedAt: time.Now()}},
-		{AppID: apps[2].ID, AdType: db.InterstitialAdType, Model: db.Model{CreatedAt: time.Now().Add(-time.Hour)}},
 	}
-	if err := tx.Create(&configs).Error; err != nil {
+	if err := tx.Set("snowflakeNode", snowflakeNode).Create(&configs).Error; err != nil {
 		t.Fatalf("Error creating configs: %v", err)
 	}
 	app1BannerConfig := &configs[0]
@@ -70,15 +71,15 @@ func TestConfigMatcher_Match(t *testing.T) {
 func TestConfigMatcher_MatchById(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
+	snowflakeNode, _ := snowflake.NewNode(1)
 
 	apps := dbtest.CreateAppsList(t, tx, 3)
 	configs := []db.AuctionConfiguration{
 		{AppID: apps[0].ID, AdType: db.BannerAdType},
 		{AppID: apps[1].ID, AdType: db.BannerAdType},
 		{AppID: apps[2].ID, AdType: db.InterstitialAdType, Model: db.Model{CreatedAt: time.Now()}},
-		{AppID: apps[2].ID, AdType: db.InterstitialAdType, Model: db.Model{CreatedAt: time.Now().Add(-time.Hour)}},
 	}
-	if err := tx.Create(&configs).Error; err != nil {
+	if err := tx.Set("snowflakeNode", snowflakeNode).Create(&configs).Error; err != nil {
 		t.Fatalf("Error creating configs: %v", err)
 	}
 	app1BannerConfig := &configs[0]

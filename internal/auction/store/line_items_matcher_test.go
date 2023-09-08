@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"database/sql"
+	"github.com/bwmarrin/snowflake"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -20,6 +21,7 @@ import (
 func TestLineItemsMatcher_Match(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
+	snowflakeNode, _ := snowflake.NewNode(1)
 
 	apps := dbtest.CreateAppsList(t, tx, 2)
 
@@ -110,7 +112,7 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 			AccountID: bidmachineAccount.ID,
 		},
 	}
-	if err := tx.Create(&lineItems).Error; err != nil {
+	if err := tx.Set("snowflakeNode", snowflakeNode).Create(&lineItems).Error; err != nil {
 		t.Fatalf("Error creating line items (%+v): %v", lineItems, err)
 	}
 

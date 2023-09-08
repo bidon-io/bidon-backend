@@ -21,6 +21,6 @@ class PublicUidGenerator
 end
 
 # Examples:
-# Segment.find_each { |s| PublicUidGenerator.generate_for(s) }
-# LineItem.find_each { |s| PublicUidGenerator.generate_for(s) }
-# AuctionConfiguration.find_each { |s| PublicUidGenerator.generate_for(s) }
+# Segment.find_each { |r| PublicUidGenerator.generate_for(r) }
+# LineItem.find_each { |r| PublicUidGenerator.generate_for(r) }
+# AuctionConfiguration.find_each { |r| PublicUidGenerator.generate_for(r) }
