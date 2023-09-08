@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bwmarrin/snowflake"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -11,9 +12,10 @@ import (
 // A resourceRepo is a generic basic repository for API resources that map directly to database models.
 // It implements [admin.ResourceRepo]
 type resourceRepo[Resource, ResourceAttrs, DBModel any] struct {
-	db           *db.DB
-	mapper       resourceMapper[Resource, ResourceAttrs, DBModel]
-	associations []string
+	db            *db.DB
+	snowflakeNode *snowflake.Node
+	mapper        resourceMapper[Resource, ResourceAttrs, DBModel]
+	associations  []string
 }
 
 // resourceMapper maps resources with corresponding DB model, and vice versa
@@ -74,6 +76,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) find(ctx context.Contex
 
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 	dbModel := r.mapper.dbModel(attrs, 0)
+	r.db.InstanceSet("snowflakeNode", r.snowflakeNode)
 
 	if err := r.db.WithContext(ctx).Create(dbModel).Error; err != nil {
 		return nil, err

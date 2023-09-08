@@ -3,15 +3,17 @@ package adminstore
 import (
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bwmarrin/snowflake"
 )
 
 type DemandSourceRepo = resourceRepo[admin.DemandSource, admin.DemandSourceAttrs, db.DemandSource]
 
-func NewDemandSourceRepo(db *db.DB) *DemandSourceRepo {
+func NewDemandSourceRepo(db *db.DB, snowflakeNode *snowflake.Node) *DemandSourceRepo {
 	return &DemandSourceRepo{
-		db:           db,
-		mapper:       demandSourceMapper{},
-		associations: []string{},
+		db:            db,
+		snowflakeNode: snowflakeNode,
+		mapper:        demandSourceMapper{},
+		associations:  []string{},
 	}
 }
 

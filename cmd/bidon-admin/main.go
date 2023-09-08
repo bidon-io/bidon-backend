@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/bwmarrin/snowflake"
 	"io/fs"
 	"log"
 	"net/http"
@@ -48,6 +49,11 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
+	snowflakeNode, err := snowflake.NewNode(1)
+	if err != nil {
+		log.Fatalf("Snowflake Node error: %v", err)
+	}
+
 	e := config.Echo("bidon-admin", logger)
 
 	configureCORS(e)
@@ -57,7 +63,7 @@ func main() {
 	auth.SetUpRoutes(e, db, jwtSecretKey)
 	//auth.ConfigureJWT(apiGroup, jwtSecretKey)
 
-	store := adminstore.New(db)
+	store := adminstore.New(db, snowflakeNode)
 	adminService := admin.NewService(store)
 	adminecho.RegisterService(apiGroup, adminService)
 

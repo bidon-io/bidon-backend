@@ -5,6 +5,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bwmarrin/snowflake"
 	"gorm.io/gorm"
 )
 
@@ -12,12 +13,13 @@ type SegmentRepo struct {
 	*resourceRepo[admin.Segment, admin.SegmentAttrs, db.Segment]
 }
 
-func NewSegmentRepo(d *db.DB) *SegmentRepo {
+func NewSegmentRepo(d *db.DB, snowflakeNode *snowflake.Node) *SegmentRepo {
 	return &SegmentRepo{
 		resourceRepo: &resourceRepo[admin.Segment, admin.SegmentAttrs, db.Segment]{
-			db:           d,
-			mapper:       segmentMapper{},
-			associations: []string{"App"},
+			db:            d,
+			snowflakeNode: snowflakeNode,
+			mapper:        segmentMapper{},
+			associations:  []string{"App"},
 		},
 	}
 }

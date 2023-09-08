@@ -3,6 +3,7 @@ package adminstore
 import (
 	"context"
 	"database/sql"
+	"github.com/bwmarrin/snowflake"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/admin"
@@ -15,12 +16,13 @@ type LineItemRepo struct {
 	*resourceRepo[admin.LineItem, admin.LineItemAttrs, db.LineItem]
 }
 
-func NewLineItemRepo(d *db.DB) *LineItemRepo {
+func NewLineItemRepo(d *db.DB, snowflakeNode *snowflake.Node) *LineItemRepo {
 	return &LineItemRepo{
 		resourceRepo: &resourceRepo[admin.LineItem, admin.LineItemAttrs, db.LineItem]{
-			db:           d,
-			mapper:       lineItemMapper{},
-			associations: []string{"App", "Account"},
+			db:            d,
+			snowflakeNode: snowflakeNode,
+			mapper:        lineItemMapper{},
+			associations:  []string{"App", "Account"},
 		},
 	}
 }

@@ -3,6 +3,7 @@ package adminstore
 import (
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bwmarrin/snowflake"
 )
 
 type Store struct {
@@ -17,17 +18,17 @@ type Store struct {
 	userRepo                 *UserRepo
 }
 
-func New(db *db.DB) *Store {
+func New(db *db.DB, snowflakeNode *snowflake.Node) *Store {
 	return &Store{
-		appRepo:                  NewAppRepo(db),
-		appDemandProfileRepo:     NewAppDemandProfileRepo(db),
-		auctionConfigurationRepo: NewAuctionConfigurationRepo(db),
-		countryRepo:              NewCountryRepo(db),
-		demandSourceRepo:         NewDemandSourceRepo(db),
-		demandSourceAccountRepo:  NewDemandSourceAccountRepo(db),
-		lineItemRepo:             NewLineItemRepo(db),
-		segmentRepo:              NewSegmentRepo(db),
-		userRepo:                 NewUserRepo(db),
+		appRepo:                  NewAppRepo(db, snowflakeNode),
+		appDemandProfileRepo:     NewAppDemandProfileRepo(db, snowflakeNode),
+		auctionConfigurationRepo: NewAuctionConfigurationRepo(db, snowflakeNode),
+		countryRepo:              NewCountryRepo(db, snowflakeNode),
+		demandSourceRepo:         NewDemandSourceRepo(db, snowflakeNode),
+		demandSourceAccountRepo:  NewDemandSourceAccountRepo(db, snowflakeNode),
+		lineItemRepo:             NewLineItemRepo(db, snowflakeNode),
+		segmentRepo:              NewSegmentRepo(db, snowflakeNode),
+		userRepo:                 NewUserRepo(db, snowflakeNode),
 	}
 }
 

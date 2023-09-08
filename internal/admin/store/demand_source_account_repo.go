@@ -3,6 +3,7 @@ package adminstore
 import (
 	"context"
 	"encoding/json"
+	"github.com/bwmarrin/snowflake"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -13,12 +14,13 @@ type DemandSourceAccountRepo struct {
 	*resourceRepo[admin.DemandSourceAccount, admin.DemandSourceAccountAttrs, db.DemandSourceAccount]
 }
 
-func NewDemandSourceAccountRepo(d *db.DB) *DemandSourceAccountRepo {
+func NewDemandSourceAccountRepo(d *db.DB, snowflakeNode *snowflake.Node) *DemandSourceAccountRepo {
 	return &DemandSourceAccountRepo{
 		resourceRepo: &resourceRepo[admin.DemandSourceAccount, admin.DemandSourceAccountAttrs, db.DemandSourceAccount]{
-			db:           d,
-			mapper:       demandSourceAccountMapper{},
-			associations: []string{"User", "DemandSource"},
+			db:            d,
+			snowflakeNode: snowflakeNode,
+			mapper:        demandSourceAccountMapper{},
+			associations:  []string{"User", "DemandSource"},
 		},
 	}
 }
