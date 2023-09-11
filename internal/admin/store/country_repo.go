@@ -2,7 +2,6 @@ package adminstore
 
 import (
 	"database/sql"
-	"github.com/bwmarrin/snowflake"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -10,12 +9,11 @@ import (
 
 type CountryRepo = resourceRepo[admin.Country, admin.CountryAttrs, db.Country]
 
-func NewCountryRepo(db *db.DB, snowflakeNode *snowflake.Node) *CountryRepo {
+func NewCountryRepo(db *db.DB) *CountryRepo {
 	return &CountryRepo{
-		db:            db,
-		snowflakeNode: snowflakeNode,
-		mapper:        countryMapper{},
-		associations:  []string{},
+		db:           db,
+		mapper:       countryMapper{},
+		associations: []string{},
 	}
 }
 

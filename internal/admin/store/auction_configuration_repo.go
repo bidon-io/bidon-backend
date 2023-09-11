@@ -3,7 +3,6 @@ package adminstore
 import (
 	"context"
 	"database/sql"
-	"github.com/bwmarrin/snowflake"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -14,13 +13,12 @@ type AuctionConfigurationRepo struct {
 	*resourceRepo[admin.AuctionConfiguration, admin.AuctionConfigurationAttrs, db.AuctionConfiguration]
 }
 
-func NewAuctionConfigurationRepo(d *db.DB, snowflakeNode *snowflake.Node) *AuctionConfigurationRepo {
+func NewAuctionConfigurationRepo(d *db.DB) *AuctionConfigurationRepo {
 	return &AuctionConfigurationRepo{
 		resourceRepo: &resourceRepo[admin.AuctionConfiguration, admin.AuctionConfigurationAttrs, db.AuctionConfiguration]{
-			db:            d,
-			snowflakeNode: snowflakeNode,
-			mapper:        auctionConfigurationMapper{},
-			associations:  []string{"App", "Segment"},
+			db:           d,
+			mapper:       auctionConfigurationMapper{},
+			associations: []string{"App", "Segment"},
 		},
 	}
 }

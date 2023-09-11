@@ -3,19 +3,17 @@ package adminstore
 import (
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/bwmarrin/snowflake"
 )
 
 type UserRepo = resourceRepo[admin.User, admin.UserAttrs, db.User]
 
 type userMapper struct{}
 
-func NewUserRepo(d *db.DB, snowflakeNode *snowflake.Node) *UserRepo {
+func NewUserRepo(d *db.DB) *UserRepo {
 	return &UserRepo{
-		db:            d,
-		snowflakeNode: snowflakeNode,
-		mapper:        userMapper{},
-		associations:  []string{},
+		db:           d,
+		mapper:       userMapper{},
+		associations: []string{},
 	}
 }
 

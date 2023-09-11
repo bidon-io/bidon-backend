@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/snowflake"
 	"io/fs"
 	"log"
 	"net/http"
@@ -45,11 +44,6 @@ func main() {
 	defer sentry.Flush(sentryConf.FlushTimeout)
 
 	dbURL := os.Getenv("DATABASE_URL")
-	db, err := db.Open(dbURL)
-	if err != nil {
-		log.Fatalf("db.Open(%v): %v", dbURL, err)
-	}
-
 	snowflakeNodeIDStr := os.Getenv("SNOWFLAKE_NODE_ID")
 	if snowflakeNodeIDStr == "" {
 		log.Fatal("SNOWFLAKE_NODE_ID is not set or empty")
@@ -58,9 +52,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse SNOWFLAKE_NODE_ID: %v", err)
 	}
-	snowflakeNode, err := snowflake.NewNode(snowflakeNodeId)
+	db, err := db.Open(dbURL, snowflakeNodeId)
 	if err != nil {
-		log.Fatalf("Snowflake Node error: %v", err)
+		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
 	e := config.Echo("bidon-admin", logger)
@@ -72,7 +66,7 @@ func main() {
 	auth.SetUpRoutes(e, db, jwtSecretKey)
 	//auth.ConfigureJWT(apiGroup, jwtSecretKey)
 
-	store := adminstore.New(db, snowflakeNode)
+	store := adminstore.New(db)
 	adminService := admin.NewService(store)
 	adminecho.RegisterService(apiGroup, adminService)
 

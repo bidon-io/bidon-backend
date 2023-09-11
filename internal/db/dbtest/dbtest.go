@@ -4,6 +4,7 @@ package dbtest
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bwmarrin/snowflake"
 	"log"
 	"os"
 	"testing"
@@ -25,7 +26,7 @@ func Prepare() *db.DB {
 		log.Printf("Did not load from .env.test file: %v", err)
 	}
 
-	testDB, err = db.Open(os.Getenv("DATABASE_URL"))
+	testDB, err = db.Open(os.Getenv("DATABASE_URL"), 0)
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}
@@ -225,6 +226,7 @@ func CreateDemandSourceAccountsList(t *testing.T, tx *db.DB, count int) []*db.De
 
 func CreateSegment(t *testing.T, tx *db.DB, index int, app *db.App) *db.Segment {
 	t.Helper()
+	snowflakeNode, _ := snowflake.NewNode(1)
 
 	if app == nil {
 		app = CreateApp(t, tx, index, nil)
@@ -239,7 +241,7 @@ func CreateSegment(t *testing.T, tx *db.DB, index int, app *db.App) *db.Segment 
 		Priority:    0,
 	}
 
-	if err := tx.Create(segment).Error; err != nil {
+	if err := tx.Set("snowflakeNode", snowflakeNode).Create(segment).Error; err != nil {
 		t.Fatalf("Failed to create segment: %v", err)
 	}
 	return segment

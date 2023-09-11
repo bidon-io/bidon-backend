@@ -9,6 +9,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/segment"
+	"github.com/bwmarrin/snowflake"
 	"github.com/shopspring/decimal"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/datatypes"
@@ -19,10 +20,15 @@ import (
 
 type DB struct {
 	*gorm.DB
+	SnowflakeNode *snowflake.Node
 }
 
-func Open(databaseURL string) (*DB, error) {
+func Open(databaseURL string, snowFlakeNodeID int64) (*DB, error) {
 	db, err := gorm.Open(postgres.Open(databaseURL))
+	if err != nil {
+		return nil, err
+	}
+	snowFlakeNode, err := snowflake.NewNode(snowFlakeNodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -32,11 +38,11 @@ func Open(databaseURL string) (*DB, error) {
 		return nil, err
 	}
 
-	return &DB{db}, nil
+	return &DB{DB: db, SnowflakeNode: snowFlakeNode}, nil
 }
 
 func (db *DB) Begin(opts ...*sql.TxOptions) *DB {
-	return &DB{db.DB.Begin(opts...)}
+	return &DB{DB: db.DB.Begin(opts...), SnowflakeNode: db.SnowflakeNode}
 }
 
 func (db *DB) SetDebug() {
@@ -98,6 +104,7 @@ type AuctionConfiguration struct {
 	SegmentID                *sql.NullInt64        `gorm:"column:segment_id;type:bigint"`
 	Segment                  *Segment              `gorm:"foreignKey:SegmentID"`
 	ExternalWinNotifications *bool                 `gorm:"column:external_win_notifications;type:boolean;default:false;not null"`
+	PublicUID                *sql.NullInt64        `gorm:"column:public_uid;type:bigint"`
 }
 
 type Country struct {
@@ -140,6 +147,7 @@ type LineItem struct {
 	Width       int32               `gorm:"column:width;type:integer;default:0;not null"`
 	Height      int32               `gorm:"column:height;type:integer;default:0;not null"`
 	Format      sql.NullString      `gorm:"column:format;type:varchar"`
+	PublicUID   *sql.NullInt64      `gorm:"column:public_uid;type:bigint"`
 }
 
 type Segment struct {
@@ -151,6 +159,7 @@ type Segment struct {
 	AppID       int64            `gorm:"column:app_id;type:bigint;not null"`
 	App         App              `gorm:"foreignKey:AppID"`
 	Priority    int32            `gorm:"column:priority;type:integer;default:0;not null"`
+	PublicUID   *sql.NullInt64   `gorm:"column:public_uid;type:bigint"`
 }
 
 type User struct {

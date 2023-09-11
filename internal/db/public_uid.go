@@ -13,7 +13,7 @@ func GenerateUniquePublicUID(tx *gorm.DB, model interface{}) error {
 	}
 	snowflakeNode, ok := passedSnowflakeNode.(*snowflake.Node)
 	if !ok {
-		return fmt.Errorf("error converting snowflakeNode from gorm instance")
+		return fmt.Errorf("error converting snowflakeNode from gorm")
 	}
 
 	// Attempt to generate a unique PublicUID with a maximum of 10 attempts
