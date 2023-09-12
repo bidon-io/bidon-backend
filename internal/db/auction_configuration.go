@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -31,7 +32,13 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 	return nil
 }
 
-// AfterCreate hook to set PublicUID and ensure uniqueness
-func (ac *AuctionConfiguration) AfterCreate(tx *gorm.DB) (err error) {
-	return GenerateUniquePublicUID(tx, ac)
+// BeforeCreate hook to set PublicUID
+func (ac *AuctionConfiguration) BeforeCreate(tx *gorm.DB) (err error) {
+	publicUID, err := generatePublicUID(tx)
+	if err != nil {
+		return err
+	}
+
+	ac.PublicUID = &sql.NullInt64{Int64: publicUID, Valid: true}
+	return nil
 }

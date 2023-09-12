@@ -1,10 +1,17 @@
 package db
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 )
 
-// AfterCreate hook to set PublicUID and ensure uniqueness
-func (s *Segment) AfterCreate(tx *gorm.DB) (err error) {
-	return GenerateUniquePublicUID(tx, s)
+// BeforeCreate hook to set PublicUID
+func (s *Segment) BeforeCreate(tx *gorm.DB) (err error) {
+	publicUID, err := generatePublicUID(tx)
+	if err != nil {
+		return err
+	}
+
+	s.PublicUID = &sql.NullInt64{Int64: publicUID, Valid: true}
+	return nil
 }
