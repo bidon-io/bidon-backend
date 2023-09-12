@@ -221,7 +221,7 @@ func main() {
 	g.POST("/:ad_type/click", clickHandler.Handle)
 	g.POST("/:ad_type/reward", rewardHandler.Handle)
 
-	port := os.Getenv("PORT_API")
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "1323"
 	}

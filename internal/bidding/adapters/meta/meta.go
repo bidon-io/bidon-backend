@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"moul.io/http2curl"
 	"net/http"
 	"strconv"
 
@@ -161,9 +160,6 @@ func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, r
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
-
-	command, _ := http2curl.GetCurlCommand(httpReq)
-	fmt.Println(command)
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
