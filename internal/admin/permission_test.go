@@ -10,7 +10,7 @@ func Test_GetPermissions(t *testing.T) {
 		name        string
 		user        *User
 		authContext AuthContext
-		wantFunc    func() []ResourcePermission // Function that returns expected slice
+		wantFunc    func() []ResourcePermission
 	}{
 		{
 			name: "User is admin",
@@ -20,7 +20,7 @@ func Test_GetPermissions(t *testing.T) {
 					return true
 				},
 			},
-			wantFunc: getAdminPermissions, // Reference the original function
+			wantFunc: getAdminPermissions,
 		},
 		{
 			name: "User is not admin",
@@ -30,14 +30,14 @@ func Test_GetPermissions(t *testing.T) {
 					return false
 				},
 			},
-			wantFunc: getUserPermissions, // Reference the original function
+			wantFunc: getUserPermissions,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := GetPermissions(tt.authContext)
-			want := tt.wantFunc() // Get the expected data using the function
+			want := tt.wantFunc()
 
 			if !reflect.DeepEqual(got, want) {
 				t.Errorf("GetPermissions() = %v, want %v", got, want)
