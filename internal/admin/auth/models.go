@@ -11,7 +11,7 @@ type LogInResponse struct {
 }
 
 type User struct {
-	ID      int64
+	ID      int64  `json:"-"`
 	Email   string `json:"email"`
 	IsAdmin bool   `json:"is_admin"`
 }
