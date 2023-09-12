@@ -174,5 +174,19 @@ func getUserPermissions() []ResourcePermission {
 				Delete: true,
 			},
 		},
+		{
+			ResourceName: "Country",
+			Path:         "/countries",
+			Actions: Actions{
+				Read: true,
+			},
+		},
+		{
+			ResourceName: "Demand Source",
+			Path:         "/demand_sources",
+			Actions: Actions{
+				Read: true,
+			},
+		},
 	}
 }
