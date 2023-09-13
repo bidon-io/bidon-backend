@@ -20,29 +20,39 @@ import (
 
 type DB struct {
 	*gorm.DB
-	SnowflakeNode *snowflake.Node
+	snowflakeNode *snowflake.Node
 }
 
-func Open(databaseURL string, snowFlakeNodeID int64) (*DB, error) {
-	db, err := gorm.Open(postgres.Open(databaseURL))
-	if err != nil {
-		return nil, err
+type Option func(*DB)
+
+func WithSnowflakeNode(node *snowflake.Node) Option {
+	return func(db *DB) {
+		db.snowflakeNode = node
 	}
-	snowFlakeNode, err := snowflake.NewNode(snowFlakeNodeID)
+}
+
+func Open(databaseURL string, opts ...Option) (*DB, error) {
+	gormDB, err := gorm.Open(postgres.Open(databaseURL))
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.Use(otelgorm.NewPlugin())
+	err = gormDB.Use(otelgorm.NewPlugin())
 	if err != nil {
 		return nil, err
 	}
 
-	return &DB{DB: db, SnowflakeNode: snowFlakeNode}, nil
+	db := &DB{DB: gormDB}
+
+	for _, opt := range opts {
+		opt(&DB{DB: gormDB})
+	}
+
+	return db, nil
 }
 
 func (db *DB) Begin(opts ...*sql.TxOptions) *DB {
-	return &DB{DB: db.DB.Begin(opts...), SnowflakeNode: db.SnowflakeNode}
+	return &DB{DB: db.DB.Begin(opts...)}
 }
 
 func (db *DB) SetDebug() {
@@ -61,6 +71,14 @@ func (db *DB) AutoMigrate() error {
 		&Segment{},
 		&User{},
 	)
+}
+
+func (db *DB) GenerateSnowflakeID() int64 {
+	if db.snowflakeNode == nil {
+		return 0
+	}
+
+	return db.snowflakeNode.Generate().Int64()
 }
 
 // Model is different from default gorm.Model, because we already have schema from Rails
@@ -147,7 +165,7 @@ type LineItem struct {
 	Width       int32               `gorm:"column:width;type:integer;default:0;not null"`
 	Height      int32               `gorm:"column:height;type:integer;default:0;not null"`
 	Format      sql.NullString      `gorm:"column:format;type:varchar"`
-	PublicUID   *sql.NullInt64      `gorm:"column:public_uid;type:bigint"`
+	PublicUID   sql.NullInt64       `gorm:"column:public_uid;type:bigint"`
 }
 
 type Segment struct {

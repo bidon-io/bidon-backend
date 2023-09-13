@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
@@ -16,6 +17,7 @@ import (
 	adminecho "github.com/bidon-io/bidon-backend/internal/admin/echo"
 	adminstore "github.com/bidon-io/bidon-backend/internal/admin/store"
 	"github.com/bidon-io/bidon-backend/internal/db"
+	"github.com/bwmarrin/snowflake"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
@@ -44,15 +46,11 @@ func main() {
 	defer sentry.Flush(sentryConf.FlushTimeout)
 
 	dbURL := os.Getenv("DATABASE_URL")
-	snowflakeNodeIDStr := os.Getenv("SNOWFLAKE_NODE_ID")
-	if snowflakeNodeIDStr == "" {
-		log.Fatal("SNOWFLAKE_NODE_ID is not set or empty")
-	}
-	snowflakeNodeId, err := strconv.ParseInt(snowflakeNodeIDStr, 10, 64)
+	snowflakeNode, err := prepareSnowflakeNode()
 	if err != nil {
-		log.Fatalf("Failed to parse SNOWFLAKE_NODE_ID: %v", err)
+		log.Fatalf("prepareSnowflakeNode(): %v", err)
 	}
-	db, err := db.Open(dbURL, snowflakeNodeId)
+	db, err := db.Open(dbURL, db.WithSnowflakeNode(snowflakeNode))
 	if err != nil {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
@@ -106,4 +104,21 @@ func configureCORS(e *echo.Echo) {
 			AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
 		}))
 	}
+}
+
+func prepareSnowflakeNode() (*snowflake.Node, error) {
+	snowflakeNodeIDStr := os.Getenv("SNOWFLAKE_NODE_ID")
+	if snowflakeNodeIDStr == "" {
+		return nil, errors.New("env var SNOWFLAKE_NODE_ID is not set or empty")
+	}
+	snowflakeNodeID, err := strconv.ParseInt(snowflakeNodeIDStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse SNOWFLAKE_NODE_ID: %v", err)
+	}
+	node, err := snowflake.NewNode(snowflakeNodeID)
+	if err != nil {
+		return nil, fmt.Errorf("snowflake.NewNode(%v): %v", snowflakeNodeID, err)
+	}
+
+	return node, nil
 }

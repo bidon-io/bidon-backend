@@ -19,7 +19,7 @@ func NewLineItemRepo(d *db.DB) *LineItemRepo {
 	return &LineItemRepo{
 		resourceRepo: &resourceRepo[admin.LineItem, admin.LineItemAttrs, db.LineItem]{
 			db:           d,
-			mapper:       lineItemMapper{},
+			mapper:       lineItemMapper{db: d},
 			associations: []string{"App", "Account"},
 		},
 	}
@@ -39,7 +39,9 @@ func (r *LineItemRepo) FindOwnedByUser(ctx context.Context, userID int64, id int
 	})
 }
 
-type lineItemMapper struct{}
+type lineItemMapper struct {
+	db *db.DB
+}
 
 //lint:ignore U1000 this method is used by generic struct
 func (m lineItemMapper) dbModel(i *admin.LineItemAttrs, id int64) *db.LineItem {
@@ -55,6 +57,12 @@ func (m lineItemMapper) dbModel(i *admin.LineItemAttrs, id int64) *db.LineItem {
 		format.Valid = true
 	}
 
+	var publicUID sql.NullInt64
+	if id == 0 {
+		publicUID.Int64 = m.db.GenerateSnowflakeID()
+		publicUID.Valid = true
+	}
+
 	return &db.LineItem{
 		Model:       db.Model{ID: id},
 		AppID:       i.AppID,
@@ -66,6 +74,7 @@ func (m lineItemMapper) dbModel(i *admin.LineItemAttrs, id int64) *db.LineItem {
 		AdType:      db.AdTypeFromDomain(i.AdType),
 		Extra:       i.Extra,
 		Format:      format,
+		PublicUID:   publicUID,
 	}
 }
 

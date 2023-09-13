@@ -75,7 +75,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) find(ctx context.Contex
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 	dbModel := r.mapper.dbModel(attrs, 0)
 
-	if err := r.db.Set("snowflakeNode", r.db.SnowflakeNode).WithContext(ctx).Create(dbModel).Error; err != nil {
+	if err := r.db.WithContext(ctx).Create(dbModel).Error; err != nil {
 		return nil, err
 	}
 

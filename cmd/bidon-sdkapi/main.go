@@ -50,7 +50,7 @@ func main() {
 	defer sentry.Flush(sentryConf.FlushTimeout)
 
 	dbURL := os.Getenv("DATABASE_URL")
-	db, err := db.Open(dbURL, 0)
+	db, err := db.Open(dbURL)
 	if err != nil {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
