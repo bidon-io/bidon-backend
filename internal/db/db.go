@@ -45,7 +45,7 @@ func Open(databaseURL string, opts ...Option) (*DB, error) {
 	db := &DB{DB: gormDB}
 
 	for _, opt := range opts {
-		opt(&DB{DB: gormDB})
+		opt(db)
 	}
 
 	return db, nil
@@ -122,7 +122,7 @@ type AuctionConfiguration struct {
 	SegmentID                *sql.NullInt64        `gorm:"column:segment_id;type:bigint"`
 	Segment                  *Segment              `gorm:"foreignKey:SegmentID"`
 	ExternalWinNotifications *bool                 `gorm:"column:external_win_notifications;type:boolean;default:false;not null"`
-	PublicUID                *sql.NullInt64        `gorm:"column:public_uid;type:bigint"`
+	PublicUID                sql.NullInt64         `gorm:"column:public_uid;type:bigint"`
 }
 
 type Country struct {
@@ -177,7 +177,7 @@ type Segment struct {
 	AppID       int64            `gorm:"column:app_id;type:bigint;not null"`
 	App         App              `gorm:"foreignKey:AppID"`
 	Priority    int32            `gorm:"column:priority;type:integer;default:0;not null"`
-	PublicUID   *sql.NullInt64   `gorm:"column:public_uid;type:bigint"`
+	PublicUID   sql.NullInt64    `gorm:"column:public_uid;type:bigint"`
 }
 
 type User struct {

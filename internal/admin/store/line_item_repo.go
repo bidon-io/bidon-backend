@@ -45,19 +45,19 @@ type lineItemMapper struct {
 
 //lint:ignore U1000 this method is used by generic struct
 func (m lineItemMapper) dbModel(i *admin.LineItemAttrs, id int64) *db.LineItem {
-	var bidFloor decimal.NullDecimal
+	bidFloor := decimal.NullDecimal{}
 	if i.BidFloor != nil {
 		bidFloor.Decimal = *i.BidFloor
 		bidFloor.Valid = true
 	}
 
-	var format sql.NullString
+	format := sql.NullString{}
 	if i.Format != nil {
 		format.String = string(*i.Format)
 		format.Valid = true
 	}
 
-	var publicUID sql.NullInt64
+	publicUID := sql.NullInt64{}
 	if id == 0 {
 		publicUID.Int64 = m.db.GenerateSnowflakeID()
 		publicUID.Valid = true

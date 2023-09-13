@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -29,16 +28,5 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 		return errors.New("the combination of app_id, ad_type, and segment_id already exists")
 	}
 
-	return nil
-}
-
-// BeforeCreate hook to set PublicUID
-func (ac *AuctionConfiguration) BeforeCreate(tx *gorm.DB) (err error) {
-	publicUID, err := generatePublicUID(tx)
-	if err != nil {
-		return err
-	}
-
-	ac.PublicUID = &sql.NullInt64{Int64: publicUID, Valid: true}
 	return nil
 }
