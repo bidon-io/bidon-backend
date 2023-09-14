@@ -23,15 +23,27 @@ func NewDemandSourceAccountRepo(d *db.DB) *DemandSourceAccountRepo {
 	}
 }
 
+func (r DemandSourceAccountRepo) ListOwnedByUser(ctx context.Context, userID int64) ([]admin.DemandSourceAccount, error) {
+	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
+		return db.Where("user_id = ?", userID)
+	})
+}
+
+func (r DemandSourceAccountRepo) FindOwnedByUser(ctx context.Context, userID int64, id int64) (*admin.DemandSourceAccount, error) {
+	return r.find(ctx, id, func(db *gorm.DB) *gorm.DB {
+		return db.Where("user_id = ?", userID)
+	})
+}
+
 func (r DemandSourceAccountRepo) ListOwnedByUserOrShared(ctx context.Context, userID int64) ([]admin.DemandSourceAccount, error) {
 	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
-		return db.Where("user_id IN ?", []int64{userID, 0})
+		return db.Where("user_id IN ?", []int64{userID, 0, 1})
 	})
 }
 
 func (r DemandSourceAccountRepo) FindOwnedByUserOrShared(ctx context.Context, userID int64, id int64) (*admin.DemandSourceAccount, error) {
 	return r.find(ctx, id, func(db *gorm.DB) *gorm.DB {
-		return db.Where("user_id IN ?", []int64{userID, 0})
+		return db.Where("user_id IN ?", []int64{userID, 0, 1})
 	})
 }
 
@@ -44,6 +56,7 @@ func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id
 	return &db.DemandSourceAccount{
 		Model:          db.Model{ID: id},
 		DemandSourceID: a.DemandSourceID,
+		Label:          a.Label,
 		UserID:         a.UserID,
 		Type:           a.Type,
 		Extra:          extra,
@@ -70,6 +83,7 @@ func (m demandSourceAccountMapper) resourceAttrs(a *db.DemandSourceAccount) admi
 
 	return admin.DemandSourceAccountAttrs{
 		UserID:         a.UserID,
+		Label:          a.Label,
 		Type:           a.Type,
 		DemandSourceID: a.DemandSourceID,
 		IsBidding:      a.IsBidding,
