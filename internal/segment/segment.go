@@ -22,6 +22,7 @@ type Params struct {
 
 type Segment struct {
 	ID      int64    `json:"id"`
+	UID     int64    `json:"uid"`
 	Filters []Filter `json:"filters"`
 }
 
