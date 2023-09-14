@@ -51,7 +51,7 @@ func (m *Matcher) Match(ctx context.Context, params *Params) Segment {
 
 	for _, sgmnt := range sgmnts {
 		if isSegmentMatch(sgmnt, params) {
-			return Segment{ID: sgmnt.ID}
+			return sgmnt
 		}
 	}
 
