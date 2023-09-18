@@ -11,6 +11,7 @@ import { ResourceTableFields } from "@/constants";
 
 const columns = [
   ResourceTableFields.Id,
+  { field: "publicUid", header: "Public UID" },
   ResourceTableFields.App,
   ResourceTableFields.DemandSource,
   ResourceTableFields.DemandSourceAccount,

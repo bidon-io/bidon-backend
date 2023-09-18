@@ -22,6 +22,7 @@ const resource = response.data;
 
 const fields = [
   ResourceCardFields.Id,
+  { label: "Public UID", key: "publicUid" },
   { label: "Email", key: "email" },
   { label: "Is Admin", key: "isAdmin" },
 ];

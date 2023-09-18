@@ -2,6 +2,7 @@ package adminstore
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
@@ -17,7 +18,7 @@ func NewDemandSourceAccountRepo(d *db.DB) *DemandSourceAccountRepo {
 	return &DemandSourceAccountRepo{
 		resourceRepo: &resourceRepo[admin.DemandSourceAccount, admin.DemandSourceAccountAttrs, db.DemandSourceAccount]{
 			db:           d,
-			mapper:       demandSourceAccountMapper{},
+			mapper:       demandSourceAccountMapper{db: d},
 			associations: []string{"User", "DemandSource"},
 		},
 	}
@@ -47,11 +48,19 @@ func (r DemandSourceAccountRepo) FindOwnedByUserOrShared(ctx context.Context, us
 	})
 }
 
-type demandSourceAccountMapper struct{}
+type demandSourceAccountMapper struct {
+	db *db.DB
+}
 
 //lint:ignore U1000 this method is used by generic struct
 func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id int64) *db.DemandSourceAccount {
 	extra, _ := json.Marshal(a.Extra)
+
+	publicUID := sql.NullInt64{}
+	if id == 0 {
+		publicUID.Int64 = m.db.GenerateSnowflakeID()
+		publicUID.Valid = true
+	}
 
 	return &db.DemandSourceAccount{
 		Model:          db.Model{ID: id},
@@ -61,6 +70,7 @@ func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id
 		Type:           a.Type,
 		Extra:          extra,
 		IsBidding:      a.IsBidding,
+		PublicUID:      publicUID,
 	}
 }
 
@@ -68,6 +78,7 @@ func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id
 func (m demandSourceAccountMapper) resource(a *db.DemandSourceAccount) admin.DemandSourceAccount {
 	return admin.DemandSourceAccount{
 		ID:                       a.ID,
+		PublicUID:                a.PublicUID.Int64,
 		DemandSourceAccountAttrs: m.resourceAttrs(a),
 		User:                     userMapper{}.resource(&a.User),
 		DemandSource: admin.DemandSource{
