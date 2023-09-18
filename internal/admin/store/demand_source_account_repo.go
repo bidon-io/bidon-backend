@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -78,7 +79,7 @@ func (m demandSourceAccountMapper) dbModel(a *admin.DemandSourceAccountAttrs, id
 func (m demandSourceAccountMapper) resource(a *db.DemandSourceAccount) admin.DemandSourceAccount {
 	return admin.DemandSourceAccount{
 		ID:                       a.ID,
-		PublicUID:                a.PublicUID.Int64,
+		PublicUID:                strconv.FormatInt(a.PublicUID.Int64, 10),
 		DemandSourceAccountAttrs: m.resourceAttrs(a),
 		User:                     userMapper{}.resource(&a.User),
 		DemandSource: admin.DemandSource{

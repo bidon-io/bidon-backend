@@ -8,8 +8,8 @@ import (
 )
 
 type AppDemandProfile struct {
-	ID        int64 `json:"id"`
-	PublicUID int64 `json:"public_uid"`
+	ID        int64  `json:"id"`
+	PublicUID string `json:"public_uid"`
 	AppDemandProfileAttrs
 	App          App                 `json:"app"`
 	Account      DemandSourceAccount `json:"account"`

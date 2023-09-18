@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
@@ -80,7 +81,7 @@ func (m userMapper) dbModel(u *admin.UserAttrs, id int64) *db.User {
 func (m userMapper) resource(u *db.User) admin.User {
 	return admin.User{
 		ID:        u.ID,
-		PublicUID: u.PublicUID.Int64,
+		PublicUID: strconv.FormatInt(u.PublicUID.Int64, 10),
 		Email:     u.Email,
 		IsAdmin:   u.IsAdmin,
 	}

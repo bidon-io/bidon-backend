@@ -3,6 +3,7 @@ package adminstore
 import (
 	"context"
 	"database/sql"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -75,7 +76,7 @@ func (m appMapper) dbModel(a *admin.AppAttrs, id int64) *db.App {
 func (m appMapper) resource(a *db.App) admin.App {
 	return admin.App{
 		ID:        a.ID,
-		PublicUID: a.PublicUID.Int64,
+		PublicUID: strconv.FormatInt(a.PublicUID.Int64, 10),
 		AppAttrs:  m.resourceAttrs(a),
 		User:      userMapper{}.resource(&a.User),
 	}

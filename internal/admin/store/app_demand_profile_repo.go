@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -66,7 +67,7 @@ func (m appDemandProfileMapper) dbModel(attrs *admin.AppDemandProfileAttrs, id i
 func (m appDemandProfileMapper) resource(p *db.AppDemandProfile) admin.AppDemandProfile {
 	return admin.AppDemandProfile{
 		ID:                    p.ID,
-		PublicUID:             p.PublicUID.Int64,
+		PublicUID:             strconv.FormatInt(p.PublicUID.Int64, 10),
 		AppDemandProfileAttrs: m.resourceAttrs(p),
 		App: admin.App{
 			ID:       p.AppID,

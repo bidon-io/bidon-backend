@@ -7,8 +7,8 @@ import (
 )
 
 type App struct {
-	ID        int64 `json:"id"`
-	PublicUID int64 `json:"public_uid"`
+	ID        int64  `json:"id"`
+	PublicUID string `json:"public_uid"`
 	AppAttrs
 	User User `json:"user"`
 }
