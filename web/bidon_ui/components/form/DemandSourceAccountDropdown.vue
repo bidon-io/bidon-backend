@@ -50,17 +50,25 @@ const buildOptions = (accounts) =>
     label: `(${type.split("::")[1]}) ${label ? label : `#${id}`}`,
   }));
 
+const fetchAccounts = async () => {
+  const response = await axios.get("/demand_source_accounts");
+  return response.data;
+};
+
+// if accounts are passed as props, use them, otherwise fetch them
 const options = ref([]);
 if (props.accounts.length > 0) {
   options.value = buildOptions(props.accounts);
 } else {
-  axios
-    .get("/demand_source_accounts")
-    .then((response) => {
-      options.value = buildOptions(response.data);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  const accounts = await fetchAccounts();
+  options.value = buildOptions(accounts);
 }
+
+// if accounts are passed as props, watch them for changes
+watch(
+  () => props.accounts,
+  (accounts) => {
+    options.value = buildOptions(accounts);
+  }
+);
 </script>
