@@ -1,7 +1,7 @@
 <template>
   <transition-group name="p-message" tag="div">
-    <Message v-if="submitError" severity="error">{{
-      submitErrorMsg
+    <Message v-for="(msg, index) in errorMsgs" :key="index" severity="error">{{
+      msg
     }}</Message>
   </transition-group>
   <form @submit="onSubmit">
@@ -116,15 +116,28 @@ const apiKey = computed(() =>
   accountType.value ? accountType.value.split("::")[1].toLowerCase() : ""
 );
 
-const submitErrorMsg = computed(() => {
-  console.log("submitError", props.submitError);
-  if (!props.submitError) return "";
+const errorMsgs = ref([]);
+watch(
+  () => props.submitError,
+  () => {
+    if (!props.submitError) return;
 
-  const error = props.submitError.response.data.error;
-  return error
-    ? `Status Code ${error.code} ${error.message}`
-    : `Status Code ${props.submitError.status} ${props.submitError.statusText}`;
-});
+    const error = props.submitError.response.data.error;
+    const errorMessage = error
+      ? `Status Code ${error.code} ${error.message}`
+      : `Status Code ${props.submitError.status} ${props.submitError.statusText}`;
+    errorMsgs.value.push(errorMessage);
+  }
+);
+// const submitErrorMsgs = computed(() => {
+//   console.log("submitError", props.submitError);
+//   if (!props.submitError) return [];
+
+//   const error = props.submitError.response.data.error;
+//   return error
+//     ? [`Status Code ${error.code} ${error.message}`]
+//     : [`Status Code ${props.submitError.status} ${props.submitError.statusText}`];
+// });
 
 // reset accountId when accountType changes
 watch(accountType, () => (accountId.value = null));

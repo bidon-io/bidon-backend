@@ -19,12 +19,6 @@ const error = ref(null);
 const handleSubmit = useCreateResource({
   path: resourcesPath,
   message: "Line Item created!",
-  onError: async (e) => {
-    debugger;
-    error.value = e;
-  },
-});
-watch(error, () => {
-  console.log("HUU", error.value);
+  onError: async (e) => (error.value = e),
 });
 </script>
