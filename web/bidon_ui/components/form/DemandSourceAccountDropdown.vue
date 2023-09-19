@@ -6,6 +6,7 @@
       option-label="label"
       option-value="id"
       class="w-full md:w-14rem"
+      :disabled="disabled"
       placeholder="Select Demand source account"
     />
   </FormField>
@@ -27,6 +28,10 @@ const props = defineProps({
   modelValue: {
     type: [Number, null],
     default: null,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
   accounts: {
     type: Array,

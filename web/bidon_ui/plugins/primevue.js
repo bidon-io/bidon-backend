@@ -13,6 +13,7 @@ import ToastService from "primevue/toastservice";
 import ConfirmDialog from "primevue/confirmdialog";
 import ConfirmationService from "primevue/confirmationservice";
 import Checkbox from "primevue/checkbox";
+import Message from "primevue/message";
 
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.use(PrimeVue, { ripple: true });
@@ -29,4 +30,5 @@ export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.component("InputNumber", InputNumber);
   nuxtApp.vueApp.component("InputText", InputText);
   nuxtApp.vueApp.component("Textarea", Textarea);
+  nuxtApp.vueApp.component("Message", Message);
 });

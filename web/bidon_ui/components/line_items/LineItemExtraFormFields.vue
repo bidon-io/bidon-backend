@@ -7,31 +7,59 @@
   </template>
   <template v-if="apiKey == 'amazone'">
     <VeeFormFieldWrapper field="extra.slotUuid" label="Slot Uuid" required />
-  </template> 
+  </template>
   <template v-if="apiKey == 'bigoads'">
     <VeeFormFieldWrapper field="extra.slotId" label="Slot Id" required />
   </template>
   <template v-if="apiKey == 'dtexchange'">
-    <VeeFormFieldWrapper field="extra.plcementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.plcementId"
+      label="Placement Id"
+      required
+    />
   </template>
   <template v-if="apiKey == 'inmobi'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
   </template>
   <template v-if="apiKey == 'meta'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
   </template>
   <template v-if="apiKey == 'mintegral'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
     <VeeFormFieldWrapper field="extra.adUnitId" label="Ad Unit Id" required />
   </template>
   <template v-if="apiKey == 'unityads'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
   </template>
   <template v-if="apiKey == 'vungle'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
   </template>
   <template v-if="apiKey == 'mobilefuse'">
-    <VeeFormFieldWrapper field="extra.placementId" label="Placement Id" required />
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
   </template>
 </template>
 

@@ -1,4 +1,9 @@
 <template>
+  <transition-group name="p-message" tag="div">
+    <Message v-if="submitError" severity="error">{{
+      submitErrorMsg
+    }}</Message>
+  </transition-group>
   <form @submit="onSubmit">
     <FormCard title="Line Item">
       <AppDropdown v-model="appId" :error="errors.appId" required />
@@ -6,6 +11,7 @@
       <AdFormatDropdown v-model="format" :error="errors.format" required />
       <DemandSourceTypeDropdown
         v-model="accountType"
+        label="Demand Source"
         :error="errors.accountType"
         required
       />
@@ -13,6 +19,7 @@
         v-model="accountId"
         :error="errors.accountId"
         :accounts="demandSourceAccounts"
+        :disabled="!accountType"
         required
       />
       <FormField label="Label" :error="errors.humanName" required>
@@ -27,11 +34,11 @@
           placeholder="Bid Floor"
         />
       </FormField>
-      <FormField label="Code" :error="errors.code" required>
+      <!-- <FormField label="Code" :error="errors.code" required>
         <InputText v-model="code" type="text" placeholder="Code" />
-      </FormField>
+      </FormField> -->
       <LineItemExtraFormFields v-model:schema="extraSchema" :api-key="apiKey" />
-      <FormSubmitButton />
+      <FormSubmitButton :disabled="!meta.valid" />
     </FormCard>
   </form>
 </template>
@@ -45,12 +52,16 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  submitError: {
+    type: [Error, null],
+    default: null,
+  },
 });
 const emit = defineEmits(["submit"]);
 const resource = ref(props.value);
 
 const extraSchema = ref(yup.object());
-const { errors, useFieldModel, handleSubmit } = useForm({
+const { errors, meta, useFieldModel, handleSubmit } = useForm({
   validationSchema: computed(() =>
     yup.object({
       humanName: yup.string().required().label("Label"),
@@ -66,8 +77,8 @@ const { errors, useFieldModel, handleSubmit } = useForm({
             schema.required("Format is required for Banner Ad Type"),
         }),
       accountId: yup.number().required().label("Account Id"),
-      accountType: yup.string().required().label("Demand Source Type"),
-      code: yup.string().required().label("Code"),
+      accountType: yup.string().required().label("Demand Source"),
+      // code: yup.string().required().label("Code"),
       extra: extraSchema.value,
     })
   ),
@@ -79,7 +90,7 @@ const { errors, useFieldModel, handleSubmit } = useForm({
     adFormat: resource.value.format || "",
     accountId: resource.value.accountId || null,
     accountType: resource.value.accountType || "",
-    code: resource.value.code || "",
+    // code: resource.value.code || "",
     extra: resource.value.extra || {},
   },
 });
@@ -91,7 +102,7 @@ const adType = useFieldModel("adType");
 const format = useFieldModel("format");
 const accountId = useFieldModel("accountId");
 const accountType = useFieldModel("accountType");
-const code = useFieldModel("code");
+// const code = useFieldModel("code");
 
 const response = await axios.get("/demand_source_accounts");
 const demandSourceAccountsAll = response.data;
@@ -104,6 +115,16 @@ const demandSourceAccounts = computed(() =>
 const apiKey = computed(() =>
   accountType.value ? accountType.value.split("::")[1].toLowerCase() : ""
 );
+
+const submitErrorMsg = computed(() => {
+  console.log("submitError", props.submitError);
+  if (!props.submitError) return "";
+
+  const error = props.submitError.response.data.error;
+  return error
+    ? `Status Code ${error.code} ${error.message}`
+    : `Status Code ${props.submitError.status} ${props.submitError.statusText}`;
+});
 
 // reset accountId when accountType changes
 watch(accountType, () => (accountId.value = null));
