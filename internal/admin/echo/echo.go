@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
@@ -16,12 +17,13 @@ import (
 	"github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	session "github.com/spazzymoto/echo-scs-session"
 )
 
 func UseAuthorization(g *echo.Group, authService *auth.Service) {
+	sm := authService.GetSessionManager()
 	g.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-		// Do not check basic auth if JWT token is present.
-		Skipper: authIsBearer,
+		Skipper: skipIfSessionCookieOrAuth(sm, "Bearer"),
 		Validator: func(username, password string, c echo.Context) (bool, error) {
 			if authService.IsSuperUser(username, password) {
 				c.Set("authCtx", stubAuthContext{})
@@ -33,11 +35,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(echojwt.WithConfig(echojwt.Config{
-		Skipper: func(c echo.Context) bool {
-			// Skip if basic auth already set auth context.
-			authCtx := c.Get("authCtx")
-			return authCtx != nil
-		},
+		Skipper: skipIfSessionCookieOrAuth(sm, "Basic"),
 		SuccessHandler: func(c echo.Context) {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(*auth.JWTClaims)
@@ -51,6 +49,22 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 			return authService.GetSecretKey(), nil
 		},
 	}))
+	g.Use(session.LoadAndSaveWithConfig(session.SessionConfig{
+		Skipper:        skipIfAuthIs("Bearer", "Basic"),
+		SessionManager: sm,
+	}))
+	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if skipIfAuthIs("Bearer", "Basic")(c) {
+				return next(c)
+			}
+
+			authCtx := authService.NewSessionAuthContext(c.Request().Context())
+			c.Set("authCtx", authCtx)
+
+			return next(c)
+		}
+	})
 }
 
 func RegisterAuthService(g *echo.Group, service *auth.Service) {
@@ -60,7 +74,37 @@ func RegisterAuthService(g *echo.Group, service *auth.Service) {
 			return err
 		}
 
-		response, err := service.LogIn(c.Request().Context(), r)
+		err := service.LogInWithSession(c.Request().Context(), r)
+		if err != nil {
+			if errors.Is(err, auth.ErrInvalidCredentials) {
+				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+			}
+
+			return err
+		}
+
+		return c.JSON(http.StatusOK, map[string]any{"success": true})
+	}, session.LoadAndSaveWithConfig(session.SessionConfig{
+		SessionManager: service.GetSessionManager(),
+	}))
+	g.POST("/logout", func(c echo.Context) error {
+		err := service.DestroySession(c.Request().Context())
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, map[string]any{"success": true})
+	}, session.LoadAndSaveWithConfig(session.SessionConfig{
+		SessionManager: service.GetSessionManager(),
+	}))
+
+	g.POST("/authorize", func(c echo.Context) error {
+		var r auth.LogInRequest
+		if err := c.Bind(&r); err != nil {
+			return err
+		}
+
+		response, err := service.LogInWithAccessToken(c.Request().Context(), r)
 		if err != nil {
 			if errors.Is(err, auth.ErrInvalidCredentials) {
 				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
@@ -306,19 +350,40 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) delete(c
 func getAuthContext(c echo.Context) (admin.AuthContext, error) {
 	authCtx, ok := c.Get("authCtx").(admin.AuthContext)
 	if !ok {
-		return nil, fmt.Errorf("failed to get auth context from request")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "unauthorized").SetInternal(
+			fmt.Errorf("failed to get auth context from request"),
+		)
 	}
 
 	return authCtx, nil
 }
 
-func authIsBearer(c echo.Context) bool {
-	header := c.Request().Header.Get(echo.HeaderAuthorization)
+func skipIfSessionCookieOrAuth(sm *scs.SessionManager, prefixes ...string) middleware.Skipper {
+	cookieSkipper := skipIfSessionCookie(sm)
+	authSkipper := skipIfAuthIs(prefixes...)
+	return func(c echo.Context) bool {
+		return cookieSkipper(c) || authSkipper(c)
+	}
+}
 
-	const prefix = "Bearer "
-	if len(header) < len(prefix) || !strings.EqualFold(header[:len(prefix)], prefix) {
+func skipIfSessionCookie(sm *scs.SessionManager) middleware.Skipper {
+	return func(c echo.Context) bool {
+		_, err := c.Cookie(sm.Cookie.Name)
+		return err == nil
+	}
+}
+
+func skipIfAuthIs(prefixes ...string) middleware.Skipper {
+	return func(c echo.Context) bool {
+		header := c.Request().Header.Get(echo.HeaderAuthorization)
+
+		for _, prefix := range prefixes {
+			prefix = prefix + " "
+			if len(header) >= len(prefix) && strings.EqualFold(header[:len(prefix)], prefix) {
+				return true
+			}
+		}
+
 		return false
 	}
-
-	return true
 }

@@ -21,5 +21,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     "/": { redirect: "/auction_configurations" },
+    "/auth/**": { proxy: "http://localhost:1323/auth/**" },
+    "/api/**": { proxy: "http://localhost:1323/api/**" },
   },
 });

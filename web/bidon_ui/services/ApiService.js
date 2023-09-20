@@ -24,8 +24,10 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response.status === 401) {
-      useAuthStore().logout();
-      window.location.reload();
+      let router = useRouter();
+      // useAuthStore().logout();
+      router.push("/login");
+      // window.location.reload();
     }
     throw error;
   },
@@ -35,10 +37,12 @@ api.interceptors.response.use(
 api.interceptors.request.use((config) => {
   const newConfig = { ...config };
 
-  const { accessToken } = useAuthStore();
-  if (accessToken) {
-    newConfig.headers["Authorization"] = `Bearer ${accessToken}`;
-  }
+  newConfig.withCredentials = true;
+
+  // const { accessToken } = useAuthStore();
+  // if (accessToken) {
+  //   newConfig.headers["Authorization"] = `Bearer ${accessToken}`;
+  // }
 
   if (newConfig.headers["Content-Type"] === "multipart/form-data")
     return newConfig;

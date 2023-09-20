@@ -19,10 +19,6 @@ export const useAuthStore = defineStore("authStore", () => {
     api
       .post("/auth/login", { email, password })
       .then((response) => {
-        user.value = camelizeKeys(response.data.user);
-        accessToken.value = response.data["access_token"];
-        localStorage.setItem("user", JSON.stringify(user.value));
-        localStorage.setItem("accessToken", accessToken.value);
         router.push("/");
       })
       .catch((error) => {
@@ -36,11 +32,11 @@ export const useAuthStore = defineStore("authStore", () => {
   }
 
   async function logout() {
-    user.value = null;
-    accessToken.value = null;
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    router.push("/login");
+    api
+        .post("/auth/logout")
+        .then((response) => {
+            router.push("/login");
+        });
   }
 
   return {
