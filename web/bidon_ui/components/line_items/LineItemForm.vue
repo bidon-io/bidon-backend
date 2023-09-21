@@ -42,16 +42,16 @@
           <div class="flex align-items-center">
             <RadioButton
               v-model="auctionType"
-              input-id="rtbAuction"
+              input-id="defaultAuction"
               name="auctionType"
-              value="rtb"
+              value="default"
             />
-            <label for="rtbAuction" class="ml-2">RTB</label>
+            <label for="defaultAuction" class="ml-2">Default</label>
           </div>
         </div>
       </FormField>
       <FormField
-        v-if="auctionType === 'rtb'"
+        v-if="auctionType === 'default'"
         label="Bid Floor"
         :error="errors.bidFloor"
         required
@@ -64,9 +64,9 @@
           placeholder="Bid Floor"
         />
       </FormField>
-      <!-- <FormField label="Code" :error="errors.code" required>
+      <FormField label="Code" :error="errors.code" required>
         <InputText v-model="code" type="text" placeholder="Code" />
-      </FormField> -->
+      </FormField>
       <LineItemExtraFormFields v-model:schema="extraSchema" :api-key="apiKey" />
       <FormSubmitButton :disabled="!meta.valid" />
     </FormCard>
@@ -91,7 +91,7 @@ const emit = defineEmits(["submit"]);
 const resource = ref(props.value);
 
 const extraSchema = ref(yup.object());
-const auctionType = ref("bidding");
+const auctionType = ref(resource.value.isBidding ? "bidding" : "default");
 
 const adTypeWithFormat = ref({
   adType: resource.value.adType,
@@ -103,7 +103,7 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
       humanName: yup.string().required().label("Label"),
       appId: yup.number().required().label("App Id"),
       bidFloor:
-        auctionType === "rtb"
+        auctionType !== "bidding"
           ? yup.number().positive().required().label("Bid Floor")
           : yup.number().nullable(true).positive().label("Bid Floor"),
       adType: yup.string().required().label("AdType"),
@@ -117,7 +117,8 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
         }),
       accountId: yup.number().required().label("Account Id"),
       accountType: yup.string().required().label("Demand Source"),
-      // code: yup.string().required().label("Code"),
+      isBidding: yup.boolean(),
+      code: yup.string().required().label("Code"),
       extra: extraSchema.value,
     })
   ),
@@ -131,7 +132,8 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
     adFormat: resource.value.format || null,
     accountId: resource.value.accountId || null,
     accountType: resource.value.accountType || "",
-    // code: resource.value.code || "",
+    isBidding: resource.value.isBidding || false,
+    code: resource.value.code || "",
     extra: resource.value.extra || {},
   },
 });
@@ -143,7 +145,8 @@ const adType = useFieldModel("adType");
 const format = useFieldModel("format");
 const accountId = useFieldModel("accountId");
 const accountType = useFieldModel("accountType");
-// const code = useFieldModel("code");
+const isBidding = useFieldModel("isBidding");
+const code = useFieldModel("code");
 
 // filter demand source accounts by account type
 const response = await axios.get("/demand_source_accounts");
@@ -165,11 +168,13 @@ watch(accountType, () => (accountId.value = null));
 
 // track adType and format together
 watchEffect(() => {
-  if (!adTypeWithFormat.value) return;
+  if (!adTypeWithFormat.value.adType) return;
 
   adType.value = adTypeWithFormat.value.adType;
   format.value = adTypeWithFormat.value.format;
 });
+
+watchEffect(() => (isBidding.value = auctionType.value === "bidding"));
 
 // push submit error to error messages
 const errorMsgs = ref([]);

@@ -75,6 +75,7 @@ func (m lineItemMapper) dbModel(i *admin.LineItemAttrs, id int64) *db.LineItem {
 		AdType:      db.AdTypeFromDomain(i.AdType),
 		Extra:       i.Extra,
 		Format:      format,
+		IsBidding:   i.IsBidding,
 		PublicUID:   publicUID,
 	}
 }
@@ -107,6 +108,7 @@ func (m lineItemMapper) resourceAttrs(i *db.LineItem) admin.LineItemAttrs {
 		AccountID:   i.AccountID,
 		AccountType: i.AccountType,
 		Code:        i.Code,
+		IsBidding:   i.IsBidding,
 		Extra:       i.Extra,
 	}
 }
