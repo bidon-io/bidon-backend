@@ -64,9 +64,6 @@
           placeholder="Bid Floor"
         />
       </FormField>
-      <FormField label="Code" :error="errors.code" required>
-        <InputText v-model="code" type="text" placeholder="Code" />
-      </FormField>
       <LineItemExtraFormFields v-model:schema="extraSchema" :api-key="apiKey" />
       <FormSubmitButton :disabled="!meta.valid" />
     </FormCard>
@@ -103,7 +100,7 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
       humanName: yup.string().required().label("Label"),
       appId: yup.number().required().label("App Id"),
       bidFloor:
-        auctionType !== "bidding"
+        auctionType.value !== "bidding"
           ? yup.number().positive().required().label("Bid Floor")
           : yup.number().nullable(true).positive().label("Bid Floor"),
       adType: yup.string().required().label("AdType"),
@@ -118,7 +115,6 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
       accountId: yup.number().required().label("Account Id"),
       accountType: yup.string().required().label("Demand Source"),
       isBidding: yup.boolean(),
-      code: yup.string().required().label("Code"),
       extra: extraSchema.value,
     })
   ),
@@ -129,11 +125,10 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
       ? parseFloat(resource.value.bidFloor)
       : null,
     adType: resource.value.adType || "",
-    adFormat: resource.value.format || null,
+    format: resource.value.format || null,
     accountId: resource.value.accountId || null,
     accountType: resource.value.accountType || "",
     isBidding: resource.value.isBidding || false,
-    code: resource.value.code || "",
     extra: resource.value.extra || {},
   },
 });
@@ -146,7 +141,6 @@ const format = useFieldModel("format");
 const accountId = useFieldModel("accountId");
 const accountType = useFieldModel("accountType");
 const isBidding = useFieldModel("isBidding");
-const code = useFieldModel("code");
 
 // filter demand source accounts by account type
 const response = await axios.get("/demand_source_accounts");

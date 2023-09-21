@@ -61,6 +61,9 @@
       required
     />
   </template>
+  <template v-if="apiKey == 'bidmachine'">
+    <VeeFormFieldWrapper field="extra.adUnitId" label="Ad Unit Id" required />
+  </template>
 </template>
 
 <script setup>
@@ -112,6 +115,9 @@ const dataSchemas = {
   }),
   mobilefuse: yup.object({
     placementId: yup.string().required().label("Placement Id"),
+  }),
+  bidmachine: yup.object({
+    adUnitId: yup.string().required().label("Ad Unit Id"),
   }),
 };
 
