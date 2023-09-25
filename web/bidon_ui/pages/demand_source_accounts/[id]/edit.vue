@@ -24,8 +24,10 @@ const { state: resource, isReady } = useAsyncState(async () => {
   return response.data;
 });
 
+const error = ref(null);
 const handleSubmit = useUpdateResource({
   path: resourcePath,
   message: "Demand source account updated!",
+  onError: async (e) => (error.value = e),
 });
 </script>

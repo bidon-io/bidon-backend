@@ -6,7 +6,7 @@
       option-label="email"
       option-value="id"
       class="w-full md:w-14rem"
-      placeholder="Select User"
+      placeholder="Shared"
     />
   </FormField>
 </template>
@@ -44,6 +44,7 @@ const users = ref([]);
 axios
   .get("/users")
   .then((response) => {
+    response.data.unshift({ id: null, email: "Shared" });
     users.value = response.data;
   })
   .catch((error) => {

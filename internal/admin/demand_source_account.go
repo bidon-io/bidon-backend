@@ -156,18 +156,22 @@ func (v *demandSourceAccountValidator) extraRule(demandSource *DemandSource) v8n
 			v8n.Key("publisher_id", v8n.Required, isString),
 			v8n.Key("endpoint", v8n.Required, is.URL),
 		)
+	case adapter.InmobiKey:
+		rule = v8n.Map(
+			v8n.Key("account_id", v8n.Required, isString),
+		)
 	case adapter.MintegralKey:
 		rule = v8n.Map(
 			v8n.Key("app_key", v8n.Required, isString),
 			v8n.Key("publisher_id", v8n.Required, isString),
 		)
-	case adapter.VungleKey:
-		rule = v8n.Map(
-			v8n.Key("account_id", v8n.Required, isString),
-		)
 	case adapter.MobileFuseKey:
 		rule = v8n.Map(
 			v8n.Key("publisher_id", v8n.Required, isString),
+		)
+	case adapter.VungleKey:
+		rule = v8n.Map(
+			v8n.Key("account_id", v8n.Required, isString),
 		)
 	}
 
