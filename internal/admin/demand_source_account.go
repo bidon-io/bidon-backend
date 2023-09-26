@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -35,7 +34,7 @@ func NewDemandSourceAccountService(store Store) *DemandSourceAccountService {
 	s.policy = newDemandSourceAccountPolicy(store)
 
 	s.prepareCreateAttrs = func(authCtx AuthContext, attrs *DemandSourceAccountAttrs) {
-		if attrs.UserID == 0 {
+		if attrs.UserID == 0 && !authCtx.IsAdmin() {
 			attrs.UserID = authCtx.UserID()
 		}
 	}
