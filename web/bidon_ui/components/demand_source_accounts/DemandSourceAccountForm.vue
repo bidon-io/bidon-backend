@@ -46,6 +46,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  submitError: {
+    type: [Error, null],
+    default: null,
+  },
 });
 const emit = defineEmits(["submit"]);
 const resource = ref(props.value);

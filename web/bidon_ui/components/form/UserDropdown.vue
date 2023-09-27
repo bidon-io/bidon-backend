@@ -44,8 +44,7 @@ const users = ref([]);
 axios
   .get("/users")
   .then((response) => {
-    response.data.unshift({ id: null, email: "Shared" });
-    users.value = response.data;
+    users.value = [{ id: null, email: "Shared" }, ...response.data];
   })
   .catch((error) => {
     console.error(error);

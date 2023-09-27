@@ -6,6 +6,7 @@
     <DemandSourceAccountForm
       v-if="isReady"
       :value="resource"
+      :submit-error="error"
       @submit="handleSubmit"
     />
   </PageContainer>
