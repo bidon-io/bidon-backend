@@ -198,7 +198,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AccountID: "inmobi",
 					AppKey:    fmt.Sprintf("inmobi_app_%d", apps[1].ID),
 				},
-				&sdkapi.AmazonInitConfig{},
+				&sdkapi.AmazonInitConfig{
+					AppKey: fmt.Sprintf("amazon_app_%d", apps[1].ID),
+					Slots:  []sdkapi.AmazonSlot{},
+				},
 			},
 		},
 	}
