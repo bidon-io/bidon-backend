@@ -40,7 +40,6 @@ defineProps({
     default: () => [],
   },
 });
-// const emit = defineEmits(["attach"]);
 const emit = defineEmits(["update:modelValue"]);
 const value = computed({
   get() {
@@ -74,8 +73,6 @@ const onUpload = (event) => {
     content.value = contentValue;
 
     value.value = contentToJson(contentValue);
-
-    // emit("attach", contentToJson(contentValue));
   };
   reader.readAsText(file);
 };
