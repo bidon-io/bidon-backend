@@ -129,7 +129,7 @@ const dataSchemas = {
   }),
 };
 
-watch(props, () => console.log('AdType + ApiKet' ,props.apiKey, props.adType));
+watch(props, () => console.log("AdType + ApiKet", props.apiKey, props.adType));
 
 const schema = computed(() => dataSchemas[props.apiKey] || yup.object());
 watchEffect(() => {
