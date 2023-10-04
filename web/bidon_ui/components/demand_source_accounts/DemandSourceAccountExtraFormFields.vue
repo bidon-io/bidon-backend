@@ -70,11 +70,15 @@ const dataSchemas = {
       .test(
         "is-url-or-host",
         "Must be a valid URL or host",
-        (value) => (
+        (value) =>
           yup.string().url().isValidSync(value) ||
           (value.replaceAll(".", "").length <= 255 &&
-            yup.string().matches(/^([a-zA-Z0-9_][a-zA-Z0-9_-]{0,62})(\.[a-zA-Z0-9_][a-zA-Z0-9_-]{0,62})*[._]?$/).isValidSync(value)) // regexp is from https://github.com/asaskevich/govalidator/blob/a9d515a09cc289c60d55064edec5ef189859f172/patterns.go#L33
-        )
+            yup
+              .string()
+              .matches(
+                /^([a-zA-Z0-9_][a-zA-Z0-9_-]{0,62})(\.[a-zA-Z0-9_][a-zA-Z0-9_-]{0,62})*[._]?$/
+              )
+              .isValidSync(value)) // regexp is from https://github.com/asaskevich/govalidator/blob/a9d515a09cc289c60d55064edec5ef189859f172/patterns.go#L33
       )
       .label("Endpoint"),
     mediationConfig: yup
