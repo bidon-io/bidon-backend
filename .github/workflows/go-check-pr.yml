@@ -19,9 +19,9 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_BIDON_BACKEND_TOKEN }}
+          url: ${{ secrets.CODECOV_URL }}
           directory: ./testcov/
           fail_ci_if_error: true
-          verbose: true
 
       - run: docker compose -f docker-compose.go-test.yml down --rmi local -v
         if: always()
