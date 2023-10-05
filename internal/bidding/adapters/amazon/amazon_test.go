@@ -55,7 +55,7 @@ func TestAdapter_FetchBids(t *testing.T) {
 										"price_point": "price_point_1"
 									},
 									{
-										"slo_uuid": "slot_uuid_2",
+										"slot_uuid": "slot_uuid_2",
 										"price_point": "price_point_2"
 									},
 									{
