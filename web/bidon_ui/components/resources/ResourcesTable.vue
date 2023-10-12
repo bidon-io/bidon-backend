@@ -122,6 +122,7 @@ const props = defineProps<{
   columns: Column[];
 }>();
 
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
 const response = await $apiFetch<any[]>(props.resourcesPath);
 
 const resources = ref(response);
