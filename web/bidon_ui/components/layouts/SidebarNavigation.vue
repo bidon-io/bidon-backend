@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import {pluralize, titleize} from "inflection";
+import { pluralize, titleize } from "inflection";
 
 const resources = useResources();
 const route = useRoute();

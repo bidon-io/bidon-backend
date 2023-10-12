@@ -7,14 +7,16 @@
 </template>
 
 <script setup lang="ts">
-import {camelize, singularize} from "inflection";
+import { camelize, singularize } from "inflection";
 
 const props = defineProps<{
   resourcesPath: string;
   label: string;
 }>();
 
-const key = computed(() => camelize(singularize(props.resourcesPath.replace('/', '')), true));
+const key = computed(() =>
+  camelize(singularize(props.resourcesPath.replace("/", "")), true),
+);
 
 const resources = useResources();
 const resource = computed(() => resources.state[key.value] ?? {});

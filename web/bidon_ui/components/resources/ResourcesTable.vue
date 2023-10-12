@@ -122,7 +122,7 @@ const props = defineProps<{
   columns: Column[];
 }>();
 
-const response = await $apiFetch<any[]>(props.resourcesPath)
+const response = await $apiFetch<any[]>(props.resourcesPath);
 
 const resources = ref(response);
 const selectedResources = ref([]);

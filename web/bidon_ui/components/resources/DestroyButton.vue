@@ -1,8 +1,5 @@
 <template>
-  <a
-    href="_"
-    @:click.prevent="() => deleteHandle(id)"
-  >
+  <a href="_" @:click.prevent="() => deleteHandle(id)">
     <Button label="Delete" icon="pi pi pi-trash" severity="danger" />
   </a>
 </template>
