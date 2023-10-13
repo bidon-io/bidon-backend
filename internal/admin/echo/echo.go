@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
@@ -23,7 +22,7 @@ import (
 func UseAuthorization(g *echo.Group, authService *auth.Service) {
 	sm := authService.GetSessionManager()
 	g.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-		Skipper: skipIfSessionCookieOrAuth(sm, "Bearer"),
+		Skipper: skipIfWebAppOrAuth("Bearer"),
 		Validator: func(username, password string, c echo.Context) (bool, error) {
 			if authService.IsSuperUser(username, password) {
 				c.Set("authCtx", stubAuthContext{})
@@ -35,7 +34,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(echojwt.WithConfig(echojwt.Config{
-		Skipper: skipIfSessionCookieOrAuth(sm, "Basic"),
+		Skipper: skipIfWebAppOrAuth("Basic"),
 		SuccessHandler: func(c echo.Context) {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(*auth.JWTClaims)
@@ -50,17 +49,19 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(session.LoadAndSaveWithConfig(session.SessionConfig{
-		Skipper:        skipIfAuthIs("Bearer", "Basic"),
+		Skipper:        skipIfNotWebApp(),
 		SessionManager: sm,
 	}))
 	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			if skipIfAuthIs("Bearer", "Basic")(c) {
+			if skipIfNotWebApp()(c) {
 				return next(c)
 			}
 
 			authCtx := authService.NewSessionAuthContext(c.Request().Context())
-			c.Set("authCtx", authCtx)
+			if authCtx != nil {
+				c.Set("authCtx", authCtx)
+			}
 
 			return next(c)
 		}
@@ -155,39 +156,41 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 	resourceRoutes := []resourceRoute{
 		{
 			group:   g.Group("/apps"),
-			handler: &appHandler{service.AppService},
+			handler: &appServiceHandler{service.AppService},
 		},
 		{
 			group:   g.Group("/app_demand_profiles"),
-			handler: &appDemandProfileHandler{service.AppDemandProfileService},
+			handler: &appDemandProfileServiceHandler{service.AppDemandProfileService},
 		},
 		{
 			group:   g.Group("/auction_configurations"),
-			handler: &auctionConfigurationHandler{service.AuctionConfigurationService},
+			handler: &auctionConfigurationServiceHandler{service.AuctionConfigurationService},
 		},
 		{
 			group:   g.Group("/countries"),
-			handler: &countryHandler{service.CountryService},
+			handler: &countryServiceHandler{service.CountryService},
 		},
 		{
 			group:   g.Group("/demand_sources"),
-			handler: &demandSourceHandler{service.DemandSourceService},
+			handler: &demandSourceServiceHandler{service.DemandSourceService},
 		},
 		{
 			group:   g.Group("/demand_source_accounts"),
-			handler: &demandSourceAccountHandler{service.DemandSourceAccountService},
+			handler: &demandSourceAccountServiceHandler{service.DemandSourceAccountService},
 		},
 		{
 			group:   g.Group("/line_items"),
-			handler: &lineItemHandler{service.LineItemService},
+			handler: &lineItemServiceHandler{service.LineItemService},
 		},
 		{
 			group:   g.Group("/segments"),
-			handler: &segmentHandler{service.SegmentService},
+			handler: &segmentServiceHandler{service.SegmentService},
 		},
 		{
-			group:   g.Group("/users"),
-			handler: &userHandler{service.UserService},
+			group: g.Group("/users"),
+			handler: &userHandler{
+				userServiceHandler: &userServiceHandler{service.UserService},
+			},
 		},
 	}
 	for _, r := range resourceRoutes {
@@ -213,15 +216,15 @@ type resourceHandler interface {
 	delete(c echo.Context) error
 }
 
-type appHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
-type appDemandProfileHandler = resourceServiceHandler[admin.AppDemandProfileResource, admin.AppDemandProfile, admin.AppDemandProfileAttrs]
-type auctionConfigurationHandler = resourceServiceHandler[admin.AuctionConfigurationResource, admin.AuctionConfiguration, admin.AuctionConfigurationAttrs]
-type countryHandler = resourceServiceHandler[admin.CountryResource, admin.Country, admin.CountryAttrs]
-type demandSourceHandler = resourceServiceHandler[admin.DemandSourceResource, admin.DemandSource, admin.DemandSourceAttrs]
-type demandSourceAccountHandler = resourceServiceHandler[admin.DemandSourceAccountResource, admin.DemandSourceAccount, admin.DemandSourceAccountAttrs]
-type lineItemHandler = resourceServiceHandler[admin.LineItemResource, admin.LineItem, admin.LineItemAttrs]
-type segmentHandler = resourceServiceHandler[admin.SegmentResource, admin.Segment, admin.SegmentAttrs]
-type userHandler = resourceServiceHandler[admin.UserResource, admin.User, admin.UserAttrs]
+type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
+type appDemandProfileServiceHandler = resourceServiceHandler[admin.AppDemandProfileResource, admin.AppDemandProfile, admin.AppDemandProfileAttrs]
+type auctionConfigurationServiceHandler = resourceServiceHandler[admin.AuctionConfigurationResource, admin.AuctionConfiguration, admin.AuctionConfigurationAttrs]
+type countryServiceHandler = resourceServiceHandler[admin.CountryResource, admin.Country, admin.CountryAttrs]
+type demandSourceServiceHandler = resourceServiceHandler[admin.DemandSourceResource, admin.DemandSource, admin.DemandSourceAttrs]
+type demandSourceAccountServiceHandler = resourceServiceHandler[admin.DemandSourceAccountResource, admin.DemandSourceAccount, admin.DemandSourceAccountAttrs]
+type lineItemServiceHandler = resourceServiceHandler[admin.LineItemResource, admin.LineItem, admin.LineItemAttrs]
+type segmentServiceHandler = resourceServiceHandler[admin.SegmentResource, admin.Segment, admin.SegmentAttrs]
+type userServiceHandler = resourceServiceHandler[admin.UserResource, admin.User, admin.UserAttrs]
 
 type resourceServiceHandler[Resource, ResourceData, ResourceAttrs any] struct {
 	service resourceService[Resource, ResourceData, ResourceAttrs]
@@ -358,18 +361,31 @@ func getAuthContext(c echo.Context) (admin.AuthContext, error) {
 	return authCtx, nil
 }
 
-func skipIfSessionCookieOrAuth(sm *scs.SessionManager, prefixes ...string) middleware.Skipper {
-	cookieSkipper := skipIfSessionCookie(sm)
+func skipIfWebAppOrAuth(prefixes ...string) middleware.Skipper {
+	webAppSkipper := skipIfWebApp()
 	authSkipper := skipIfAuthIs(prefixes...)
 	return func(c echo.Context) bool {
-		return cookieSkipper(c) || authSkipper(c)
+		return webAppSkipper(c) || authSkipper(c)
 	}
 }
 
-func skipIfSessionCookie(sm *scs.SessionManager) middleware.Skipper {
+func skipIfWebApp() middleware.Skipper {
 	return func(c echo.Context) bool {
-		_, err := c.Cookie(sm.Cookie.Name)
-		return err == nil
+		if c.Request().Header.Get("X-Bidon-App") == "web" {
+			return true
+		}
+
+		return false
+	}
+}
+
+func skipIfNotWebApp() middleware.Skipper {
+	return func(c echo.Context) bool {
+		if c.Request().Header.Get("X-Bidon-App") != "web" {
+			return true
+		}
+
+		return false
 	}
 }
 
@@ -386,4 +402,34 @@ func skipIfAuthIs(prefixes ...string) middleware.Skipper {
 
 		return false
 	}
+}
+
+type userHandler struct {
+	*userServiceHandler
+}
+
+func (h *userHandler) get(c echo.Context) error {
+	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
+
+	var id int64
+	idParam := c.Param("id")
+	if idParam == "me" {
+		id = authCtx.UserID()
+	} else {
+		convID, err := strconv.Atoi(idParam)
+		if err != nil {
+			return fmt.Errorf("invalid id: %v", err)
+		}
+		id = int64(convID)
+	}
+
+	resource, err := h.service.Find(c.Request().Context(), authCtx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resource)
 }
