@@ -8,7 +8,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/mocks"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
@@ -23,23 +22,12 @@ import (
 
 func SetupConfigHandler() sdkapi.ConfigHandler {
 	app := sdkapi.App{ID: 1}
-	geodata := geocoder.GeoData{CountryCode: "US"}
 	sgmnt := segment.Segment{
 		ID:      1,
 		UID:     "1",
 		Filters: []segment.Filter{segment.Filter{Type: "country", Operator: "IN", Values: []string{"US"}}},
 	}
 
-	appFetcher := &mocks.AppFetcherMock{
-		FetchFunc: func(ctx context.Context, appKey string, appBundle string) (sdkapi.App, error) {
-			return app, nil
-		},
-	}
-	geocoder := &mocks.GeocoderMock{
-		LookupFunc: func(ctx context.Context, ipString string) (geocoder.GeoData, error) {
-			return geodata, nil
-		},
-	}
 	segmentFetcher := &segmentmocks.FetcherMock{
 		FetchFunc: func(ctx context.Context, appID int64) ([]segment.Segment, error) {
 			return []segment.Segment{sgmnt}, nil
@@ -80,8 +68,8 @@ func SetupConfigHandler() sdkapi.ConfigHandler {
 
 	return sdkapi.ConfigHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
-			AppFetcher: appFetcher,
-			Geocoder:   geocoder,
+			AppFetcher: AppFetcherMock(),
+			Geocoder:   GeocoderMock(),
 		},
 		EventLogger:               &event.Logger{Engine: &engine.Log{}},
 		SegmentMatcher:            segmentMatcher,
@@ -137,6 +125,6 @@ func TestConfigHandler_Handle_InvalidRequest(t *testing.T) {
 
 	echoError, ok := err.(*echo.HTTPError)
 	if ok && echoError.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("Expected status code %d, got %d", http.StatusBadRequest, rec.Code)
+		t.Fatalf("Expected status code %d, got %d", http.StatusUnprocessableEntity, rec.Code)
 	}
 }
