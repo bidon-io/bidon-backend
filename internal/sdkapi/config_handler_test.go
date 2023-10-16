@@ -3,7 +3,6 @@ package sdkapi_test
 import (
 	"context"
 	"fmt"
-	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
@@ -12,11 +11,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
-	"github.com/labstack/echo/v4"
 	"net/http"
-	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -78,53 +74,39 @@ func SetupConfigHandler() sdkapi.ConfigHandler {
 }
 
 func TestConfigHandler_Handle(t *testing.T) {
-	rec := httptest.NewRecorder()
-	reqBody, err := os.ReadFile("testdata/config/valid_request.json")
-	if err != nil {
-		t.Fatalf("Error reading request file: %v", err)
+	tests := []struct {
+		name         string
+		requestPath  string
+		expectedCode int
+		wantErr      bool
+	}{
+		{
+			name:         "valid request",
+			requestPath:  "testdata/config/valid_request.json",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "invalid request",
+			requestPath:  "testdata/config/invalid_request.json",
+			expectedCode: http.StatusUnprocessableEntity,
+			wantErr:      true,
+		},
 	}
 
-	// Create a new HTTP request
-	req := httptest.NewRequest(http.MethodPost, "/config", strings.NewReader(string(reqBody)))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqBody, err := os.ReadFile(tt.requestPath)
+			if err != nil {
+				t.Fatalf("Error reading request file: %v", err)
+			}
+			handler := SetupConfigHandler()
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/config", string(reqBody), nil)
 
-	handler := SetupConfigHandler()
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)
+			}
 
-	e := config.Echo()
-	c := e.NewContext(req, rec)
-
-	err = handler.Handle(c)
-	if err != nil {
-		t.Fatalf("Error handling request: %v", err)
-	}
-	if rec.Code != http.StatusOK {
-		t.Fatalf("Expected status code %d, got %d", http.StatusOK, rec.Code)
-	}
-}
-
-func TestConfigHandler_Handle_InvalidRequest(t *testing.T) {
-	rec := httptest.NewRecorder()
-	reqBody, err := os.ReadFile("testdata/config/invalid_request.json")
-	if err != nil {
-		t.Fatalf("Error reading request file: %v", err)
-	}
-
-	// Create a new HTTP request
-	req := httptest.NewRequest(http.MethodPost, "/config", strings.NewReader(string(reqBody)))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-
-	handler := SetupConfigHandler()
-
-	e := config.Echo()
-	c := e.NewContext(req, rec)
-
-	err = handler.Handle(c)
-	if err == nil {
-		t.Fatalf("Expected error, got nil")
-	}
-
-	echoError, ok := err.(*echo.HTTPError)
-	if ok && echoError.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("Expected status code %d, got %d", http.StatusUnprocessableEntity, rec.Code)
+			CheckResponseCode(t, err, rec.Code, tt.expectedCode)
+		})
 	}
 }
