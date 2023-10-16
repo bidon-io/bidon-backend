@@ -74,7 +74,7 @@ func TestStatsHandler_Handle(t *testing.T) {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 			handler := SetupStatsHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/stats/banner", string(reqBody))
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/stats/banner", string(reqBody), nil)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)

@@ -34,7 +34,7 @@ func AppFetcherMock() *mocks.AppFetcherMock {
 	}
 }
 
-func ExecuteRequest(t *testing.T, handler Handler, method, path, body string) (*httptest.ResponseRecorder, error) {
+func ExecuteRequest(t *testing.T, handler Handler, method, path, body string, params map[string]string) (*httptest.ResponseRecorder, error) {
 	t.Helper()
 
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
@@ -43,6 +43,12 @@ func ExecuteRequest(t *testing.T, handler Handler, method, path, body string) (*
 
 	e := config.Echo()
 	c := e.NewContext(req, rec)
+
+	// Set path parameters in Echo context If any.
+	for k, v := range params {
+		c.SetParamNames(k)
+		c.SetParamValues(v)
+	}
 
 	err := handler.Handle(c)
 
