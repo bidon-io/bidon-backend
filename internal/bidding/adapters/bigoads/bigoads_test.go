@@ -39,6 +39,18 @@ type ParseBidsTestOutput struct {
 	Err            error
 }
 
+type TestTransport func(req *http.Request) *http.Response
+
+func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func NewTestClient(tr TestTransport) *http.Client {
+	return &http.Client{
+		Transport: tr,
+	}
+}
+
 func ptr[T any](t T) *T {
 	return &t
 }
@@ -246,18 +258,6 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.Br, diff)
 		}
-	}
-}
-
-type TestTransport func(req *http.Request) *http.Response
-
-func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
-}
-
-func NewTestClient(tr TestTransport) *http.Client {
-	return &http.Client{
-		Transport: tr,
 	}
 }
 

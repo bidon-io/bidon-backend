@@ -39,6 +39,18 @@ type ParseBidsTestOutput struct {
 	Err            error
 }
 
+type TestTransport func(req *http.Request) *http.Response
+
+func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func NewTestClient(tr TestTransport) *http.Client {
+	return &http.Client{
+		Transport: tr,
+	}
+}
+
 func ptr[T any](t T) *T {
 	return &t
 }
@@ -257,19 +269,7 @@ func TestMeta_CreateRequestTest(t *testing.T) {
 	}
 }
 
-type TestTransport func(req *http.Request) *http.Response
-
-func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
-}
-
-func NewTestClient(tr TestTransport) *http.Client {
-	return &http.Client{
-		Transport: tr,
-	}
-}
-
-func TestBigoAdsAdapter_ExecuteRequest(t *testing.T) {
+func TestMetaAdapter_ExecuteRequest(t *testing.T) {
 	networkAdapter := buildAdapter()
 	responseBody := []byte(`{"key": "value"`)
 
@@ -278,7 +278,7 @@ func TestBigoAdsAdapter_ExecuteRequest(t *testing.T) {
 			t.Errorf("Expected POST request")
 		}
 		if req.URL.String() != "https://an.facebook.com/687579938617452/placementbid.ortb" {
-			t.Errorf("Expected URL: https://api.gov-static.tech/Ad/GetUniAdS2s?id=200104")
+			t.Errorf("Expected URL: https://an.facebook.com/687579938617452/placementbid.ortb")
 		}
 		contentType := req.Header.Get("Content-Type")
 		if contentType != "application/json" {
@@ -317,7 +317,7 @@ func TestBigoAdsAdapter_ExecuteRequest(t *testing.T) {
 	}
 }
 
-func TestBigoAds_ParseBids(t *testing.T) {
+func TestMeta_ParseBids(t *testing.T) {
 	rawResponse := `{
 		"id": "47611e59-e05b-4e1e-9074-5a65eb4501e4",
 		"seatbid": [
@@ -415,7 +415,7 @@ func TestBigoAds_ParseBids(t *testing.T) {
 	}
 }
 
-func TestBigoAds_Builder(t *testing.T) {
+func TestMeta_Builder(t *testing.T) {
 	client := &http.Client{}
 	metaCfg := adapter.ProcessedConfigsMap{
 		adapter.MetaKey: map[string]any{

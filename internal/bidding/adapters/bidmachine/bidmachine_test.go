@@ -40,6 +40,18 @@ type ParseBidsTestOutput struct {
 	Err            error
 }
 
+type TestTransport func(req *http.Request) *http.Response
+
+func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func NewTestClient(tr TestTransport) *http.Client {
+	return &http.Client{
+		Transport: tr,
+	}
+}
+
 func ptr[T any](t T) *T {
 	return &t
 }
@@ -321,19 +333,7 @@ func TestBidmachine_CreateRequest(t *testing.T) {
 	}
 }
 
-type TestTransport func(req *http.Request) *http.Response
-
-func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
-}
-
-func NewTestClient(tr TestTransport) *http.Client {
-	return &http.Client{
-		Transport: tr,
-	}
-}
-
-func TestBigoAdsAdapter_ExecuteRequest(t *testing.T) {
+func TestBidmachineAdapter_ExecuteRequest(t *testing.T) {
 	networkAdapter := buildAdapter()
 	responseBody := []byte(`{"key": "value"`)
 
