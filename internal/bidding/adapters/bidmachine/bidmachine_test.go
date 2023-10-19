@@ -1,9 +1,12 @@
 package bidmachine_test
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/bidon-io/bidon-backend/internal/device"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -315,6 +318,69 @@ func TestBidmachine_CreateRequest(t *testing.T) {
 		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.Br, diff)
 		}
+	}
+}
+
+type TestTransport func(req *http.Request) *http.Response
+
+func (f TestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func NewTestClient(tr TestTransport) *http.Client {
+	return &http.Client{
+		Transport: tr,
+	}
+}
+
+func TestBigoAdsAdapter_ExecuteRequest(t *testing.T) {
+	networkAdapter := buildAdapter()
+	responseBody := []byte(`{"key": "value"`)
+
+	customClient := NewTestClient(func(req *http.Request) *http.Response {
+		if req.Method != "POST" {
+			t.Errorf("Expected POST request")
+		}
+		if req.URL.String() != "https://api-eu.bidmachine.io/auction/prebid/bidon" {
+			t.Errorf("Expected URL: https://api-eu.bidmachine.io/auction/prebid/bidon")
+		}
+		contentType := req.Header.Get("Content-Type")
+		if contentType != "application/json" {
+			t.Errorf("Expected Content-Type header: application/json")
+		}
+		return &http.Response{
+			Status:        http.StatusText(http.StatusOK),
+			StatusCode:    http.StatusOK,
+			Body:          ioutil.NopCloser(bytes.NewBuffer(responseBody)),
+			ContentLength: int64(len(responseBody)),
+		}
+	})
+	request := openrtb.BidRequest{
+		ID: "test-request-id",
+	}
+
+	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+
+	if response.DemandID != adapter.BidmachineKey {
+		t.Errorf("Expected DemandID %v, but got %v", adapter.BigoAdsKey, response.DemandID)
+	}
+	if response.RequestID != request.ID {
+		t.Errorf("Expected RequestID %v, but got %v", request.ID, response.RequestID)
+	}
+	if response.TagID != "" {
+		t.Errorf("Expected TagID be blank, but got %v", response.TagID)
+	}
+	if response.PlacementID != "" {
+		t.Errorf("Expected PlacementID be blank, but got %v", response.PlacementID)
+	}
+	if response.Error != nil {
+		t.Errorf("Expected no error, but got an error: %v", response.Error)
+	}
+	if response.RawResponse != string(responseBody) {
+		t.Errorf("Expected client response body as RawResponse but got: %v", response.RawResponse)
+	}
+	if response.Status != http.StatusOK {
+		t.Errorf("Expected status code %d, but got %d", http.StatusOK, response.Status)
 	}
 }
 

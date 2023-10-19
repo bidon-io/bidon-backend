@@ -43,7 +43,6 @@ func ptr[T any](t T) *T {
 	return &t
 }
 
-// compareErrors checks for error occurrence.
 func compareErrors(want, got error) bool {
 	return (want == nil) == (got == nil)
 }
