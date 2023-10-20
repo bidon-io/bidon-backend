@@ -9,7 +9,8 @@ type Auction struct {
 	ConfigUID                string        `json:"auction_configuration_uid"`
 	ExternalWinNotifications bool          `json:"external_win_notifications"`
 	Rounds                   []RoundConfig `json:"rounds"`
-	LineItems                []LineItem    `json:"line_items"`
+	LineItems                []LineItem    `json:"line_items"` // Deprecated: use AdUnits instead
+	AdUnits                  []AdUnit      `json:"ad_units"`
 	Segment                  Segment       `json:"segment"`
 }
 type Config struct {
@@ -27,14 +28,23 @@ type RoundConfig struct {
 }
 
 type LineItem struct {
-	ID          string  `json:"id"`
-	UID         string  `json:"uid"`
-	PriceFloor  float64 `json:"pricefloor"`
-	AdUnitID    string  `json:"ad_unit_id"`
-	PlacementID string  `json:"placement_id"`
-	ZonedID     string  `json:"zoned_id"`
-	SlotUUID    string  `json:"slot_uuid"`
-	SlotID      string  `json:"slot_id"`
+	ID          string         `json:"id"`
+	UID         string         `json:"uid"`
+	PriceFloor  float64        `json:"pricefloor"`
+	AdUnitID    string         `json:"ad_unit_id"`
+	PlacementID string         `json:"placement_id"`
+	ZonedID     string         `json:"zoned_id"`
+	SlotUUID    string         `json:"slot_uuid"`
+	SlotID      string         `json:"slot_id"`
+	Extra       map[string]any `json:"extra"`
+}
+
+type AdUnit struct {
+	DemandID   string         `json:"demand_id"`
+	UID        string         `json:"uid"`
+	Label      string         `json:"label"`
+	PriceFloor float64        `json:"price_floor"`
+	Extra      map[string]any `json:"extra"`
 }
 
 type Segment struct {

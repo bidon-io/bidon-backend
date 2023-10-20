@@ -3,6 +3,7 @@ package sdkapi
 import (
 	"errors"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"net/http"
 	"strconv"
 
@@ -15,9 +16,10 @@ import (
 
 type AuctionHandler struct {
 	*BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]
-	AuctionBuilder *auction.Builder
-	SegmentMatcher *segment.Matcher
-	EventLogger    *event.Logger
+	AuctionBuilder   *auction.Builder
+	AuctionBuilderV2 *auction.BuilderV2
+	SegmentMatcher   *segment.Matcher
+	EventLogger      *event.Logger
 }
 
 type AuctionResponse struct {
@@ -52,7 +54,20 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		Segment:    sgmnt,
 		PriceFloor: &req.raw.AdObject.PriceFloor,
 	}
-	auc, err := h.AuctionBuilder.Build(c.Request().Context(), params)
+
+	constraint, _ := semver.NewConstraint(">= 0.5.0-next.1")
+	sdkVersion, err := semver.NewVersion(req.raw.App.SDKVersion)
+	if err != nil {
+		return err
+	}
+
+	var auc *auction.Auction
+	if constraint.Check(sdkVersion) {
+		auc, err = h.AuctionBuilderV2.Build(c.Request().Context(), params)
+	} else {
+		auc, err = h.AuctionBuilder.Build(c.Request().Context(), params)
+	}
+
 	if err != nil {
 		if errors.Is(err, auction.ErrNoAdsFound) {
 			err = ErrNoAdsFound
