@@ -38,20 +38,18 @@
       "timeout": 15000
     }
   ],
-  "line_items": [
+  "ad_units": [
     {
-      "id": "test",
+      "demand_id": "test",
       "uid": "1701972528521547776",
-      "pricefloor": 0.1,
-      "ad_unit_id": "test_id",
-      "placement_id": "",
-      "zoned_id": "",
-      "slot_uuid": "",
-      "slot_id": "",
-      "extra": null
+      "price_floor": 0.1,
+      "label": "test",
+      "extra": {
+        "placement_id": "test_id"
+      }
     }
   ],
-  "ad_units": null,
+  "line_items": null,
   "segment": {
     "id": "1",
     "uid": "1701972528521547776"
