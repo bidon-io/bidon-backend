@@ -44,7 +44,7 @@
       "uid": "1701972528521547776",
       "price_floor": 0.1,
       "label": "test",
-      "extra": {
+      "ext": {
         "placement_id": "test_id"
       }
     }

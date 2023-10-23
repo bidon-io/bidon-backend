@@ -28,15 +28,14 @@ type RoundConfig struct {
 }
 
 type LineItem struct {
-	ID          string         `json:"id"`
-	UID         string         `json:"uid"`
-	PriceFloor  float64        `json:"pricefloor"`
-	AdUnitID    string         `json:"ad_unit_id"`
-	PlacementID string         `json:"placement_id"`
-	ZonedID     string         `json:"zoned_id"`
-	SlotUUID    string         `json:"slot_uuid"`
-	SlotID      string         `json:"slot_id"`
-	Extra       map[string]any `json:"extra"`
+	ID          string  `json:"id"`
+	UID         string  `json:"uid"`
+	PriceFloor  float64 `json:"pricefloor"`
+	AdUnitID    string  `json:"ad_unit_id"`
+	PlacementID string  `json:"placement_id"`
+	ZonedID     string  `json:"zoned_id"`
+	SlotUUID    string  `json:"slot_uuid"`
+	SlotID      string  `json:"slot_id"`
 }
 
 type AdUnit struct {
@@ -44,7 +43,7 @@ type AdUnit struct {
 	UID        string         `json:"uid"`
 	Label      string         `json:"label"`
 	PriceFloor float64        `json:"price_floor"`
-	Extra      map[string]any `json:"extra"`
+	Extra      map[string]any `json:"ext"`
 }
 
 type Segment struct {
