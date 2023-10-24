@@ -270,7 +270,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 			Account: func(i int) db.DemandSourceAccount { return account },
 			AdType:  func(i int) db.AdType { return db.BannerAdType },
 			Extra: func(i int) map[string]any {
-				return map[string]any{"slot_uuid": "amazon_slot_banner"}
+				return map[string]any{"slot_uuid": "amazon_slot_banner", "format": "BANNER"}
 			},
 		}, 0)
 
@@ -286,7 +286,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 				}
 			},
 			Extra: func(i int) map[string]any {
-				return map[string]any{"slot_uuid": "amazon_slot_mrec"}
+				return map[string]any{"slot_uuid": "amazon_slot_mrec", "format": "MREC"}
 			},
 		}, 0)
 
@@ -296,7 +296,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 			Account: func(i int) db.DemandSourceAccount { return account },
 			AdType:  func(i int) db.AdType { return db.InterstitialAdType },
 			Extra: func(i int) map[string]any {
-				return map[string]any{"slot_uuid": "amazon_slot_interstitial"}
+				return map[string]any{"slot_uuid": "amazon_slot_interstitial", "format": "INTERSTITIAL"}
 			},
 		}, 0)
 
@@ -306,7 +306,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 			Account: func(i int) db.DemandSourceAccount { return account },
 			AdType:  func(i int) db.AdType { return db.InterstitialAdType },
 			Extra: func(i int) map[string]any {
-				return map[string]any{"slot_uuid": "amazon_slot_video", "is_video": true}
+				return map[string]any{"slot_uuid": "amazon_slot_video", "format": "VIDEO"}
 			},
 		}, 0)
 
@@ -316,7 +316,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 			Account: func(i int) db.DemandSourceAccount { return account },
 			AdType:  func(i int) db.AdType { return db.RewardedAdType },
 			Extra: func(i int) map[string]any {
-				return map[string]any{"slot_uuid": "amazon_slot_rewarded"}
+				return map[string]any{"slot_uuid": "amazon_slot_rewarded", "format": "REWARDED"}
 			},
 		}, 0)
 

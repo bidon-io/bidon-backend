@@ -220,6 +220,7 @@ func (a *InmobiInitConfig) Key() adapter.Key {
 	return adapter.InmobiKey
 }
 
+// Deprecated in 0.5.0
 type AmazonSlot struct {
 	SlotUUID string `json:"slot_uuid,omitempty"`
 	Format   string `json:"format,omitempty"`
@@ -227,7 +228,7 @@ type AmazonSlot struct {
 
 type AmazonInitConfig struct {
 	AppKey string       `json:"app_key,omitempty"`
-	Slots  []AmazonSlot `json:"slots"`
+	Slots  []AmazonSlot `json:"slots"` // Deprecated in 0.5.0
 }
 
 func (a *AmazonInitConfig) Key() adapter.Key {

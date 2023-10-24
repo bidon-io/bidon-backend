@@ -55,14 +55,13 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		PriceFloor: &req.raw.AdObject.PriceFloor,
 	}
 
-	constraint, _ := semver.NewConstraint(">= 0.5.0-next.1")
 	sdkVersion, err := semver.NewVersion(req.raw.App.SDKVersion)
 	if err != nil {
 		return err
 	}
 
 	var auc *auction.Auction
-	if constraint.Check(sdkVersion) {
+	if Version050GteConstraint.Check(sdkVersion) {
 		auc, err = h.AuctionBuilderV2.Build(c.Request().Context(), params)
 	} else {
 		auc, err = h.AuctionBuilder.Build(c.Request().Context(), params)
