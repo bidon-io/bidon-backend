@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"os"
 	"testing"
 
@@ -149,12 +150,14 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 		name        string
 		appID       int64
 		adapterKeys []adapter.Key
+		sdkVersion  string
 		want        []sdkapi.AdapterInitConfig
 	}{
 		{
 			name:        "first app with all adapters",
 			appID:       apps[0].ID,
 			adapterKeys: adapter.Keys,
+			sdkVersion:  "0.4.0",
 			want: []sdkapi.AdapterInitConfig{
 				&sdkapi.AdmobInitConfig{
 					AppID: fmt.Sprintf("admob_app_%d", apps[0].ID),
@@ -185,6 +188,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			name:        "second app with all adapters",
 			appID:       apps[1].ID,
 			adapterKeys: adapter.Keys,
+			sdkVersion:  "0.4.0",
 			want: []sdkapi.AdapterInitConfig{
 				&sdkapi.MobileFuseInitConfig{},
 				&sdkapi.UnityAdsInitConfig{
@@ -210,7 +214,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys)
+			sdkVersion, _ := semver.NewVersion(tt.sdkVersion)
+			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys, sdkVersion)
 			if err != nil {
 				t.Fatalf("FetchAdapterInitConfigs() error = %v", err)
 			}
@@ -222,6 +227,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 	}
 }
 
+// TODO: remove this test once we drop support for 0.4.x
 func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
@@ -325,13 +331,15 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 	tests := []struct {
 		name        string
 		appID       int64
+		sdkVersion  string
 		adapterKeys []adapter.Key
 		want        []sdkapi.AdapterInitConfig
 	}{
 		{
-			name:        "amazon app with all line items",
+			name:        "amazon app with all line items and sdk version < 0.5.0",
 			appID:       app.ID,
 			adapterKeys: adapter.Keys,
+			sdkVersion:  "0.4.0",
 			want: []sdkapi.AdapterInitConfig{
 				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
@@ -360,11 +368,24 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 				},
 			},
 		},
+		{
+			name:        "amazon app with all line items and sdk version >= 0.5.0",
+			appID:       app.ID,
+			adapterKeys: adapter.Keys,
+			sdkVersion:  "0.5.0",
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.AmazonInitConfig{
+					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
+					Slots:  nil,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys)
+			sdkVersion, _ := semver.NewVersion(tt.sdkVersion)
+			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys, sdkVersion)
 			if err != nil {
 				t.Fatalf("FetchAdapterInitConfigs() error = %v", err)
 			}

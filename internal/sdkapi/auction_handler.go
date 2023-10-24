@@ -61,7 +61,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	}
 
 	var auc *auction.Auction
-	if Version050GteConstraint.Check(sdkVersion) {
+	if Version05GTEConstraint.Check(sdkVersion) {
 		auc, err = h.AuctionBuilderV2.Build(c.Request().Context(), params)
 	} else {
 		auc, err = h.AuctionBuilder.Build(c.Request().Context(), params)
