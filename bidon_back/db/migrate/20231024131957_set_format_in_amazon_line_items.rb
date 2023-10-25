@@ -1,5 +1,6 @@
 class SetFormatInAmazonLineItems < ActiveRecord::Migration[7.0]
   def up
+    # set format in amazon line items
     LineItem.where(account_type: 'DemandSourceAccount::Amazon').find_each do |line_item|
       extra = line_item.extra
       case line_item.ad_type
@@ -11,7 +12,12 @@ class SetFormatInAmazonLineItems < ActiveRecord::Migration[7.0]
         format = extra['is_video'] ? 'VIDEO' : 'INTERSTITIAL'
       end
 
-      line_item.update!(extra: { slot_uuid: extra['slot_uuid'], format: }) unless extra['format']
+      line_item.update!(extra: extra.merge({ format: })) unless extra['format']
+    end
+
+    # set placement_id in vungle, meta and mobilefuse line items
+    LineItem.where(account_type: %w[DemandSourceAccount::Vungle DemandSourceAccount::Meta DemandSourceAccount::MobileFuse]).find_each do |line_item|
+      line_item.update!(extra: extra.merge({ placement_id: line_item.code }))
     end
   end
 

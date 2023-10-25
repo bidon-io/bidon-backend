@@ -156,7 +156,9 @@ func main() {
 		},
 		AdaptersConfigBuilder: &adapters_builder.AdaptersConfigBuilder{
 			ConfigurationFetcher: &adapterstore.ConfigurationFetcher{DB: db},
-			LineItemsMatcher:     &auctionstore.LineItemsMatcher{DB: db},
+		},
+		AdUnitsMapBuilder: &adapterstore.AdUnitsMapBuilder{
+			AdUnitsMatcher: &auctionstore.AdUnitsMatcher{DB: db},
 		},
 		EventLogger: eventLogger,
 	}
