@@ -64,7 +64,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		logError(c, fmt.Errorf("log config event: %v", err))
 	})
 
-	sdkVersion, err := semver.NewVersion(req.raw.App.SDKVersion)
+	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package sdkapi
 import (
 	"context"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"github.com/bidon-io/bidon-backend/internal/adapter/store"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"net/http"
@@ -111,7 +110,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		Status: "NO_BID",
 	}
 
-	sdkVersion, err := semver.NewVersion(req.raw.App.SDKVersion)
+	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
 		return err
 	}

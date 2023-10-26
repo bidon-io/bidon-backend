@@ -3,7 +3,6 @@ package sdkapi
 import (
 	"errors"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"net/http"
 	"strconv"
 
@@ -55,7 +54,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		PriceFloor: &req.raw.AdObject.PriceFloor,
 	}
 
-	sdkVersion, err := semver.NewVersion(req.raw.App.SDKVersion)
+	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
 		return err
 	}
