@@ -18,6 +18,8 @@ task fix_line_items_extra_field: :environment do
   LineItem.where(
     account_type: %w[DemandSourceAccount::Vungle DemandSourceAccount::Meta DemandSourceAccount::MobileFuse],
   ).find_each do |line_item|
-    line_item.update!(extra: line_item.extra.merge({ placement_id: line_item.code })) unless line_item.extra['placement_id']
+    next if line_item.extra['placement_id']
+
+    line_item.update!(extra: line_item.extra.merge({ placement_id: line_item.code }))
   end
 end
