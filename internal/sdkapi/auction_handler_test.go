@@ -160,7 +160,7 @@ func checkResponses(t *testing.T, expectedResponseJson, actualResponseJson []byt
 func TestAuctionHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name                 string
-		bidonVersion         string
+		sdkVersion           string
 		requestPath          string
 		expectedResponsePath string
 		expectedStatusCode   int
@@ -169,7 +169,7 @@ func TestAuctionHandler_Handle(t *testing.T) {
 	}{
 		{
 			name:                 "OK version 0,4",
-			bidonVersion:         "0.4.0",
+			sdkVersion:           "0.4.0",
 			requestPath:          "testdata/auction/valid_request.json",
 			expectedResponsePath: "testdata/auction/valid_response.json",
 			expectedStatusCode:   http.StatusOK,
@@ -177,7 +177,7 @@ func TestAuctionHandler_Handle(t *testing.T) {
 		},
 		{
 			name:               "Err NoAdsFound version 0,4",
-			bidonVersion:       "0.4.0",
+			sdkVersion:         "0.4.0",
 			requestPath:        "testdata/auction/noads_request.json",
 			expectedStatusCode: http.StatusUnprocessableEntity,
 			wantErr:            true,
@@ -185,7 +185,7 @@ func TestAuctionHandler_Handle(t *testing.T) {
 		},
 		{
 			name:                 "OK version 0,5",
-			bidonVersion:         "0.5",
+			sdkVersion:           "0.5",
 			requestPath:          "testdata/auction/valid_request.json",
 			expectedResponsePath: "testdata/auction/valid_response_v2.json",
 			expectedStatusCode:   http.StatusOK,
@@ -193,11 +193,18 @@ func TestAuctionHandler_Handle(t *testing.T) {
 		},
 		{
 			name:               "Err NoAdsFound version 0,5",
-			bidonVersion:       "0.5",
+			sdkVersion:         "0.5",
 			requestPath:        "testdata/auction/noads_request.json",
 			expectedStatusCode: http.StatusUnprocessableEntity,
 			wantErr:            true,
 			err:                sdkapi.ErrNoAdsFound,
+		}, {
+			name:               "Err Invalid SDKVesrion",
+			sdkVersion:         "",
+			requestPath:        "testdata/auction/valid_request.json",
+			expectedStatusCode: http.StatusUnprocessableEntity,
+			wantErr:            true,
+			err:                sdkapi.ErrInvalidSDKVersion,
 		},
 	}
 
@@ -211,7 +218,7 @@ func TestAuctionHandler_Handle(t *testing.T) {
 			handler := testHelperAuctionHandler(t)
 			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/auction/interstitial", string(reqBody), &RequestOptions{
 				Headers: map[string]string{
-					"X-Bidon-Version": tt.bidonVersion,
+					"X-Bidon-Version": tt.sdkVersion,
 				},
 			})
 			CheckResponseCode(t, err, rec.Code, tt.expectedStatusCode)

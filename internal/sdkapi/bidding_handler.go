@@ -112,7 +112,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 
 	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
-		return err
+		return ErrInvalidSDKVersion
 	}
 
 	if Version05GTEConstraint.Check(sdkVersion) {
@@ -188,6 +188,7 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 			DemandID:                string(result.DemandID),
 			AdUnitID:                0,
 			LineItemUID:             0,
+			LineItemLabel:           "",
 			AdUnitCode:              "",
 			Ecpm:                    0,
 			PriceFloor:              imp.GetBidFloor(),
@@ -213,6 +214,7 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 				DemandID:                string(result.DemandID),
 				AdUnitID:                0,
 				LineItemUID:             0,
+				LineItemLabel:           "",
 				AdUnitCode:              result.TagID,
 				Ecpm:                    result.Bid.Price,
 				PriceFloor:              imp.GetBidFloor(),

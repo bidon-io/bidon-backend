@@ -66,7 +66,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 
 	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
-		return err
+		return ErrInvalidSDKVersion
 	}
 
 	adapterInitConfigs, err := h.AdapterInitConfigsFetcher.FetchAdapterInitConfigs(ctx, req.app.ID, req.raw.Adapters.Keys(), sdkVersion)

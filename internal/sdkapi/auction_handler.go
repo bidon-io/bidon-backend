@@ -56,7 +56,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 
 	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
-		return err
+		return ErrInvalidSDKVersion
 	}
 
 	var auc *auction.Auction
@@ -91,6 +91,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		DemandID:                "",
 		AdUnitID:                0,
 		LineItemUID:             0,
+		LineItemLabel:           "",
 		AdUnitCode:              "",
 		Ecpm:                    0,
 		PriceFloor:              req.raw.AdObject.PriceFloor,

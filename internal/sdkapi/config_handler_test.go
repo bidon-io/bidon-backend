@@ -104,6 +104,13 @@ func TestConfigHandler_Handle(t *testing.T) {
 			requestPath:  "testdata/config/valid_request.json",
 			expectedCode: http.StatusOK,
 		},
+		{
+			name:         "invalid sdk version",
+			sdkVersion:   "",
+			requestPath:  "testdata/config/valid_request.json",
+			expectedCode: http.StatusUnprocessableEntity,
+			wantErr:      true,
+		},
 	}
 
 	for _, tt := range tests {
