@@ -234,8 +234,8 @@ func (b StatsBidding) Map() map[string]any {
 type StatsBid struct {
 	ID           string  `json:"id" validate:"required"`
 	Status       string  `json:"status" validate:"required"`
-	ECPM         float64 `json:"ecpm"` // Deprecated: use Price instead
-	Price        float64 `json:"price"`
+	ECPM         float64 `json:"ecpm" validate:"required_without=Price"` // Deprecated: use Price instead
+	Price        float64 `json:"price" validate:"required_without=ECPM"`
 	AdUnitUID    string  `json:"ad_unit_uid"`
 	AdUnitLabel  string  `json:"ad_unit_label"`
 	FillStartTS  int     `json:"fill_start_ts"`
