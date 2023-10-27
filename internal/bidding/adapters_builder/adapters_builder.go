@@ -95,8 +95,6 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.BigoAdsKey:
 			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["publisher_id"]
-			adapters[key]["tag_id"] = ""
-			adapters[key]["placement_id"] = ""
 
 			if adUnits, ok := (*adUnitsMap)[key]; ok {
 				adapters[key]["tag_id"] = adUnits[0].Extra["slot_id"]
@@ -105,8 +103,6 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.MintegralKey:
 			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["publisher_id"]
-			adapters[key]["tag_id"] = ""
-			adapters[key]["placement_id"] = ""
 
 			if adUnits, ok := (*adUnitsMap)[key]; ok {
 				adapters[key]["tag_id"] = adUnits[0].Extra["ad_unit_id"]
@@ -115,7 +111,6 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.VungleKey:
 			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["seller_id"] = extra["account_id"]
-			adapters[key]["tag_id"] = ""
 
 			if adUnits, ok := (*adUnitsMap)[key]; ok {
 				adapters[key]["tag_id"] = adUnits[0].Extra["placement_id"]
@@ -123,14 +118,11 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.MetaKey:
 			adapters[key]["app_id"] = appData["app_id"]
 			adapters[key]["app_secret"] = appData["app_secret"]
-			adapters[key]["tag_id"] = ""
 
 			if adUnits, ok := (*adUnitsMap)[key]; ok {
 				adapters[key]["tag_id"] = adUnits[0].Extra["placement_id"]
 			}
 		case adapter.MobileFuseKey:
-			adapters[key]["tag_id"] = ""
-
 			if adUnits, ok := (*adUnitsMap)[key]; ok {
 				adapters[key]["tag_id"] = adUnits[0].Extra["placement_id"]
 			}
