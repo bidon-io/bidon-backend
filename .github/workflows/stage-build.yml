@@ -29,9 +29,7 @@ jobs:
         with:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
-          ref: DO-1767/bidon-stage
 
-
-      - name: Deploy stage 
+      - name: Deploy stage
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
         run: make bidon-backend STAGE=${{ inputs.stage-number }}
