@@ -21,6 +21,7 @@ jobs:
 
   deploy:
     name: Deploy
+    needs: [build]
     runs-on: [self-hosted]
     steps:
       - name: Checks-out repository devops
