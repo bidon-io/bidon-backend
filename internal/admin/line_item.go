@@ -132,7 +132,7 @@ func (csv dtExchangeLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount
 		Format:      format,
 		AccountID:   account.ID,
 		AccountType: account.Type,
-		Code:        nil,
+		Code:        &csv.PlacementID,
 		IsBidding:   &attrs.IsBidding,
 		Extra: map[string]any{
 			"placement_id": csv.PlacementID,
@@ -162,7 +162,7 @@ func (csv inmobiLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, at
 		Format:      format,
 		AccountID:   account.ID,
 		AccountType: account.Type,
-		Code:        nil,
+		Code:        &csv.PlacementID,
 		IsBidding:   &attrs.IsBidding,
 		Extra: map[string]any{
 			"placement_id": csv.PlacementID,
@@ -192,7 +192,7 @@ func (csv unityAdsLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, 
 		Format:      format,
 		AccountID:   account.ID,
 		AccountType: account.Type,
-		Code:        nil,
+		Code:        &csv.PlacementID,
 		IsBidding:   &attrs.IsBidding,
 		Extra: map[string]any{
 			"placement_id": csv.PlacementID,
