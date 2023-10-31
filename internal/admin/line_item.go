@@ -142,6 +142,66 @@ func (csv dtExchangeLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount
 	return lineItemAttrs, nil
 }
 
+type inmobiLineItemCSV struct {
+	AdFormat    string          `csv:"ad_format"`
+	BidFloor    decimal.Decimal `csv:"bid_floor"`
+	PlacementID string          `csv:"placement_id"`
+}
+
+func (csv inmobiLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		Code:        nil,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"placement_id": csv.PlacementID,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
+type unityAdsLineItemCSV struct {
+	AdFormat    string          `csv:"ad_format"`
+	BidFloor    decimal.Decimal `csv:"bid_floor"`
+	PlacementID string          `csv:"placement_id"`
+}
+
+func (csv unityAdsLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		Code:        nil,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"placement_id": csv.PlacementID,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
 func parseCSVAdFormat(adFormat string) (ad.Type, *ad.Format) {
 	switch strings.ToLower(adFormat) {
 	case "banner":
@@ -197,6 +257,28 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		csvLineItems = make([]LineItemCSV, len(dtExchangeLineItems))
 		for i, dtExchangeLineItem := range dtExchangeLineItems {
 			csvLineItems[i] = dtExchangeLineItem
+		}
+	case adapter.InmobiKey:
+		var inmobiLineItems []inmobiLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &inmobiLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(inmobiLineItems))
+		for i, inmobiLineItem := range inmobiLineItems {
+			csvLineItems[i] = inmobiLineItem
+		}
+	case adapter.UnityAdsKey:
+		var unityLineItems []unityAdsLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &unityLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(unityLineItems))
+		for i, unityAdsLineItem := range unityLineItems {
+			csvLineItems[i] = unityAdsLineItem
 		}
 	default:
 		return fmt.Errorf("unsupported demand source: %s", account.DemandSource.ApiKey)
