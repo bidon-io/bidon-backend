@@ -17,12 +17,14 @@ require (
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/go-cmp v0.6.0
+	github.com/jackc/pgx/v5 v5.4.3
 	github.com/joho/godotenv v1.5.1
 	github.com/jszwec/csvutil v1.8.0
 	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/prebid/openrtb/v19 v19.0.0
+	github.com/pressly/goose/v3 v3.15.1
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/shopspring/decimal v1.3.1
 	github.com/spazzymoto/echo-scs-session v1.0.0
@@ -54,7 +56,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
