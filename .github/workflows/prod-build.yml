@@ -31,6 +31,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       tag: ${{ needs.tag.outputs.tag }}
+      registry: ghcr.io/bidon-io
     secrets: inherit
 
   deploy:
@@ -40,7 +41,6 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       tag:  ${{ needs.tag.outputs.tag }}
-      registry: ghcr.io/bidon-io
     secrets: inherit
 
   sentry-release:
