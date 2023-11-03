@@ -23,3 +23,15 @@ func (r *AuctionRequest) Map() map[string]any {
 
 	return m
 }
+
+func (r *AuctionRequest) GetAuctionConfigurationParams(sdkVersion string) (string, string) {
+	if r.AdObject.AuctionConfigurationUID != "" {
+		return "uid", r.AdObject.AuctionConfigurationUID
+	}
+
+	return "", ""
+}
+
+func (r *AuctionRequest) SetAuctionConfigurationParams(id int64, uid string) {
+	r.AdObject.AuctionConfigurationUID = uid
+}

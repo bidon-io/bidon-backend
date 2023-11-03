@@ -11,11 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type ConfigMatcher struct {
+type ConfigFetcher struct {
 	DB *db.DB
 }
 
-func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
+func (m *ConfigFetcher) Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
 	dbConfig := &db.AuctionConfiguration{}
 
 	query := m.DB.
@@ -51,16 +51,26 @@ func (m *ConfigMatcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 	return config, nil
 }
 
-func (m *ConfigMatcher) MatchById(ctx context.Context, appID, id int64) *auction.Config {
+func (m *ConfigFetcher) FetchByUID(ctx context.Context, appID int64, key, id string) *auction.Config {
+	if key != "id" && key != "uid" {
+		return nil
+	}
+
 	dbConfig := &db.AuctionConfiguration{}
+
+	filter := map[string]any{
+		"app_id": appID,
+	}
+	if key == "id" {
+		filter["id"] = id
+	} else {
+		filter["public_uid"] = id
+	}
 
 	err := m.DB.
 		WithContext(ctx).
 		Select("id", "public_uid", "external_win_notifications", "rounds").
-		Where(map[string]any{
-			"app_id": appID,
-			"id":     id,
-		}).
+		Where(filter).
 		Order("created_at DESC").
 		Take(dbConfig).
 		Error

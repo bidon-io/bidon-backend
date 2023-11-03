@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -32,6 +33,20 @@ func (b *ShowRequest) NormalizeValues() {
 	b.BaseRequest.NormalizeValues()
 
 	if b.Bid != nil {
+		// Some SDK versions can send lower case bid_type
 		b.Bid.BidType = BidType(strings.ToUpper(b.Bid.BidType.String()))
 	}
+}
+
+func (r *ShowRequest) GetAuctionConfigurationParams(sdkVersion string) (string, string) {
+	if r.Bid.AuctionConfigurationUID != "" {
+		return "uid", r.Bid.AuctionConfigurationUID
+	}
+
+	return "id", strconv.FormatInt(int64(r.Bid.AuctionConfigurationID), 10)
+}
+
+func (r *ShowRequest) SetAuctionConfigurationParams(id int64, uid string) {
+	r.Bid.AuctionConfigurationID = id
+	r.Bid.AuctionConfigurationUID = uid
 }

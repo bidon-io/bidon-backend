@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestConfigMatcher_Match(t *testing.T) {
+func TestConfigFetcher_Match(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
@@ -80,7 +81,7 @@ func TestConfigMatcher_Match(t *testing.T) {
 		},
 	}
 
-	matcher := &store.ConfigMatcher{DB: tx}
+	matcher := &store.ConfigFetcher{DB: tx}
 	for _, tC := range testCases {
 		got, err := matcher.Match(context.Background(), tC.args.appID, tC.args.adType, tC.args.segmentID)
 		if err != nil {
@@ -93,7 +94,7 @@ func TestConfigMatcher_Match(t *testing.T) {
 	}
 }
 
-func TestConfigMatcher_MatchById(t *testing.T) {
+func TestConfigFetcher_FetchByUID(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
@@ -125,14 +126,15 @@ func TestConfigMatcher_MatchById(t *testing.T) {
 
 	type args struct {
 		appID int64
-		id    int64
+		key   string
+		id    string
 	}
 	testCases := []struct {
 		args args
 		want *auction.Config
 	}{
 		{
-			args: args{appID: apps[0].ID, id: app1BannerConfig.ID},
+			args: args{appID: apps[0].ID, key: "id", id: fmt.Sprint(app1BannerConfig.ID)},
 			want: &auction.Config{
 				ID:     app1BannerConfig.ID,
 				UID:    strconv.FormatInt(app1BannerConfig.PublicUID.Int64, 10),
@@ -140,7 +142,7 @@ func TestConfigMatcher_MatchById(t *testing.T) {
 			},
 		},
 		{
-			args: args{appID: apps[1].ID, id: app2BannerConfig.ID},
+			args: args{appID: apps[1].ID, key: "uid", id: fmt.Sprint(app2BannerConfig.PublicUID.Int64)},
 			want: &auction.Config{
 				ID:     app2BannerConfig.ID,
 				UID:    strconv.FormatInt(app2BannerConfig.PublicUID.Int64, 10),
@@ -148,21 +150,25 @@ func TestConfigMatcher_MatchById(t *testing.T) {
 			},
 		},
 		{
-			args: args{appID: apps[2].ID, id: latestConfig.ID},
+			args: args{appID: apps[2].ID, key: "id", id: fmt.Sprint(latestConfig.ID)},
 			want: &auction.Config{
 				ID:     latestConfig.ID,
 				UID:    strconv.FormatInt(latestConfig.PublicUID.Int64, 10),
 				Rounds: latestConfig.Rounds,
 			},
 		},
+		{
+			args: args{appID: apps[2].ID, key: "d", id: fmt.Sprint(latestConfig.ID)},
+			want: nil,
+		},
 	}
 
-	matcher := &store.ConfigMatcher{DB: tx}
+	matcher := &store.ConfigFetcher{DB: tx}
 	for _, tC := range testCases {
-		got := matcher.MatchById(context.Background(), tC.args.appID, tC.args.id)
+		got := matcher.FetchByUID(context.Background(), tC.args.appID, tC.args.key, tC.args.id)
 
 		if diff := cmp.Diff(tC.want, got); diff != "" {
-			t.Errorf("matcher.MatchById(ctx, %d, %q) mismatch (-want, +got):\n%s", tC.args.appID, tC.args.id, diff)
+			t.Errorf("matcher.FetchById(ctx, %d, %q) mismatch (-want, +got):\n%s", tC.args.appID, tC.args.id, diff)
 		}
 	}
 }

@@ -14,19 +14,14 @@ import (
 
 type StatsHandler struct {
 	*BaseHandler[schema.StatsRequest, *schema.StatsRequest]
-	ConfigMatcher       ConfigMatcher
 	EventLogger         *event.Logger
 	NotificationHandler StatsNotificationHandler
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/stats_mocks.go -pkg mocks . StatsNotificationHandler ConfigMatcher
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/stats_mocks.go -pkg mocks . StatsNotificationHandler
 
 type StatsNotificationHandler interface {
 	HandleStats(context.Context, schema.Stats, auction.Config) error
-}
-
-type ConfigMatcher interface {
-	MatchById(ctx context.Context, appID, id int64) *auction.Config
 }
 
 func (h *StatsHandler) Handle(c echo.Context) error {
@@ -42,8 +37,7 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 
 	h.sendEvents(c, req)
 
-	ctx := c.Request().Context()
-	config := h.ConfigMatcher.MatchById(ctx, req.app.ID, int64(req.raw.Stats.AuctionConfigurationID))
+	config := req.auctionConfig
 	if config == nil {
 		logError(c, fmt.Errorf("cannot find config: %v", req.raw.Stats.AuctionConfigurationID))
 	} else {
