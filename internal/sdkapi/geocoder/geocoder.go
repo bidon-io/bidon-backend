@@ -13,6 +13,11 @@ import (
 type Geocoder struct {
 	MaxMindDB *maxminddb.Reader
 	DB        *db.DB
+	Cache     cache
+}
+
+type cache interface {
+	Get(context.Context, []byte, func(ctx context.Context) (*db.Country, error)) (*db.Country, error)
 }
 
 // GeoData represents the geolocation data.
@@ -113,7 +118,7 @@ func (g *Geocoder) Lookup(ctx context.Context, ipString string) (GeoData, error)
 	}
 
 	countryCode := g.countryCodeFor(mmdbGeoData)
-	country, err := g.findCountry(ctx, countryCode)
+	country, err := g.findCountryCached(ctx, countryCode)
 	if err != nil {
 		return geoData, err
 	}
@@ -155,6 +160,11 @@ func (g *Geocoder) countryCodeFor(mmdbGeoData MmdbGeoData) string {
 	return UNKNOWN_COUNTRY_CODE
 }
 
+func (g *Geocoder) findCountryCached(ctx context.Context, countryCode string) (*db.Country, error) {
+	return g.Cache.Get(ctx, []byte(countryCode), func(ctx context.Context) (*db.Country, error) {
+		return g.findCountry(ctx, countryCode)
+	})
+}
 func (g *Geocoder) findCountry(ctx context.Context, countryCode string) (*db.Country, error) {
 	var dbCountry db.Country
 

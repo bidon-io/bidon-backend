@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bool64/cache"
 	"log"
 	"net/http"
 	"os"
@@ -24,7 +25,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
-	"github.com/bidon-io/bidon-backend/internal/db"
+	dbpkg "github.com/bidon-io/bidon-backend/internal/db"
 	notificationstore "github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
@@ -50,7 +51,7 @@ func main() {
 	defer sentry.Flush(sentryConf.FlushTimeout)
 
 	dbURL := os.Getenv("DATABASE_URL")
-	db, err := db.Open(dbURL)
+	db, err := dbpkg.Open(dbURL)
 	if err != nil {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
@@ -101,10 +102,14 @@ func main() {
 
 	configFetcher := &auctionstore.ConfigFetcher{
 		DB:    db,
-		Cache: config.NewMemoryCacheOf[*auction.Config](30*time.Second, 1*time.Second, 1*time.Hour),
+		Cache: config.NewMemoryCacheOf[*auction.Config](1 * time.Hour),
 	}
 	appFetcher := &sdkapistore.AppFetcher{DB: db}
-	geocoder := &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB}
+	geoCoder := &geocoder.Geocoder{
+		DB:        db,
+		MaxMindDB: maxMindDB,
+		Cache:     config.NewMemoryCacheOf[*dbpkg.Country](cache.UnlimitedTTL), // We don't update countries
+	}
 	segmentMatcher := segment.Matcher{
 		Fetcher: &segmentstore.SegmentFetcher{DB: db},
 	}
@@ -126,7 +131,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		SegmentMatcher: &segmentMatcher,
 		AuctionBuilder: &auction.Builder{
@@ -143,7 +148,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		SegmentMatcher:            &segmentMatcher,
 		AdapterInitConfigsFetcher: &sdkapistore.AdapterInitConfigsFetcher{DB: db},
@@ -153,7 +158,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		SegmentMatcher: &segmentMatcher,
 		BiddingBuilder: &bidding.Builder{
@@ -172,7 +177,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger:         eventLogger,
 		NotificationHandler: notificationHandler,
@@ -181,7 +186,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger:         eventLogger,
 		NotificationHandler: notificationHandler,
@@ -190,7 +195,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger: eventLogger,
 	}
@@ -198,7 +203,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger: eventLogger,
 	}
@@ -206,7 +211,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.LossRequest, *schema.LossRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger:         eventLogger,
 		NotificationHandler: notificationHandler,
@@ -215,7 +220,7 @@ func main() {
 		BaseHandler: &sdkapi.BaseHandler[schema.WinRequest, *schema.WinRequest]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
-			Geocoder:      geocoder,
+			Geocoder:      geoCoder,
 		},
 		EventLogger:         eventLogger,
 		NotificationHandler: notificationHandler,
