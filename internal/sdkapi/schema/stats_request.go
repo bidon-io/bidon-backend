@@ -21,12 +21,8 @@ func (r *StatsRequest) Map() map[string]any {
 	return m
 }
 
-func (r *StatsRequest) GetAuctionConfigurationParams(sdkVersion string) (string, string) {
-	if r.Stats.AuctionConfigurationUID != "" {
-		return "uid", r.Stats.AuctionConfigurationUID
-	}
-
-	return "id", strconv.FormatInt(r.Stats.AuctionConfigurationID, 10)
+func (r *StatsRequest) GetAuctionConfigurationParams() (string, string) {
+	return strconv.FormatInt(r.Stats.AuctionConfigurationID, 10), r.Stats.AuctionConfigurationUID
 }
 
 func (r *StatsRequest) SetAuctionConfigurationParams(id int64, uid string) {
@@ -36,7 +32,7 @@ func (r *StatsRequest) SetAuctionConfigurationParams(id int64, uid string) {
 
 type Stats struct {
 	AuctionID               string       `json:"auction_id" validate:"required"`
-	AuctionConfigurationID  int64        `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"` // Deprecated: use AuctionConfigurationUID instead
+	AuctionConfigurationID  int64        `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"`
 	AuctionConfigurationUID string       `json:"auction_configuration_uid" validate:"required_without=AuctionConfigurationID"`
 	Result                  StatsResult  `json:"result" validate:"required"`
 	Rounds                  []StatsRound `json:"rounds" validate:"required"`

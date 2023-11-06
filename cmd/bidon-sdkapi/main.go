@@ -99,8 +99,11 @@ func main() {
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
 
+	configFetcher := &auctionstore.ConfigFetcher{
+		DB:    db,
+		Cache: config.NewMemoryCacheOf[*auction.Config](30*time.Second, 1*time.Second, 1*time.Hour),
+	}
 	appFetcher := &sdkapistore.AppFetcher{DB: db}
-	configFetcher := &auctionstore.ConfigFetcher{DB: db}
 	geocoder := &geocoder.Geocoder{DB: db, MaxMindDB: maxMindDB}
 	segmentMatcher := segment.Matcher{
 		Fetcher: &segmentstore.SegmentFetcher{DB: db},

@@ -76,7 +76,7 @@ func (r *BaseRequest) GetSDKVersionSemver() (*semver.Version, error) {
 	return semver.NewVersion(r.App.SDKVersion)
 }
 
-func (r *BaseRequest) GetAuctionConfigurationParams(sdkVersion string) (string, string) {
+func (r *BaseRequest) GetAuctionConfigurationParams() (string, string) {
 	return "", ""
 }
 

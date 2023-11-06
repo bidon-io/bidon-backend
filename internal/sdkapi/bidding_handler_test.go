@@ -80,7 +80,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 		},
 	}
 	configFetcher := &sdkapimocks.ConfigFetcherMock{
-		FetchByUIDFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
+		FetchByUIDCachedFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
 			return auctionConfig
 		},
 	}

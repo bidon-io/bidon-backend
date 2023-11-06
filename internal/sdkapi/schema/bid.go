@@ -18,7 +18,7 @@ func (b BidType) String() string {
 
 type Bid struct {
 	AuctionID               string                `json:"auction_id" validate:"required"`
-	AuctionConfigurationID  int64                 `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"` // Deprecated: use AuctionConfigurationUID instead
+	AuctionConfigurationID  int64                 `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"`
 	AuctionConfigurationUID string                `json:"auction_configuration_uid" validate:"required_without=AuctionConfigurationID"`
 	ImpID                   string                `json:"imp_id" validate:"required"`
 	DemandID                string                `json:"demand_id" validate:"required"`

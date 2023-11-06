@@ -33,7 +33,7 @@ func SetupStatsHandler() sdkapi.StatsHandler {
 		},
 	}
 	configFetcher := mocks.ConfigFetcherMock{
-		FetchByUIDFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
+		FetchByUIDCachedFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
 			return auctionConfig
 		},
 	}

@@ -8,7 +8,7 @@ import (
 type Imp struct {
 	ID                      string                         `json:"id" validate:"required,uuid4"`
 	AuctionID               string                         `json:"auction_id" validate:"required,uuid4"`
-	AuctionConfigurationID  int64                          `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"` // Deprecated: use AuctionConfigurationUID instead
+	AuctionConfigurationID  int64                          `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"`
 	AuctionConfigurationUID string                         `json:"auction_configuration_uid" validate:"required_without=AuctionConfigurationID"`
 	RoundID                 string                         `json:"round_id" validate:"required"`
 	BidFloor                *float64                       `json:"bidfloor" validate:"required,gte=0"`

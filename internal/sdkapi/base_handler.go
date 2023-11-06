@@ -29,7 +29,7 @@ type AppFetcher interface {
 }
 
 type ConfigFetcher interface {
-	FetchByUID(ctx context.Context, appId int64, key, aucUID string) *auction.Config
+	FetchByUIDCached(ctx context.Context, appId int64, id, uid string) *auction.Config
 	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error)
 }
 
@@ -62,8 +62,8 @@ func (b *BaseHandler[T, PT]) resolveRequest(c echo.Context) (*request[T, PT], er
 
 	var auctionConfig *auction.Config
 	if b.ConfigFetcher != nil {
-		key, id := req.GetAuctionConfigurationParams(sdkVersion)
-		auctionConfig = b.ConfigFetcher.FetchByUID(c.Request().Context(), app.ID, key, id)
+		id, uid := req.GetAuctionConfigurationParams()
+		auctionConfig = b.ConfigFetcher.FetchByUIDCached(c.Request().Context(), app.ID, id, uid)
 	}
 	if auctionConfig != nil {
 		req.SetAuctionConfigurationParams(auctionConfig.ID, auctionConfig.UID)
@@ -88,7 +88,7 @@ type rawRequest[T any] interface {
 	GetGeo() schema.Geo
 	SetSDKVersion(string)
 	NormalizeValues()
-	GetAuctionConfigurationParams(string) (string, string)
+	GetAuctionConfigurationParams() (string, string)
 	SetAuctionConfigurationParams(int64, string)
 }
 

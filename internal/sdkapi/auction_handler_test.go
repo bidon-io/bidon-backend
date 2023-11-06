@@ -97,7 +97,7 @@ func testHelperAuctionHandler(t *testing.T) *sdkapi.AuctionHandler {
 		MatchFunc: func(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
 			return auctionConfig, nil
 		},
-		FetchByUIDFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
+		FetchByUIDCachedFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
 			return nil
 		},
 	}

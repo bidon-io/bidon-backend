@@ -38,12 +38,8 @@ func (b *ShowRequest) NormalizeValues() {
 	}
 }
 
-func (r *ShowRequest) GetAuctionConfigurationParams(sdkVersion string) (string, string) {
-	if r.Bid.AuctionConfigurationUID != "" {
-		return "uid", r.Bid.AuctionConfigurationUID
-	}
-
-	return "id", strconv.FormatInt(int64(r.Bid.AuctionConfigurationID), 10)
+func (r *ShowRequest) GetAuctionConfigurationParams() (string, string) {
+	return strconv.FormatInt(int64(r.Bid.AuctionConfigurationID), 10), r.Bid.AuctionConfigurationUID
 }
 
 func (r *ShowRequest) SetAuctionConfigurationParams(id int64, uid string) {

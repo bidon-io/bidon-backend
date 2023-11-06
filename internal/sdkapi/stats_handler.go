@@ -54,6 +54,14 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 	// 1 event for each demand in round
 	stats := req.raw.Stats
 
+	if req.auctionConfig == nil {
+		err := fmt.Errorf(
+			"no config found for app_id:%d, id: %d, uid: %s",
+			req.app.ID, stats.AuctionConfigurationID, stats.AuctionConfigurationUID,
+		)
+		logError(c, err)
+	}
+
 	auctionConfigurationUID, err := strconv.Atoi(stats.AuctionConfigurationUID)
 	if err != nil {
 		auctionConfigurationUID = 0
@@ -74,7 +82,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 		EventType:               "stats_request",
 		AdType:                  string(req.raw.AdType),
 		AuctionID:               stats.AuctionID,
-		AuctionConfigurationID:  int64(stats.AuctionConfigurationID),
+		AuctionConfigurationID:  stats.AuctionConfigurationID,
 		AuctionConfigurationUID: int64(auctionConfigurationUID),
 		Status:                  stats.Result.Status,
 		RoundID:                 stats.Result.RoundID,
@@ -98,7 +106,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 			EventType:               "round_request",
 			AdType:                  string(req.raw.AdType),
 			AuctionID:               stats.AuctionID,
-			AuctionConfigurationID:  int64(stats.AuctionConfigurationID),
+			AuctionConfigurationID:  stats.AuctionConfigurationID,
 			AuctionConfigurationUID: int64(auctionConfigurationUID),
 			RoundID:                 round.ID,
 			RoundNumber:             roundNumber,
@@ -126,7 +134,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 				EventType:               "demand_request",
 				AdType:                  string(req.raw.AdType),
 				AuctionID:               stats.AuctionID,
-				AuctionConfigurationID:  int64(stats.AuctionConfigurationID),
+				AuctionConfigurationID:  stats.AuctionConfigurationID,
 				AuctionConfigurationUID: int64(auctionConfigurationUID),
 				Status:                  demand.Status,
 				RoundID:                 round.ID,
@@ -152,7 +160,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 				EventType:               "client_bid",
 				AdType:                  string(req.raw.AdType),
 				AuctionID:               stats.AuctionID,
-				AuctionConfigurationID:  int64(stats.AuctionConfigurationID),
+				AuctionConfigurationID:  stats.AuctionConfigurationID,
 				AuctionConfigurationUID: int64(auctionConfigurationUID),
 				Status:                  bid.Status,
 				RoundID:                 round.ID,
