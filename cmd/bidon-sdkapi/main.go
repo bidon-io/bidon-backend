@@ -104,7 +104,10 @@ func main() {
 		DB:    db,
 		Cache: config.NewMemoryCacheOf[*auction.Config](1 * time.Hour),
 	}
-	appFetcher := &sdkapistore.AppFetcher{DB: db}
+	appFetcher := &sdkapistore.AppFetcher{
+		DB:    db,
+		Cache: config.NewMemoryCacheOf[sdkapi.App](10 * time.Minute),
+	}
 	geoCoder := &geocoder.Geocoder{
 		DB:        db,
 		MaxMindDB: maxMindDB,

@@ -91,17 +91,16 @@ func (g *MmdbGeoData) SubdivisionCode() string {
 }
 
 const (
-	MAX_MIND_PROVIDER_CODE = 3
-	UNKNOWN_COUNTRY_CODE   = "ZZ"
-	UNKNOWN_COUNTRY_CODE3  = "ZZZ"
+	MaxMindProviderCode = 3
+	UnknownCountryCode  = "ZZ"
 )
 
-var DEFAULT_COUNTRY_CODES_FOR_CONTINENTS = map[string]string{
+var DefaultCountryCodesForContinents = map[string]string{
 	"Europe": "FR",
 	"Asia":   "ID",
 }
 
-// FindGeoData finds the geolocation data for the given IP address.
+// Lookup finds the geolocation data for the given IP address.
 func (g *Geocoder) Lookup(ctx context.Context, ipString string) (GeoData, error) {
 	var geoData GeoData
 
@@ -125,7 +124,7 @@ func (g *Geocoder) Lookup(ctx context.Context, ipString string) (GeoData, error)
 
 	geoData.CountryCode = countryCode
 	geoData.CountryCode3 = country.Alpha3Code
-	geoData.UnknownCountry = countryCode == UNKNOWN_COUNTRY_CODE
+	geoData.UnknownCountry = countryCode == UnknownCountryCode
 	geoData.CountryID = country.ID
 	geoData.CityName = mmdbGeoData.CityName()
 	geoData.RegionName = mmdbGeoData.SubdivisionName()
@@ -134,7 +133,7 @@ func (g *Geocoder) Lookup(ctx context.Context, ipString string) (GeoData, error)
 	geoData.Lon = mmdbGeoData.Location.Longitude
 	geoData.Accuracy = mmdbGeoData.Location.AccuracyRadius * 1000 // convert kilometers to meters
 	geoData.ZipCode = mmdbGeoData.Postal.Code
-	geoData.IPService = MAX_MIND_PROVIDER_CODE
+	geoData.IPService = MaxMindProviderCode
 	geoData.IPString = ipString
 
 	return geoData, nil
@@ -153,11 +152,11 @@ func (g *Geocoder) countryCodeFor(mmdbGeoData MmdbGeoData) string {
 		return mmdbGeoData.Country.ISOCode
 	}
 
-	if code, ok := DEFAULT_COUNTRY_CODES_FOR_CONTINENTS[mmdbGeoData.ContinentName()]; ok {
+	if code, ok := DefaultCountryCodesForContinents[mmdbGeoData.ContinentName()]; ok {
 		return code
 	}
 
-	return UNKNOWN_COUNTRY_CODE
+	return UnknownCountryCode
 }
 
 func (g *Geocoder) findCountryCached(ctx context.Context, countryCode string) (*db.Country, error) {
@@ -165,6 +164,7 @@ func (g *Geocoder) findCountryCached(ctx context.Context, countryCode string) (*
 		return g.findCountry(ctx, countryCode)
 	})
 }
+
 func (g *Geocoder) findCountry(ctx context.Context, countryCode string) (*db.Country, error) {
 	var dbCountry db.Country
 
