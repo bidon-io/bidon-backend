@@ -16,14 +16,12 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
 
 type BiddingHandler struct {
 	*BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]
 	BiddingBuilder        *bidding.Builder
-	SegmentMatcher        *segment.Matcher
 	AdUnitsMapBuilder     AdUnitsMapBuilder
 	AdaptersConfigBuilder AdaptersConfigBuilder
 	EventLogger           *event.Logger

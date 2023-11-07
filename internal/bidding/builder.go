@@ -76,7 +76,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		ID:   bidId.String(),
 		Test: *bool2int(br.Test),
 		AT:   1,
-		TMax: 5000,
+		TMax: br.TMax,
 		App: &openrtb2.App{
 			Ver:    br.App.Version,
 			Bundle: br.App.Bundle,
