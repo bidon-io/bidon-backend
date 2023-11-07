@@ -205,6 +205,7 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 			Bidding:                 true,
 			RawRequest:              result.RawRequest,
 			RawResponse:             result.RawResponse,
+			Error:                   result.ErrorMessage(),
 		}
 		bidRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
 		h.EventLogger.Log(bidRequestEvent, func(err error) {

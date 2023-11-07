@@ -147,13 +147,14 @@ func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 		dr.Error = err
 		return dr
 	}
+	defer httpResp.Body.Close()
 
 	respBody, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		dr.Error = err
 		return dr
 	}
-	defer httpResp.Body.Close()
+
 	dr.RawResponse = string(respBody)
 	dr.Status = httpResp.StatusCode
 
