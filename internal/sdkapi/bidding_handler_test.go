@@ -104,7 +104,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 	}
 
 	adUnitsMapBuilder := &sdkapimocks.AdUnitsMapBuilderMock{
-		BuildFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp) (store.AdUnitsMap, error) {
+		BuildFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, br schema.BiddingRequest) (store.AdUnitsMap, error) {
 			return *adUnitsMap, nil
 		},
 	}
@@ -132,7 +132,7 @@ func testHelperBiddingHandler(t *testing.T) sdkapi.BiddingHandler {
 	}
 
 	notificationMock := &biddingmocks.NotificationHandlerMock{
-		HandleRoundFunc: func(context.Context, *schema.Imp, bidding.AuctionResult) error {
+		HandleBiddingRoundFunc: func(context.Context, *schema.Imp, bidding.AuctionResult) error {
 			return nil
 		},
 	}

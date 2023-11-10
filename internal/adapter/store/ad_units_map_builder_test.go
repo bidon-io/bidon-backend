@@ -2,10 +2,11 @@ package store_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/auction/mocks"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/adapter/store"
@@ -50,7 +51,7 @@ func TestAdUnitsMapBuilder_Build(t *testing.T) {
 	}
 
 	for _, tC := range testCases {
-		got, err := builder.Build(context.Background(), 1, tC.adapterKeys, schema.Imp{})
+		got, err := builder.Build(context.Background(), 1, tC.adapterKeys, schema.BiddingRequest{})
 		if err != nil {
 			t.Fatalf("failed to fetch app demand profiles: %v", err)
 		}

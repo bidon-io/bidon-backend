@@ -34,7 +34,7 @@ type AdaptersConfigBuilder interface {
 }
 
 type AdUnitsMapBuilder interface {
-	Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp) (store.AdUnitsMap, error)
+	Build(context.Context, int64, []adapter.Key, schema.BiddingRequest) (store.AdUnitsMap, error)
 }
 
 type BiddingResponse struct {
@@ -86,7 +86,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 	}
 
 	imp := req.raw.Imp
-	adUnitsMap, err := h.AdUnitsMapBuilder.Build(ctx, req.app.ID, req.raw.Adapters.Keys(), imp)
+	adUnitsMap, err := h.AdUnitsMapBuilder.Build(ctx, req.app.ID, req.raw.Adapters.Keys(), req.raw)
 	if err != nil {
 		return err
 	}

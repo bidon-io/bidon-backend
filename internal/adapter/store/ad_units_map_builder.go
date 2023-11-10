@@ -17,12 +17,13 @@ type AdUnitsMatcher interface {
 	Match(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error)
 }
 
-func (b *AdUnitsMapBuilder) Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp) (AdUnitsMap, error) {
+func (b *AdUnitsMapBuilder) Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, biddingRequest schema.BiddingRequest) (AdUnitsMap, error) {
 	adUnits, err := b.AdUnitsMatcher.Match(ctx, &auction.BuildParams{
-		Adapters: adapterKeys,
-		AppID:    appID,
-		AdType:   imp.Type(),
-		AdFormat: imp.Format(),
+		Adapters:   adapterKeys,
+		AppID:      appID,
+		AdType:     biddingRequest.Imp.Type(),
+		AdFormat:   biddingRequest.Imp.Format(),
+		DeviceType: biddingRequest.Device.Type,
 	})
 	if err != nil {
 		return nil, err
