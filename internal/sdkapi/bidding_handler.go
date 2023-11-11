@@ -21,13 +21,17 @@ import (
 
 type BiddingHandler struct {
 	*BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]
-	BiddingBuilder        *bidding.Builder
+	BiddingBuilder        BiddingBuilder
 	AdUnitsMatcher        AdUnitsMatcher
 	AdaptersConfigBuilder AdaptersConfigBuilder
 	EventLogger           *event.Logger
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/bidding_mocks.go -pkg mocks . AdaptersConfigBuilder AdUnitsMatcher
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/bidding_mocks.go -pkg mocks . BiddingBuilder AdaptersConfigBuilder AdUnitsMatcher
+
+type BiddingBuilder interface {
+	HoldAuction(ctx context.Context, params *bidding.BuildParams) (bidding.AuctionResult, error)
+}
 
 type AdaptersConfigBuilder interface {
 	Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp, adUnitsMap *map[adapter.Key][]auction.AdUnit) (adapter.ProcessedConfigsMap, error)
@@ -131,7 +135,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req, &auctionResult)
+	h.sendEvents(c, req, &auctionResult, &adUnitsMap)
 
 	response, err := h.buildResponse(auctionResult, imp, adUnitsMap, sdkVersion)
 	if err != nil {
@@ -147,7 +151,7 @@ func (h *BiddingHandler) buildResponse(auctionResult bidding.AuctionResult, imp 
 	}
 
 	for _, result := range auctionResult.Bids {
-		if result.IsBid() && result.Bid.Price >= imp.GetBidFloor() {
+		if result.IsBid() && result.Price() >= imp.GetBidFloor() {
 			var bid *Bid
 
 			if Version05GTEConstraint.Check(sdkVersion) {
@@ -173,16 +177,28 @@ func (h *BiddingHandler) buildResponse(auctionResult bidding.AuctionResult, imp 
 }
 
 func (h *BiddingHandler) buildBid(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) *Bid {
-	adUnit, err := selectAdUnit(demandResponse, adUnitsMap)
+	storeAdUnit, err := selectAdUnit(demandResponse, adUnitsMap)
 	if err != nil {
 		return nil
+	}
+
+	var adUnit AdUnit
+
+	if storeAdUnit != nil {
+		adUnit = AdUnit{
+			DemandID: demandResponse.DemandID,
+			UID:      storeAdUnit.UID,
+			Label:    storeAdUnit.Label,
+			BidType:  storeAdUnit.BidType,
+			Extra:    storeAdUnit.Extra,
+		}
 	}
 
 	return &Bid{
 		ID:     demandResponse.Bid.ID,
 		ImpID:  demandResponse.Bid.ImpID,
 		Price:  demandResponse.Bid.Price,
-		AdUnit: *adUnit,
+		AdUnit: adUnit,
 		Ext: map[string]any{
 			"payload": demandResponse.Bid.Payload,
 		},
@@ -201,7 +217,12 @@ func (h *BiddingHandler) buildBidDeprecated(demandResponse adapters.DemandRespon
 	}
 }
 
-func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingRequest, *schema.BiddingRequest], auctionResult *bidding.AuctionResult) {
+func (h *BiddingHandler) sendEvents(
+	c echo.Context,
+	req *request[schema.BiddingRequest, *schema.BiddingRequest],
+	auctionResult *bidding.AuctionResult,
+	adUnitsMap *map[adapter.Key][]auction.AdUnit,
+) {
 	imp := req.raw.Imp
 	auctionConfigurationUID, err := strconv.Atoi(imp.AuctionConfigurationUID)
 	if err != nil {
@@ -209,6 +230,15 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 	}
 
 	for _, result := range auctionResult.Bids {
+		adUnit, _ := selectAdUnit(result, adUnitsMap)
+		adUnitUID := int64(0)
+		adUnitLabel := ""
+		if adUnit != nil {
+			uid, _ := strconv.ParseInt(adUnit.UID, 10, 64)
+			adUnitUID = uid
+			adUnitLabel = adUnit.Label
+		}
+
 		adRequestParams := event.AdRequestParams{
 			EventType:               "bid_request",
 			AdType:                  string(req.raw.AdType),
@@ -220,11 +250,9 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 			RoundNumber:             auctionResult.RoundNumber,
 			ImpID:                   imp.ID,
 			DemandID:                string(result.DemandID),
-			AdUnitID:                0,
-			LineItemUID:             0,
-			LineItemLabel:           "",
-			AdUnitCode:              "",
-			Ecpm:                    0,
+			AdUnitUID:               adUnitUID,
+			AdUnitLabel:             adUnitLabel,
+			Ecpm:                    result.Price(),
 			PriceFloor:              imp.GetBidFloor(),
 			Bidding:                 true,
 			RawRequest:              result.RawRequest,
@@ -247,10 +275,8 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 				RoundNumber:             auctionResult.RoundNumber,
 				ImpID:                   imp.ID,
 				DemandID:                string(result.DemandID),
-				AdUnitID:                0,
-				LineItemUID:             0,
-				LineItemLabel:           "",
-				AdUnitCode:              result.TagID,
+				AdUnitUID:               adUnitUID,
+				AdUnitLabel:             adUnitLabel,
 				Ecpm:                    result.Bid.Price,
 				PriceFloor:              imp.GetBidFloor(),
 				Bidding:                 true,
@@ -263,39 +289,24 @@ func (h *BiddingHandler) sendEvents(c echo.Context, req *request[schema.BiddingR
 	}
 }
 
-func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) (*AdUnit, error) {
+func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) (*auction.AdUnit, error) {
 	adUnits, ok := (*adUnitsMap)[demandResponse.DemandID]
 	if !ok {
 		return nil, fmt.Errorf("ad units not found for demand %s", demandResponse.DemandID)
 	}
+
 	if demandResponse.DemandID == adapter.AmazonKey {
-		return selectAmazonAdUnit(demandResponse.SlotUUID, adUnits)
-	}
-
-	adUnit := adUnits[0]
-	return &AdUnit{
-		DemandID: demandResponse.DemandID,
-		UID:      adUnit.UID,
-		Label:    adUnit.Label,
-		BidType:  adUnit.BidType,
-		Extra:    adUnit.Extra,
-	}, nil
-}
-
-func selectAmazonAdUnit(slotUUID string, adUnits []auction.AdUnit) (*AdUnit, error) {
-	for _, adUnit := range adUnits {
-		if slotUUID == adUnit.Extra["slot_uuid"] {
-			return &AdUnit{
-				DemandID: adapter.AmazonKey,
-				UID:      adUnit.UID,
-				Label:    adUnit.Label,
-				BidType:  adUnit.BidType,
-				Extra:    adUnit.Extra,
-			}, nil
+		for _, adUnit := range adUnits {
+			if demandResponse.SlotUUID == adUnit.Extra["slot_uuid"] {
+				return &adUnit, nil
+			}
 		}
+	} else {
+		adUnit := adUnits[0]
+		return &adUnit, nil
 	}
 
-	return nil, fmt.Errorf("ad unit not found for slot_uuid %s", slotUUID)
+	return nil, fmt.Errorf("ad unit not found for demand %s", demandResponse.DemandID)
 }
 
 // Deprecated: uses AdUnit instead of Demands since SDK 0.5
