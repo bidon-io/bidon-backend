@@ -3,6 +3,7 @@ package sdkapi
 import (
 	"context"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"net/http"
 	"sort"
 	"strconv"
@@ -73,6 +74,11 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		return err
 	}
 
+	sdkVersion, err := req.raw.GetSDKVersionSemver()
+	if err != nil {
+		return ErrInvalidSDKVersion
+	}
+
 	start := time.Now()
 
 	ctx := c.Request().Context()
@@ -127,64 +133,71 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 
 	h.sendEvents(c, req, &auctionResult)
 
-	response := BiddingResponse{
-		Status: "NO_BID",
-	}
-
-	sdkVersion, err := req.raw.GetSDKVersionSemver()
+	response, err := h.buildResponse(auctionResult, imp, adUnitsMap, sdkVersion)
 	if err != nil {
-		return ErrInvalidSDKVersion
+		c.Logger().Errorf("Error building response: ", err)
 	}
-
-	if Version05GTEConstraint.Check(sdkVersion) {
-		h.buildBids(auctionResult, imp, &adUnitsMap, &response)
-	} else {
-		h.buildBidsDeprecated(auctionResult, imp, &response)
-	}
-	// Sort bids by price descending
-	sort.Slice(response.Bids, func(i, j int) bool {
-		return response.Bids[i].Price > response.Bids[j].Price
-	})
 
 	return c.JSON(http.StatusOK, response)
 }
 
-func (h *BiddingHandler) buildBids(auctionResult bidding.AuctionResult, imp schema.Imp, adUnitsMap *map[adapter.Key][]auction.AdUnit, response *BiddingResponse) {
+func (h *BiddingHandler) buildResponse(auctionResult bidding.AuctionResult, imp schema.Imp, adUnitsMap map[adapter.Key][]auction.AdUnit, sdkVersion *semver.Version) (BiddingResponse, error) {
+	response := BiddingResponse{
+		Status: "NO_BID",
+	}
+
 	for _, result := range auctionResult.Bids {
 		if result.IsBid() && result.Bid.Price >= imp.GetBidFloor() {
+			var bid *Bid
 
-			adUnit, err := selectAdUnit(result, adUnitsMap)
-			if err != nil {
-				continue
+			if Version05GTEConstraint.Check(sdkVersion) {
+				bid = h.buildBid(result, &adUnitsMap)
+			} else {
+				bid = h.buildBidDeprecated(result)
 			}
-			response.Bids = append(response.Bids, Bid{
-				ID:     result.Bid.ID,
-				ImpID:  result.Bid.ImpID,
-				Price:  result.Bid.Price,
-				AdUnit: *adUnit,
-				Ext: map[string]any{
-					"payload": result.Bid.Payload,
-				},
-			})
-			response.Status = "SUCCESS"
+
+			if bid != nil {
+				response.Bids = append(response.Bids, *bid)
+			}
 		}
+	}
+	if len(response.Bids) > 0 {
+		response.Status = "SUCCESS"
+	}
+
+	// Sort bids by price descending
+	sort.Slice(response.Bids, func(i, j int) bool {
+		return response.Bids[i].Price > response.Bids[j].Price
+	})
+	return response, nil
+}
+
+func (h *BiddingHandler) buildBid(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) *Bid {
+	adUnit, err := selectAdUnit(demandResponse, adUnitsMap)
+	if err != nil {
+		return nil
+	}
+
+	return &Bid{
+		ID:     demandResponse.Bid.ID,
+		ImpID:  demandResponse.Bid.ImpID,
+		Price:  demandResponse.Bid.Price,
+		AdUnit: *adUnit,
+		Ext: map[string]any{
+			"payload": demandResponse.Bid.Payload,
+		},
 	}
 }
 
 // Deprecated: uses AdUnit instead of Demands since SDK 0.5
-func (h *BiddingHandler) buildBidsDeprecated(auctionResult bidding.AuctionResult, imp schema.Imp, response *BiddingResponse) {
-	for _, result := range auctionResult.Bids {
-		if result.IsBid() && result.Bid.Price >= imp.GetBidFloor() {
-			response.Bids = append(response.Bids, Bid{
-				ID:    result.Bid.ID,
-				ImpID: result.Bid.ImpID,
-				Price: result.Bid.Price,
-				Demands: map[adapter.Key]Demand{
-					result.DemandID: buildDemandInfo(result),
-				},
-			})
-			response.Status = "SUCCESS"
-		}
+func (h *BiddingHandler) buildBidDeprecated(demandResponse adapters.DemandResponse) *Bid {
+	return &Bid{
+		ID:    demandResponse.Bid.ID,
+		ImpID: demandResponse.Bid.ImpID,
+		Price: demandResponse.Bid.Price,
+		Demands: map[adapter.Key]Demand{
+			demandResponse.DemandID: buildDemandInfo(demandResponse),
+		},
 	}
 }
 
