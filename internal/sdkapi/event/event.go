@@ -21,15 +21,6 @@ type Event interface {
 	json.Marshaler
 }
 
-func NewConfig(request *schema.ConfigRequest, geoData geocoder.GeoData) Event {
-	return &simpleEvent[*schema.ConfigRequest]{
-		timestamp: generateTimestamp(),
-		topic:     config.ConfigTopic,
-		request:   request,
-		geoData:   geoData,
-	}
-}
-
 func NewShow(request *schema.ShowRequest, geoData geocoder.GeoData) Event {
 	return &simpleEvent[*schema.ShowRequest]{
 		timestamp: generateTimestamp(),

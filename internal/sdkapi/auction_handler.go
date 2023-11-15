@@ -78,6 +78,20 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	if err != nil {
 		auctionConfigurationUID = 0
 	}
+
+	h.sendEvents(c, req, auc, auctionConfigurationUID)
+
+	response := &AuctionResponse{
+		Auction:    auc,
+		Token:      "{}",
+		PriceFloor: req.raw.AdObject.PriceFloor,
+		AuctionID:  req.raw.AdObject.AuctionID,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *AuctionHandler) sendEvents(c echo.Context, req *request[schema.AuctionRequest, *schema.AuctionRequest], auc *auction.Auction, auctionConfigurationUID int) {
 	adRequestParams := event.AdRequestParams{
 		EventType:               "auction_request",
 		AdType:                  string(req.raw.AdType),
@@ -98,13 +112,4 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	h.EventLogger.Log(aucRequestEvent, func(err error) {
 		logError(c, fmt.Errorf("log auction_request event: %v", err))
 	})
-
-	response := &AuctionResponse{
-		Auction:    auc,
-		Token:      "{}",
-		PriceFloor: req.raw.AdObject.PriceFloor,
-		AuctionID:  req.raw.AdObject.AuctionID,
-	}
-
-	return c.JSON(http.StatusOK, response)
 }
