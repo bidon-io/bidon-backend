@@ -2,15 +2,10 @@
 package dbtest
 
 import (
-	"database/sql"
-	"fmt"
 	"log"
 	"os"
-	"testing"
-	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/joho/godotenv"
 )
 
