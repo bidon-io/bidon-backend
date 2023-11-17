@@ -26,7 +26,8 @@ type Option func(*DB)
 
 func WithSnowflakeNode(node *snowflake.Node) Option {
 	return func(db *DB) {
-		db.DB = db.Set(snowflakeNodeKey, node)
+		// Calling Session() is important, refer to https://gorm.io/docs/method_chaining.html#New-Session-Method
+		db.DB = db.Set(snowflakeNodeKey, node).Session(&gorm.Session{})
 	}
 }
 
