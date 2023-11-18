@@ -111,6 +111,8 @@ func NewAdapterInitConfig(key adapter.Key) (AdapterInitConfig, error) {
 		return new(BigoAdsInitConfig), nil
 	case adapter.DTExchangeKey:
 		return new(DTExchangeInitConfig), nil
+	case adapter.GAMKey:
+		return new(GAMInitConfig), nil
 	case adapter.MetaKey:
 		return new(MetaInitConfig), nil
 	case adapter.MintegralKey:
@@ -172,6 +174,15 @@ type DTExchangeInitConfig struct {
 
 func (a *DTExchangeInitConfig) Key() adapter.Key {
 	return adapter.DTExchangeKey
+}
+
+type GAMInitConfig struct {
+	NetworkCode string `json:"network_code,omitempty"`
+	AppID       string `json:"app_id,omitempty"`
+}
+
+func (a *GAMInitConfig) Key() adapter.Key {
+	return adapter.GAMKey
 }
 
 type MetaInitConfig struct {
