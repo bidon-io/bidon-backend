@@ -41,6 +41,9 @@ const dataSchemas = {
   "DemandSourceAccount::BigoAds": yup.object({
     appId: yup.number().required().label("App Id"),
   }),
+  "DemandSourceAccount::GAM": yup.object({
+    appId: yup.number().required().label("App Id"),
+  }),
   "DemandSourceAccount::DtExchange": yup.object({
     appId: yup.number().required().label("App Id"),
   }),
@@ -86,6 +89,7 @@ const appKeyVisible = computed(() =>
     "DemandSourceAccount::Inmobi",
     "DemandSourceAccount::MobileFuse",
     "DemandSourceAccount::Amazon",
+    "DemandSourceAccount::GAM",
   ].includes(props.accountType),
 );
 

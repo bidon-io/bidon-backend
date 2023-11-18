@@ -24,6 +24,9 @@
       required
     />
   </template>
+  <template v-if="apiKey === 'gam'">
+    <VeeFormFieldWrapper field="extra.adUnitId" label="Ad Unit Id" required />
+  </template>
   <template v-if="apiKey === 'inmobi'">
     <VeeFormFieldWrapper
       field="extra.placementId"
@@ -111,6 +114,9 @@ const dataSchemas = {
   }),
   dtexchange: yup.object({
     placementId: yup.string().required().label("Placement Id"),
+  }),
+  gam: yup.object({
+    adUnitId: yup.string().required().label("Ad Unit Id"),
   }),
   inmobi: yup.object({
     placementId: yup.string().required().label("Placement Id"),
