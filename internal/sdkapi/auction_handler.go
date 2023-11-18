@@ -105,7 +105,7 @@ func (h *AuctionHandler) sendEvents(c echo.Context, req *request[schema.AuctionR
 		DemandID:                "",
 		AdUnitUID:               0,
 		AdUnitLabel:             "",
-		Ecpm:                    0,
+		ECPM:                    0,
 		PriceFloor:              req.raw.AdObject.PriceFloor,
 	}
 	aucRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)

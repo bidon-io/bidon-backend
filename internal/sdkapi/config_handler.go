@@ -94,11 +94,11 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 
 func (h *ConfigHandler) sendEvents(c echo.Context, req *request[schema.ConfigRequest, *schema.ConfigRequest]) {
 	adRequestParams := event.AdRequestParams{
-		EventType: "config_request",
+		EventType: "config",
 	}
 	configRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
 	h.EventLogger.Log(configRequestEvent, func(err error) {
-		logError(c, fmt.Errorf("log config_request event: %v", err))
+		logError(c, fmt.Errorf("log config event: %v", err))
 	})
 }
 
