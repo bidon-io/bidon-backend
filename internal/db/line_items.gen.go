@@ -31,8 +31,8 @@ type LineItem struct {
 	Format      sql.NullString      `gorm:"column:format;type:character varying" json:"format"`
 	PublicUID   sql.NullInt64       `gorm:"column:public_uid;type:bigint;uniqueIndex:index_line_items_on_public_uid,priority:1" json:"public_uid"`
 	IsBidding   sql.NullBool        `gorm:"column:bidding;type:boolean" json:"bidding"`
-	App         App                 `gorm:"foreignKey:AppID" json:"app"`
-	Account     DemandSourceAccount `gorm:"foreignKey:AccountID" json:"account"`
+	App         App                 `json:"app"`
+	Account     DemandSourceAccount `json:"account"`
 }
 
 // TableName LineItem's table name

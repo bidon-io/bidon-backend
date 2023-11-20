@@ -27,11 +27,7 @@ func GenerateModels(db *sql.DB) {
 
 	app := g.GenerateModel(
 		"apps",
-		gen.FieldRelate(field.BelongsTo, "User", user, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"UserID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "User", user, &field.RelateConfig{}),
 		gen.FieldType("platform_id", "PlatformID"),
 		gen.FieldType("settings", "map[string]any"),
 		gen.FieldGORMTag("settings", func(tag field.GormTag) field.GormTag {
@@ -43,16 +39,8 @@ func GenerateModels(db *sql.DB) {
 
 	demandSourceAccount := g.GenerateModel(
 		"demand_source_accounts",
-		gen.FieldRelate(field.BelongsTo, "DemandSource", demandSource, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"DemandSourceID"},
-			},
-		}),
-		gen.FieldRelate(field.BelongsTo, "User", user, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"UserID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "DemandSource", demandSource, &field.RelateConfig{}),
+		gen.FieldRelate(field.BelongsTo, "User", user, &field.RelateConfig{}),
 		gen.FieldType("user_id", "int64"),
 		gen.FieldRename("bidding", "IsBidding"),
 		gen.FieldGORMTag("bidding", func(tag field.GormTag) field.GormTag {
@@ -62,30 +50,14 @@ func GenerateModels(db *sql.DB) {
 
 	g.GenerateModel(
 		"app_demand_profiles",
-		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AppID"},
-			},
-		}),
-		gen.FieldRelate(field.BelongsTo, "Account", demandSourceAccount, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AccountID"},
-			},
-		}),
-		gen.FieldRelate(field.BelongsTo, "DemandSource", demandSource, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"DemandSourceID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{}),
+		gen.FieldRelate(field.BelongsTo, "Account", demandSourceAccount, &field.RelateConfig{}),
+		gen.FieldRelate(field.BelongsTo, "DemandSource", demandSource, &field.RelateConfig{}),
 	)
 
 	segment := g.GenerateModel(
 		"segments",
-		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AppID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{}),
 		gen.FieldType("filters", "[]segment.Filter"),
 		gen.FieldGORMTag("filters", func(tag field.GormTag) field.GormTag {
 			return tag.Set("serializer", "json")
@@ -94,23 +66,16 @@ func GenerateModels(db *sql.DB) {
 
 	g.GenerateModel(
 		"auction_configurations",
-		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AppID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{}),
 		gen.FieldRelate(field.BelongsTo, "Segment", segment, &field.RelateConfig{
 			RelatePointer: true,
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"SegmentID"},
-			},
 		}),
+		gen.FieldType("segment_id", "*sql.NullInt64"),
 		gen.FieldType("ad_type", "AdType"),
 		gen.FieldType("rounds", "[]auction.RoundConfig"),
 		gen.FieldGORMTag("rounds", func(tag field.GormTag) field.GormTag {
 			return tag.Set("serializer", "json")
 		}),
-		gen.FieldType("segment_id", "*sql.NullInt64"),
 		gen.FieldGORMTag("external_win_notifications", func(tag field.GormTag) field.GormTag {
 			return tag.Set("default", "false")
 		}),
@@ -120,16 +85,8 @@ func GenerateModels(db *sql.DB) {
 
 	g.GenerateModel(
 		"line_items",
-		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AppID"},
-			},
-		}),
-		gen.FieldRelate(field.BelongsTo, "Account", demandSourceAccount, &field.RelateConfig{
-			GORMTag: field.GormTag{
-				"foreignKey": []string{"AccountID"},
-			},
-		}),
+		gen.FieldRelate(field.BelongsTo, "App", app, &field.RelateConfig{}),
+		gen.FieldRelate(field.BelongsTo, "Account", demandSourceAccount, &field.RelateConfig{}),
 		gen.FieldType("code", "*string"),
 		gen.FieldType("ad_type", "AdType"),
 		gen.FieldType("extra", "map[string]any"),

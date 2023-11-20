@@ -25,7 +25,7 @@ type Segment struct {
 	UpdatedAt   time.Time        `gorm:"column:updated_at;type:timestamp(6) without time zone;not null" json:"updated_at"`
 	Priority    int32            `gorm:"column:priority;type:integer;not null" json:"priority"`
 	PublicUID   sql.NullInt64    `gorm:"column:public_uid;type:bigint;uniqueIndex:index_segments_on_public_uid,priority:1" json:"public_uid"`
-	App         App              `gorm:"foreignKey:AppID" json:"app"`
+	App         App              `json:"app"`
 }
 
 // TableName Segment's table name

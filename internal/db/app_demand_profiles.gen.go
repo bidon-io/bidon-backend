@@ -24,9 +24,9 @@ type AppDemandProfile struct {
 	CreatedAt      time.Time           `gorm:"column:created_at;type:timestamp(6) without time zone;not null" json:"created_at"`
 	UpdatedAt      time.Time           `gorm:"column:updated_at;type:timestamp(6) without time zone;not null" json:"updated_at"`
 	PublicUID      sql.NullInt64       `gorm:"column:public_uid;type:bigint;uniqueIndex:index_app_demand_profiles_on_public_uid,priority:1" json:"public_uid"`
-	App            App                 `gorm:"foreignKey:AppID" json:"app"`
-	Account        DemandSourceAccount `gorm:"foreignKey:AccountID" json:"account"`
-	DemandSource   DemandSource        `gorm:"foreignKey:DemandSourceID" json:"demand_source"`
+	App            App                 `json:"app"`
+	Account        DemandSourceAccount `json:"account"`
+	DemandSource   DemandSource        `json:"demand_source"`
 }
 
 // TableName AppDemandProfile's table name

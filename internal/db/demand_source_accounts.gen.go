@@ -26,8 +26,8 @@ type DemandSourceAccount struct {
 	UpdatedAt      time.Time      `gorm:"column:updated_at;type:timestamp(6) without time zone;not null" json:"updated_at"`
 	Label          sql.NullString `gorm:"column:label;type:character varying" json:"label"`
 	PublicUID      sql.NullInt64  `gorm:"column:public_uid;type:bigint;uniqueIndex:index_demand_source_accounts_on_public_uid,priority:1" json:"public_uid"`
-	DemandSource   DemandSource   `gorm:"foreignKey:DemandSourceID" json:"demand_source"`
-	User           User           `gorm:"foreignKey:UserID" json:"user"`
+	DemandSource   DemandSource   `json:"demand_source"`
+	User           User           `json:"user"`
 }
 
 // TableName DemandSourceAccount's table name
