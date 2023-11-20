@@ -8,33 +8,34 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var Env = getEnv()
-
 const (
-	ProdEnv = "production"
-	DevEnv  = "development"
-	TestEnv = "test"
+	ProdEnv    = "production"
+	DevEnv     = "development"
+	TestEnv    = "test"
+	UnknownEnv = ""
 )
 
-func LoadEnvFile() {
-	var err error
-	if Env == TestEnv {
-		err = godotenv.Load(".env.test")
-	} else {
-		err = godotenv.Load()
-	}
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-}
-
-func getEnv() string {
+func GetEnv() string {
 	switch env := os.Getenv("ENVIRONMENT"); env {
 	case ProdEnv:
 		return ProdEnv
 	case TestEnv:
 		return TestEnv
-	default:
+	case DevEnv:
 		return DevEnv
+	default:
+		return UnknownEnv
+	}
+}
+
+func LoadEnvFile() {
+	var err error
+	if GetEnv() == TestEnv {
+		err = godotenv.Load(".env.test")
+	} else {
+		err = godotenv.Load()
+	}
+	if err != nil {
+		log.Printf("Did not load .env file: %v", err)
 	}
 }

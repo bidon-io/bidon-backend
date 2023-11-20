@@ -112,7 +112,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// Generate models after migration tasks in dev environment
-	if config.Env == config.DevEnv {
+	if config.GetEnv() == config.DevEnv {
 		gen.GenerateModels(db)
 	}
 }
