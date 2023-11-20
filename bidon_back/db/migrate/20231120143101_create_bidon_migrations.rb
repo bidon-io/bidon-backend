@@ -1,5 +1,5 @@
 class CreateBidONMigrations < ActiveRecord::Migration[7.0]
-  # rubocop:disable Rails/SquishedSQLHeredoc
+  # rubocop:disable Rails/SquishedSQLHeredocs
   def up
     safety_assured do
       execute <<~SQL
@@ -21,5 +21,5 @@ class CreateBidONMigrations < ActiveRecord::Migration[7.0]
       SQL
     end
   end
-  # rubocop:enable Rails/SquishedSQLHeredoc
+  # rubocop:enable Rails/SquishedSQLHeredocs
 end
