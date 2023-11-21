@@ -23,7 +23,7 @@ type LineItem struct {
 	Code        *string             `gorm:"column:code;type:character varying;not null" json:"code"`
 	BidFloor    decimal.NullDecimal `gorm:"column:bid_floor;type:numeric" json:"bid_floor"`
 	AdType      AdType              `gorm:"column:ad_type;type:integer;not null" json:"ad_type"`
-	Extra       map[string]any      `gorm:"column:extra;type:jsonb;default:{};serializer:json" json:"extra"`
+	Extra       map[string]any      `gorm:"column:extra;type:jsonb;default:'{}';serializer:json" json:"extra"`
 	CreatedAt   time.Time           `gorm:"column:created_at;type:timestamp(6) without time zone;not null" json:"created_at"`
 	UpdatedAt   time.Time           `gorm:"column:updated_at;type:timestamp(6) without time zone;not null" json:"updated_at"`
 	Width       int32               `gorm:"column:width;type:integer;not null" json:"width"`
