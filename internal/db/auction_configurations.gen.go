@@ -20,9 +20,9 @@ type AuctionConfiguration struct {
 	Name                     sql.NullString        `gorm:"column:name;type:character varying" json:"name"`
 	AppID                    int64                 `gorm:"column:app_id;type:bigint;not null;index:index_auction_configurations_on_app_id,priority:1" json:"app_id"`
 	AdType                   AdType                `gorm:"column:ad_type;type:integer;not null" json:"ad_type"`
-	Rounds                   []auction.RoundConfig `gorm:"column:rounds;type:jsonb;default:'[]';serializer:json" json:"rounds"`
+	Rounds                   []auction.RoundConfig `gorm:"column:rounds;type:jsonb;default:[];serializer:json" json:"rounds"`
 	Status                   sql.NullInt32         `gorm:"column:status;type:integer" json:"status"`
-	Settings                 datatypes.JSON        `gorm:"column:settings;type:jsonb;default:'{}'" json:"settings"`
+	Settings                 datatypes.JSON        `gorm:"column:settings;type:jsonb;default:{}" json:"settings"`
 	Pricefloor               float64               `gorm:"column:pricefloor;type:double precision;not null" json:"pricefloor"`
 	CreatedAt                time.Time             `gorm:"column:created_at;type:timestamp(6) without time zone;not null" json:"created_at"`
 	UpdatedAt                time.Time             `gorm:"column:updated_at;type:timestamp(6) without time zone;not null" json:"updated_at"`
