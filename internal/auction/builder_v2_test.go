@@ -52,6 +52,9 @@ func TestBuilderV2_Build(t *testing.T) {
 		MatchFunc: func(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
 			return config, nil
 		},
+		FetchByAuctionKeyFunc: func(ctx context.Context, appID int64, auctionKey string) (*auction.Config, error) {
+			return nil, nil
+		},
 	}
 	adUnitsMatcher := &auctionmocks.AdUnitsMatcherMock{
 		MatchFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {

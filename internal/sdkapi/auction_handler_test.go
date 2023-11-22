@@ -100,6 +100,9 @@ func testHelperAuctionHandler(t *testing.T) *sdkapi.AuctionHandler {
 		FetchByUIDCachedFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
 			return nil
 		},
+		FetchByAuctionKeyFunc: func(ctx context.Context, appID int64, auctionKey string) (*auction.Config, error) {
+			return nil, nil
+		},
 	}
 	lineItemsMatcher := &auctionmocks.LineItemsMatcherMock{
 		MatchFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {

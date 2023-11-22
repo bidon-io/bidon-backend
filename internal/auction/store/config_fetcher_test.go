@@ -3,7 +3,9 @@ package store_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"strconv"
 	"testing"
 	"time"
@@ -263,6 +265,109 @@ func TestConfigFetcher_FetchByUIDCached(t *testing.T) {
 
 		if diff := cmp.Diff(tC.want, got); diff != "" {
 			t.Errorf("matcher.FetchByUIDCached(ctx, %d, %q, %q) mismatch (-want, +got):\n%s", tC.args.appID, tC.args.id, tC.args.uid, diff)
+		}
+	}
+}
+
+func TestConfigFetcher_FetchByAuctionKey(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	apps := make([]db.App, 2)
+	for i := range apps {
+		apps[i] = dbtest.CreateApp(t, tx)
+	}
+
+	configs := []db.AuctionConfiguration{
+		{
+			AppID:     apps[0].ID,
+			PublicUID: sql.NullInt64{Int64: 1111111111111111111, Valid: true},
+			AdType:    db.BannerAdType,
+		},
+		{
+			AppID:     apps[0].ID,
+			PublicUID: sql.NullInt64{Int64: 2222222222222222222, Valid: true},
+			AdType:    db.BannerAdType,
+		},
+		{
+			AppID:     apps[1].ID,
+			PublicUID: sql.NullInt64{Int64: 3333333333333333333, Valid: true},
+			AdType:    db.InterstitialAdType,
+			CreatedAt: time.Now(),
+		},
+	}
+	if err := tx.Create(&configs).Error; err != nil {
+		t.Fatalf("Error creating configs: %v", err)
+	}
+	app1BannerConfig := &configs[0]
+	app2BannerConfig := &configs[1]
+	latestConfig := &configs[2]
+
+	type args struct {
+		appID      int64
+		auctionKey string
+	}
+	testCases := []struct {
+		args    args
+		want    *auction.Config
+		wantErr bool
+		err     error
+	}{
+		{
+			args: args{appID: apps[0].ID, auctionKey: "GEYTCMJRGEYTCMJRGEYTCMJRGEYTCMI="},
+			want: &auction.Config{
+				ID:     app1BannerConfig.ID,
+				UID:    strconv.FormatInt(app1BannerConfig.PublicUID.Int64, 10),
+				Rounds: app1BannerConfig.Rounds,
+			},
+			wantErr: false,
+		},
+		{
+			args: args{appID: apps[0].ID, auctionKey: "GIZDEMRSGIZDEMRSGIZDEMRSGIZDEMQ="},
+			want: &auction.Config{
+				ID:     app2BannerConfig.ID,
+				UID:    strconv.FormatInt(app2BannerConfig.PublicUID.Int64, 10),
+				Rounds: app2BannerConfig.Rounds,
+			},
+			wantErr: false,
+		},
+		{
+			args: args{appID: apps[1].ID, auctionKey: "GMZTGMZTGMZTGMZTGMZTGMZTGMZTGMY="},
+			want: &auction.Config{
+				ID:     latestConfig.ID,
+				UID:    strconv.FormatInt(latestConfig.PublicUID.Int64, 10),
+				Rounds: latestConfig.Rounds,
+			},
+			wantErr: false,
+		},
+		{
+			args: args{appID: apps[1].ID, auctionKey: "GIZDEMRSGIZDEMRSGIZDEMRSGIZDEMQ="},
+			want: &auction.Config{
+				ID:     latestConfig.ID,
+				UID:    strconv.FormatInt(latestConfig.PublicUID.Int64, 10),
+				Rounds: latestConfig.Rounds,
+			},
+			wantErr: true,
+			err:     gorm.ErrRecordNotFound,
+		},
+	}
+
+	matcher := &store.ConfigFetcher{DB: tx}
+	for _, tC := range testCases {
+		got, err := matcher.FetchByAuctionKey(context.Background(), tC.args.appID, tC.args.auctionKey)
+
+		if tC.wantErr {
+			if !errors.Is(err, tC.err) {
+				t.Errorf("Expected error %v, got: %v", tC.err, err)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Error FetchByAuctionKey config: %v", err)
+			}
+
+			if diff := cmp.Diff(tC.want, got); diff != "" {
+				t.Errorf("matcher.FetchByAuctionKey(ctx, %d, %q) mismatch (-want, +got):\n%s", tC.args.appID, tC.args.auctionKey, diff)
+			}
 		}
 	}
 }

@@ -22,6 +22,7 @@ var ErrNoAdsFound = errors.New("no ads found")
 
 type ConfigFetcher interface {
 	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*Config, error)
+	FetchByAuctionKey(ctx context.Context, appID int64, auctionKey string) (*Config, error)
 }
 
 type AdUnitsMatcher interface {
@@ -36,10 +37,19 @@ type BuildParams struct {
 	Adapters   []adapter.Key
 	Segment    segment.Segment
 	PriceFloor *float64
+	AuctionKey string
 }
 
 func (b *BuilderV2) Build(ctx context.Context, params *BuildParams) (*Auction, error) {
-	config, err := b.ConfigFetcher.Match(ctx, params.AppID, params.AdType, params.Segment.ID)
+	// if AuctionKey is passed then use configFetcher.FetchByAuctionKey method else use Match
+	var config *Config
+	var err error
+	if params.AuctionKey != "" {
+		config, err = b.ConfigFetcher.FetchByAuctionKey(ctx, params.AppID, params.AuctionKey)
+	} else {
+		config, err = b.ConfigFetcher.Match(ctx, params.AppID, params.AdType, params.Segment.ID)
+	}
+
 	if err != nil {
 		return nil, err
 	}

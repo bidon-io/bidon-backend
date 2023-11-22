@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"strconv"
@@ -119,4 +120,41 @@ func (m *ConfigFetcher) FetchByUID(ctx context.Context, appID int64, id, uid str
 	}
 
 	return config
+}
+
+// FetchByAuctionKey fetches an auction configuration by its auction key
+// If no configuration is found, returns error
+func (m *ConfigFetcher) FetchByAuctionKey(ctx context.Context, appID int64, auctionKey string) (*auction.Config, error) {
+	dbConfig := &db.AuctionConfiguration{}
+
+	// auctionKey is base32 encoded publicUid
+	publicUid, err := base32.StdEncoding.DecodeString(auctionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := map[string]string{
+		"app_id":     strconv.Itoa(int(appID)),
+		"public_uid": string(publicUid),
+	}
+
+	err = m.DB.
+		WithContext(ctx).
+		Select("id", "public_uid", "external_win_notifications", "rounds").
+		Where(filter).
+		Order("created_at DESC").
+		Take(dbConfig).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	config := &auction.Config{
+		ID:                       dbConfig.ID,
+		UID:                      strconv.FormatInt(dbConfig.PublicUID.Int64, 10),
+		ExternalWinNotifications: *dbConfig.ExternalWinNotifications,
+		Rounds:                   dbConfig.Rounds,
+	}
+
+	return config, nil
 }
