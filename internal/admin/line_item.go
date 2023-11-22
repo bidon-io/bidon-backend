@@ -433,7 +433,11 @@ func (v *lineItemAttrsValidator) extraRule(account *DemandSourceAccount) v8n.Rul
 		rule = v8n.Map(
 			v8n.Key("slot_id", v8n.Required, isString),
 		)
-	case adapter.DTExchangeKey, adapter.MetaKey, adapter.UnityAdsKey, adapter.VungleKey, adapter.MobileFuseKey:
+	case adapter.MetaKey, adapter.UnityAdsKey, adapter.VungleKey, adapter.MobileFuseKey:
+		rule = v8n.Map(
+			v8n.Key("placement_id", v8n.Required, isString),
+		)
+	case adapter.DTExchangeKey:
 		rule = v8n.Map(
 			v8n.Key("spot_id", v8n.Required, isString),
 		)
