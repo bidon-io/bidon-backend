@@ -30,7 +30,6 @@ type AppFetcher interface {
 
 type ConfigFetcher interface {
 	FetchByUIDCached(ctx context.Context, appId int64, id, uid string) *auction.Config
-	FetchByAuctionKey(ctx context.Context, appID int64, auctionKey string) (*auction.Config, error)
 	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error)
 }
 
