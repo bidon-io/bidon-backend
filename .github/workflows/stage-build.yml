@@ -18,6 +18,7 @@ on:
 
 jobs:
   build:
+    if: ${{ inputs.stage-number != ' ' }}
     name: Build image
     uses: ./.github/workflows/build.yml
     with:
