@@ -10,6 +10,11 @@ on:
           - ' '
           - 1
           - 2
+      refresh-db:
+        type: boolean
+        description: Refresh DB
+        default: false
+
 
 jobs:
   build:
@@ -30,6 +35,11 @@ jobs:
         with:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
+
+      - name: Refresh DB
+        if: ${{ inputs.refresh-db == true }}
+        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
+        run: make bidon-refresh-db STAGE=${{ inputs.stage-number }}
 
       - name: Deploy stage
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
