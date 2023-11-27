@@ -4,9 +4,6 @@ REGISTRY ?= "ghcr.io/bidon-io"
 test:
 	docker compose run --rm go-test
 
-tools:
-	go install github.com/matryer/moq@latest
-
 docker-build-push-prod-admin:
 	docker buildx build --platform linux/amd64 --provenance=false \
 	--target bidon-admin --cache-to type=inline --cache-from $(REGISTRY)/bidon-admin \
