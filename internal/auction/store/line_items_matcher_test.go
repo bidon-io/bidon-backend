@@ -3,7 +3,6 @@ package store_test
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -49,7 +48,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				String: string(ad.BannerFormat),
 				Valid:  true,
 			},
-			Code:      ptr("applovin-banner-banner"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.1")),
 			AccountID: applovinAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -64,7 +62,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				String: string(ad.AdaptiveFormat),
 				Valid:  true,
 			},
-			Code:      ptr("applovin-banner-adaptive"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.2")),
 			AccountID: applovinAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -79,7 +76,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				String: string(ad.LeaderboardFormat),
 				Valid:  true,
 			},
-			Code:      ptr("applovin-banner-leaderboard"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.3")),
 			AccountID: applovinAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -90,7 +86,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 		{
 			AppID:     apps[0].ID,
 			AdType:    db.InterstitialAdType,
-			Code:      ptr("applovin-interstitial"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.3")),
 			AccountID: applovinAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -101,7 +96,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 		{
 			AppID:     apps[0].ID,
 			AdType:    db.InterstitialAdType,
-			Code:      ptr("bidmachine-interstitial"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.3")),
 			AccountID: bidmachineAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -116,7 +110,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				String: string(ad.MRECFormat),
 				Valid:  true,
 			},
-			Code:      ptr("app2-applovin-banner-mrec"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.4")),
 			AccountID: applovinAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -131,7 +124,6 @@ func TestLineItemsMatcher_Match(t *testing.T) {
 				String: string(ad.MRECFormat),
 				Valid:  true,
 			},
-			Code:      ptr("app2-bidmachine-banner-mrec"),
 			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.4")),
 			AccountID: bidmachineAccount.ID,
 			PublicUID: sql.NullInt64{
@@ -285,7 +277,6 @@ func TestLineItemsMatcher_ExtraFields(t *testing.T) {
 			lineItem.Account = account
 			lineItem.BidFloor = decimal.NewNullDecimal(decimal.RequireFromString("0.15"))
 			lineItem.Extra = dbtest.ValidLineItemExtra(t, adapter.Key(demandSources[i].APIKey))
-			lineItem.Code = ptr(fmt.Sprintf("code%d", i))
 			lineItem.PublicUID = sql.NullInt64{
 				Int64: int64(i),
 				Valid: true,
