@@ -2,7 +2,6 @@ package sdkapi
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -30,23 +29,16 @@ func (h *ShowHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	demandRequestEvent, err := prepareShowEvent(req)
-	if err != nil {
-		logError(c, fmt.Errorf("prepare show event: %v", err))
-	} else {
-		h.EventLogger.Log(demandRequestEvent, func(err error) {
-			logError(c, fmt.Errorf("log show event: %v", err))
-		})
-	}
+	demandRequestEvent := prepareShowEvent(req)
+	h.EventLogger.Log(demandRequestEvent, func(err error) {
+		logError(c, fmt.Errorf("log show event: %v", err))
+	})
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func prepareShowEvent(req *request[schema.ShowRequest, *schema.ShowRequest]) (*event.RequestEvent, error) {
+func prepareShowEvent(req *request[schema.ShowRequest, *schema.ShowRequest]) *event.RequestEvent {
 	bid := req.raw.Bid
-	if bid == nil {
-		return nil, errors.New("bid is nil")
-	}
 
 	auctionConfigurationUID, err := strconv.ParseInt(bid.AuctionConfigurationUID, 10, 64)
 	if err != nil {
@@ -71,5 +63,5 @@ func prepareShowEvent(req *request[schema.ShowRequest, *schema.ShowRequest]) (*e
 		PriceFloor:              bid.AuctionPriceFloor,
 		Bidding:                 bid.IsBidding(),
 	}
-	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData), nil
+	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
 }

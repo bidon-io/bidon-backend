@@ -155,10 +155,7 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	events, err := prepareBiddingEvents(req, &auctionResult, &adUnitsMap)
-	if err != nil {
-		logError(c, fmt.Errorf("prepare bidding events: %v", err))
-	}
+	events := prepareBiddingEvents(req, &auctionResult, &adUnitsMap)
 	for _, ev := range events {
 		h.EventLogger.Log(ev, func(err error) {
 			logError(c, fmt.Errorf("log %v event: %v", ev.EventType, err))
@@ -247,7 +244,7 @@ func prepareBiddingEvents(
 	req *request[schema.BiddingRequest, *schema.BiddingRequest],
 	auctionResult *bidding.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
-) ([]*event.RequestEvent, error) {
+) []*event.RequestEvent {
 	imp := req.raw.Imp
 	auctionConfigurationUID, err := strconv.Atoi(imp.AuctionConfigurationUID)
 	if err != nil {
@@ -316,7 +313,7 @@ func prepareBiddingEvents(
 		}
 	}
 
-	return events, nil
+	return events
 }
 
 func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) (*auction.AdUnit, error) {

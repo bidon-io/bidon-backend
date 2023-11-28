@@ -80,14 +80,10 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		auctionConfigurationUID = 0
 	}
 
-	aucRequestEvent, err := prepareAuctionRequestEvent(req, auc, auctionConfigurationUID)
-	if err != nil {
-		logError(c, fmt.Errorf("prepare auction_request event: %v", err))
-	} else {
-		h.EventLogger.Log(aucRequestEvent, func(err error) {
-			logError(c, fmt.Errorf("log auction_request event: %v", err))
-		})
-	}
+	aucRequestEvent := prepareAuctionRequestEvent(req, auc, auctionConfigurationUID)
+	h.EventLogger.Log(aucRequestEvent, func(err error) {
+		logError(c, fmt.Errorf("log auction_request event: %v", err))
+	})
 
 	response := &AuctionResponse{
 		Auction:    auc,
@@ -99,7 +95,7 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func prepareAuctionRequestEvent(req *request[schema.AuctionRequest, *schema.AuctionRequest], auc *auction.Auction, auctionConfigurationUID int) (*event.RequestEvent, error) {
+func prepareAuctionRequestEvent(req *request[schema.AuctionRequest, *schema.AuctionRequest], auc *auction.Auction, auctionConfigurationUID int) *event.RequestEvent {
 	adRequestParams := event.AdRequestParams{
 		EventType:               "auction_request",
 		AdType:                  string(req.raw.AdType),
@@ -117,5 +113,5 @@ func prepareAuctionRequestEvent(req *request[schema.AuctionRequest, *schema.Auct
 		ECPM:                    0,
 		PriceFloor:              req.raw.AdObject.PriceFloor,
 	}
-	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData), nil
+	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
 }

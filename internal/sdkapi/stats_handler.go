@@ -30,10 +30,7 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	events, err := prepareStatsEvents(req)
-	if err != nil {
-		logError(c, fmt.Errorf("prepare stats events: %v", err))
-	}
+	events := prepareStatsEvents(req)
 	for _, ev := range events {
 		h.EventLogger.Log(ev, func(err error) {
 			logError(c, fmt.Errorf("log %v event: %v", ev.EventType, err))
@@ -51,7 +48,7 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest]) ([]*event.RequestEvent, error) {
+func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest]) []*event.RequestEvent {
 	// 1 event whole auction
 	// 1 event for each round
 	// 1 event for each demand in round
@@ -168,5 +165,5 @@ func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest])
 		}
 	}
 
-	return events, nil
+	return events
 }
