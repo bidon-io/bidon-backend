@@ -56,6 +56,7 @@ func prepareLossEvent(req *request[schema.LossRequest, *schema.LossRequest]) (*e
 	adRequestParams := event.AdRequestParams{
 		EventType:               "loss",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(bid.Format()),
 		AuctionID:               bid.AuctionID,
 		AuctionConfigurationID:  bid.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,

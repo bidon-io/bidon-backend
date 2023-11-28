@@ -48,6 +48,7 @@ func prepareRewardEvent(req *request[schema.RewardRequest, *schema.RewardRequest
 	adRequestParams := event.AdRequestParams{
 		EventType:               "reward",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(bid.Format()),
 		AuctionID:               bid.AuctionID,
 		AuctionConfigurationID:  bid.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,

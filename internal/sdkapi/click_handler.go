@@ -48,6 +48,7 @@ func prepareClickEvent(req *request[schema.ClickRequest, *schema.ClickRequest]) 
 	adRequestParams := event.AdRequestParams{
 		EventType:               "click",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(bid.Format()),
 		AuctionID:               bid.AuctionID,
 		AuctionConfigurationID:  bid.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,

@@ -21,6 +21,7 @@ func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, ge
 	requestEvent.EventType = adRequestParams.EventType
 	requestEvent.Status = adRequestParams.Status
 	requestEvent.AdType = adRequestParams.AdType
+	requestEvent.AdFormat = adRequestParams.AdFormat
 	requestEvent.AuctionID = adRequestParams.AuctionID
 	requestEvent.AuctionConfigurationID = adRequestParams.AuctionConfigurationID
 	requestEvent.AuctionConfigurationUID = adRequestParams.AuctionConfigurationUID
@@ -105,6 +106,7 @@ func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) *Requ
 type AdRequestParams struct {
 	EventType               string
 	AdType                  string
+	AdFormat                string
 	AuctionID               string
 	AuctionConfigurationID  int64
 	AuctionConfigurationUID int64
@@ -130,6 +132,7 @@ type RequestEvent struct {
 	Timestamp                   float64   `json:"timestamp"`
 	EventType                   string    `json:"event_type"`
 	AdType                      string    `json:"ad_type"`
+	AdFormat                    string    `json:"ad_format"`
 	AuctionID                   string    `json:"auction_id"`
 	AuctionConfigurationID      int64     `json:"auction_configuration_id"`
 	AuctionConfigurationUID     int64     `json:"auction_configuration_uid"`

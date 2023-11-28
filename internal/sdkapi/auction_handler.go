@@ -103,6 +103,7 @@ func prepareAuctionRequestEvent(req *request[schema.AuctionRequest, *schema.Auct
 	adRequestParams := event.AdRequestParams{
 		EventType:               "auction_request",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(req.raw.AdObject.Format()),
 		AuctionID:               req.raw.AdObject.AuctionID,
 		AuctionConfigurationID:  auc.ConfigID,
 		AuctionConfigurationUID: int64(auctionConfigurationUID),

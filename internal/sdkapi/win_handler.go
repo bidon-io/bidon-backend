@@ -56,6 +56,7 @@ func prepareWinEvent(req *request[schema.WinRequest, *schema.WinRequest]) (*even
 	adRequestParams := event.AdRequestParams{
 		EventType:               "win",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(bid.Format()),
 		AuctionID:               bid.AuctionID,
 		AuctionConfigurationID:  bid.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,

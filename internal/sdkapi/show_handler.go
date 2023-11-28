@@ -56,6 +56,7 @@ func prepareShowEvent(req *request[schema.ShowRequest, *schema.ShowRequest]) (*e
 	adRequestParams := event.AdRequestParams{
 		EventType:               "show",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(bid.Format()),
 		AuctionID:               bid.AuctionID,
 		AuctionConfigurationID:  bid.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,

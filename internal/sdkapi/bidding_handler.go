@@ -268,6 +268,7 @@ func prepareBiddingEvents(
 		adRequestParams := event.AdRequestParams{
 			EventType:               "bid_request",
 			AdType:                  string(req.raw.AdType),
+			AdFormat:                string(req.raw.Imp.Format()),
 			AuctionID:               imp.AuctionID,
 			AuctionConfigurationID:  imp.AuctionConfigurationID,
 			AuctionConfigurationUID: int64(auctionConfigurationUID),
@@ -293,6 +294,7 @@ func prepareBiddingEvents(
 			adRequestParams = event.AdRequestParams{
 				EventType:               "bid",
 				AdType:                  string(req.raw.AdType),
+				AdFormat:                string(req.raw.Imp.Format()),
 				AuctionID:               imp.AuctionID,
 				AuctionConfigurationID:  imp.AuctionConfigurationID,
 				AuctionConfigurationUID: int64(auctionConfigurationUID),
