@@ -1,7 +1,6 @@
 package event
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 
@@ -14,7 +13,6 @@ type TimingMap map[string][2]int64
 
 type Event interface {
 	Topic() config.Topic
-	json.Marshaler
 }
 
 func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) RequestEvent {
@@ -197,11 +195,6 @@ type Session struct {
 	StorageUsed               int      `json:"storage_used"`
 	Battery                   float64  `json:"battery"`
 	CPUUsage                  *float64 `json:"cpu_usage"`
-}
-
-func (e RequestEvent) MarshalJSON() ([]byte, error) {
-	type Alias RequestEvent
-	return json.Marshal((Alias)(e))
 }
 
 func (e RequestEvent) Topic() config.Topic {
