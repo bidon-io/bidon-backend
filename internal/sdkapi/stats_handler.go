@@ -30,7 +30,15 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req)
+	events, err := prepareStatsEvents(req)
+	if err != nil {
+		logError(c, fmt.Errorf("prepare stats events: %v", err))
+	}
+	for _, ev := range events {
+		h.EventLogger.Log(ev, func(err error) {
+			logError(c, fmt.Errorf("log %v event: %v", ev.EventType, err))
+		})
+	}
 
 	config := req.auctionConfig
 	if config == nil {
@@ -43,7 +51,7 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsRequest, *schema.StatsRequest]) {
+func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest]) ([]*event.RequestEvent, error) {
 	// 1 event whole auction
 	// 1 event for each round
 	// 1 event for each demand in round
@@ -65,6 +73,9 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 		}
 	}
 
+	// 1 event whole auction + 1 event for each round + at least 1 event for each demand in round
+	events := make([]*event.RequestEvent, 0, 1+len(stats.Rounds)*2)
+
 	adRequestParams := event.AdRequestParams{
 		EventType:               "stats_request",
 		AdType:                  string(req.raw.AdType),
@@ -82,10 +93,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 		PriceFloor:              statsPriceFloor,
 		TimingMap:               event.TimingMap{"auction": {stats.Result.AuctionStartTS, stats.Result.AuctionFinishTS}},
 	}
-	statsRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-	h.EventLogger.Log(statsRequestEvent, func(err error) {
-		logError(c, fmt.Errorf("log stats_request event: %v", err))
-	})
+	events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 
 	for roundNumber, round := range stats.Rounds {
 		adRequestParams = event.AdRequestParams{
@@ -109,10 +117,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 		} else {
 			adRequestParams.Status = "FAIL"
 		}
-		roundRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-		h.EventLogger.Log(roundRequestEvent, func(err error) {
-			logError(c, fmt.Errorf("log round_request event: %v", err))
-		})
+		events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 
 		for _, demand := range round.Demands {
 			adRequestParams = event.AdRequestParams{
@@ -133,10 +138,7 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 				Bidding:                 false,
 				TimingMap:               event.TimingMap{"fill": {demand.FillStartTS, demand.FillFinishTS}},
 			}
-			demandRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-			h.EventLogger.Log(demandRequestEvent, func(err error) {
-				logError(c, fmt.Errorf("log demand_request event: %v", err))
-			})
+			events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		}
 
 		for _, bid := range round.Bidding.Bids {
@@ -162,10 +164,9 @@ func (h *StatsHandler) sendEvents(c echo.Context, req *request[schema.StatsReque
 					"bid":   {round.Bidding.BidStartTS, round.Bidding.BidFinishTS},
 				},
 			}
-			demandRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-			h.EventLogger.Log(demandRequestEvent, func(err error) {
-				logError(c, fmt.Errorf("log bid event: %v", err))
-			})
+			events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		}
 	}
+
+	return events, nil
 }

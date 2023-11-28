@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -29,13 +30,23 @@ func (h *ShowHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req)
+	demandRequestEvent, err := prepareShowEvent(req)
+	if err != nil {
+		logError(c, fmt.Errorf("prepare show event: %v", err))
+	} else {
+		h.EventLogger.Log(demandRequestEvent, func(err error) {
+			logError(c, fmt.Errorf("log show event: %v", err))
+		})
+	}
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func (h *ShowHandler) sendEvents(c echo.Context, req *request[schema.ShowRequest, *schema.ShowRequest]) {
+func prepareShowEvent(req *request[schema.ShowRequest, *schema.ShowRequest]) (*event.RequestEvent, error) {
 	bid := req.raw.Bid
+	if bid == nil {
+		return nil, errors.New("bid is nil")
+	}
 
 	auctionConfigurationUID, err := strconv.ParseInt(bid.AuctionConfigurationUID, 10, 64)
 	if err != nil {
@@ -59,8 +70,5 @@ func (h *ShowHandler) sendEvents(c echo.Context, req *request[schema.ShowRequest
 		PriceFloor:              bid.AuctionPriceFloor,
 		Bidding:                 bid.IsBidding(),
 	}
-	demandRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-	h.EventLogger.Log(demandRequestEvent, func(err error) {
-		logError(c, fmt.Errorf("log show event: %v", err))
-	})
+	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData), nil
 }

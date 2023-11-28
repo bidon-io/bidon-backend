@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"net/http"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/bidon-io/bidon-backend/internal/auction"
-
+	"github.com/Masterminds/semver/v3"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
@@ -156,7 +155,15 @@ func (h *BiddingHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req, &auctionResult, &adUnitsMap)
+	events, err := prepareBiddingEvents(req, &auctionResult, &adUnitsMap)
+	if err != nil {
+		logError(c, fmt.Errorf("prepare bidding events: %v", err))
+	}
+	for _, ev := range events {
+		h.EventLogger.Log(ev, func(err error) {
+			logError(c, fmt.Errorf("log %v event: %v", ev.EventType, err))
+		})
+	}
 
 	response, err := h.buildResponse(auctionResult, imp, adUnitsMap, sdkVersion)
 	if err != nil {
@@ -236,18 +243,18 @@ func (h *BiddingHandler) buildBidDeprecated(demandResponse adapters.DemandRespon
 	}
 }
 
-func (h *BiddingHandler) sendEvents(
-	c echo.Context,
+func prepareBiddingEvents(
 	req *request[schema.BiddingRequest, *schema.BiddingRequest],
 	auctionResult *bidding.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
-) {
+) ([]*event.RequestEvent, error) {
 	imp := req.raw.Imp
 	auctionConfigurationUID, err := strconv.Atoi(imp.AuctionConfigurationUID)
 	if err != nil {
 		auctionConfigurationUID = 0
 	}
 
+	events := make([]*event.RequestEvent, 0, len(auctionResult.Bids))
 	for _, result := range auctionResult.Bids {
 		adUnit, _ := selectAdUnit(result, adUnitsMap)
 		adUnitUID := int64(0)
@@ -281,10 +288,7 @@ func (h *BiddingHandler) sendEvents(
 				"bid": {result.StartTS, result.EndTS},
 			},
 		}
-		bidRequestEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-		h.EventLogger.Log(bidRequestEvent, func(err error) {
-			logError(c, fmt.Errorf("log bid_request event: %v", err))
-		})
+		events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		if result.IsBid() {
 			adRequestParams = event.AdRequestParams{
 				EventType:               "bid",
@@ -306,12 +310,11 @@ func (h *BiddingHandler) sendEvents(
 					"bid": {result.StartTS, result.EndTS},
 				},
 			}
-			bidEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-			h.EventLogger.Log(bidEvent, func(err error) {
-				logError(c, fmt.Errorf("log bid event: %v", err))
-			})
+			events = append(events, event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		}
 	}
+
+	return events, nil
 }
 
 func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *map[adapter.Key][]auction.AdUnit) (*auction.AdUnit, error) {

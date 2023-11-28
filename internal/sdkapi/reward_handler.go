@@ -1,6 +1,7 @@
 package sdkapi
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -21,13 +22,23 @@ func (h *RewardHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req)
+	adEvent, err := prepareRewardEvent(req)
+	if err != nil {
+		logError(c, fmt.Errorf("prepare reward event: %v", err))
+	} else {
+		h.EventLogger.Log(adEvent, func(err error) {
+			logError(c, fmt.Errorf("log reward event: %v", err))
+		})
+	}
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func (h *RewardHandler) sendEvents(c echo.Context, req *request[schema.RewardRequest, *schema.RewardRequest]) {
+func prepareRewardEvent(req *request[schema.RewardRequest, *schema.RewardRequest]) (*event.RequestEvent, error) {
 	bid := req.raw.Bid
+	if bid == nil {
+		return nil, errors.New("bid is nil")
+	}
 
 	auctionConfigurationUID, err := strconv.ParseInt(bid.AuctionConfigurationUID, 10, 64)
 	if err != nil {
@@ -52,8 +63,5 @@ func (h *RewardHandler) sendEvents(c echo.Context, req *request[schema.RewardReq
 		Bidding:                 bid.IsBidding(),
 	}
 
-	adEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-	h.EventLogger.Log(adEvent, func(err error) {
-		logError(c, fmt.Errorf("log reward event: %v", err))
-	})
+	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData), nil
 }

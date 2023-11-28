@@ -2,6 +2,7 @@ package sdkapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -29,13 +30,23 @@ func (h *LossHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	h.sendEvents(c, req)
+	adEvent, err := prepareLossEvent(req)
+	if err != nil {
+		logError(c, fmt.Errorf("prepare loss event: %v", err))
+	} else {
+		h.EventLogger.Log(adEvent, func(err error) {
+			logError(c, fmt.Errorf("log loss event: %v", err))
+		})
+	}
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
 
-func (h *LossHandler) sendEvents(c echo.Context, req *request[schema.LossRequest, *schema.LossRequest]) {
+func prepareLossEvent(req *request[schema.LossRequest, *schema.LossRequest]) (*event.RequestEvent, error) {
 	bid := req.raw.Bid
+	if bid == nil {
+		return nil, errors.New("bid is nil")
+	}
 
 	auctionConfigurationUID, err := strconv.ParseInt(bid.AuctionConfigurationUID, 10, 64)
 	if err != nil {
@@ -61,8 +72,5 @@ func (h *LossHandler) sendEvents(c echo.Context, req *request[schema.LossRequest
 		ExternalWinnerDemandID:  req.raw.ExternalWinner.DemandID,
 		ExternalWinnerEcpm:      req.raw.ExternalWinner.ECPM,
 	}
-	adEvent := event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData)
-	h.EventLogger.Log(adEvent, func(err error) {
-		logError(c, fmt.Errorf("log loss event: %v", err))
-	})
+	return event.NewRequest(&req.raw.BaseRequest, adRequestParams, req.geoData), nil
 }

@@ -15,7 +15,7 @@ type Event interface {
 	Topic() config.Topic
 }
 
-func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) RequestEvent {
+func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) *RequestEvent {
 	requestEvent := newBaseRequest(request, geoData)
 
 	requestEvent.EventType = adRequestParams.EventType
@@ -47,13 +47,13 @@ func NewRequest(request *schema.BaseRequest, adRequestParams AdRequestParams, ge
 	return requestEvent
 }
 
-func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) RequestEvent {
+func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) *RequestEvent {
 	segmentUID, err := strconv.Atoi(request.Segment.UID)
 	if err != nil {
 		segmentUID = 0
 	}
 
-	return RequestEvent{
+	return &RequestEvent{
 		Timestamp:                   generateTimestamp(),
 		Manufacturer:                request.Device.Manufacturer,
 		Model:                       request.Device.Model,
@@ -197,7 +197,7 @@ type Session struct {
 	CPUUsage                  *float64 `json:"cpu_usage"`
 }
 
-func (e RequestEvent) Topic() config.Topic {
+func (e *RequestEvent) Topic() config.Topic {
 	return config.AdEventsTopic
 }
 
