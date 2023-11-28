@@ -116,7 +116,10 @@ func main() {
 		Cache:     config.NewMemoryCacheOf[*dbpkg.Country](cache.UnlimitedTTL), // We don't update countries
 	}
 	segmentMatcher := segment.Matcher{
-		Fetcher: &segmentstore.SegmentFetcher{DB: db},
+		Fetcher: &segmentstore.SegmentFetcher{
+			DB:    db,
+			Cache: config.NewMemoryCacheOf[[]segment.Segment](1 * time.Hour),
+		},
 	}
 
 	biddingHttpClient := &http.Client{
