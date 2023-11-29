@@ -2,8 +2,12 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"sort"
 	"strconv"
 
+	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -12,7 +16,18 @@ import (
 )
 
 type LineItemsMatcher struct {
-	DB *db.DB
+	DB    *db.DB
+	Cache config.Cache[[]auction.LineItem]
+}
+
+func (m *LineItemsMatcher) MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
+	key, err := m.cacheKey(params)
+	if err != nil {
+		return nil, err
+	}
+	return m.Cache.Get(ctx, key, func(ctx context.Context) ([]auction.LineItem, error) {
+		return m.Match(ctx, params)
+	})
 }
 
 func (m *LineItemsMatcher) Match(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
@@ -116,4 +131,19 @@ func setAdUnitIDIfEmpty(lineItem *auction.LineItem, value string) {
 	if lineItem.AdUnitID == "" {
 		lineItem.AdUnitID = value
 	}
+}
+
+func (m *LineItemsMatcher) cacheKey(params *auction.BuildParams) ([]byte, error) {
+	// Sort adapter keys to get deterministic cache key
+	sort.Slice(params.Adapters, func(i, j int) bool {
+		return params.Adapters[i] < params.Adapters[j]
+	})
+	jsonData, err := json.Marshal(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.Sum256(jsonData)
+	return hash[:], nil
 }

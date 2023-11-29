@@ -1,10 +1,15 @@
 package config
 
 import (
+	"context"
 	"time"
 
 	"github.com/bool64/cache"
 )
+
+type Cache[T any] interface {
+	Get(context.Context, []byte, func(ctx context.Context) (T, error)) (T, error)
+}
 
 func NewMemoryCacheOf[T any](ttl time.Duration) *cache.FailoverOf[T] {
 	return cache.NewFailoverOf[T](func(cfg *cache.FailoverConfigOf[T]) {

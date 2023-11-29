@@ -149,8 +149,11 @@ func main() {
 		},
 		SegmentMatcher: &segmentMatcher,
 		AuctionBuilder: &auction.Builder{
-			ConfigFetcher:    configFetcher,
-			LineItemsMatcher: &auctionstore.LineItemsMatcher{DB: db},
+			ConfigFetcher: configFetcher,
+			LineItemsMatcher: &auctionstore.LineItemsMatcher{
+				DB:    db,
+				Cache: config.NewMemoryCacheOf[[]auction.LineItem](10 * time.Minute),
+			},
 		},
 		AuctionBuilderV2: &auction.BuilderV2{
 			ConfigFetcher:  configFetcher,
