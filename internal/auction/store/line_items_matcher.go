@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -17,7 +16,7 @@ import (
 
 type LineItemsMatcher struct {
 	DB    *db.DB
-	Cache config.Cache[[]auction.LineItem]
+	Cache cache[[]auction.LineItem]
 }
 
 func (m *LineItemsMatcher) MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
