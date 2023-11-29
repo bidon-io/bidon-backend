@@ -76,6 +76,7 @@ func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest])
 	adRequestParams := event.AdRequestParams{
 		EventType:               "stats_request",
 		AdType:                  string(req.raw.AdType),
+		AdFormat:                string(req.raw.Stats.Result.Format()),
 		AuctionID:               stats.AuctionID,
 		AuctionConfigurationID:  stats.AuctionConfigurationID,
 		AuctionConfigurationUID: auctionConfigurationUID,
@@ -96,6 +97,7 @@ func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest])
 		adRequestParams = event.AdRequestParams{
 			EventType:               "round_request",
 			AdType:                  string(req.raw.AdType),
+			AdFormat:                string(req.raw.Stats.Result.Format()),
 			AuctionID:               stats.AuctionID,
 			AuctionConfigurationID:  stats.AuctionConfigurationID,
 			AuctionConfigurationUID: auctionConfigurationUID,
@@ -120,6 +122,7 @@ func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest])
 			adRequestParams = event.AdRequestParams{
 				EventType:               "demand_request",
 				AdType:                  string(req.raw.AdType),
+				AdFormat:                string(req.raw.Stats.Result.Format()),
 				AuctionID:               stats.AuctionID,
 				AuctionConfigurationID:  stats.AuctionConfigurationID,
 				AuctionConfigurationUID: auctionConfigurationUID,
@@ -142,6 +145,7 @@ func prepareStatsEvents(req *request[schema.StatsRequest, *schema.StatsRequest])
 			adRequestParams = event.AdRequestParams{
 				EventType:               "client_bid",
 				AdType:                  string(req.raw.AdType),
+				AdFormat:                string(req.raw.Stats.Result.Format()),
 				AuctionID:               stats.AuctionID,
 				AuctionConfigurationID:  stats.AuctionConfigurationID,
 				AuctionConfigurationUID: auctionConfigurationUID,
