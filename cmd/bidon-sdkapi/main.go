@@ -141,6 +141,10 @@ func main() {
 		},
 	}
 
+	adUnitsMatcher := &auctionstore.AdUnitsMatcher{
+		DB:    db,
+		Cache: config.NewMemoryCacheOf[[]auction.AdUnit](10 * time.Minute),
+	}
 	auctionHandler := sdkapi.AuctionHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
 			AppFetcher:    appFetcher,
@@ -157,7 +161,7 @@ func main() {
 		},
 		AuctionBuilderV2: &auction.BuilderV2{
 			ConfigFetcher:  configFetcher,
-			AdUnitsMatcher: &auctionstore.AdUnitsMatcher{DB: db},
+			AdUnitsMatcher: adUnitsMatcher,
 		},
 		EventLogger: eventLogger,
 	}
@@ -184,7 +188,7 @@ func main() {
 		AdaptersConfigBuilder: &adapters_builder.AdaptersConfigBuilder{
 			ConfigurationFetcher: &adapterstore.ConfigurationFetcher{DB: db},
 		},
-		AdUnitsMatcher: &auctionstore.AdUnitsMatcher{DB: db},
+		AdUnitsMatcher: adUnitsMatcher,
 		EventLogger:    eventLogger,
 	}
 	statsHandler := sdkapi.StatsHandler{
