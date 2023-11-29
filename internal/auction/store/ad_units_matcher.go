@@ -21,7 +21,7 @@ type AdUnitsMatcher struct {
 }
 
 func (m *AdUnitsMatcher) MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
-	key, err := m.cacheKey(params)
+	key, err := m.cacheKey(*params)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (m *AdUnitsMatcher) find(query *gorm.DB) ([]auction.AdUnit, error) {
 	return adUnits, nil
 }
 
-func (m *AdUnitsMatcher) cacheKey(params *auction.BuildParams) ([]byte, error) {
+func (m *AdUnitsMatcher) cacheKey(params auction.BuildParams) ([]byte, error) {
 	// Sort adapter keys to get deterministic cache key
 	sort.Slice(params.Adapters, func(i, j int) bool {
 		return params.Adapters[i] < params.Adapters[j]

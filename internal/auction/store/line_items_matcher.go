@@ -20,7 +20,7 @@ type LineItemsMatcher struct {
 }
 
 func (m *LineItemsMatcher) MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.LineItem, error) {
-	key, err := m.cacheKey(params)
+	key, err := m.cacheKey(*params)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func setAdUnitIDIfEmpty(lineItem *auction.LineItem, value string) {
 	}
 }
 
-func (m *LineItemsMatcher) cacheKey(params *auction.BuildParams) ([]byte, error) {
+func (m *LineItemsMatcher) cacheKey(params auction.BuildParams) ([]byte, error) {
 	// Sort adapter keys to get deterministic cache key
 	sort.Slice(params.Adapters, func(i, j int) bool {
 		return params.Adapters[i] < params.Adapters[j]
