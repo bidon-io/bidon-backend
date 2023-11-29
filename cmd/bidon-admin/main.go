@@ -127,7 +127,7 @@ func main() {
 	go func() {
 		err := e.Start(addr)
 		if !errors.Is(err, http.ErrServerClosed) {
-			e.Logger.Fatalf("failed to start http server: %v", addr, err)
+			e.Logger.Fatalf("failed to start http server: %v", err)
 		}
 		e.Logger.Warn(err)
 	}()
