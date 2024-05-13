@@ -1,0 +1,75 @@
+{
+  "auction_configuration_id": 1,
+  "auction_configuration_uid": "1701972528521547776",
+  "external_win_notifications": false,
+  "ad_units": [
+    {
+      "demand_id": "gam",
+      "uid": "123_gam",
+      "pricefloor": 0.8,
+      "label": "gam",
+      "bid_type": "CPM",
+      "ext": {
+        "placement_id": "123"
+      }
+    }
+  ],
+  "bids": [
+    {
+      "id": "111",
+      "imp_id": "222",
+      "price": 0.5,
+      "ad_unit": {
+        "bid_type": "RTB",
+        "demand_id": "amazon",
+        "label": "amazon",
+        "uid": "123_amazon",
+        "ext": {
+          "slot_uuid": "uuid1"
+        }
+      },
+      "ext": {}
+    },
+    {
+      "id": "123",
+      "imp_id": "456",
+      "price": 0.6,
+      "ad_unit": {
+        "demand_id": "meta",
+        "uid": "123_meta",
+        "label": "meta",
+        "bid_type": "RTB",
+        "ext": {
+          "placement_id": "123"
+        }
+      },
+      "ext": {
+        "payload": "payload"
+      }
+    },
+    {
+      "id": "333",
+      "imp_id": "444",
+      "price": 0.7,
+      "ad_unit": {
+        "bid_type": "RTB",
+        "demand_id": "mobilefuse",
+        "label": "mobilefuse",
+        "uid": "123_mobilefuse",
+        "ext": {
+          "placement_id": "123"
+        }
+      },
+      "ext": {
+        "signaldata": "signal_data"
+      }
+    }
+  ],
+  "segment": {
+    "id": "1",
+    "uid": "1701972528521547776"
+  },
+  "token": "{}",
+  "pricefloor": 0.5,
+  "auction_id": "1d7fa438-cd08-4849-80ed-e20d5657a5ea"
+}

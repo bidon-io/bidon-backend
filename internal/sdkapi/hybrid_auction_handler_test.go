@@ -1,0 +1,257 @@
+package sdkapi_test
+
+import (
+	"context"
+	"errors"
+	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/hybrid_auction"
+	"net/http"
+	"os"
+	"testing"
+
+	"github.com/bidon-io/bidon-backend/internal/ad"
+	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+
+	hybridauctionmocks "github.com/bidon-io/bidon-backend/internal/hybrid_auction/mocks"
+	sdkapimocks "github.com/bidon-io/bidon-backend/internal/sdkapi/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/segment"
+	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
+)
+
+func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
+	app := sdkapi.App{ID: 1}
+	geodata := geocoder.GeoData{CountryCode: "US"}
+	segments := []segment.Segment{
+		{
+			ID:      1,
+			UID:     "1701972528521547776",
+			Filters: []segment.Filter{{Type: "country", Name: "country", Operator: "IN", Values: []string{"US", "UK"}}},
+		},
+	}
+	auctionConfig := &auction.Config{
+		ID:  1, // Hardcoded ID For All Hybrid Auctions
+		UID: "1701972528521547776",
+		Rounds: []auction.RoundConfig{
+			{
+				ID:      schema.HybridAuctionRoundID,
+				Demands: []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
+				Timeout: 15000,
+			},
+		},
+	}
+	pf := 0.1
+	gamPf := 0.8
+	adUnits := []auction.AdUnit{
+		{
+			DemandID:   "amazon",
+			Label:      "amazon",
+			PriceFloor: &pf,
+			UID:        "123_amazon",
+			BidType:    schema.RTBBidType,
+			Extra: map[string]any{
+				"slot_uuid": "uuid1",
+			},
+		},
+		{
+			DemandID:   "meta",
+			Label:      "meta",
+			PriceFloor: &pf,
+			UID:        "123_meta",
+			BidType:    schema.RTBBidType,
+			Extra: map[string]any{
+				"placement_id": "123",
+			},
+		},
+		{
+			DemandID:   "mobilefuse",
+			Label:      "mobilefuse",
+			PriceFloor: &pf,
+			UID:        "123_mobilefuse",
+			BidType:    schema.RTBBidType,
+			Extra: map[string]any{
+				"placement_id": "123",
+			},
+		},
+		{
+			DemandID:   "gam",
+			Label:      "gam",
+			PriceFloor: &gamPf,
+			UID:        "123_gam",
+			BidType:    schema.CPMBidType,
+			Extra: map[string]any{
+				"placement_id": "123",
+			},
+		},
+	}
+
+	adUnitsMatcher := &hybridauctionmocks.AdUnitsMatcherMock{
+		MatchCachedFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
+			return adUnits, nil
+		},
+	}
+	appFetcher := &sdkapimocks.AppFetcherMock{
+		FetchCachedFunc: func(ctx context.Context, appKey string, appBundle string) (sdkapi.App, error) {
+			return app, nil
+		},
+	}
+	gcoder := &sdkapimocks.GeocoderMock{
+		LookupFunc: func(ctx context.Context, ipString string) (geocoder.GeoData, error) {
+			return geodata, nil
+		},
+	}
+	configFetcher := &sdkapimocks.ConfigFetcherMock{
+		MatchFunc: func(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error) {
+			return auctionConfig, nil
+		},
+		FetchByUIDCachedFunc: func(ctx context.Context, appId int64, key string, aucUID string) *auction.Config {
+			return nil
+		},
+	}
+	segmentFetcher := &segmentmocks.FetcherMock{
+		FetchCachedFunc: func(ctx context.Context, appID int64) ([]segment.Segment, error) {
+			return segments, nil
+		},
+	}
+	segmentMatcher := &segment.Matcher{
+		Fetcher: segmentFetcher,
+	}
+	biddingAdaptersConfigBuilder := &sdkapimocks.AdaptersConfigBuilderMock{
+		BuildFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp, adUnitsMap *map[adapter.Key][]auction.AdUnit) (adapter.ProcessedConfigsMap, error) {
+			return adapter.ProcessedConfigsMap{
+				adapter.ApplovinKey: map[string]any{
+					"app_key": "123",
+				},
+				adapter.BidmachineKey: map[string]any{},
+				adapter.MetaKey: map[string]any{
+					"app_id":     "123",
+					"app_secret": "123",
+					"seller_id":  "123",
+					"tag_id":     "123",
+				},
+				adapter.MobileFuseKey: map[string]any{
+					"tag_id": "123",
+				},
+				adapter.AmazonKey: map[string]any{
+					"price_points_map": map[string]any{
+						"price_point_1": map[string]any{"price": 0.1, "price_point": "price_point_1"},
+					},
+				},
+			}, nil
+		},
+	}
+	biddingBuilder := &sdkapimocks.BiddingBuilderMock{
+		HoldAuctionFunc: func(ctx context.Context, params *bidding.BuildParams) (bidding.AuctionResult, error) {
+			return bidding.AuctionResult{
+				RoundNumber: 0,
+				Bids: []adapters.DemandResponse{
+					{
+						DemandID: "amazon",
+						SlotUUID: "uuid1",
+						Bid: &adapters.BidDemandResponse{
+							Price:    0.5,
+							ID:       "111",
+							ImpID:    "222",
+							DemandID: adapter.MetaKey,
+						},
+					},
+					{
+						DemandID: "meta",
+						Bid: &adapters.BidDemandResponse{
+							Payload:  "payload",
+							Price:    0.6,
+							ID:       "123",
+							ImpID:    "456",
+							DemandID: adapter.MetaKey,
+						},
+					},
+					{
+						DemandID: "mobilefuse",
+						Bid: &adapters.BidDemandResponse{
+							Price:      0.7,
+							ID:         "333",
+							ImpID:      "444",
+							DemandID:   adapter.MobileFuseKey,
+							Signaldata: "signal_data",
+						},
+					},
+				},
+			}, nil
+		},
+	}
+	hybridAuctionBuilder := &hybrid_auction.Builder{
+		ConfigFetcher:                configFetcher,
+		AdUnitsMatcher:               adUnitsMatcher,
+		BiddingBuilder:               biddingBuilder,
+		BiddingAdaptersConfigBuilder: biddingAdaptersConfigBuilder,
+	}
+
+	handler := &sdkapi.HybridAuctionHandler{
+		BaseHandler: &sdkapi.BaseHandler[schema.HybridAuctionRequest, *schema.HybridAuctionRequest]{
+			AppFetcher:    appFetcher,
+			ConfigFetcher: configFetcher,
+			Geocoder:      gcoder,
+		},
+		HybridAuctionBuilder: hybridAuctionBuilder,
+		SegmentMatcher:       segmentMatcher,
+		EventLogger:          &event.Logger{Engine: &engine.Log{}},
+	}
+
+	return handler
+}
+
+func TestHybridAuctionHandler_Handle(t *testing.T) {
+	tests := []struct {
+		name                 string
+		sdkVersion           string
+		requestPath          string
+		expectedResponsePath string
+		expectedStatusCode   int
+		wantErr              bool
+		err                  error
+	}{
+		{
+			name:                 "OK",
+			sdkVersion:           "0.5",
+			requestPath:          "testdata/hybrid_auction/valid_request.json",
+			expectedResponsePath: "testdata/hybrid_auction/valid_response.json",
+			expectedStatusCode:   http.StatusOK,
+			wantErr:              false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqBody, err := os.ReadFile(tt.requestPath)
+			if err != nil {
+				t.Fatalf("Error reading request file: %v", err)
+			}
+
+			handler := testHelperHybridAuctionHandler(t)
+			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/hybrid_auction/interstitial", string(reqBody), &RequestOptions{
+				Headers: map[string]string{
+					"X-Bidon-Version": tt.sdkVersion,
+				},
+			})
+			CheckResponseCode(t, err, rec.Code, tt.expectedStatusCode)
+
+			if tt.wantErr {
+				if !errors.Is(err, tt.err) {
+					t.Errorf("Expected error %v, got: %v", tt.err, err)
+				}
+			} else {
+				expectedResponseJson, err := os.ReadFile(tt.expectedResponsePath)
+				if err != nil {
+					t.Fatalf("Error reading response file: %v", err)
+				}
+				checkResponses(t, expectedResponseJson, rec.Body.Bytes())
+			}
+		})
+	}
+}
