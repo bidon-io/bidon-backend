@@ -40,7 +40,7 @@ func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
 		UID: "1701972528521547776",
 		Rounds: []auction.RoundConfig{
 			{
-				ID:      schema.HybridAuctionRoundID,
+				ID:      "ROUND_1",
 				Demands: []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
 				Timeout: 15000,
 			},

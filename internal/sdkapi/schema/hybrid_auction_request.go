@@ -38,12 +38,12 @@ func (r *HybridAuctionRequest) ToAuctionRequest() AuctionRequest {
 	}
 }
 
-func (r *HybridAuctionRequest) ToBiddingRequest() BiddingRequest {
+func (r *HybridAuctionRequest) ToBiddingRequest(roundID string) BiddingRequest {
 	return BiddingRequest{
 		BaseRequest: r.BaseRequest,
 		AdType:      r.AdType,
 		Adapters:    r.Adapters,
-		Imp:         r.HybridImp.ToImp(),
+		Imp:         r.HybridImp.ToImp(roundID),
 		Test:        r.Test,
 		TMax:        r.TMax,
 	}

@@ -73,6 +73,12 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		return nil, err
 	}
 
+	if len(auctionConfig.Rounds) == 0 {
+		return nil, auction.ErrNoAdsFound
+	}
+
+	firstRound := auctionConfig.Rounds[0]
+
 	adUnits, err := b.AdUnitsMatcher.MatchCached(ctx, &auction.BuildParams{
 		Adapters:   params.Adapters,
 		AppID:      params.AppID,
@@ -93,14 +99,14 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	// Bidding
 	params.MergedAuctionRequest.HybridImp.AuctionConfigurationID = auctionConfig.ID
 	params.MergedAuctionRequest.HybridImp.AuctionConfigurationUID = auctionConfig.UID
-	imp := params.MergedAuctionRequest.HybridImp.ToImp()
+	imp := params.MergedAuctionRequest.HybridImp.ToImp(firstRound.ID)
 
 	adapterConfigs, err := b.BiddingAdaptersConfigBuilder.Build(ctx, params.AppID, params.Adapters, imp, &adUnitsMap)
 	if err != nil {
 		return nil, err
 	}
 
-	biddingRequest := params.MergedAuctionRequest.ToBiddingRequest()
+	biddingRequest := params.MergedAuctionRequest.ToBiddingRequest(firstRound.ID)
 	biddingAuctionResult, err := b.BiddingBuilder.HoldAuction(ctx, &bidding.BuildParams{
 		AppID:          params.AppID,
 		BiddingRequest: biddingRequest,

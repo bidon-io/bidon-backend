@@ -65,7 +65,6 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 	}
 
 	auctionResult, err := h.HybridAuctionBuilder.Build(c.Request().Context(), params)
-	c.Logger().Printf("[HYBRID AUCTION] auction: (%+v), err: (%s), took (%ms)", auctionResult, err, auctionResult.Stat.DurationTS)
 	if err != nil {
 		if errors.Is(err, auction.ErrNoAdsFound) {
 			err = ErrNoAdsFound
@@ -73,6 +72,7 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 
 		return err
 	}
+	c.Logger().Printf("[HYBRID AUCTION] auction: (%+v), err: (%s), took (%ms)", auctionResult, err, auctionResult.Stat.DurationTS)
 
 	adUnitsMap := make(map[adapter.Key][]auction.AdUnit)
 	for _, adUnit := range *auctionResult.AdUnits {
@@ -153,8 +153,12 @@ func (h *HybridAuctionHandler) logEvents(
 		auctionConfigurationUID = 0
 	}
 
+	var firstRoundID string
+	if len(auctionResult.AuctionConfiguration.Rounds) > 0 {
+		firstRoundID = auctionResult.AuctionConfiguration.Rounds[0].ID
+	}
 	biddingRequest := &request[schema.BiddingRequest, *schema.BiddingRequest]{
-		raw:           req.raw.ToBiddingRequest(),
+		raw:           req.raw.ToBiddingRequest(firstRoundID),
 		app:           req.app,
 		auctionConfig: req.auctionConfig,
 		geoData:       req.geoData,

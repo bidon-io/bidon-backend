@@ -17,14 +17,12 @@ type HybridImp struct {
 	Rewarded                *RewardedAdObject              `json:"rewarded"`
 }
 
-const HybridAuctionRoundID = "1"
-
-func (o *HybridImp) ToImp() Imp {
+func (o *HybridImp) ToImp(roundID string) Imp {
 	return Imp{
 		AuctionID:               o.AuctionID,
 		AuctionConfigurationID:  o.AuctionConfigurationID,
 		AuctionConfigurationUID: o.AuctionConfigurationUID,
-		RoundID:                 HybridAuctionRoundID,
+		RoundID:                 roundID,
 		BidFloor:                &o.PriceFloor,
 		Orientation:             o.Orientation,
 		Demands:                 o.Demands,

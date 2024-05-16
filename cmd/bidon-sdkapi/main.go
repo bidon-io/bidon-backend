@@ -278,7 +278,7 @@ func main() {
 
 	g.POST("/config", configHandler.Handle)
 	g.POST("/auction/:ad_type", auctionHandler.Handle)
-	g.POST("/hybrid_auction/:ad_type", hybridAuctionHandler.Handle)
+	g.POST("/v2/auction/:ad_type", hybridAuctionHandler.Handle)
 	g.POST("/bidding/:ad_type", biddingHandler.Handle)
 	g.POST("/stats/:ad_type", statsHandler.Handle)
 	g.POST("/show/:ad_type", showHandler.Handle)
