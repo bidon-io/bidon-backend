@@ -5,7 +5,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 )
 
-type HybridImp struct {
+type HybridAdObject struct {
 	AuctionID               string                         `json:"auction_id" validate:"required,uuid4"`
 	AuctionConfigurationID  int64                          `json:"auction_configuration_id"`
 	AuctionConfigurationUID string                         `json:"auction_configuration_uid"`
@@ -17,7 +17,7 @@ type HybridImp struct {
 	Rewarded                *RewardedAdObject              `json:"rewarded"`
 }
 
-func (o *HybridImp) ToImp(roundID string) Imp {
+func (o *HybridAdObject) ToImp(roundID string) Imp {
 	return Imp{
 		AuctionID:               o.AuctionID,
 		AuctionConfigurationID:  o.AuctionConfigurationID,
@@ -32,7 +32,7 @@ func (o *HybridImp) ToImp(roundID string) Imp {
 	}
 }
 
-func (o *HybridImp) Format() ad.Format {
+func (o *HybridAdObject) Format() ad.Format {
 	if o.Banner != nil {
 		return o.Banner.Format
 	}

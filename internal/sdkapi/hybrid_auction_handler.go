@@ -55,11 +55,11 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 	params := &hybrid_auction.BuildParams{
 		AppID:                req.app.ID,
 		AdType:               req.raw.AdType,
-		AdFormat:             req.raw.HybridImp.Format(),
+		AdFormat:             req.raw.HybridAdObject.Format(),
 		DeviceType:           req.raw.Device.Type,
 		Adapters:             req.raw.Adapters.Keys(),
 		Segment:              sgmnt,
-		PriceFloor:           req.raw.HybridImp.PriceFloor,
+		PriceFloor:           req.raw.HybridAdObject.PriceFloor,
 		MergedAuctionRequest: &req.raw,
 		GeoData:              req.geoData,
 	}
@@ -95,18 +95,18 @@ func (h *HybridAuctionHandler) buildResponse(
 	auctionResult *hybrid_auction.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
 ) (*HybridAuctionResponse, error) {
-	imp := req.raw.HybridImp
+	adObject := req.raw.HybridAdObject
 	response := HybridAuctionResponse{
 		ConfigID:   auctionResult.AuctionConfiguration.ID,
 		ConfigUID:  auctionResult.AuctionConfiguration.UID,
 		Segment:    auction.Segment{ID: req.raw.Segment.ID, UID: req.raw.Segment.UID},
 		Token:      "{}",
-		AuctionID:  imp.AuctionID,
-		PriceFloor: imp.PriceFloor,
+		AuctionID:  adObject.AuctionID,
+		PriceFloor: adObject.PriceFloor,
 	}
 
 	for _, bidResponse := range auctionResult.BiddingAuctionResult.Bids {
-		if bidResponse.IsBid() && bidResponse.Price() >= imp.PriceFloor {
+		if bidResponse.IsBid() && bidResponse.Price() >= adObject.PriceFloor {
 			bid := buildBid(bidResponse, adUnitsMap)
 			response.Bids = append(response.Bids, *bid)
 		}
@@ -119,7 +119,7 @@ func (h *HybridAuctionHandler) buildResponse(
 		}
 	}
 
-	priceFloor := imp.PriceFloor
+	priceFloor := adObject.PriceFloor
 	if minBidFloor > priceFloor {
 		priceFloor = minBidFloor
 	}

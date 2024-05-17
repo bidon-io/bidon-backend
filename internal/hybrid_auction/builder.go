@@ -97,9 +97,9 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	}
 
 	// Bidding
-	params.MergedAuctionRequest.HybridImp.AuctionConfigurationID = auctionConfig.ID
-	params.MergedAuctionRequest.HybridImp.AuctionConfigurationUID = auctionConfig.UID
-	imp := params.MergedAuctionRequest.HybridImp.ToImp(firstRound.ID)
+	params.MergedAuctionRequest.HybridAdObject.AuctionConfigurationID = auctionConfig.ID
+	params.MergedAuctionRequest.HybridAdObject.AuctionConfigurationUID = auctionConfig.UID
+	imp := params.MergedAuctionRequest.HybridAdObject.ToImp(firstRound.ID)
 
 	adapterConfigs, err := b.BiddingAdaptersConfigBuilder.Build(ctx, params.AppID, params.Adapters, imp, &adUnitsMap)
 	if err != nil {
