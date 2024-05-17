@@ -73,11 +73,11 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		return nil, err
 	}
 
-	if len(auctionConfig.Rounds) == 0 {
+	rounds := filterRounds(auctionConfig.Rounds, params.Adapters)
+	if len(rounds) == 0 {
 		return nil, auction.ErrNoAdsFound
 	}
-
-	firstRound := auctionConfig.Rounds[0]
+	firstRound := rounds[0]
 
 	adUnits, err := b.AdUnitsMatcher.MatchCached(ctx, &auction.BuildParams{
 		Adapters:   params.Adapters,
@@ -133,4 +133,23 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	}
 
 	return &auctionResult, nil
+}
+
+func filterRounds(rounds []auction.RoundConfig, sdk_adapters []adapter.Key) []auction.RoundConfig {
+	filteredRounds := []auction.RoundConfig{}
+
+	for _, round := range rounds {
+		demands := adapter.GetCommonAdapters(round.Demands, sdk_adapters)
+		bidding := adapter.GetCommonAdapters(round.Bidding, sdk_adapters)
+
+		if len(demands) == 0 && len(bidding) == 0 {
+			continue // If both demands and bidding arrays empty => remove this round from Auction
+		}
+
+		round.Demands = demands
+		round.Bidding = bidding
+		filteredRounds = append(filteredRounds, round)
+	}
+
+	return filteredRounds
 }

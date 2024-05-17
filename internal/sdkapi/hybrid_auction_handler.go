@@ -119,12 +119,13 @@ func (h *HybridAuctionHandler) buildResponse(
 		}
 	}
 
-	if minBidFloor > imp.PriceFloor {
-		response.PriceFloor = minBidFloor
+	priceFloor := imp.PriceFloor
+	if minBidFloor > priceFloor {
+		priceFloor = minBidFloor
 	}
 
 	for _, adUnit := range *auctionResult.AdUnits {
-		if adUnit.GetPriceFloor() >= response.PriceFloor {
+		if adUnit.GetPriceFloor() >= priceFloor {
 			response.AdUnits = append(response.AdUnits, adUnit)
 		}
 	}

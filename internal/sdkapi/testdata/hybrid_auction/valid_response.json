@@ -70,6 +70,6 @@
     "uid": "1701972528521547776"
   },
   "token": "{}",
-  "pricefloor": 0.5,
+  "pricefloor": 0.001,
   "auction_id": "1d7fa438-cd08-4849-80ed-e20d5657a5ea"
 }

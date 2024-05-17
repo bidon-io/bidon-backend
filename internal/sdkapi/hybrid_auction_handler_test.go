@@ -36,7 +36,7 @@ func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
 		},
 	}
 	auctionConfig := &auction.Config{
-		ID:  1, // Hardcoded ID For All Hybrid Auctions
+		ID:  1,
 		UID: "1701972528521547776",
 		Rounds: []auction.RoundConfig{
 			{
@@ -224,6 +224,14 @@ func TestHybridAuctionHandler_Handle(t *testing.T) {
 			expectedStatusCode:   http.StatusOK,
 			wantErr:              false,
 		},
+		{
+			name:               "NoAdsFound",
+			sdkVersion:         "0.5",
+			requestPath:        "testdata/hybrid_auction/noads_request.json",
+			expectedStatusCode: http.StatusUnprocessableEntity,
+			wantErr:            true,
+			err:                sdkapi.ErrNoAdsFound,
+		},
 	}
 
 	for _, tt := range tests {
@@ -250,7 +258,7 @@ func TestHybridAuctionHandler_Handle(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Error reading response file: %v", err)
 				}
-				checkResponses(t, expectedResponseJson, rec.Body.Bytes())
+				CheckResponses(t, expectedResponseJson, rec.Body.Bytes())
 			}
 		})
 	}
