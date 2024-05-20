@@ -12,56 +12,37 @@
       "ext": {
         "placement_id": "123"
       }
-    }
-  ],
-  "bids": [
-    {
-      "id": "111",
-      "imp_id": "222",
-      "price": 0.5,
-      "ad_unit": {
-        "bid_type": "RTB",
-        "demand_id": "amazon",
-        "label": "amazon",
-        "uid": "123_amazon",
-        "ext": {
-          "slot_uuid": "uuid1"
-        }
-      },
-      "ext": {}
     },
     {
-      "id": "123",
-      "imp_id": "456",
-      "price": 0.6,
-      "ad_unit": {
-        "demand_id": "meta",
-        "uid": "123_meta",
-        "label": "meta",
-        "bid_type": "RTB",
-        "ext": {
-          "placement_id": "123"
-        }
-      },
+      "bid_type": "RTB",
+      "demand_id": "mobilefuse",
+      "label": "mobilefuse",
+      "pricefloor": 0.7,
+      "uid": "123_mobilefuse",
       "ext": {
-        "payload": "payload"
+        "signaldata": "signal_data",
+        "placement_id": "123"
       }
     },
     {
-      "id": "333",
-      "imp_id": "444",
-      "price": 0.7,
-      "ad_unit": {
-        "bid_type": "RTB",
-        "demand_id": "mobilefuse",
-        "label": "mobilefuse",
-        "uid": "123_mobilefuse",
-        "ext": {
-          "placement_id": "123"
-        }
-      },
+      "demand_id": "meta",
+      "uid": "123_meta",
+      "label": "meta",
+      "pricefloor": 0.6,
+      "bid_type": "RTB",
       "ext": {
-        "signaldata": "signal_data"
+        "payload": "payload",
+        "placement_id": "123"
+      }
+    },
+    {
+      "bid_type": "RTB",
+      "demand_id": "amazon",
+      "label": "amazon",
+      "pricefloor": 0.5,
+      "uid": "123_amazon",
+      "ext": {
+        "slot_uuid": "uuid1"
       }
     }
   ],
