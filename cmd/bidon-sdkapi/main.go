@@ -199,7 +199,7 @@ func main() {
 		AdUnitsMatcher:        adUnitsMatcher,
 		EventLogger:           eventLogger,
 	}
-	auctionHandlerV2 := sdkapi.AuctionHandlerV2{
+	auctionV2Handler := sdkapi.AuctionV2Handler{
 		BaseHandler: &sdkapi.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
@@ -287,7 +287,6 @@ func main() {
 
 	g.POST("/config", configHandler.Handle)
 	g.POST("/auction/:ad_type", auctionHandler.Handle)
-	g.POST("/v2/auction/:ad_type", auctionHandlerV2.Handle)
 	g.POST("/bidding/:ad_type", biddingHandler.Handle)
 	g.POST("/stats/:ad_type", statsHandler.Handle)
 	g.POST("/show/:ad_type", showHandler.Handle)
@@ -296,6 +295,8 @@ func main() {
 	g.POST("/loss/:ad_type", lossHandler.Handle)
 	g.POST("/win/:ad_type", winHandler.Handle)
 
+	// API v2 endpoints
+	g.POST("/v2/auction/:ad_type", auctionV2Handler.Handle)
 	g.POST("/v2/stats/:ad_type", statsV2Handler.Handle)
 
 	// Legacy endpoints

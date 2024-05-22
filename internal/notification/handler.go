@@ -242,7 +242,7 @@ func (h Handler) HandleStatsV2(ctx context.Context, stats schema.StatsV2, config
 	var notifications []Params
 	var prices []float64
 
-	prices = append(prices, stats.Result.GetWinnerPrice())
+	prices = append(prices, stats.AuctionPricefloor)
 
 	for _, adUnit := range stats.AdUnits {
 		if adUnit.IsFill() {

@@ -11,22 +11,22 @@ import (
 	"sync"
 )
 
-// Ensure, that StatsNotificationHandlerMock does implement sdkapi.StatsV2NotificationHandler.
+// Ensure, that StatsNotificationHandlerMock does implement sdkapi.StatsNotificationHandler.
 // If this is not the case, regenerate this file with moq.
 var _ sdkapi.StatsNotificationHandler = &StatsNotificationHandlerMock{}
 
-// StatsNotificationHandlerMock is a mock implementation of sdkapi.StatsV2NotificationHandler.
+// StatsNotificationHandlerMock is a mock implementation of sdkapi.StatsNotificationHandler.
 //
 //	func TestSomethingThatUsesStatsNotificationHandler(t *testing.T) {
 //
-//		// make and configure a mocked sdkapi.StatsV2NotificationHandler
+//		// make and configure a mocked sdkapi.StatsNotificationHandler
 //		mockedStatsNotificationHandler := &StatsNotificationHandlerMock{
 //			HandleStatsFunc: func(contextMoqParam context.Context, stats schema.Stats, config *auction.Config, s1 string, s2 string)  {
 //				panic("mock out the HandleStats method")
 //			},
 //		}
 //
-//		// use mockedStatsNotificationHandler in code that requires sdkapi.StatsV2NotificationHandler
+//		// use mockedStatsNotificationHandler in code that requires sdkapi.StatsNotificationHandler
 //		// and then make assertions.
 //
 //	}
@@ -56,7 +56,7 @@ type StatsNotificationHandlerMock struct {
 // HandleStats calls HandleStatsFunc.
 func (mock *StatsNotificationHandlerMock) HandleStats(contextMoqParam context.Context, stats schema.Stats, config *auction.Config, s1 string, s2 string) {
 	if mock.HandleStatsFunc == nil {
-		panic("StatsNotificationHandlerMock.HandleStatsFunc: method is nil but StatsV2NotificationHandler.HandleStats was just called")
+		panic("StatsNotificationHandlerMock.HandleStatsFunc: method is nil but StatsNotificationHandler.HandleStats was just called")
 	}
 	callInfo := struct {
 		ContextMoqParam context.Context

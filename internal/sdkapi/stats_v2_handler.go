@@ -74,7 +74,7 @@ func prepareStatsV2Events(req *request[schema.StatsV2Request, *schema.StatsV2Req
 	events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 
 	for _, adUnit := range stats.AdUnits {
-		if adUnit.BidType == "CPM" {
+		if adUnit.BidType == schema.CPMBidType {
 			adRequestParams = event.AdRequestParams{
 				EventType:               "demand_request",
 				AdType:                  string(req.raw.AdType),
