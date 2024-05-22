@@ -3,9 +3,9 @@ package sdkapi_test
 import (
 	"context"
 	"errors"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/hybrid_auction"
 	"net/http"
 	"os"
 	"testing"
@@ -18,14 +18,14 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 
-	hybridauctionmocks "github.com/bidon-io/bidon-backend/internal/hybrid_auction/mocks"
+	auctionv2mocks "github.com/bidon-io/bidon-backend/internal/auctionv2/mocks"
 	sdkapimocks "github.com/bidon-io/bidon-backend/internal/sdkapi/mocks"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )
 
-func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
+func testHelperAuctionV2Handler(t *testing.T) *sdkapi.AuctionHandlerV2 {
 	app := sdkapi.App{ID: 1}
 	geodata := geocoder.GeoData{CountryCode: "US"}
 	segments := []segment.Segment{
@@ -91,7 +91,7 @@ func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
 		},
 	}
 
-	adUnitsMatcher := &hybridauctionmocks.AdUnitsMatcherMock{
+	adUnitsMatcher := &auctionv2mocks.AdUnitsMatcherMock{
 		MatchCachedFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
 			return adUnits, nil
 		},
@@ -185,28 +185,28 @@ func testHelperHybridAuctionHandler(t *testing.T) *sdkapi.HybridAuctionHandler {
 			}, nil
 		},
 	}
-	hybridAuctionBuilder := &hybrid_auction.Builder{
+	auctionBuilderV2 := &auctionv2.Builder{
 		ConfigFetcher:                configFetcher,
 		AdUnitsMatcher:               adUnitsMatcher,
 		BiddingBuilder:               biddingBuilder,
 		BiddingAdaptersConfigBuilder: biddingAdaptersConfigBuilder,
 	}
 
-	handler := &sdkapi.HybridAuctionHandler{
-		BaseHandler: &sdkapi.BaseHandler[schema.HybridAuctionRequest, *schema.HybridAuctionRequest]{
+	handler := &sdkapi.AuctionHandlerV2{
+		BaseHandler: &sdkapi.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
 			Geocoder:      gcoder,
 		},
-		HybridAuctionBuilder: hybridAuctionBuilder,
-		SegmentMatcher:       segmentMatcher,
-		EventLogger:          &event.Logger{Engine: &engine.Log{}},
+		AuctionBuilder: auctionBuilderV2,
+		SegmentMatcher: segmentMatcher,
+		EventLogger:    &event.Logger{Engine: &engine.Log{}},
 	}
 
 	return handler
 }
 
-func TestHybridAuctionHandler_Handle(t *testing.T) {
+func TestAuctionV2Handler_Handle(t *testing.T) {
 	tests := []struct {
 		name                 string
 		sdkVersion           string
@@ -219,15 +219,15 @@ func TestHybridAuctionHandler_Handle(t *testing.T) {
 		{
 			name:                 "OK",
 			sdkVersion:           "0.5",
-			requestPath:          "testdata/hybrid_auction/valid_request.json",
-			expectedResponsePath: "testdata/hybrid_auction/valid_response.json",
+			requestPath:          "testdata/auction_v2/valid_request.json",
+			expectedResponsePath: "testdata/auction_v2/valid_response.json",
 			expectedStatusCode:   http.StatusOK,
 			wantErr:              false,
 		},
 		{
 			name:               "NoAdsFound",
 			sdkVersion:         "0.5",
-			requestPath:        "testdata/hybrid_auction/noads_request.json",
+			requestPath:        "testdata/auction_v2/noads_request.json",
 			expectedStatusCode: http.StatusUnprocessableEntity,
 			wantErr:            true,
 			err:                sdkapi.ErrNoAdsFound,
@@ -241,8 +241,8 @@ func TestHybridAuctionHandler_Handle(t *testing.T) {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 
-			handler := testHelperHybridAuctionHandler(t)
-			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/hybrid_auction/interstitial", string(reqBody), &RequestOptions{
+			handler := testHelperAuctionV2Handler(t)
+			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/v2/auction/interstitial", string(reqBody), &RequestOptions{
 				Headers: map[string]string{
 					"X-Bidon-Version": tt.sdkVersion,
 				},

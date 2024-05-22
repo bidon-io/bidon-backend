@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/hybrid_auction"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"log"
 	"net/http"
 	"os"
@@ -199,14 +199,14 @@ func main() {
 		AdUnitsMatcher:        adUnitsMatcher,
 		EventLogger:           eventLogger,
 	}
-	hybridAuctionHandler := sdkapi.HybridAuctionHandler{
-		BaseHandler: &sdkapi.BaseHandler[schema.HybridAuctionRequest, *schema.HybridAuctionRequest]{
+	auctionHandlerV2 := sdkapi.AuctionHandlerV2{
+		BaseHandler: &sdkapi.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
 			Geocoder:      geoCoder,
 		},
 		SegmentMatcher: &segmentMatcher,
-		HybridAuctionBuilder: &hybrid_auction.Builder{
+		AuctionBuilder: &auctionv2.Builder{
 			ConfigFetcher:                configFetcher,
 			AdUnitsMatcher:               adUnitsMatcher,
 			BiddingBuilder:               biddingBuilder,
@@ -278,7 +278,7 @@ func main() {
 
 	g.POST("/config", configHandler.Handle)
 	g.POST("/auction/:ad_type", auctionHandler.Handle)
-	g.POST("/v2/auction/:ad_type", hybridAuctionHandler.Handle)
+	g.POST("/v2/auction/:ad_type", auctionHandlerV2.Handle)
 	g.POST("/bidding/:ad_type", biddingHandler.Handle)
 	g.POST("/stats/:ad_type", statsHandler.Handle)
 	g.POST("/show/:ad_type", showHandler.Handle)

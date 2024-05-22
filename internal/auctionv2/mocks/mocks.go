@@ -8,21 +8,21 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
-	"github.com/bidon-io/bidon-backend/internal/hybrid_auction"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"sync"
 )
 
-// Ensure, that ConfigFetcherMock does implement hybrid_auction.ConfigFetcher.
+// Ensure, that ConfigFetcherMock does implement auctionv2.ConfigFetcher.
 // If this is not the case, regenerate this file with moq.
-var _ hybrid_auction.ConfigFetcher = &ConfigFetcherMock{}
+var _ auctionv2.ConfigFetcher = &ConfigFetcherMock{}
 
-// ConfigFetcherMock is a mock implementation of hybrid_auction.ConfigFetcher.
+// ConfigFetcherMock is a mock implementation of auctionv2.ConfigFetcher.
 //
 //	func TestSomethingThatUsesConfigFetcher(t *testing.T) {
 //
-//		// make and configure a mocked hybrid_auction.ConfigFetcher
+//		// make and configure a mocked auctionv2.ConfigFetcher
 //		mockedConfigFetcher := &ConfigFetcherMock{
 //			FetchByUIDCachedFunc: func(ctx context.Context, appId int64, id string, uid string) *auction.Config {
 //				panic("mock out the FetchByUIDCached method")
@@ -32,7 +32,7 @@ var _ hybrid_auction.ConfigFetcher = &ConfigFetcherMock{}
 //			},
 //		}
 //
-//		// use mockedConfigFetcher in code that requires hybrid_auction.ConfigFetcher
+//		// use mockedConfigFetcher in code that requires auctionv2.ConfigFetcher
 //		// and then make assertions.
 //
 //	}
@@ -160,22 +160,22 @@ func (mock *ConfigFetcherMock) MatchCalls() []struct {
 	return calls
 }
 
-// Ensure, that AdUnitsMatcherMock does implement hybrid_auction.AdUnitsMatcher.
+// Ensure, that AdUnitsMatcherMock does implement auctionv2.AdUnitsMatcher.
 // If this is not the case, regenerate this file with moq.
-var _ hybrid_auction.AdUnitsMatcher = &AdUnitsMatcherMock{}
+var _ auctionv2.AdUnitsMatcher = &AdUnitsMatcherMock{}
 
-// AdUnitsMatcherMock is a mock implementation of hybrid_auction.AdUnitsMatcher.
+// AdUnitsMatcherMock is a mock implementation of auctionv2.AdUnitsMatcher.
 //
 //	func TestSomethingThatUsesAdUnitsMatcher(t *testing.T) {
 //
-//		// make and configure a mocked hybrid_auction.AdUnitsMatcher
+//		// make and configure a mocked auctionv2.AdUnitsMatcher
 //		mockedAdUnitsMatcher := &AdUnitsMatcherMock{
 //			MatchCachedFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
 //				panic("mock out the MatchCached method")
 //			},
 //		}
 //
-//		// use mockedAdUnitsMatcher in code that requires hybrid_auction.AdUnitsMatcher
+//		// use mockedAdUnitsMatcher in code that requires auctionv2.AdUnitsMatcher
 //		// and then make assertions.
 //
 //	}
@@ -232,22 +232,22 @@ func (mock *AdUnitsMatcherMock) MatchCachedCalls() []struct {
 	return calls
 }
 
-// Ensure, that BiddingBuilderMock does implement hybrid_auction.BiddingBuilder.
+// Ensure, that BiddingBuilderMock does implement auctionv2.BiddingBuilder.
 // If this is not the case, regenerate this file with moq.
-var _ hybrid_auction.BiddingBuilder = &BiddingBuilderMock{}
+var _ auctionv2.BiddingBuilder = &BiddingBuilderMock{}
 
-// BiddingBuilderMock is a mock implementation of hybrid_auction.BiddingBuilder.
+// BiddingBuilderMock is a mock implementation of auctionv2.BiddingBuilder.
 //
 //	func TestSomethingThatUsesBiddingBuilder(t *testing.T) {
 //
-//		// make and configure a mocked hybrid_auction.BiddingBuilder
+//		// make and configure a mocked auctionv2.BiddingBuilder
 //		mockedBiddingBuilder := &BiddingBuilderMock{
 //			HoldAuctionFunc: func(ctx context.Context, params *bidding.BuildParams) (bidding.AuctionResult, error) {
 //				panic("mock out the HoldAuction method")
 //			},
 //		}
 //
-//		// use mockedBiddingBuilder in code that requires hybrid_auction.BiddingBuilder
+//		// use mockedBiddingBuilder in code that requires auctionv2.BiddingBuilder
 //		// and then make assertions.
 //
 //	}
@@ -304,22 +304,22 @@ func (mock *BiddingBuilderMock) HoldAuctionCalls() []struct {
 	return calls
 }
 
-// Ensure, that BiddingAdaptersConfigBuilderMock does implement hybrid_auction.BiddingAdaptersConfigBuilder.
+// Ensure, that BiddingAdaptersConfigBuilderMock does implement auctionv2.BiddingAdaptersConfigBuilder.
 // If this is not the case, regenerate this file with moq.
-var _ hybrid_auction.BiddingAdaptersConfigBuilder = &BiddingAdaptersConfigBuilderMock{}
+var _ auctionv2.BiddingAdaptersConfigBuilder = &BiddingAdaptersConfigBuilderMock{}
 
-// BiddingAdaptersConfigBuilderMock is a mock implementation of hybrid_auction.BiddingAdaptersConfigBuilder.
+// BiddingAdaptersConfigBuilderMock is a mock implementation of auctionv2.BiddingAdaptersConfigBuilder.
 //
 //	func TestSomethingThatUsesBiddingAdaptersConfigBuilder(t *testing.T) {
 //
-//		// make and configure a mocked hybrid_auction.BiddingAdaptersConfigBuilder
+//		// make and configure a mocked auctionv2.BiddingAdaptersConfigBuilder
 //		mockedBiddingAdaptersConfigBuilder := &BiddingAdaptersConfigBuilderMock{
 //			BuildFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, imp schema.Imp, adUnitsMap *map[adapter.Key][]auction.AdUnit) (adapter.ProcessedConfigsMap, error) {
 //				panic("mock out the Build method")
 //			},
 //		}
 //
-//		// use mockedBiddingAdaptersConfigBuilder in code that requires hybrid_auction.BiddingAdaptersConfigBuilder
+//		// use mockedBiddingAdaptersConfigBuilder in code that requires auctionv2.BiddingAdaptersConfigBuilder
 //		// and then make assertions.
 //
 //	}

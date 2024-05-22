@@ -1,4 +1,4 @@
-package hybrid_auction
+package auctionv2
 
 import (
 	"context"
@@ -47,7 +47,7 @@ type BuildParams struct {
 	Adapters             []adapter.Key
 	Segment              segment.Segment
 	PriceFloor           float64
-	MergedAuctionRequest *schema.HybridAuctionRequest
+	MergedAuctionRequest *schema.AuctionV2Request
 	GeoData              geocoder.GeoData
 }
 
@@ -73,6 +73,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		return nil, err
 	}
 
+	// TODO: Get rid of rounds
 	rounds := filterRounds(auctionConfig.Rounds, params.Adapters)
 	if len(rounds) == 0 {
 		return nil, auction.ErrNoAdsFound
@@ -97,9 +98,9 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	}
 
 	// Bidding
-	params.MergedAuctionRequest.HybridAdObject.AuctionConfigurationID = auctionConfig.ID
-	params.MergedAuctionRequest.HybridAdObject.AuctionConfigurationUID = auctionConfig.UID
-	imp := params.MergedAuctionRequest.HybridAdObject.ToImp(firstRound.ID)
+	params.MergedAuctionRequest.AdObjectV2.AuctionConfigurationID = auctionConfig.ID
+	params.MergedAuctionRequest.AdObjectV2.AuctionConfigurationUID = auctionConfig.UID
+	imp := params.MergedAuctionRequest.AdObjectV2.ToImp(firstRound.ID)
 
 	adapterConfigs, err := b.BiddingAdaptersConfigBuilder.Build(ctx, params.AppID, params.Adapters, imp, &adUnitsMap)
 	if err != nil {

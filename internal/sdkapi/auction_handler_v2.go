@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/hybrid_auction"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
@@ -16,9 +16,9 @@ import (
 	"strconv"
 )
 
-type HybridAuctionHandler struct {
-	*BaseHandler[schema.HybridAuctionRequest, *schema.HybridAuctionRequest]
-	HybridAuctionBuilder  *hybrid_auction.Builder
+type AuctionHandlerV2 struct {
+	*BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]
+	AuctionBuilder        *auctionv2.Builder
 	SegmentMatcher        *segment.Matcher
 	BiddingBuilder        BiddingBuilder
 	AdUnitsMatcher        AdUnitsMatcher
@@ -26,7 +26,7 @@ type HybridAuctionHandler struct {
 	EventLogger           *event.Logger
 }
 
-type HybridAuctionResponse struct {
+type AuctionV2Response struct {
 	ConfigID                 int64            `json:"auction_configuration_id"`
 	ConfigUID                string           `json:"auction_configuration_uid"`
 	ExternalWinNotifications bool             `json:"external_win_notifications"`
@@ -37,7 +37,7 @@ type HybridAuctionResponse struct {
 	AuctionID                string           `json:"auction_id"`
 }
 
-func (h *HybridAuctionHandler) Handle(c echo.Context) error {
+func (h *AuctionHandlerV2) Handle(c echo.Context) error {
 	req, err := h.resolveRequest(c)
 	if err != nil {
 		return err
@@ -53,19 +53,19 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 	req.raw.Segment.ID = sgmnt.StringID()
 	req.raw.Segment.UID = sgmnt.UID
 
-	params := &hybrid_auction.BuildParams{
+	params := &auctionv2.BuildParams{
 		AppID:                req.app.ID,
 		AdType:               req.raw.AdType,
-		AdFormat:             req.raw.HybridAdObject.Format(),
+		AdFormat:             req.raw.AdObjectV2.Format(),
 		DeviceType:           req.raw.Device.Type,
 		Adapters:             req.raw.Adapters.Keys(),
 		Segment:              sgmnt,
-		PriceFloor:           req.raw.HybridAdObject.PriceFloor,
+		PriceFloor:           req.raw.AdObjectV2.PriceFloor,
 		MergedAuctionRequest: &req.raw,
 		GeoData:              req.geoData,
 	}
 
-	auctionResult, err := h.HybridAuctionBuilder.Build(c.Request().Context(), params)
+	auctionResult, err := h.AuctionBuilder.Build(c.Request().Context(), params)
 	if err != nil {
 		if errors.Is(err, auction.ErrNoAdsFound) {
 			err = ErrNoAdsFound
@@ -73,7 +73,7 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 
 		return err
 	}
-	c.Logger().Printf("[HYBRID AUCTION] auction: (%+v), err: (%s), took (%ms)", auctionResult, err, auctionResult.Stat.DurationTS)
+	c.Logger().Printf("[AUCTION V2] auction: (%+v), err: (%s), took (%ms)", auctionResult, err, auctionResult.Stat.DurationTS)
 
 	adUnitsMap := make(map[adapter.Key][]auction.AdUnit)
 	for _, adUnit := range *auctionResult.AdUnits {
@@ -91,13 +91,13 @@ func (h *HybridAuctionHandler) Handle(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (h *HybridAuctionHandler) buildResponse(
-	req *request[schema.HybridAuctionRequest, *schema.HybridAuctionRequest],
-	auctionResult *hybrid_auction.AuctionResult,
+func (h *AuctionHandlerV2) buildResponse(
+	req *request[schema.AuctionV2Request, *schema.AuctionV2Request],
+	auctionResult *auctionv2.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
-) (*HybridAuctionResponse, error) {
-	adObject := req.raw.HybridAdObject
-	response := HybridAuctionResponse{
+) (*AuctionV2Response, error) {
+	adObject := req.raw.AdObjectV2
+	response := AuctionV2Response{
 		ConfigID:   auctionResult.AuctionConfiguration.ID,
 		ConfigUID:  auctionResult.AuctionConfiguration.UID,
 		Segment:    auction.Segment{ID: req.raw.Segment.ID, UID: req.raw.Segment.UID},
@@ -131,10 +131,10 @@ func (h *HybridAuctionHandler) buildResponse(
 	return &response, nil
 }
 
-func (h *HybridAuctionHandler) logEvents(
+func (h *AuctionHandlerV2) logEvents(
 	c echo.Context,
-	req *request[schema.HybridAuctionRequest, *schema.HybridAuctionRequest],
-	auctionResult *hybrid_auction.AuctionResult,
+	req *request[schema.AuctionV2Request, *schema.AuctionV2Request],
+	auctionResult *auctionv2.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
 ) {
 	auctionRequest := &request[schema.AuctionRequest, *schema.AuctionRequest]{
