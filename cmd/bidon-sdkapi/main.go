@@ -223,6 +223,15 @@ func main() {
 		EventLogger:         eventLogger,
 		NotificationHandler: notificationHandler,
 	}
+	statsV2Handler := sdkapi.StatsV2Handler{
+		BaseHandler: &sdkapi.BaseHandler[schema.StatsV2Request, *schema.StatsV2Request]{
+			AppFetcher:    appFetcher,
+			ConfigFetcher: configFetcher,
+			Geocoder:      geoCoder,
+		},
+		EventLogger:         eventLogger,
+		NotificationHandler: notificationHandler,
+	}
 	showHandler := sdkapi.ShowHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher:    appFetcher,
@@ -286,6 +295,8 @@ func main() {
 	g.POST("/reward/:ad_type", rewardHandler.Handle)
 	g.POST("/loss/:ad_type", lossHandler.Handle)
 	g.POST("/win/:ad_type", winHandler.Handle)
+
+	g.POST("/v2/stats/:ad_type", statsV2Handler.Handle)
 
 	// Legacy endpoints
 	g.POST("/:ad_type/auction", auctionHandler.Handle)
