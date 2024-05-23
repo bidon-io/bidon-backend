@@ -143,6 +143,13 @@ func main() {
 			EventLogger: eventLogger,
 		},
 	}
+	notificationHandlerV2 := notification.HandlerV2{
+		AuctionResultRepo: notificationstore.AuctionResultRepo{Redis: rdb},
+		Sender: notification.EventSender{
+			HttpClient:  biddingHttpClient,
+			EventLogger: eventLogger,
+		},
+	}
 
 	adUnitsMatcher := &auctionstore.AdUnitsMatcher{
 		DB:    db,
@@ -230,7 +237,7 @@ func main() {
 			Geocoder:      geoCoder,
 		},
 		EventLogger:         eventLogger,
-		NotificationHandler: notificationHandler,
+		NotificationHandler: notificationHandlerV2,
 	}
 	showHandler := sdkapi.ShowHandler{
 		BaseHandler: &sdkapi.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{

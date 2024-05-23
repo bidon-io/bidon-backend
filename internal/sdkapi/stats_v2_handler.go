@@ -21,7 +21,7 @@ type StatsV2Handler struct {
 //go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/stats_v2_mocks.go -pkg mocks . StatsV2NotificationHandler
 
 type StatsV2NotificationHandler interface {
-	HandleStatsV2(context.Context, schema.StatsV2, *auction.Config, string, string)
+	HandleStats(context.Context, schema.StatsV2, *auction.Config, string, string)
 }
 
 func (h *StatsV2Handler) Handle(c echo.Context) error {
@@ -37,7 +37,7 @@ func (h *StatsV2Handler) Handle(c echo.Context) error {
 		})
 	}
 
-	h.NotificationHandler.HandleStatsV2(c.Request().Context(), req.raw.Stats, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
+	h.NotificationHandler.HandleStats(c.Request().Context(), req.raw.Stats, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }
@@ -52,7 +52,7 @@ func prepareStatsV2Events(req *request[schema.StatsV2Request, *schema.StatsV2Req
 		auctionConfigurationUID = 0
 	}
 
-	// 1 event whole auction + at 1 event for each ad unit
+	// 1 event whole auction + 1 event for each ad unit
 	events := make([]*event.AdEvent, 0, 1+len(stats.AdUnits))
 
 	adRequestParams := event.AdRequestParams{

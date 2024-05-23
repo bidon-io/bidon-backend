@@ -21,8 +21,8 @@ var _ sdkapi.StatsV2NotificationHandler = &StatsV2NotificationHandlerMock{}
 //
 //		// make and configure a mocked sdkapi.StatsV2NotificationHandler
 //		mockedStatsV2NotificationHandler := &StatsV2NotificationHandlerMock{
-//			HandleStatsV2Func: func(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string)  {
-//				panic("mock out the HandleStatsV2 method")
+//			HandleStatsFunc: func(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string)  {
+//				panic("mock out the HandleStats method")
 //			},
 //		}
 //
@@ -31,13 +31,13 @@ var _ sdkapi.StatsV2NotificationHandler = &StatsV2NotificationHandlerMock{}
 //
 //	}
 type StatsV2NotificationHandlerMock struct {
-	// HandleStatsV2Func mocks the HandleStatsV2 method.
-	HandleStatsV2Func func(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string)
+	// HandleStatsFunc mocks the HandleStats method.
+	HandleStatsFunc func(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// HandleStatsV2 holds details about calls to the HandleStatsV2 method.
-		HandleStatsV2 []struct {
+		// HandleStats holds details about calls to the HandleStats method.
+		HandleStats []struct {
 			// ContextMoqParam is the contextMoqParam argument value.
 			ContextMoqParam context.Context
 			// StatsV2 is the statsV2 argument value.
@@ -50,13 +50,13 @@ type StatsV2NotificationHandlerMock struct {
 			S2 string
 		}
 	}
-	lockHandleStatsV2 sync.RWMutex
+	lockHandleStats sync.RWMutex
 }
 
-// HandleStatsV2 calls HandleStatsV2Func.
-func (mock *StatsV2NotificationHandlerMock) HandleStatsV2(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string) {
-	if mock.HandleStatsV2Func == nil {
-		panic("StatsV2NotificationHandlerMock.HandleStatsV2Func: method is nil but StatsV2NotificationHandler.HandleStatsV2 was just called")
+// HandleStats calls HandleStatsFunc.
+func (mock *StatsV2NotificationHandlerMock) HandleStats(contextMoqParam context.Context, statsV2 schema.StatsV2, config *auction.Config, s1 string, s2 string) {
+	if mock.HandleStatsFunc == nil {
+		panic("StatsV2NotificationHandlerMock.HandleStatsFunc: method is nil but StatsV2NotificationHandler.HandleStats was just called")
 	}
 	callInfo := struct {
 		ContextMoqParam context.Context
@@ -71,17 +71,17 @@ func (mock *StatsV2NotificationHandlerMock) HandleStatsV2(contextMoqParam contex
 		S1:              s1,
 		S2:              s2,
 	}
-	mock.lockHandleStatsV2.Lock()
-	mock.calls.HandleStatsV2 = append(mock.calls.HandleStatsV2, callInfo)
-	mock.lockHandleStatsV2.Unlock()
-	mock.HandleStatsV2Func(contextMoqParam, statsV2, config, s1, s2)
+	mock.lockHandleStats.Lock()
+	mock.calls.HandleStats = append(mock.calls.HandleStats, callInfo)
+	mock.lockHandleStats.Unlock()
+	mock.HandleStatsFunc(contextMoqParam, statsV2, config, s1, s2)
 }
 
-// HandleStatsV2Calls gets all the calls that were made to HandleStatsV2.
+// HandleStatsCalls gets all the calls that were made to HandleStats.
 // Check the length with:
 //
-//	len(mockedStatsV2NotificationHandler.HandleStatsV2Calls())
-func (mock *StatsV2NotificationHandlerMock) HandleStatsV2Calls() []struct {
+//	len(mockedStatsV2NotificationHandler.HandleStatsCalls())
+func (mock *StatsV2NotificationHandlerMock) HandleStatsCalls() []struct {
 	ContextMoqParam context.Context
 	StatsV2         schema.StatsV2
 	Config          *auction.Config
@@ -95,8 +95,8 @@ func (mock *StatsV2NotificationHandlerMock) HandleStatsV2Calls() []struct {
 		S1              string
 		S2              string
 	}
-	mock.lockHandleStatsV2.RLock()
-	calls = mock.calls.HandleStatsV2
-	mock.lockHandleStatsV2.RUnlock()
+	mock.lockHandleStats.RLock()
+	calls = mock.calls.HandleStats
+	mock.lockHandleStats.RUnlock()
 	return calls
 }
