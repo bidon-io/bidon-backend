@@ -2,7 +2,7 @@ package event
 
 import (
 	"github.com/bidon-io/bidon-backend/config"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"

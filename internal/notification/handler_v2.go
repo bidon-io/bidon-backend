@@ -3,7 +3,7 @@ package notification
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/auction"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
 	"github.com/prebid/openrtb/v19/openrtb3"
 	"golang.org/x/exp/slices"
 	"log"
@@ -18,7 +18,7 @@ type HandlerV2 struct {
 // Finalize results of auction in redis
 // If external_win_notification is enabled - do nothing, wait /win or /loss request
 // If external_win_notification is disabled - send win/loss notifications to demands
-func (h HandlerV2) HandleStats(ctx context.Context, stats schema.StatsV2, config *auction.Config, bundle, adType string) {
+func (h HandlerV2) HandleStats(ctx context.Context, stats schema.Stats, config *auction.Config, bundle, adType string) {
 	if config == nil {
 		log.Printf("HandleStats: cannot find config: %v", stats.AuctionConfigurationID)
 		return

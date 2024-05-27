@@ -9,6 +9,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
 	"gorm.io/gorm"
 )
 
@@ -53,7 +54,7 @@ type AdapterInitConfigsFetcher struct {
 	DB *db.DB
 }
 
-func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
+func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]handlers.AdapterInitConfig, error) {
 	var dbProfiles []db.AppDemandProfile
 
 	err := f.DB.
@@ -68,10 +69,10 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 		return nil, fmt.Errorf("find app demand profiles: %v", err)
 	}
 
-	configs := make([]sdkapi.AdapterInitConfig, 0, len(dbProfiles))
+	configs := make([]handlers.AdapterInitConfig, 0, len(dbProfiles))
 	for _, profile := range dbProfiles {
 		adapterKey := adapter.Key(profile.Account.DemandSource.APIKey)
-		config, err := sdkapi.NewAdapterInitConfig(adapterKey, setOrder)
+		config, err := handlers.NewAdapterInitConfig(adapterKey, setOrder)
 		if err != nil {
 			return nil, fmt.Errorf("new AdapterInitConfig: %w", err)
 		}
@@ -86,14 +87,14 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 			return nil, fmt.Errorf("unmarshal profile data: %v", err)
 		}
 
-		applovinConfig, ok := config.(*sdkapi.ApplovinInitConfig)
+		applovinConfig, ok := config.(*handlers.ApplovinInitConfig)
 		if ok {
 			applovinConfig.AppKey = applovinConfig.SDKKey
 		}
 
 		// TODO: remove this block when we drop support for 0.4.x
 		if !sdkapi.Version05GTEConstraint.Check(sdkVersion) {
-			amazonConfig, ok := config.(*sdkapi.AmazonInitConfig)
+			amazonConfig, ok := config.(*handlers.AmazonInitConfig)
 			if ok {
 				amazonConfig.Slots, err = f.fetchAmazonSlots(ctx, appID)
 				if err != nil {
@@ -109,7 +110,7 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 }
 
 // Deprecated: amazon slots moved to the auction as of 0.5.0
-func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID int64) ([]sdkapi.AmazonSlot, error) {
+func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID int64) ([]handlers.AmazonSlot, error) {
 	var dbLineItems []db.LineItem
 
 	err := f.DB.
@@ -126,9 +127,9 @@ func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID 
 		return nil, fmt.Errorf("find line items: %v", err)
 	}
 
-	slots := make([]sdkapi.AmazonSlot, 0, len(dbLineItems))
+	slots := make([]handlers.AmazonSlot, 0, len(dbLineItems))
 	for _, lineItem := range dbLineItems {
-		slot := sdkapi.AmazonSlot{}
+		slot := handlers.AmazonSlot{}
 
 		slotUUID, ok := lineItem.Extra["slot_uuid"].(string)
 		if !ok {

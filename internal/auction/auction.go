@@ -2,7 +2,7 @@ package auction
 
 import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 )
 
 type Auction struct {

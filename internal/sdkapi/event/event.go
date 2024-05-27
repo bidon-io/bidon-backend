@@ -1,12 +1,13 @@
 package event
 
 import (
+	schemav2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
 	"strconv"
 	"time"
 
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 )
 
 type TimingMap map[string][2]int64
@@ -49,6 +50,102 @@ func NewAdEvent(request *schema.BaseRequest, adRequestParams AdRequestParams, ge
 }
 
 func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) *AdEvent {
+	segmentUID, err := strconv.Atoi(request.Segment.UID)
+	if err != nil {
+		segmentUID = 0
+	}
+
+	var model string
+	if request.Device.OS == "android" {
+		model = request.Device.Model
+	} else {
+		// for iOS and iPadOS, use hardware version like "iPad7,11" instead of model that is just "iPad"
+		model = request.Device.HardwareVersion
+	}
+
+	return &AdEvent{
+		Timestamp:                   generateTimestamp(),
+		Manufacturer:                request.Device.Manufacturer,
+		Model:                       model,
+		Os:                          request.Device.OS,
+		OsVersion:                   request.Device.OSVersion,
+		ConnectionType:              request.Device.ConnectionType,
+		DeviceType:                  string(request.Device.Type),
+		SessionID:                   request.Session.ID,
+		SessionUptime:               request.Session.Uptime(),
+		Bundle:                      request.App.Bundle,
+		Framework:                   request.App.Framework,
+		FrameworkVersion:            request.App.FrameworkVersion,
+		PluginVersion:               request.App.PluginVersion,
+		PackageVersion:              request.App.Version,
+		SdkVersion:                  request.App.SDKVersion,
+		IDFA:                        request.User.IDFA,
+		IDG:                         request.User.IDG,
+		IDFV:                        request.User.IDFV,
+		TrackingAuthorizationStatus: request.User.TrackingAuthorizationStatus,
+		COPPA:                       request.GetRegulations().COPPA,
+		GDPR:                        request.GetRegulations().GDPR,
+		CountryCode:                 geoData.CountryCode,
+		City:                        geoData.CityName,
+		Ip:                          geoData.IPString,
+		CountryID:                   geoData.CountryID,
+		SegmentID:                   request.Segment.ID,
+		SegmentUID:                  int64(segmentUID),
+		Ext:                         request.Ext,
+		Session: Session{
+			ID:                        request.Session.ID,
+			LaunchTS:                  request.Session.LaunchTS,
+			LaunchMonotonicTS:         request.Session.LaunchMonotonicTS,
+			StartTS:                   request.Session.StartTS,
+			StartMonotonicTS:          request.Session.StartMonotonicTS,
+			TS:                        request.Session.TS,
+			MonotonicTS:               request.Session.MonotonicTS,
+			MemoryWarningsTS:          request.Session.MemoryWarningsTS,
+			MemoryWarningsMonotonicTS: request.Session.MemoryWarningsMonotonicTS,
+			RAMUsed:                   request.Session.RAMUsed,
+			RAMSize:                   request.Session.RAMSize,
+			StorageFree:               request.Session.StorageFree,
+			StorageUsed:               request.Session.StorageUsed,
+			Battery:                   request.Session.Battery,
+			CPUUsage:                  request.Session.CPUUsage,
+		},
+	}
+}
+
+func NewAdEventV2(request *schemav2.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) *AdEvent {
+	requestEvent := newBaseRequestV2(request, geoData)
+
+	requestEvent.EventType = adRequestParams.EventType
+	requestEvent.Status = adRequestParams.Status
+	requestEvent.AdType = adRequestParams.AdType
+	requestEvent.AdFormat = adRequestParams.AdFormat
+	requestEvent.AuctionID = adRequestParams.AuctionID
+	requestEvent.AuctionConfigurationID = adRequestParams.AuctionConfigurationID
+	requestEvent.AuctionConfigurationUID = adRequestParams.AuctionConfigurationUID
+	requestEvent.RoundID = adRequestParams.RoundID
+	requestEvent.RoundNumber = adRequestParams.RoundNumber
+	requestEvent.ImpID = adRequestParams.ImpID
+	requestEvent.DemandID = adRequestParams.DemandID
+	requestEvent.Bidding = adRequestParams.Bidding
+	requestEvent.AdUnitUID = adRequestParams.AdUnitUID
+	requestEvent.AdUnitLabel = adRequestParams.AdUnitLabel
+	requestEvent.ECPM = adRequestParams.ECPM
+	requestEvent.PriceFloor = adRequestParams.PriceFloor
+	requestEvent.RawRequest = adRequestParams.RawRequest
+	requestEvent.RawResponse = adRequestParams.RawResponse
+	requestEvent.Error = adRequestParams.Error
+	if adRequestParams.TimingMap == nil {
+		requestEvent.TimingMap = make(TimingMap)
+	} else {
+		requestEvent.TimingMap = adRequestParams.TimingMap
+	}
+	requestEvent.ExternalWinnerDemandID = adRequestParams.ExternalWinnerDemandID
+	requestEvent.ExternalWinnerEcpm = adRequestParams.ExternalWinnerEcpm
+
+	return requestEvent
+}
+
+func newBaseRequestV2(request *schemav2.BaseRequest, geoData geocoder.GeoData) *AdEvent {
 	segmentUID, err := strconv.Atoi(request.Segment.UID)
 	if err != nil {
 		segmentUID = 0
