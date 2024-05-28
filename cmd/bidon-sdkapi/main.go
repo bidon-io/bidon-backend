@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/middleware"
 	v1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1"
 	v2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2"
 	"log"
@@ -176,16 +175,10 @@ func main() {
 
 	e := config.Echo()
 
-	g := e.Group("")
-	config.UseCommonMiddleware(g, "bidon-sdkapi", logger)
-	g.Use(sdkapi.CheckBidonHeader)
+	v1Group := e.Group("")
+	config.UseCommonMiddleware(v1Group, "bidon-sdkapi", logger)
+	v1Group.Use(sdkapi.CheckBidonHeader)
 
-	e.Use(echoprometheus.NewMiddleware("sdkapi"))  // adds middleware to gather metrics
-	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
-
-	g.Use(middleware.Versioning)
-
-	v1Group := e.Group("/v1")
 	routerV1 := v1.Router{
 		ConfigFetcher:             configFetcher,
 		AppFetcher:                appFetcher,
@@ -203,6 +196,8 @@ func main() {
 	routerV1.RegisterRoutes(v1Group)
 
 	v2Group := e.Group("/v2")
+	config.UseCommonMiddleware(v2Group, "bidon-sdkapi", logger)
+	v2Group.Use(sdkapi.CheckBidonHeader)
 	routerV2 := v2.Router{
 		ConfigFetcher:             configFetcher,
 		AppFetcher:                appFetcher,
@@ -219,6 +214,9 @@ func main() {
 		ConfigurationFetcher:      configurationFetcher,
 	}
 	routerV2.RegisterRoutes(v2Group)
+
+	e.Use(echoprometheus.NewMiddleware("sdkapi"))  // adds middleware to gather metrics
+	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
 
 	port := os.Getenv("PORT")
 	if port == "" {
