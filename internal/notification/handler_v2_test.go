@@ -9,7 +9,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/notification/mocks"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 func TestHandlerV2_HandleStats_WinBid(t *testing.T) {

@@ -2,23 +2,23 @@ package handlers_test
 
 import (
 	"context"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 func SetupStatsV2Handler() handlers.StatsHandler {
 	mockHandler := &mocks.StatsNotificationHandlerMock{}
-	mockHandler.HandleStatsFunc = func(contextMoqParam context.Context, stats schema.Stats, config *auction.Config, _ string, _ string) {
+	mockHandler.HandleStatsFunc = func(contextMoqParam context.Context, stats schema.StatsV2, config *auction.Config, _ string, _ string) {
 	}
 	auctionConfig := &auction.Config{
 		ID:  1,
@@ -38,7 +38,7 @@ func SetupStatsV2Handler() handlers.StatsHandler {
 	}
 
 	return handlers.StatsHandler{
-		BaseHandler: &handlers.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
+		BaseHandler: &handlers.BaseHandler[schema.StatsV2Request, *schema.StatsV2Request]{
 			AppFetcher:    AppFetcherMock(),
 			ConfigFetcher: &configFetcher,
 			Geocoder:      GeocoderMock(),

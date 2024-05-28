@@ -5,7 +5,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 )
 
-type AdObject struct {
+type AdObjectV2 struct {
 	AuctionID               string                         `json:"auction_id" validate:"required,uuid4"`
 	AuctionConfigurationID  int64                          `json:"auction_configuration_id"`
 	AuctionConfigurationUID string                         `json:"auction_configuration_uid"`
@@ -17,7 +17,7 @@ type AdObject struct {
 	Rewarded                *RewardedAdObject              `json:"rewarded"`
 }
 
-func (o *AdObject) ToImp(roundID string) Imp {
+func (o *AdObjectV2) ToImp(roundID string) Imp {
 	return Imp{
 		AuctionID:               o.AuctionID,
 		AuctionConfigurationID:  o.AuctionConfigurationID,
@@ -32,32 +32,10 @@ func (o *AdObject) ToImp(roundID string) Imp {
 	}
 }
 
-func (o *AdObject) Format() ad.Format {
+func (o *AdObjectV2) Format() ad.Format {
 	if o.Banner != nil {
 		return o.Banner.Format
 	}
 
 	return ad.EmptyFormat
-}
-
-type BannerAdObject struct {
-	Format ad.Format `json:"format" validate:"oneof=BANNER LEADERBOARD MREC ADAPTIVE"`
-}
-
-func (o BannerAdObject) Map() map[string]any {
-	return map[string]any{
-		"format": o.Format,
-	}
-}
-
-type InterstitialAdObject struct{}
-
-func (o InterstitialAdObject) Map() map[string]any {
-	return map[string]any{}
-}
-
-type RewardedAdObject struct{}
-
-func (o RewardedAdObject) Map() map[string]any {
-	return map[string]any{}
 }

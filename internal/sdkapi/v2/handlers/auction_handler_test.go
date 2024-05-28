@@ -6,7 +6,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	schemav1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"os"
@@ -22,7 +22,6 @@ import (
 
 	auctionv2mocks "github.com/bidon-io/bidon-backend/internal/auctionv2/mocks"
 	handlersmocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )
@@ -56,7 +55,7 @@ func testHelperAuctionV2Handler(t *testing.T) *handlers.AuctionHandler {
 			Label:      "amazon",
 			PriceFloor: &pf,
 			UID:        "123_amazon",
-			BidType:    schemav1.RTBBidType,
+			BidType:    schema.RTBBidType,
 			Extra: map[string]any{
 				"slot_uuid": "uuid1",
 			},
@@ -66,7 +65,7 @@ func testHelperAuctionV2Handler(t *testing.T) *handlers.AuctionHandler {
 			Label:      "meta",
 			PriceFloor: &pf,
 			UID:        "123_meta",
-			BidType:    schemav1.RTBBidType,
+			BidType:    schema.RTBBidType,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -76,7 +75,7 @@ func testHelperAuctionV2Handler(t *testing.T) *handlers.AuctionHandler {
 			Label:      "mobilefuse",
 			PriceFloor: &pf,
 			UID:        "123_mobilefuse",
-			BidType:    schemav1.RTBBidType,
+			BidType:    schema.RTBBidType,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -86,7 +85,7 @@ func testHelperAuctionV2Handler(t *testing.T) *handlers.AuctionHandler {
 			Label:      "gam",
 			PriceFloor: &gamPf,
 			UID:        "123_gam",
-			BidType:    schemav1.CPMBidType,
+			BidType:    schema.CPMBidType,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -195,7 +194,7 @@ func testHelperAuctionV2Handler(t *testing.T) *handlers.AuctionHandler {
 	}
 
 	handler := &handlers.AuctionHandler{
-		BaseHandler: &handlers.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
+		BaseHandler: &handlers.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    appFetcher,
 			ConfigFetcher: configFetcher,
 			Geocoder:      gcoder,

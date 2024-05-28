@@ -16,8 +16,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapimocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers/mocks"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )

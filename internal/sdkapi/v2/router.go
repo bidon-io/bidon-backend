@@ -9,11 +9,10 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
 	handlersv1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
-	schemav1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 	handlersv2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
-	schemav2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
@@ -36,7 +35,7 @@ type Router struct {
 
 func (r *Router) RegisterRoutes(g *echo.Group) {
 	auctionHandler := handlersv2.AuctionHandler{
-		BaseHandler: &handlersv2.BaseHandler[schemav2.AuctionRequest, *schemav2.AuctionRequest]{
+		BaseHandler: &handlersv2.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -51,7 +50,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger: r.EventLogger,
 	}
 	statsHandler := handlersv2.StatsHandler{
-		BaseHandler: &handlersv2.BaseHandler[schemav2.StatsRequest, *schemav2.StatsRequest]{
+		BaseHandler: &handlersv2.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -60,7 +59,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		NotificationHandler: r.NotificationHandler,
 	}
 	configHandler := handlersv1.ConfigHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.ConfigRequest, *schemav1.ConfigRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -70,7 +69,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:               r.EventLogger,
 	}
 	showHandler := handlersv1.ShowHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.ShowRequest, *schemav1.ShowRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -79,7 +78,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		NotificationHandler: r.NotificationHandler,
 	}
 	clickHandler := handlersv1.ClickHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.ClickRequest, *schemav1.ClickRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -87,7 +86,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger: r.EventLogger,
 	}
 	rewardHandler := handlersv1.RewardHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.RewardRequest, *schemav1.RewardRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -95,7 +94,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger: r.EventLogger,
 	}
 	lossHandler := handlersv1.LossHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.LossRequest, *schemav1.LossRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.LossRequest, *schema.LossRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -104,7 +103,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		NotificationHandler: r.NotificationHandler,
 	}
 	winHandler := handlersv1.WinHandler{
-		BaseHandler: &handlersv1.BaseHandler[schemav1.WinRequest, *schemav1.WinRequest]{
+		BaseHandler: &handlersv1.BaseHandler[schema.WinRequest, *schema.WinRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,

@@ -14,7 +14,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 	"github.com/bidon-io/bidon-backend/internal/device"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/shopspring/decimal"

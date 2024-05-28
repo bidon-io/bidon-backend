@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 type BidderInterface interface {

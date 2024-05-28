@@ -13,7 +13,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bidmachine"
 	"github.com/bidon-io/bidon-backend/internal/bidding/mocks"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 func TestMain(m *testing.M) {

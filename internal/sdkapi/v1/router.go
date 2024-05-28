@@ -9,9 +9,9 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )

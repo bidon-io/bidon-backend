@@ -6,7 +6,7 @@ package mocks
 import (
 	"context"
 	"github.com/bidon-io/bidon-backend/internal/notification"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"sync"
 )
 

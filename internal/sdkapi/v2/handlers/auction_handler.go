@@ -11,8 +11,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
-	schemav1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -21,7 +20,7 @@ import (
 )
 
 type AuctionHandler struct {
-	*BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]
+	*BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]
 	AuctionBuilder        *auctionv2.Builder
 	SegmentMatcher        *segment.Matcher
 	BiddingBuilder        BiddingBuilder
@@ -74,11 +73,11 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	params := &auctionv2.BuildParams{
 		AppID:                req.app.ID,
 		AdType:               req.raw.AdType,
-		AdFormat:             req.raw.AdObject.Format(),
+		AdFormat:             req.raw.AdObjectV2.Format(),
 		DeviceType:           req.raw.Device.Type,
 		Adapters:             req.raw.Adapters.Keys(),
 		Segment:              sgmnt,
-		PriceFloor:           req.raw.AdObject.PriceFloor,
+		PriceFloor:           req.raw.AdObjectV2.PriceFloor,
 		MergedAuctionRequest: &req.raw,
 		GeoData:              req.geoData,
 	}
@@ -110,11 +109,11 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 }
 
 func (h *AuctionHandler) buildResponse(
-	req *request[schema.AuctionRequest, *schema.AuctionRequest],
+	req *request[schema.AuctionV2Request, *schema.AuctionV2Request],
 	auctionResult *auctionv2.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
 ) (*AuctionResponse, error) {
-	adObject := req.raw.AdObject
+	adObject := req.raw.AdObjectV2
 	response := AuctionResponse{
 		ConfigID:   auctionResult.AuctionConfiguration.ID,
 		ConfigUID:  auctionResult.AuctionConfiguration.UID,
@@ -126,7 +125,7 @@ func (h *AuctionHandler) buildResponse(
 
 	// Store CPM AdUnits from AuctionConfiguration
 	for _, adUnit := range *auctionResult.AdUnits {
-		if adUnit.BidType == schemav1.CPMBidType {
+		if adUnit.BidType == schema.CPMBidType {
 			response.AdUnits = append(response.AdUnits, adUnit)
 		}
 	}
@@ -151,7 +150,7 @@ func (h *AuctionHandler) buildResponse(
 
 func (h *AuctionHandler) logEvents(
 	c echo.Context,
-	req *request[schema.AuctionRequest, *schema.AuctionRequest],
+	req *request[schema.AuctionV2Request, *schema.AuctionV2Request],
 	auctionResult *auctionv2.AuctionResult,
 	adUnitsMap *map[adapter.Key][]auction.AdUnit,
 ) {

@@ -8,7 +8,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/device"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"time"
 )
@@ -47,7 +47,7 @@ type BuildParams struct {
 	Adapters             []adapter.Key
 	Segment              segment.Segment
 	PriceFloor           float64
-	MergedAuctionRequest *schema.AuctionRequest
+	MergedAuctionRequest *schema.AuctionV2Request
 	GeoData              geocoder.GeoData
 }
 
@@ -98,9 +98,9 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	}
 
 	// Bidding
-	params.MergedAuctionRequest.AdObject.AuctionConfigurationID = auctionConfig.ID
-	params.MergedAuctionRequest.AdObject.AuctionConfigurationUID = auctionConfig.UID
-	imp := params.MergedAuctionRequest.AdObject.ToImp(firstRound.ID)
+	params.MergedAuctionRequest.AdObjectV2.AuctionConfigurationID = auctionConfig.ID
+	params.MergedAuctionRequest.AdObjectV2.AuctionConfigurationUID = auctionConfig.UID
+	imp := params.MergedAuctionRequest.AdObjectV2.ToImp(firstRound.ID)
 
 	adapterConfigs, err := b.BiddingAdaptersConfigBuilder.Build(ctx, params.AppID, params.Adapters, imp, &adUnitsMap)
 	if err != nil {

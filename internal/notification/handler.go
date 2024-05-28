@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/prebid/openrtb/v19/openrtb3"
 	"golang.org/x/exp/slices"
 	"log"

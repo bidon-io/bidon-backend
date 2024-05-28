@@ -8,8 +8,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
 	"sync"
 )
 

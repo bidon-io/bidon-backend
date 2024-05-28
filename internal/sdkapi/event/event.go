@@ -1,13 +1,12 @@
 package event
 
 import (
-	schemav2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"strconv"
 	"time"
 
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/schema"
 )
 
 type TimingMap map[string][2]int64
@@ -112,7 +111,7 @@ func newBaseRequest(request *schema.BaseRequest, geoData geocoder.GeoData) *AdEv
 	}
 }
 
-func NewAdEventV2(request *schemav2.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) *AdEvent {
+func NewAdEventV2(request *schema.BaseRequest, adRequestParams AdRequestParams, geoData geocoder.GeoData) *AdEvent {
 	requestEvent := newBaseRequestV2(request, geoData)
 
 	requestEvent.EventType = adRequestParams.EventType
@@ -145,7 +144,7 @@ func NewAdEventV2(request *schemav2.BaseRequest, adRequestParams AdRequestParams
 	return requestEvent
 }
 
-func newBaseRequestV2(request *schemav2.BaseRequest, geoData geocoder.GeoData) *AdEvent {
+func newBaseRequestV2(request *schema.BaseRequest, geoData geocoder.GeoData) *AdEvent {
 	segmentUID, err := strconv.Atoi(request.Segment.UID)
 	if err != nil {
 		segmentUID = 0

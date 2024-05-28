@@ -7,29 +7,29 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 )
 
-type StatsRequest struct {
+type StatsV2Request struct {
 	BaseRequest
 	AdType ad.Type `param:"ad_type"`
-	Stats  Stats   `json:"stats" validate:"required"`
+	Stats  StatsV2 `json:"stats" validate:"required"`
 }
 
-func (r *StatsRequest) NormalizeValues() {
+func (r *StatsV2Request) NormalizeValues() {
 	r.BaseRequest.NormalizeValues()
 
 	// Some SDK versions can send lower case bid_type
 	r.Stats.Result.BidType = BidType(strings.ToUpper(r.Stats.Result.BidType.String()))
 }
 
-func (r *StatsRequest) GetAuctionConfigurationParams() (string, string) {
+func (r *StatsV2Request) GetAuctionConfigurationParams() (string, string) {
 	return strconv.FormatInt(r.Stats.AuctionConfigurationID, 10), r.Stats.AuctionConfigurationUID
 }
 
-func (r *StatsRequest) SetAuctionConfigurationParams(id int64, uid string) {
+func (r *StatsV2Request) SetAuctionConfigurationParams(id int64, uid string) {
 	r.Stats.AuctionConfigurationID = id
 	r.Stats.AuctionConfigurationUID = uid
 }
 
-type Stats struct {
+type StatsV2 struct {
 	AuctionID               string                `json:"auction_id" validate:"required"`
 	AuctionPricefloor       float64               `json:"auction_pricefloor"`
 	AuctionConfigurationID  int64                 `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"`
