@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"os"
 	"testing"
@@ -14,7 +14,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )

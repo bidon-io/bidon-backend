@@ -1,7 +1,9 @@
 package handlers_test
 
 import (
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	"context"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 	"net/http"
 	"os"
 	"testing"
@@ -11,17 +13,20 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
-func SetupRewardHandler() handlers.RewardHandler {
-	return handlers.RewardHandler{
-		BaseHandler: &handlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
+func SetupShowHandler() handlers.ShowHandler {
+	mockHandler := &mocks.ShowNotificationHandlerMock{}
+	mockHandler.HandleShowFunc = func(ctx context.Context, imp *schema.Bid, _ string, _ string) {}
+	return handlers.ShowHandler{
+		BaseHandler: &handlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher: AppFetcherMock(),
 			Geocoder:   GeocoderMock(),
 		},
-		EventLogger: &event.Logger{Engine: &engine.Log{}},
+		EventLogger:         &event.Logger{Engine: &engine.Log{}},
+		NotificationHandler: mockHandler,
 	}
 }
 
-func TestRewardHandler_Handle(t *testing.T) {
+func TestShowHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name         string
 		requestPath  string
@@ -30,12 +35,12 @@ func TestRewardHandler_Handle(t *testing.T) {
 	}{
 		{
 			name:         "valid request",
-			requestPath:  "testdata/reward/valid_request.json",
+			requestPath:  "testdata/show/valid_request.json",
 			expectedCode: http.StatusOK,
 		},
 		{
 			name:         "invalid request",
-			requestPath:  "testdata/reward/invalid_request.json",
+			requestPath:  "testdata/show/invalid_request.json",
 			expectedCode: http.StatusUnprocessableEntity,
 			wantErr:      true,
 		},
@@ -46,13 +51,8 @@ func TestRewardHandler_Handle(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error reading request file: %v", err)
 			}
-			handler := SetupRewardHandler()
-			rec, err := ExecuteRequest(
-				t, &handler, http.MethodPost, "/reward/rewarded",
-				string(reqBody), &RequestOptions{
-					Params: map[string]string{"ad_type": "rewarded"},
-				},
-			)
+			handler := SetupShowHandler()
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/show", string(reqBody), nil)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)

@@ -11,7 +11,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	handlersv1 "github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	handlersv2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
@@ -32,8 +33,8 @@ type Router struct {
 }
 
 func (r *Router) RegisterRoutes(g *echo.Group) {
-	auctionHandler := handlers.AuctionHandler{
-		BaseHandler: &handlers.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
+	auctionHandler := handlersv1.AuctionHandler{
+		BaseHandler: &handlersv1.BaseHandler[schema.AuctionRequest, *schema.AuctionRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -49,8 +50,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		},
 		EventLogger: r.EventLogger,
 	}
-	configHandler := handlers.ConfigHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
+	configHandler := handlersv2.ConfigHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -59,8 +60,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		AdapterInitConfigsFetcher: r.AdapterInitConfigsFetcher,
 		EventLogger:               r.EventLogger,
 	}
-	biddingHandler := handlers.BiddingHandler{
-		BaseHandler: &handlers.BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]{
+	biddingHandler := handlersv1.BiddingHandler{
+		BaseHandler: &handlersv1.BaseHandler[schema.BiddingRequest, *schema.BiddingRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -70,8 +71,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		AdUnitsMatcher:        r.AdUnitsMatcher,
 		EventLogger:           r.EventLogger,
 	}
-	statsHandler := handlers.StatsHandler{
-		BaseHandler: &handlers.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
+	statsHandler := handlersv1.StatsHandler{
+		BaseHandler: &handlersv1.BaseHandler[schema.StatsRequest, *schema.StatsRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -79,8 +80,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
-	showHandler := handlers.ShowHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
+	showHandler := handlersv2.ShowHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -88,24 +89,24 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
-	clickHandler := handlers.ClickHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
+	clickHandler := handlersv2.ClickHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
 		},
 		EventLogger: r.EventLogger,
 	}
-	rewardHandler := handlers.RewardHandler{
-		BaseHandler: &handlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
+	rewardHandler := handlersv2.RewardHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
 		},
 		EventLogger: r.EventLogger,
 	}
-	lossHandler := handlers.LossHandler{
-		BaseHandler: &handlers.BaseHandler[schema.LossRequest, *schema.LossRequest]{
+	lossHandler := handlersv2.LossHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.LossRequest, *schema.LossRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -113,8 +114,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
-	winHandler := handlers.WinHandler{
-		BaseHandler: &handlers.BaseHandler[schema.WinRequest, *schema.WinRequest]{
+	winHandler := handlersv2.WinHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.WinRequest, *schema.WinRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,

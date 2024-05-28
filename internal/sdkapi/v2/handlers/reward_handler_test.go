@@ -1,7 +1,7 @@
 package handlers_test
 
 import (
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"os"
 	"testing"
@@ -11,9 +11,9 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
-func SetupClickHandler() handlers.ClickHandler {
-	return handlers.ClickHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
+func SetupRewardHandler() handlers.RewardHandler {
+	return handlers.RewardHandler{
+		BaseHandler: &handlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
 			AppFetcher: AppFetcherMock(),
 			Geocoder:   GeocoderMock(),
 		},
@@ -21,7 +21,7 @@ func SetupClickHandler() handlers.ClickHandler {
 	}
 }
 
-func TestClickHandler_Handle(t *testing.T) {
+func TestRewardHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name         string
 		requestPath  string
@@ -30,12 +30,12 @@ func TestClickHandler_Handle(t *testing.T) {
 	}{
 		{
 			name:         "valid request",
-			requestPath:  "testdata/click/valid_request.json",
+			requestPath:  "testdata/reward/valid_request.json",
 			expectedCode: http.StatusOK,
 		},
 		{
 			name:         "invalid request",
-			requestPath:  "testdata/click/invalid_request.json",
+			requestPath:  "testdata/reward/invalid_request.json",
 			expectedCode: http.StatusUnprocessableEntity,
 			wantErr:      true,
 		},
@@ -46,8 +46,13 @@ func TestClickHandler_Handle(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error reading request file: %v", err)
 			}
-			handler := SetupClickHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/click", string(reqBody), nil)
+			handler := SetupRewardHandler()
+			rec, err := ExecuteRequest(
+				t, &handler, http.MethodPost, "/reward/rewarded",
+				string(reqBody), &RequestOptions{
+					Params: map[string]string{"ad_type": "rewarded"},
+				},
+			)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)

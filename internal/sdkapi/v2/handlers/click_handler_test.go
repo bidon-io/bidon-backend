@@ -1,9 +1,7 @@
 package handlers_test
 
 import (
-	"context"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"os"
 	"testing"
@@ -13,20 +11,17 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
-func SetupShowHandler() handlers.ShowHandler {
-	mockHandler := &mocks.ShowNotificationHandlerMock{}
-	mockHandler.HandleShowFunc = func(ctx context.Context, imp *schema.Bid, _ string, _ string) {}
-	return handlers.ShowHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
+func SetupClickHandler() handlers.ClickHandler {
+	return handlers.ClickHandler{
+		BaseHandler: &handlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
 			AppFetcher: AppFetcherMock(),
 			Geocoder:   GeocoderMock(),
 		},
-		EventLogger:         &event.Logger{Engine: &engine.Log{}},
-		NotificationHandler: mockHandler,
+		EventLogger: &event.Logger{Engine: &engine.Log{}},
 	}
 }
 
-func TestShowHandler_Handle(t *testing.T) {
+func TestClickHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name         string
 		requestPath  string
@@ -35,12 +30,12 @@ func TestShowHandler_Handle(t *testing.T) {
 	}{
 		{
 			name:         "valid request",
-			requestPath:  "testdata/show/valid_request.json",
+			requestPath:  "testdata/click/valid_request.json",
 			expectedCode: http.StatusOK,
 		},
 		{
 			name:         "invalid request",
-			requestPath:  "testdata/show/invalid_request.json",
+			requestPath:  "testdata/click/invalid_request.json",
 			expectedCode: http.StatusUnprocessableEntity,
 			wantErr:      true,
 		},
@@ -51,8 +46,8 @@ func TestShowHandler_Handle(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error reading request file: %v", err)
 			}
-			handler := SetupShowHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/show", string(reqBody), nil)
+			handler := SetupClickHandler()
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/click", string(reqBody), nil)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)

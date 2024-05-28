@@ -2,7 +2,7 @@ package handlers_test
 
 import (
 	"context"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,7 +15,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 	"github.com/labstack/echo/v4"
 )
 

@@ -5,8 +5,8 @@ package mocks
 
 import (
 	"context"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
 	"sync"
 )
 
