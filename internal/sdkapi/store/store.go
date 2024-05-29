@@ -106,7 +106,6 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 	return configs, nil
 }
 
-// Deprecated: amazon slots moved to the auction as of 0.5.0
 func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID int64) ([]sdkapi.AmazonSlot, error) {
 	var dbLineItems []db.LineItem
 
