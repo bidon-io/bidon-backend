@@ -50,8 +50,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		},
 		EventLogger: r.EventLogger,
 	}
-	configHandler := handlersv1.ConfigHandler{
-		BaseHandler: &handlersv1.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
+	configHandler := handlersv2.ConfigHandler{
+		BaseHandler: &handlersv2.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
