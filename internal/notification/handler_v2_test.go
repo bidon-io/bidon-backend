@@ -14,7 +14,7 @@ import (
 
 func TestHandlerV2_HandleStats_WinBid(t *testing.T) {
 	ctx := context.Background()
-	imp := schema.Stats{
+	imp := schema.StatsV2{
 		AuctionID:               "f26af577-869e-41cb-909e-4d3eba57a28b",
 		AuctionPricefloor:       7.0,
 		AuctionConfigurationID:  10,
@@ -101,7 +101,7 @@ func TestHandlerV2_HandleStats_WinBid(t *testing.T) {
 func TestHandlerV2_HandleStats_Loss(t *testing.T) {
 	ctx := context.Background()
 
-	imp := schema.Stats{
+	imp := schema.StatsV2{
 		AuctionID:               "f26af577-869e-41cb-909e-4d3eba57a28b",
 		AuctionPricefloor:       7.0,
 		AuctionConfigurationID:  10,
