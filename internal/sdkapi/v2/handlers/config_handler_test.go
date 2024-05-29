@@ -38,53 +38,53 @@ func SetupConfigHandler() handlers.ConfigHandler {
 		Fetcher: segmentFetcher,
 	}
 	adapterInitConfigsFetcher := &mocks.AdapterInitConfigsFetcherMock{
-		FetchAdapterInitConfigsFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]handlers.AdapterInitConfig, error) {
-			return []handlers.AdapterInitConfig{
-				&handlers.AdmobInitConfig{
+		FetchAdapterInitConfigsFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
+			return []sdkapi.AdapterInitConfig{
+				&sdkapi.AdmobInitConfig{
 					AppID: fmt.Sprintf("admob_app_%d", app.ID),
 				},
-				&handlers.ApplovinInitConfig{
+				&sdkapi.ApplovinInitConfig{
 					AppKey: "applovin",
 					SDKKey: "applovin",
 				},
-				&handlers.BidmachineInitConfig{
+				&sdkapi.BidmachineInitConfig{
 					SellerID:        "1",
 					Endpoint:        "x.appbaqend.com",
 					MediationConfig: []string{"one", "two"},
 				},
-				&handlers.BigoAdsInitConfig{
+				&sdkapi.BigoAdsInitConfig{
 					AppID: fmt.Sprintf("bigo_app_%d", app.ID),
 				},
-				&handlers.DTExchangeInitConfig{
+				&sdkapi.DTExchangeInitConfig{
 					AppID: fmt.Sprintf("dtexchange_app_%d", app.ID),
 				},
-				&handlers.GAMInitConfig{
+				&sdkapi.GAMInitConfig{
 					AppID:       fmt.Sprintf("dtexchange_app_%d", app.ID),
 					NetworkCode: "network_code",
 				},
-				&handlers.MetaInitConfig{
+				&sdkapi.MetaInitConfig{
 					AppID:     fmt.Sprintf("meta_app_%d", app.ID),
 					AppSecret: fmt.Sprintf("meta_app_%d_secret", app.ID),
 				},
-				&handlers.MintegralInitConfig{
+				&sdkapi.MintegralInitConfig{
 					AppID:  fmt.Sprintf("mintegral_app_%d", app.ID),
 					AppKey: "mintegral",
 				},
-				&handlers.UnityAdsInitConfig{
+				&sdkapi.UnityAdsInitConfig{
 					GameID: fmt.Sprintf("unity_game_%d", app.ID),
 				},
-				&handlers.VungleInitConfig{
+				&sdkapi.VungleInitConfig{
 					AppID: fmt.Sprintf("vungle_app_%d", app.ID),
 				},
-				&handlers.MobileFuseInitConfig{
+				&sdkapi.MobileFuseInitConfig{
 					PublisherID: fmt.Sprintf("mobilefuse_publisher_%d", app.ID),
 					AppKey:      fmt.Sprintf("mobilefuse_app_%d", app.ID),
 				},
-				&handlers.InmobiInitConfig{
+				&sdkapi.InmobiInitConfig{
 					AccountID: fmt.Sprintf("inmobi_account_%d", app.ID),
 					AppKey:    fmt.Sprintf("inmobi_app_%d", app.ID),
 				},
-				&handlers.AmazonInitConfig{
+				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
 				},
 			}, nil
@@ -151,7 +151,7 @@ func TestConfigHandler_Handle(t *testing.T) {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 			handler := SetupConfigHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/config", string(reqBody), &RequestOptions{
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
 				Headers: map[string]string{
 					"X-Bidon-Version": tt.sdkVersion,
 				},

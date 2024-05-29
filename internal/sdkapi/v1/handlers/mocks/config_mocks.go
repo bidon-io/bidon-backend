@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/Masterminds/semver/v3"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
 	"sync"
 )
@@ -21,7 +22,7 @@ var _ handlers.AdapterInitConfigsFetcher = &AdapterInitConfigsFetcherMock{}
 //
 //		// make and configure a mocked handlers.AdapterInitConfigsFetcher
 //		mockedAdapterInitConfigsFetcher := &AdapterInitConfigsFetcherMock{
-//			FetchAdapterInitConfigsFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]handlers.AdapterInitConfig, error) {
+//			FetchAdapterInitConfigsFunc: func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
 //				panic("mock out the FetchAdapterInitConfigs method")
 //			},
 //		}
@@ -32,7 +33,7 @@ var _ handlers.AdapterInitConfigsFetcher = &AdapterInitConfigsFetcherMock{}
 //	}
 type AdapterInitConfigsFetcherMock struct {
 	// FetchAdapterInitConfigsFunc mocks the FetchAdapterInitConfigs method.
-	FetchAdapterInitConfigsFunc func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]handlers.AdapterInitConfig, error)
+	FetchAdapterInitConfigsFunc func(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]sdkapi.AdapterInitConfig, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -54,7 +55,7 @@ type AdapterInitConfigsFetcherMock struct {
 }
 
 // FetchAdapterInitConfigs calls FetchAdapterInitConfigsFunc.
-func (mock *AdapterInitConfigsFetcherMock) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]handlers.AdapterInitConfig, error) {
+func (mock *AdapterInitConfigsFetcherMock) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, sdkVersion *semver.Version, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
 	if mock.FetchAdapterInitConfigsFunc == nil {
 		panic("AdapterInitConfigsFetcherMock.FetchAdapterInitConfigsFunc: method is nil but AdapterInitConfigsFetcher.FetchAdapterInitConfigs was just called")
 	}

@@ -2,8 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 	"net/http"
 	"os"
 	"testing"
@@ -11,6 +9,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers/mocks"
 )
 
 func SetupShowHandler() handlers.ShowHandler {
@@ -52,7 +52,7 @@ func TestShowHandler_Handle(t *testing.T) {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 			handler := SetupShowHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/show", string(reqBody), nil)
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/show", string(reqBody), nil)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)

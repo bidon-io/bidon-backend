@@ -234,7 +234,7 @@ func prepareAuctionRequestEvent(req *request[schema.AuctionRequest, *schema.Auct
 		PriceFloor:              req.raw.AdObject.PriceFloor,
 	}
 
-	return event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData)
+	return event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData)
 }
 func prepareBiddingEvents(
 	req *request[schema.BiddingRequest, *schema.BiddingRequest],
@@ -282,7 +282,7 @@ func prepareBiddingEvents(
 				"bid": {result.StartTS, result.EndTS},
 			},
 		}
-		events = append(events, event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData))
+		events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		if result.IsBid() {
 			adRequestParams = event.AdRequestParams{
 				EventType:               "bid",
@@ -305,7 +305,7 @@ func prepareBiddingEvents(
 					"bid": {result.StartTS, result.EndTS},
 				},
 			}
-			events = append(events, event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData))
+			events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		}
 	}
 

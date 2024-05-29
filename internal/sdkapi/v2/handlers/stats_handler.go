@@ -72,7 +72,7 @@ func prepareStatsEvents(req *request[schema.StatsV2Request, *schema.StatsV2Reque
 		PriceFloor:              stats.AuctionPricefloor,
 		TimingMap:               event.TimingMap{"auction": {stats.Result.AuctionStartTS, stats.Result.AuctionFinishTS}},
 	}
-	events = append(events, event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData))
+	events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 
 	for _, adUnit := range stats.AdUnits {
 		if adUnit.BidType == schema.CPMBidType {
@@ -93,7 +93,7 @@ func prepareStatsEvents(req *request[schema.StatsV2Request, *schema.StatsV2Reque
 				Bidding:                 false,
 				TimingMap:               event.TimingMap{"fill": {adUnit.FillStartTS, adUnit.FillFinishTS}},
 			}
-			events = append(events, event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData))
+			events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		} else {
 			adRequestParams = event.AdRequestParams{
 				EventType:               "client_bid",
@@ -115,7 +115,7 @@ func prepareStatsEvents(req *request[schema.StatsV2Request, *schema.StatsV2Reque
 					"token": {adUnit.TokenStartTS, adUnit.TokenFinishTS},
 				},
 			}
-			events = append(events, event.NewAdEventV2(&req.raw.BaseRequest, adRequestParams, req.geoData))
+			events = append(events, event.NewAdEvent(&req.raw.BaseRequest, adRequestParams, req.geoData))
 		}
 	}
 

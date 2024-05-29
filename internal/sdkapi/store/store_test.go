@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v1/handlers"
 	"os"
 	"testing"
 	"time"
@@ -149,7 +148,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 		adapterKeys []adapter.Key
 		sdkVersion  string
 		setOrder    bool
-		want        []handlers.AdapterInitConfig
+		want        []sdkapi.AdapterInitConfig
 	}{
 		{
 			name:        "first app with all adapters",
@@ -157,27 +156,27 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			adapterKeys: adapter.Keys,
 			sdkVersion:  "0.4.0",
 			setOrder:    false,
-			want: []handlers.AdapterInitConfig{
-				&handlers.AdmobInitConfig{
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.AdmobInitConfig{
 					AppID: fmt.Sprintf("admob_app_%d", apps[0].ID),
 				},
-				&handlers.AmazonInitConfig{
+				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", apps[0].ID),
-					Slots:  []handlers.AmazonSlot{},
+					Slots:  []sdkapi.AmazonSlot{},
 				},
-				&handlers.ApplovinInitConfig{
+				&sdkapi.ApplovinInitConfig{
 					AppKey: "applovin",
 					SDKKey: "applovin",
 				},
-				&handlers.BidmachineInitConfig{
+				&sdkapi.BidmachineInitConfig{
 					SellerID:        "1",
 					Endpoint:        "x.appbaqend.com",
 					MediationConfig: []string{"one", "two"},
 				},
-				&handlers.BigoAdsInitConfig{
+				&sdkapi.BigoAdsInitConfig{
 					AppID: fmt.Sprintf("bigoads_app_%d", apps[0].ID),
 				},
-				&handlers.DTExchangeInitConfig{
+				&sdkapi.DTExchangeInitConfig{
 					AppID: fmt.Sprintf("dtexchange_app_%d", apps[0].ID),
 				},
 			},
@@ -188,28 +187,28 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			adapterKeys: adapter.Keys,
 			sdkVersion:  "0.4.0",
 			setOrder:    false,
-			want: []handlers.AdapterInitConfig{
-				&handlers.GAMInitConfig{
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.GAMInitConfig{
 					NetworkCode: "111",
 					AppID:       fmt.Sprintf("gam_app_%d", apps[1].ID),
 				},
-				&handlers.InmobiInitConfig{
+				&sdkapi.InmobiInitConfig{
 					AccountID: "inmobi",
 					AppKey:    fmt.Sprintf("inmobi_app_%d", apps[1].ID),
 				},
-				&handlers.MetaInitConfig{
+				&sdkapi.MetaInitConfig{
 					AppID:     fmt.Sprintf("meta_app_%d", apps[1].ID),
 					AppSecret: fmt.Sprintf("meta_app_%d_secret", apps[1].ID),
 				},
-				&handlers.MintegralInitConfig{
+				&sdkapi.MintegralInitConfig{
 					AppID:  fmt.Sprintf("mintegral_app_%d", apps[1].ID),
 					AppKey: "mintegral",
 				},
-				&handlers.MobileFuseInitConfig{},
-				&handlers.UnityAdsInitConfig{
+				&sdkapi.MobileFuseInitConfig{},
+				&sdkapi.UnityAdsInitConfig{
 					GameID: fmt.Sprintf("unityads_game_%d", apps[1].ID),
 				},
-				&handlers.VungleInitConfig{
+				&sdkapi.VungleInitConfig{
 					AppID: fmt.Sprintf("vungle_app_%d", apps[1].ID),
 				},
 			},
@@ -220,35 +219,35 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			adapterKeys: adapter.Keys,
 			sdkVersion:  "0.4.0",
 			setOrder:    true,
-			want: []handlers.AdapterInitConfig{
-				&handlers.GAMInitConfig{
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.GAMInitConfig{
 					NetworkCode: "111",
 					AppID:       fmt.Sprintf("gam_app_%d", apps[1].ID),
 					Order:       1,
 				},
-				&handlers.InmobiInitConfig{
+				&sdkapi.InmobiInitConfig{
 					AccountID: "inmobi",
 					AppKey:    fmt.Sprintf("inmobi_app_%d", apps[1].ID),
 					Order:     3,
 				},
-				&handlers.MetaInitConfig{
+				&sdkapi.MetaInitConfig{
 					AppID:     fmt.Sprintf("meta_app_%d", apps[1].ID),
 					AppSecret: fmt.Sprintf("meta_app_%d_secret", apps[1].ID),
 					Order:     0,
 				},
-				&handlers.MintegralInitConfig{
+				&sdkapi.MintegralInitConfig{
 					AppID:  fmt.Sprintf("mintegral_app_%d", apps[1].ID),
 					AppKey: "mintegral",
 					Order:  3,
 				},
-				&handlers.MobileFuseInitConfig{
+				&sdkapi.MobileFuseInitConfig{
 					Order: 3,
 				},
-				&handlers.UnityAdsInitConfig{
+				&sdkapi.UnityAdsInitConfig{
 					GameID: fmt.Sprintf("unityads_game_%d", apps[1].ID),
 					Order:  2,
 				},
-				&handlers.VungleInitConfig{
+				&sdkapi.VungleInitConfig{
 					AppID: fmt.Sprintf("vungle_app_%d", apps[1].ID),
 					Order: 2,
 				},
@@ -343,17 +342,17 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 		appID       int64
 		sdkVersion  string
 		adapterKeys []adapter.Key
-		want        []handlers.AdapterInitConfig
+		want        []sdkapi.AdapterInitConfig
 	}{
 		{
 			name:        "amazon app with all line items and sdk version < 0.5.0",
 			appID:       app.ID,
 			adapterKeys: adapter.Keys,
 			sdkVersion:  "0.4.0",
-			want: []handlers.AdapterInitConfig{
-				&handlers.AmazonInitConfig{
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
-					Slots: []handlers.AmazonSlot{
+					Slots: []sdkapi.AmazonSlot{
 						{
 							SlotUUID: "amazon_slot_banner",
 							Format:   "BANNER",
@@ -383,8 +382,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 			appID:       app.ID,
 			adapterKeys: adapter.Keys,
 			sdkVersion:  "0.5.0",
-			want: []handlers.AdapterInitConfig{
-				&handlers.AmazonInitConfig{
+			want: []sdkapi.AdapterInitConfig{
+				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
 					Slots:  nil,
 				},

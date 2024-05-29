@@ -47,7 +47,7 @@ func TestClickHandler_Handle(t *testing.T) {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 			handler := SetupClickHandler()
-			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/click", string(reqBody), nil)
+			rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/click", string(reqBody), nil)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Expected error %v, got: %v", tt.wantErr, err)
