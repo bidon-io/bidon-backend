@@ -11,7 +11,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/handlers"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
 )
@@ -33,8 +33,8 @@ type Router struct {
 }
 
 func (r *Router) RegisterRoutes(g *echo.Group) {
-	auctionHandler := handlers.AuctionHandler{
-		BaseHandler: &handlers.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
+	auctionHandler := apihandlers.AuctionHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -48,8 +48,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		},
 		EventLogger: r.EventLogger,
 	}
-	statsHandler := handlers.StatsHandler{
-		BaseHandler: &handlers.BaseHandler[schema.StatsV2Request, *schema.StatsV2Request]{
+	statsHandler := apihandlers.StatsHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.StatsV2Request, *schema.StatsV2Request]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -57,8 +57,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandlerV2,
 	}
-	configHandler := handlers.ConfigHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
+	configHandler := apihandlers.ConfigHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.ConfigRequest, *schema.ConfigRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -67,8 +67,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		AdapterInitConfigsFetcher: r.AdapterInitConfigsFetcher,
 		EventLogger:               r.EventLogger,
 	}
-	showHandler := handlers.ShowHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
+	showHandler := apihandlers.ShowHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -76,24 +76,24 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
-	clickHandler := handlers.ClickHandler{
-		BaseHandler: &handlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
+	clickHandler := apihandlers.ClickHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
 		},
 		EventLogger: r.EventLogger,
 	}
-	rewardHandler := handlers.RewardHandler{
-		BaseHandler: &handlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
+	rewardHandler := apihandlers.RewardHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
 		},
 		EventLogger: r.EventLogger,
 	}
-	lossHandler := handlers.LossHandler{
-		BaseHandler: &handlers.BaseHandler[schema.LossRequest, *schema.LossRequest]{
+	lossHandler := apihandlers.LossHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.LossRequest, *schema.LossRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
@@ -101,8 +101,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
-	winHandler := handlers.WinHandler{
-		BaseHandler: &handlers.BaseHandler[schema.WinRequest, *schema.WinRequest]{
+	winHandler := apihandlers.WinHandler{
+		BaseHandler: &apihandlers.BaseHandler[schema.WinRequest, *schema.WinRequest]{
 			AppFetcher:    r.AppFetcher,
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
