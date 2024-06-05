@@ -45,15 +45,10 @@ func WithBiddingBuilder(bb *mocks.BiddingBuilderMock) BuilderOption {
 
 func testHelperDefaultAuctionBuilderMocks() *BuilderMocks {
 	auctionConfig := &auction.Config{
-		ID: 1,
-		Rounds: []auction.RoundConfig{
-			{
-				ID:      "ROUND_1",
-				Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
-				Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
-				Timeout: 15000,
-			},
-		},
+		ID:      1,
+		Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
+		Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
+		Timeout: 15000,
 	}
 	pf := 0.1
 	adUnits := []auction.AdUnit{
@@ -151,15 +146,10 @@ func TestBuilder_Build2(t *testing.T) {
 			params: &auctionv2.BuildParams{Adapters: []adapter.Key{adapter.GAMKey, adapter.BidmachineKey}, MergedAuctionRequest: request},
 			want: &auctionv2.AuctionResult{
 				AuctionConfiguration: &auction.Config{
-					ID: 1,
-					Rounds: []auction.RoundConfig{
-						{
-							ID:      "ROUND_1",
-							Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
-							Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
-							Timeout: 15000,
-						},
-					},
+					ID:      1,
+					Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
+					Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
+					Timeout: 15000,
 				},
 				AdUnits: &[]auction.AdUnit{
 					{
@@ -188,15 +178,10 @@ func TestBuilder_Build2(t *testing.T) {
 			params: &auctionv2.BuildParams{Adapters: []adapter.Key{adapter.GAMKey, adapter.BidmachineKey}, MergedAuctionRequest: request},
 			want: &auctionv2.AuctionResult{
 				AuctionConfiguration: &auction.Config{
-					ID: 1,
-					Rounds: []auction.RoundConfig{
-						{
-							ID:      "ROUND_1",
-							Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
-							Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
-							Timeout: 15000,
-						},
-					},
+					ID:      1,
+					Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
+					Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
+					Timeout: 15000,
 				},
 				AdUnits: &[]auction.AdUnit{
 					{
@@ -248,15 +233,10 @@ func TestBuilder_Build2(t *testing.T) {
 			},
 			want: &auctionv2.AuctionResult{
 				AuctionConfiguration: &auction.Config{
-					ID: 1,
-					Rounds: []auction.RoundConfig{
-						{
-							ID:      "ROUND_1",
-							Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
-							Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
-							Timeout: 15000,
-						},
-					},
+					ID:      1,
+					Demands: []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
+					Bidding: []adapter.Key{adapter.BidmachineKey, adapter.AmazonKey, adapter.MetaKey},
+					Timeout: 15000,
 				},
 				AdUnits: &[]auction.AdUnit{
 					{
@@ -301,10 +281,6 @@ func TestBuilder_Build2(t *testing.T) {
 	for _, tC := range testCases {
 		got, err := tC.builder.Build(context.Background(), tC.params)
 
-		if !tC.wantErr {
-			got.Stat = nil // Stat is not deterministic
-		}
-
 		if tC.wantErr {
 			if !errors.Is(err, tC.err) {
 				t.Errorf("Expected error %v, got: %v", tC.err, err)
@@ -312,8 +288,10 @@ func TestBuilder_Build2(t *testing.T) {
 		} else {
 			if err != nil {
 				t.Errorf("Error Build: %v", err)
+				return // Skip further checks
 			}
 
+			got.Stat = nil // Stat is not deterministic
 			if diff := cmp.Diff(tC.want, got); diff != "" {
 				t.Errorf("builder.Build -> %+v mismatch \n(-want, +got)\n%s", tC.name, diff)
 			}

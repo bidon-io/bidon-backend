@@ -49,7 +49,7 @@ func (m *ConfigFetcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 		ExternalWinNotifications: *dbConfig.ExternalWinNotifications,
 		Rounds:                   dbConfig.Rounds,
 		Demands:                  db.StringArrayToAdapterKeys(&dbConfig.Demands),
-		Biddings:                 db.StringArrayToAdapterKeys(&dbConfig.Biddings),
+		Bidding:                  db.StringArrayToAdapterKeys(&dbConfig.Biddings),
 		AdUnitIDs:                dbConfig.AdUnitIds,
 		Timeout:                  int(dbConfig.Timeout),
 	}
@@ -117,7 +117,7 @@ func (m *ConfigFetcher) FetchByUID(ctx context.Context, appID int64, id, uid str
 		ExternalWinNotifications: *dbConfig.ExternalWinNotifications,
 		Rounds:                   dbConfig.Rounds,
 		Demands:                  db.StringArrayToAdapterKeys(&dbConfig.Demands),
-		Biddings:                 db.StringArrayToAdapterKeys(&dbConfig.Biddings),
+		Bidding:                  db.StringArrayToAdapterKeys(&dbConfig.Biddings),
 		AdUnitIDs:                dbConfig.AdUnitIds,
 		Timeout:                  int(dbConfig.Timeout),
 	}
