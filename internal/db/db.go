@@ -179,3 +179,13 @@ func StringArrayToAdapterKeys(p *pq.StringArray) []adapter.Key {
 	}
 	return keys
 }
+
+func AdapterKeysToStringArray(k []adapter.Key) pq.StringArray {
+	stringArray := pq.StringArray{}
+
+	for _, key := range k {
+		stringArray = append(stringArray, string(key))
+	}
+
+	return stringArray
+}

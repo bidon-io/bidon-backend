@@ -6,7 +6,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 )
 
-const AuctionConfigurationV2ResourceKey = "auction_configuration"
+const AuctionConfigurationV2ResourceKey = "auction_configuration_v2"
 
 type AuctionConfigurationV2Resource struct {
 	*AuctionConfigurationV2
@@ -31,9 +31,9 @@ type AuctionConfigurationV2Attrs struct {
 	SegmentID                *int64        `json:"segment_id"`
 	ExternalWinNotifications *bool         `json:"external_win_notifications"`
 	Demands                  []adapter.Key `json:"demands"`
-	Biddings                 []adapter.Key `json:"biddings"`
+	Bidding                  []adapter.Key `json:"bidding"`
 	AdUnitIDs                []int64       `json:"ad_unit_ids"`
-	Timeout                  int           `json:"timeout"`
+	Timeout                  int32         `json:"timeout"`
 }
 
 type AuctionConfigurationV2Service struct {

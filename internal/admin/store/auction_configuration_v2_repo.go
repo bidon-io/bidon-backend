@@ -3,6 +3,7 @@ package adminstore
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -29,7 +30,7 @@ func NewAuctionConfigurationV2Repo(d *db.DB) *AuctionConfigurationV2Repo {
 func (r *AuctionConfigurationV2Repo) ListOwnedByUser(ctx context.Context, userID int64) ([]admin.AuctionConfigurationV2, error) {
 	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
 		s := db.Session(&gorm.Session{NewDB: true})
-		return db.InnerJoins("App", s.Select("user_id").Where(map[string]any{"user_id": userID}))
+		return db.InnerJoins("App", s.Select("user_id").Where(map[string]any{"user_id": userID}).Where("settings->>'v2' = ?", true))
 	})
 }
 
@@ -57,6 +58,13 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		segmentID.Valid = true
 	}
 
+	settingsMap := make(map[string]any)
+	if id == 0 {
+		settingsMap["v2"] = true
+	}
+
+	settings, _ := json.Marshal(settingsMap)
+
 	return &db.AuctionConfiguration{
 		ID:                       id,
 		Name:                     name,
@@ -65,6 +73,11 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		Pricefloor:               c.Pricefloor,
 		SegmentID:                &segmentID,
 		ExternalWinNotifications: c.ExternalWinNotifications,
+		Demands:                  db.AdapterKeysToStringArray(c.Demands),
+		Bidding:                  db.AdapterKeysToStringArray(c.Bidding),
+		AdUnitIds:                c.AdUnitIDs,
+		Timeout:                  c.Timeout,
+		Settings:                 settings,
 	}
 }
 
@@ -106,5 +119,9 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 		Pricefloor:               c.Pricefloor,
 		SegmentID:                segmentID,
 		ExternalWinNotifications: c.ExternalWinNotifications,
+		Demands:                  db.StringArrayToAdapterKeys(&c.Demands),
+		Bidding:                  db.StringArrayToAdapterKeys(&c.Bidding),
+		AdUnitIDs:                c.AdUnitIds,
+		Timeout:                  c.Timeout,
 	}
 }
