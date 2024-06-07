@@ -30,7 +30,7 @@ type ConfigResponse struct {
 	Placements     []any              `json:"placements"`
 	Token          string             `json:"token"`
 	Segment        Segment            `json:"segment"`
-	TokenTimeoutMS int64              `json:"token_timeout_ms"`
+	TokenTimeoutMS int                `json:"token_timeout_ms"`
 }
 
 type Segment struct {
