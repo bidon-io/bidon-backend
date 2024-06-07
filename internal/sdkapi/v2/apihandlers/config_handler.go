@@ -26,10 +26,11 @@ type AdapterInitConfigsFetcher interface {
 }
 
 type ConfigResponse struct {
-	Init       ConfigResponseInit `json:"init"`
-	Placements []any              `json:"placements"`
-	Token      string             `json:"token"`
-	Segment    Segment            `json:"segment"`
+	Init           ConfigResponseInit `json:"init"`
+	Placements     []any              `json:"placements"`
+	Token          string             `json:"token"`
+	Segment        Segment            `json:"segment"`
+	TokenTimeoutMS int64              `json:"token_timeout_ms"`
 }
 
 type Segment struct {
@@ -38,8 +39,8 @@ type Segment struct {
 }
 
 type ConfigResponseInit struct {
-	TMax     int                                      `json:"tmax"`
-	Adapters map[adapter.Key]sdkapi.AdapterInitConfig `json:"adapters"`
+	TMax     int                        `json:"tmax"`
+	Adapters []sdkapi.AdapterInitConfig `json:"adapters"`
 }
 
 func (h *ConfigHandler) Handle(c echo.Context) error {
@@ -79,19 +80,15 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		return sdkapi.ErrNoAdaptersFound
 	}
 
-	adapters := make(map[adapter.Key]sdkapi.AdapterInitConfig, len(adapterInitConfigs))
-	for _, cfg := range adapterInitConfigs {
-		adapters[cfg.Key()] = cfg
-	}
-
 	resp := &ConfigResponse{
 		Init: ConfigResponseInit{
 			TMax:     10000,
-			Adapters: adapters,
+			Adapters: adapterInitConfigs,
 		},
-		Placements: []any{},
-		Token:      "{}",
-		Segment:    Segment{ID: sgmnt.StringID(), UID: sgmnt.UID},
+		Placements:     []any{},
+		Token:          "{}",
+		Segment:        Segment{ID: sgmnt.StringID(), UID: sgmnt.UID},
+		TokenTimeoutMS: 100000,
 	}
 
 	return c.JSON(http.StatusOK, resp)
