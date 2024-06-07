@@ -26,11 +26,11 @@ type AdapterInitConfigsFetcher interface {
 }
 
 type ConfigResponse struct {
-	Init           ConfigResponseInit `json:"init"`
-	Placements     []any              `json:"placements"`
-	Token          string             `json:"token"`
-	Segment        Segment            `json:"segment"`
-	TokenTimeoutMS int                `json:"token_timeout_ms"`
+	Init       ConfigResponseInit `json:"init"`
+	Placements []any              `json:"placements"`
+	Token      string             `json:"token"`
+	Segment    Segment            `json:"segment"`
+	Bidding    ConfigBidding      `json:"bidding"`
 }
 
 type Segment struct {
@@ -41,6 +41,10 @@ type Segment struct {
 type ConfigResponseInit struct {
 	TMax     int                        `json:"tmax"`
 	Adapters []sdkapi.AdapterInitConfig `json:"adapters"`
+}
+
+type ConfigBidding struct {
+	TokenTimeoutMS int `json:"token_timeout_ms"`
 }
 
 func (h *ConfigHandler) Handle(c echo.Context) error {
@@ -85,10 +89,10 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 			TMax:     10000,
 			Adapters: adapterInitConfigs,
 		},
-		Placements:     []any{},
-		Token:          "{}",
-		Segment:        Segment{ID: sgmnt.StringID(), UID: sgmnt.UID},
-		TokenTimeoutMS: 100000,
+		Placements: []any{},
+		Token:      "{}",
+		Segment:    Segment{ID: sgmnt.StringID(), UID: sgmnt.UID},
+		Bidding:    ConfigBidding{TokenTimeoutMS: 10000},
 	}
 
 	return c.JSON(http.StatusOK, resp)
