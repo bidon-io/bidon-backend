@@ -53,6 +53,7 @@ type BuildParams struct {
 	MergedAuctionRequest *schema.AuctionV2Request
 	GeoData              geocoder.GeoData
 	AuctionKey           string
+	AdUnitIds            []int64
 }
 
 type AuctionResult struct {
@@ -107,6 +108,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		AdType:     params.AdType,
 		AdFormat:   params.AdFormat,
 		DeviceType: params.DeviceType,
+		AdUnitIDs:  auctionConfig.AdUnitIDs,
 	})
 	if err != nil {
 		return nil, err
