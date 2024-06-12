@@ -24,28 +24,23 @@
       </FormField>
       <FormField v-if="showNetworks" label="CPM Networks">
         <NetworkAccordion
-          v-model:networks="cpmNetworks"
+          v-model:network-keys="demands"
+          v-model:ad-unit-ids="demandAdUnitIds"
           :ad-type="adType"
           :app-id="appId"
           :is-bidding="false"
-          :ad-unit-ids="adUnitIds"
         />
       </FormField>
       <FormField v-if="showNetworks" label="Bidding Networks">
         <NetworkAccordion
-          v-model:networks="biddingNetworks"
+          v-model:network-keys="bidding"
+          v-model:ad-unit-ids="biddingAdUnitIds"
           :ad-type="adType"
           :app-id="appId"
           :is-bidding="true"
-          :ad-unit-ids="adUnitIds"
         />
       </FormField>
       <FormSubmitButton />
-      <div>
-        <pre>{{ JSON.stringify(adUnitIds, null, 2) }}</pre>
-        <pre>{{ JSON.stringify(demands, null, 2) }}</pre>
-        <pre>{{ JSON.stringify(cpmNetworks, null, 2) }}</pre>
-      </div>
     </FormCard>
   </form>
 </template>
@@ -90,65 +85,15 @@ const pricefloor = useFieldModel("pricefloor");
 const segmentId = useFieldModel("segmentId");
 const externalWinNotifications = useFieldModel("externalWinNotifications");
 
-// TODO: Remove hardcoded networks, fetch from API
-const cpmNetworks = ref(
-  [
-    { label: "Admob", key: "admob" },
-    { label: "Applovin", key: "applovin" },
-    { label: "DtExchange", key: "dtexchange" },
-    { label: "Google Ad Manager", key: "gam" },
-    { label: "UnityAds", key: "unityads" },
-  ].map((network) => ({
-    ...network,
-    enabled: false,
-    adUnits: [],
-    selectedAdUnitIds: [],
-  })),
-);
-
-const biddingNetworks = ref(
-  [
-    { label: "BidMachine", key: "bidmachine" },
-    { label: "Bigoads", key: "bigoads" },
-    { label: "Inmobi", key: "inmobi" },
-    { label: "Meta", key: "meta" },
-    { label: "Mintegral", key: "mintegral" },
-    { label: "MobileFuse", key: "mobilefuse" },
-    { label: "Vungle", key: "vungle" },
-  ].map((network) => ({
-    ...network,
-    enabled: false,
-    adUnits: [],
-    selectedAdUnitIds: [],
-  })),
-);
+const demands = ref(resource.value.demands || []);
+const bidding = ref(resource.value.bidding || []);
+const demandAdUnitIds = ref(resource.value.adUnitIds || []);
+const biddingAdUnitIds = ref(resource.value.adUnitIds || []);
 
 const showNetworks = computed(() => appId.value && adType.value);
-const demands = computed(() =>
-  cpmNetworks.value.filter((network) => network.enabled).map(({ key }) => key),
-);
-const bidding = computed(() =>
-  biddingNetworks.value
-    .filter((network) => network.enabled)
-    .map(({ key }) => key),
-);
-const adUnitIds = computed(() =>
-  cpmNetworks.value.map((network) => network.selectedAdUnitIds).flat(),
-);
-
-// admob
-// amazon
-// applovin
-// bidmachine
-// bigoads
-// dtexchange
-// gam
-// inmobi
-// meta
-// mintegral
-// mobilefuse
-// unityads
-// vungle
+const adUnitIds = computed(() => [
+  ...new Set(demandAdUnitIds.value.concat(biddingAdUnitIds.value)),
+]);
 
 const onSubmit = handleSubmit((values) =>
   emit("submit", {

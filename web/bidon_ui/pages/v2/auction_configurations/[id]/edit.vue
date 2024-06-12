@@ -17,7 +17,7 @@ import axios from "@/services/ApiService";
 
 const route = useRoute();
 const id = route.params.id;
-const resourcePath = `v2/auction_configurations/${id}`;
+const resourcePath = `/v2/auction_configurations/${id}`;
 
 const { state: resource, isReady } = useAsyncState(async () => {
   const response = await axios.get(resourcePath);
