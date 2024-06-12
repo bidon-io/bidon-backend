@@ -26,7 +26,7 @@ type Builder struct {
 //go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . ConfigFetcher AdUnitsMatcher BiddingBuilder BiddingAdaptersConfigBuilder
 
 type ConfigFetcher interface {
-	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64) (*auction.Config, error)
+	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64, version string) (*auction.Config, error)
 	FetchByUIDCached(ctx context.Context, appId int64, id, uid string) *auction.Config
 }
 
@@ -87,7 +87,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 			return nil, auction.InvalidAuctionKey
 		}
 	} else {
-		auctionConfig, err = b.ConfigFetcher.Match(ctx, params.AppID, params.AdType, params.Segment.ID)
+		auctionConfig, err = b.ConfigFetcher.Match(ctx, params.AppID, params.AdType, params.Segment.ID, "v2")
 	}
 
 	if err != nil {
