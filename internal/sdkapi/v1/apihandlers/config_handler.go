@@ -30,7 +30,6 @@ type ConfigResponse struct {
 	Placements []any              `json:"placements"`
 	Token      string             `json:"token"`
 	Segment    Segment            `json:"segment"`
-	Bidding    ConfigBidding      `json:"bidding"`
 }
 
 type Segment struct {
@@ -41,10 +40,6 @@ type Segment struct {
 type ConfigResponseInit struct {
 	TMax     int                                      `json:"tmax"`
 	Adapters map[adapter.Key]sdkapi.AdapterInitConfig `json:"adapters"`
-}
-
-type ConfigBidding struct {
-	TokenTimeoutMS int `json:"token_timeout_ms"`
 }
 
 func (h *ConfigHandler) Handle(c echo.Context) error {
@@ -97,7 +92,6 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		Placements: []any{},
 		Token:      "{}",
 		Segment:    Segment{ID: sgmnt.StringID(), UID: sgmnt.UID},
-		Bidding:    ConfigBidding{TokenTimeoutMS: 10000},
 	}
 
 	return c.JSON(http.StatusOK, resp)

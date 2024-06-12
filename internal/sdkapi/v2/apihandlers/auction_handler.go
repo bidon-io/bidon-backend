@@ -50,9 +50,14 @@ type AuctionResponse struct {
 	AdUnits                  []auction.AdUnit `json:"ad_units"`
 	Segment                  auction.Segment  `json:"segment"`
 	Token                    string           `json:"token"`
-	PriceFloor               float64          `json:"pricefloor"`
+	AuctionPriceFloor        float64          `json:"auction_pricefloor"`
+	AuctionTimeout           int              `json:"auction_timeout"`
 	AuctionID                string           `json:"auction_id"`
 }
+
+const (
+	DefaultAuctionTimeout = 30000
+)
 
 func (h *AuctionHandler) Handle(c echo.Context) error {
 	req, err := h.resolveRequest(c)
@@ -88,6 +93,9 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		if errors.Is(err, auction.ErrNoAdsFound) {
 			err = sdkapi.ErrNoAdsFound
 		}
+		if errors.Is(err, auction.InvalidAuctionKey) {
+			err = sdkapi.ErrInvalidAuctionKey
+		}
 
 		return err
 	}
@@ -116,20 +124,17 @@ func (h *AuctionHandler) buildResponse(
 ) (*AuctionResponse, error) {
 	adObject := req.raw.AdObject
 	response := AuctionResponse{
-		ConfigID:   auctionResult.AuctionConfiguration.ID,
-		ConfigUID:  auctionResult.AuctionConfiguration.UID,
-		Segment:    auction.Segment{ID: req.raw.Segment.ID, UID: req.raw.Segment.UID},
-		Token:      "{}",
-		AuctionID:  adObject.AuctionID,
-		PriceFloor: adObject.PriceFloor,
+		ConfigID:          auctionResult.AuctionConfiguration.ID,
+		ConfigUID:         auctionResult.AuctionConfiguration.UID,
+		Segment:           auction.Segment{ID: req.raw.Segment.ID, UID: req.raw.Segment.UID},
+		Token:             "{}",
+		AuctionID:         adObject.AuctionID,
+		AuctionPriceFloor: adObject.PriceFloor,
+		AuctionTimeout:    auctionTimeout(auctionResult.AuctionConfiguration),
 	}
 
 	// Store CPM AdUnits from AuctionConfiguration
-	for _, adUnit := range *auctionResult.AdUnits {
-		if adUnit.BidType == schema.CPMBidType {
-			response.AdUnits = append(response.AdUnits, adUnit)
-		}
-	}
+	response.AdUnits = append(response.AdUnits, *auctionResult.CPMAdUnits...)
 
 	// Store Bids AS RTB AdUnits from BiddingAuctionResult
 	for _, bidResponse := range auctionResult.BiddingAuctionResult.Bids {
@@ -206,7 +211,7 @@ func convertBidToAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *map[
 		DemandID:   string(demandResponse.DemandID),
 		UID:        storeAdUnit.UID,
 		Label:      storeAdUnit.Label,
-		BidType:    storeAdUnit.BidType,
+		BidType:    schema.RTBBidType,
 		PriceFloor: &priceFloor,
 		Extra:      ext,
 	}
@@ -336,4 +341,12 @@ func buildDemandExt(demandResponse adapters.DemandResponse) map[string]any {
 			"payload": demandResponse.Bid.Payload,
 		}
 	}
+}
+
+func auctionTimeout(conf *auction.Config) int {
+	if conf.Timeout > 0 {
+		return conf.Timeout
+	}
+
+	return DefaultAuctionTimeout
 }
