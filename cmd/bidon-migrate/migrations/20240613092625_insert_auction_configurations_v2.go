@@ -70,7 +70,7 @@ func upInsertAuctionConfigurationsV2(ctx context.Context, tx *sql.Tx) error {
 		settings["v2"] = true
 		settings["reference_id"] = aucConf.ID
 		snowflakeID, err := generateSnowflakeID()
-		time.Sleep(50 * time.Millisecond) // Sleep for 50ms to avoid duplicate snowflake IDs
+		time.Sleep(100 * time.Millisecond) // Sleep for 100ms to avoid duplicate snowflake IDs
 		if err != nil {
 			return fmt.Errorf("generate snowflake id: %v", err)
 		}
@@ -82,11 +82,9 @@ func upInsertAuctionConfigurationsV2(ctx context.Context, tx *sql.Tx) error {
 			Adapters:   adapters,
 			PriceFloor: &aucConf.Pricefloor,
 		})
-
 		if err != nil {
 			log.Printf("Error fetching ad unit IDs: %v", err)
 		}
-		log.Printf("Ad unit IDs: %v", adUnitIDs)
 
 		aucConfV2 := AuctionConfiguration{
 			Name:       aucConf.Name,
