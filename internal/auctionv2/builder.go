@@ -100,6 +100,9 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 	if len(demandAdapters) == 0 && len(biddingAdapters) == 0 {
 		return nil, auction.ErrNoAdsFound
 	}
+	if len(auctionConfig.AdUnitIDs) == 0 {
+		return nil, auction.ErrNoAdsFound
+	}
 
 	adUnits, err := b.AdUnitsMatcher.MatchCached(ctx, &auction.BuildParams{
 		Adapters:   params.Adapters,
