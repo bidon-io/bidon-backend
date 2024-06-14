@@ -64,13 +64,12 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		segmentID.Valid = true
 	}
 
-	settingsMap := make(map[string]any)
+	settingsMap := c.Settings
 	if id == 0 {
 		settingsMap["v2"] = true
 	}
 
 	settings, _ := json.Marshal(settingsMap)
-
 	return &db.AuctionConfiguration{
 		ID:                       id,
 		Name:                     name,
@@ -118,6 +117,9 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 		segmentID = nil
 	}
 
+	settings := make(map[string]any)
+	json.Unmarshal(c.Settings, &settings)
+
 	return admin.AuctionConfigurationV2Attrs{
 		Name:                     c.Name.String,
 		AppID:                    c.AppID,
@@ -129,5 +131,6 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 		Bidding:                  db.StringArrayToAdapterKeys(&c.Bidding),
 		AdUnitIDs:                c.AdUnitIds,
 		Timeout:                  c.Timeout,
+		Settings:                 settings,
 	}
 }
