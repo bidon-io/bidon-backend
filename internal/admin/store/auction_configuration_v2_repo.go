@@ -63,18 +63,7 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		segmentID.Int64 = *c.SegmentID
 		segmentID.Valid = true
 	}
-
-	settingsMap := map[string]any{}
-	if c.Settings != nil {
-		settingsMap = c.Settings
-	}
-
-	if id == 0 {
-		settingsMap["v2"] = true
-	}
-
-	settings, _ := json.Marshal(settingsMap)
-	return &db.AuctionConfiguration{
+	model := &db.AuctionConfiguration{
 		ID:                       id,
 		Name:                     name,
 		AppID:                    c.AppID,
@@ -86,8 +75,20 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		Bidding:                  db.AdapterKeysToStringArray(c.Bidding),
 		AdUnitIds:                c.AdUnitIDs,
 		Timeout:                  c.Timeout,
-		Settings:                 settings,
 	}
+
+	if id == 0 {
+		settingsMap := map[string]any{}
+		if c.Settings != nil {
+			settingsMap = c.Settings
+		}
+		settingsMap["v2"] = true
+
+		settings, _ := json.Marshal(settingsMap)
+		model.Settings = settings
+	}
+
+	return model
 }
 
 //lint:ignore U1000 this method is used by generic struct
