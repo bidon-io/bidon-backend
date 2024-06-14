@@ -64,7 +64,11 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		segmentID.Valid = true
 	}
 
-	settingsMap := c.Settings
+	settingsMap := map[string]any{}
+	if c.Settings != nil {
+		settingsMap = c.Settings
+	}
+
 	if id == 0 {
 		settingsMap["v2"] = true
 	}
