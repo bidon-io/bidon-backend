@@ -80,9 +80,9 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 
 	if id == 0 {
 		if c.Settings != nil {
-			c.Settings["v2"] = true
+			model.Settings["v2"] = true
 		} else {
-			c.Settings = map[string]any{"v2": true}
+			model.Settings = map[string]any{"v2": true}
 		}
 	}
 
