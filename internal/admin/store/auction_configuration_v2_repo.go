@@ -118,7 +118,9 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 	}
 
 	settings := make(map[string]any)
-	json.Unmarshal(c.Settings, &settings)
+	if c.Settings != nil {
+		_ = json.Unmarshal(c.Settings, &settings)
+	}
 
 	return admin.AuctionConfigurationV2Attrs{
 		Name:                     c.Name.String,
