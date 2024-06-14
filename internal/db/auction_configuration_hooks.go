@@ -17,9 +17,11 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 		Where("app_id = ? AND ad_type = ?", ac.AppID, ac.AdType)
 
 	var settings map[string]any
-	err = json.Unmarshal(ac.Settings, &settings)
-	if err != nil {
-		return fmt.Errorf("unmarshal settings: %v", err)
+	if ac.Settings != nil {
+		err = json.Unmarshal(ac.Settings, &settings)
+		if err != nil {
+			return fmt.Errorf("unmarshal settings: %v", err)
+		}
 	}
 
 	if isV2, ok := settings["v2"].(bool); ok && isV2 {
