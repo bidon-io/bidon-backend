@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -16,15 +15,14 @@ func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 	query := tx.Model(&AuctionConfiguration{}).
 		Where("app_id = ? AND ad_type = ?", ac.AppID, ac.AdType)
 
-	var settings map[string]any
+	isV2 := false
 	if ac.Settings != nil {
-		err = json.Unmarshal(ac.Settings, &settings)
-		if err != nil {
-			return fmt.Errorf("unmarshal settings: %v", err)
+		if v2, ok := ac.Settings["v2"].(bool); ok {
+			isV2 = v2
 		}
 	}
 
-	if isV2, ok := settings["v2"].(bool); ok && isV2 {
+	if isV2 {
 		query = query.Where("settings->>'v2' = 'true'")
 	} else {
 		query = query.Where("settings->>'v2' IS NULL")

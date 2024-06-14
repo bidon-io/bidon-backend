@@ -3,7 +3,6 @@ package adminstore
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -63,6 +62,7 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		segmentID.Int64 = *c.SegmentID
 		segmentID.Valid = true
 	}
+
 	model := &db.AuctionConfiguration{
 		ID:                       id,
 		Name:                     name,
@@ -75,17 +75,15 @@ func (m auctionConfigurationV2Mapper) dbModel(c *admin.AuctionConfigurationV2Att
 		Bidding:                  db.AdapterKeysToStringArray(c.Bidding),
 		AdUnitIds:                c.AdUnitIDs,
 		Timeout:                  c.Timeout,
+		Settings:                 c.Settings,
 	}
 
 	if id == 0 {
-		settingsMap := map[string]any{}
 		if c.Settings != nil {
-			settingsMap = c.Settings
+			c.Settings["v2"] = true
+		} else {
+			c.Settings = map[string]any{"v2": true}
 		}
-		settingsMap["v2"] = true
-
-		settings, _ := json.Marshal(settingsMap)
-		model.Settings = settings
 	}
 
 	return model
@@ -122,11 +120,6 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 		segmentID = nil
 	}
 
-	settings := make(map[string]any)
-	if c.Settings != nil {
-		_ = json.Unmarshal(c.Settings, &settings)
-	}
-
 	return admin.AuctionConfigurationV2Attrs{
 		Name:                     c.Name.String,
 		AppID:                    c.AppID,
@@ -138,6 +131,6 @@ func (m auctionConfigurationV2Mapper) resourceAttrs(c *db.AuctionConfiguration) 
 		Bidding:                  db.StringArrayToAdapterKeys(&c.Bidding),
 		AdUnitIDs:                c.AdUnitIds,
 		Timeout:                  c.Timeout,
-		Settings:                 settings,
+		Settings:                 c.Settings,
 	}
 }
