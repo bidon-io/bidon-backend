@@ -278,10 +278,10 @@ func (b *Builder) setTokenResponse(demandResponse *adapters.DemandResponse, br *
 		demandResponse.Token.Status = status.(string)
 	}
 	if tokenStartTS, ok := demandData["token_start_ts"]; ok {
-		demandResponse.Token.StartTS = tokenStartTS.(int64)
+		demandResponse.Token.StartTS = int64(tokenStartTS.(int))
 	}
-	if tokenEndTS, ok := demandData["token_end_ts"]; ok {
-		demandResponse.Token.EndTS = tokenEndTS.(int64)
+	if tokenFinishTS, ok := demandData["token_finish_ts"]; ok {
+		demandResponse.Token.EndTS = int64(tokenFinishTS.(int))
 	}
 }
 
