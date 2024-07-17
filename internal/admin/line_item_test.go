@@ -170,7 +170,7 @@ func Test_lineItemAttrsValidator_ValidateWithContext(t *testing.T) {
 			&DemandSourceAccount{
 				DemandSource: DemandSource{
 					DemandSourceAttrs: DemandSourceAttrs{
-						ApiKey: string(adapter.VungleKey),
+						ApiKey: string(adapter.VKAdsKey),
 					},
 				},
 			},
