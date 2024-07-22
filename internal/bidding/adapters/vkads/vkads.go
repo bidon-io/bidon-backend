@@ -67,7 +67,6 @@ func (a *VKAdsAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
 	w, h := size[0], size[1]
 
 	return &openrtb2.Imp{
-		ID: "1",
 		Banner: &openrtb2.Banner{
 			W: &w,
 			H: &h,
@@ -107,6 +106,7 @@ func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, br *schema.Bidd
 	request.User = &openrtb.User{
 		ID: br.User.IDG,
 	}
+	request.App.ID = a.AppID
 	request.Ext = json.RawMessage(`{"pid":111}`)
 
 	return request, nil
@@ -185,7 +185,7 @@ func (a *VKAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandR
 		ImpID:    bid.ImpID,
 		Price:    bid.Price,
 		Payload:  bid.AdM,
-		DemandID: adapter.MobileFuseKey,
+		DemandID: adapter.VKAdsKey,
 		AdID:     bid.AdID,
 		SeatID:   seat.Seat,
 		LURL:     bid.LURL,
@@ -225,7 +225,7 @@ func fixRawResponse(rawResponse *string) string {
 	return string(updatedData)
 }
 
-// Builder builds a new instance of the MobileFuse adapter for the given bidder with the given config.
+// Builder builds a new instance of the VKAds adapter for the given bidder with the given config.
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
 	vkCfg := cfg[adapter.VKAdsKey]
 
