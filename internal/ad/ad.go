@@ -17,7 +17,6 @@ const (
 	LeaderboardFormat Format = "LEADERBOARD"
 	MRECFormat        Format = "MREC"
 	AdaptiveFormat    Format = "ADAPTIVE"
-	RewardedFormat    Format = "REWARDED"
 )
 
 func (f Format) IsBannerFormat() bool {

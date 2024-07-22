@@ -31,8 +31,12 @@ var bannerFormats = map[ad.Format][2]int64{
 	ad.MRECFormat:        {300, 250},
 	ad.AdaptiveFormat:    {320, 50},
 	ad.EmptyFormat:       {320, 50}, // Default
-	ad.RewardedFormat:    {1920, 1080},
 }
+
+const (
+	rewardedWidth  int64 = 1920
+	rewardedHeight int64 = 1080
+)
 
 func (a *VKAdsAdapter) banner(br *schema.BiddingRequest) *openrtb2.Imp {
 	size := bannerFormats[br.Imp.Format()]
@@ -63,9 +67,7 @@ func (a *VKAdsAdapter) interstitial() *openrtb2.Imp {
 }
 
 func (a *VKAdsAdapter) rewarded(br *schema.BiddingRequest) *openrtb2.Imp {
-	size := bannerFormats[ad.RewardedFormat]
-	w, h := size[0], size[1]
-
+	w, h := rewardedWidth, rewardedHeight
 	return &openrtb2.Imp{
 		Banner: &openrtb2.Banner{
 			W: &w,
