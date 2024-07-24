@@ -271,17 +271,17 @@ func (b *Builder) setTokenResponse(demandResponse *adapters.DemandResponse, br *
 		return
 	}
 
-	if token, ok := demandData["token"]; ok {
-		demandResponse.Token.Value = token.(string)
+	if token, ok := demandData["token"].(string); ok {
+		demandResponse.Token.Value = token
 	}
-	if status, ok := demandData["status"]; ok {
-		demandResponse.Token.Status = status.(string)
+	if status, ok := demandData["status"].(string); ok {
+		demandResponse.Token.Status = status
 	}
-	if tokenStartTS, ok := demandData["token_start_ts"]; ok {
-		demandResponse.Token.StartTS = int64(tokenStartTS.(int))
+	if tokenStartTS, ok := demandData["token_start_ts"].(float64); ok {
+		demandResponse.Token.StartTS = int64(tokenStartTS)
 	}
-	if tokenFinishTS, ok := demandData["token_finish_ts"]; ok {
-		demandResponse.Token.EndTS = int64(tokenFinishTS.(int))
+	if tokenFinishTS, ok := demandData["token_finish_ts"].(float64); ok {
+		demandResponse.Token.EndTS = int64(tokenFinishTS)
 	}
 }
 
