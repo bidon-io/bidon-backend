@@ -98,7 +98,7 @@ func TestLineItemRepo_List(t *testing.T) {
 		want[i].App = adminstore.AppAttrsWithId(&app)
 	}
 
-	got, err := repo.List(context.Background())
+	got, err := repo.List(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("repo.List(ctx) = %v, %q; want %+v, %v", got, err, want, nil)
 	}
