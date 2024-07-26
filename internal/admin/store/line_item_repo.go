@@ -127,7 +127,7 @@ func (m lineItemMapper) resourceAttrs(i *db.LineItem) admin.LineItemAttrs {
 type lineItemFilters struct {
 	UserID      int64
 	AppID       int64
-	AdType      ad.Type
+	AdType      db.AdType
 	AccountID   int64
 	AccountType string
 	IsBidding   *bool
@@ -140,7 +140,7 @@ func (f *lineItemFilters) apply(db *gorm.DB) *gorm.DB {
 	if f.AppID != 0 {
 		db = db.Where("app_id = ?", f.AppID)
 	}
-	if f.AdType != "" {
+	if f.AdType != 0 {
 		db = db.Where("ad_type = ?", f.AdType)
 	}
 	if f.AccountID != 0 {
@@ -150,7 +150,11 @@ func (f *lineItemFilters) apply(db *gorm.DB) *gorm.DB {
 		db = db.Where("account_type = ?", f.AccountType)
 	}
 	if f.IsBidding != nil {
-		db = db.Where("is_bidding = ?", f.IsBidding)
+		if *f.IsBidding {
+			db = db.Where("bidding = ?", true)
+		} else {
+			db = db.Where("bidding = ? OR bidding IS NULL", false)
+		}
 	}
 	return db
 }
@@ -164,7 +168,9 @@ func queryToLineItemFilters(qParams map[string][]string) lineItemFilters {
 		filters.AppID, _ = strconv.ParseInt(v[0], 10, 64)
 	}
 	if v, ok := qParams["ad_type"]; ok {
-		filters.AdType = ad.Type(v[0])
+
+		dbAdType := db.AdTypeFromDomain(ad.Type(v[0]))
+		filters.AdType = dbAdType
 	}
 	if v, ok := qParams["account_id"]; ok {
 		filters.AccountID, _ = strconv.ParseInt(v[0], 10, 64)
