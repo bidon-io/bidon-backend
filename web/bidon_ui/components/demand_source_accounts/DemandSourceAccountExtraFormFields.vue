@@ -52,7 +52,11 @@
     <VeeFormFieldWrapper field="extra.accountId" label="Account ID" required />
   </template>
   <template v-if="apiKey === 'yandex'">
-    <VeeFormFieldWrapper field="extra.oauth_token" label="Oauth Token" required />
+    <VeeFormFieldWrapper
+      field="extra.oauth_token"
+      label="Oauth Token"
+      required
+    />
   </template>
 </template>
 

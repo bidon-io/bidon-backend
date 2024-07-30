@@ -16,7 +16,12 @@
   <FormField v-if="appKeyVisible" label="App key" :error="appKeyError" required>
     <InputText v-model="appKey" type="text" placeholder="App Key" />
   </FormField>
-  <ForField v-if="metricaIdVisible" label="Metrica ID" :error="metricaIdError" required>
+  <ForField
+    v-if="metricaIdVisible"
+    label="Metrica ID"
+    :error="metricaIdError"
+    required
+  >
     <InputText v-model="metricaId" type="text" placeholder="Metrica ID" />
   </ForField>
 </template>
@@ -103,14 +108,17 @@ const appKeyVisible = computed(() =>
     "DemandSourceAccount::Amazon",
   ].includes(props.accountType),
 );
-const metricaIdVisible = computed(() => props.accountType === "DemandSourceAccount::Yandex");
+const metricaIdVisible = computed(
+  () => props.accountType === "DemandSourceAccount::Yandex",
+);
 
 const { value: appId, errorMessage: appIdError } = useField("data.appId");
 const { value: appSecret, errorMessage: appSecretError } =
   useField("data.appSecret");
 const { value: gameId, errorMessage: gameIdError } = useField("data.gameId");
 const { value: appKey, errorMessage: appKeyError } = useField("data.appKey");
-const { value: metricaId, errorMessage: metricaIdError } = useField("data.metricaId");
+const { value: metricaId, errorMessage: metricaIdError } =
+  useField("data.metricaId");
 
 const schema = computed(() => dataSchemas[props.accountType] || yup.object());
 
