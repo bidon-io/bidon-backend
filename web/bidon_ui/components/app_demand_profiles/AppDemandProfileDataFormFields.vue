@@ -16,14 +16,14 @@
   <FormField v-if="appKeyVisible" label="App key" :error="appKeyError" required>
     <InputText v-model="appKey" type="text" placeholder="App Key" />
   </FormField>
-  <ForField
+  <FormField
     v-if="metricaIdVisible"
     label="Metrica ID"
     :error="metricaIdError"
     required
   >
     <InputText v-model="metricaId" type="text" placeholder="Metrica ID" />
-  </ForField>
+  </FormField>
 </template>
 
 <script setup>
