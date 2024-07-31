@@ -124,11 +124,13 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 	}
 
 	selectApp := func(i int) db.App {
-		if i < 7 { // 7 is approx half of the keys
-			return apps[0]
-		} else {
-			return apps[1]
+		firstAppAccounts := []adapter.Key{adapter.AdmobKey, adapter.AmazonKey, adapter.ApplovinKey, adapter.BidmachineKey, adapter.BigoAdsKey, adapter.DTExchangeKey, adapter.GAMKey}
+		for _, key := range firstAppAccounts {
+			if key == adapter.Key(accounts[i].DemandSource.APIKey) {
+				return apps[0]
+			}
 		}
+		return apps[1]
 	}
 	for i, account := range accounts {
 		dbtest.CreateAppDemandProfile(t, tx, func(profile *db.AppDemandProfile) {
