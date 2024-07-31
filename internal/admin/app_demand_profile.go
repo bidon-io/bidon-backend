@@ -196,7 +196,7 @@ func (v *appDemandProfileAttrsValidator) dataRule(demandSource *DemandSource) v8
 	case adapter.BigoAdsKey:
 		rule = v8n.Map(
 			v8n.Key("app_id", v8n.Required, isString),
-			v8n.Key("app_channel", isString),
+			v8n.Key("app_channel", v8n.NilOrNotEmpty, isString).Optional(),
 		)
 	case adapter.MetaKey:
 		rule = v8n.Map(
