@@ -124,7 +124,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 	}
 
 	selectApp := func(i int) db.App {
-		if i < (len(accounts) / 2) {
+		if i < 7 { // 7 is approx half of the keys
 			return apps[0]
 		} else {
 			return apps[1]
@@ -195,6 +195,9 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AccountID: "inmobi",
 					AppKey:    fmt.Sprintf("inmobi_app_%d", apps[1].ID),
 				},
+				&sdkapi.IronSourceInitConfig{
+					AppKey: fmt.Sprintf("ironsource_app_%d", apps[1].ID),
+				},
 				&sdkapi.MetaInitConfig{
 					AppID:     fmt.Sprintf("meta_app_%d", apps[1].ID),
 					AppSecret: fmt.Sprintf("meta_app_%d_secret", apps[1].ID),
@@ -230,6 +233,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AccountID: "inmobi",
 					AppKey:    fmt.Sprintf("inmobi_app_%d", apps[1].ID),
 					Order:     3,
+				},
+				&sdkapi.IronSourceInitConfig{
+					AppKey: fmt.Sprintf("ironsource_app_%d", apps[1].ID),
+					Order:  2,
 				},
 				&sdkapi.MetaInitConfig{
 					AppID:     fmt.Sprintf("meta_app_%d", apps[1].ID),
