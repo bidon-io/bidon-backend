@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
-	"fmt"
 	adapterstore "github.com/bidon-io/bidon-backend/internal/adapter/store"
 	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
 	"github.com/bidon-io/bidon-backend/internal/auctionv2"
@@ -17,7 +15,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 type Router struct {
@@ -125,20 +122,4 @@ func (r *Router) RegisterRoutes(e *echo.Echo, g *echo.Group) {
 	api.RegisterHandlers(e, &Server{
 		ConfigHandler: &configHandler,
 	})
-
-	spec, err := api.GetSwagger()
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
-
-	// Define a route to serve the OpenAPI spec
-	e.GET("/openapi.json", func(c echo.Context) error {
-		swaggerJSON, err := json.Marshal(spec)
-		if err != nil {
-			return fmt.Errorf("failed to generate OpenAPI spec")
-		}
-
-		return c.JSONBlob(http.StatusOK, swaggerJSON)
-	})
-
 }

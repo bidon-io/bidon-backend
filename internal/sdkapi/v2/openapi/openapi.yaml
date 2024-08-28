@@ -27,3 +27,21 @@ paths:
           application/problem+json:
             schema:
               $ref: './schemas/error.schema.json'
+  /openapi.json:
+    get:
+      summary: Get OpenAPI specification
+      operationId: getOpenAPISpec
+      description: Returns the OpenAPI JSON specification for the API.
+      responses:
+        '200':
+          description: OpenAPI JSON specification
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: './schemas/error.schema.json'

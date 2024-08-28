@@ -9,7 +9,7 @@ require (
 	github.com/bool64/cache v0.4.6
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/cenkalti/backoff/v4 v4.2.1
-	github.com/getkin/kin-openapi v0.127.0
+	github.com/getkin/kin-openapi v0.125.0
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/getsentry/sentry-go/otel v0.25.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
