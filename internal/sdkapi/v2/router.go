@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
 	adapterstore "github.com/bidon-io/bidon-backend/internal/adapter/store"
 	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
 	"github.com/bidon-io/bidon-backend/internal/auctionv2"
@@ -11,9 +13,11 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/api"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type Router struct {
@@ -31,7 +35,7 @@ type Router struct {
 	BiddingAdaptersCfgBuilder *adapters_builder.AdaptersConfigBuilder
 }
 
-func (r *Router) RegisterRoutes(g *echo.Group) {
+func (r *Router) RegisterRoutes(e *echo.Echo, g *echo.Group) {
 	auctionHandler := apihandlers.AuctionHandler{
 		BaseHandler: &apihandlers.BaseHandler[schema.AuctionV2Request, *schema.AuctionV2Request]{
 			AppFetcher:    r.AppFetcher,
@@ -110,7 +114,6 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		NotificationHandler: r.NotificationHandler,
 	}
 
-	g.POST("/config", configHandler.Handle)
 	g.POST("/auction/:ad_type", auctionHandler.Handle)
 	g.POST("/stats/:ad_type", statsHandler.Handle)
 	g.POST("/show/:ad_type", showHandler.Handle)
@@ -118,4 +121,24 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 	g.POST("/reward/:ad_type", rewardHandler.Handle)
 	g.POST("/loss/:ad_type", lossHandler.Handle)
 	g.POST("/win/:ad_type", winHandler.Handle)
+
+	api.RegisterHandlers(e, &Server{
+		ConfigHandler: &configHandler,
+	})
+
+	spec, err := api.GetSwagger()
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	// Define a route to serve the OpenAPI spec
+	e.GET("/openapi.json", func(c echo.Context) error {
+		swaggerJSON, err := json.Marshal(spec)
+		if err != nil {
+			return fmt.Errorf("failed to generate OpenAPI spec")
+		}
+
+		return c.JSONBlob(http.StatusOK, swaggerJSON)
+	})
+
 }
