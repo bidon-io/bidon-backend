@@ -1,9 +1,10 @@
-package v1
+//go:generate go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config=config.yaml --config=config.yaml ../openapi/openapi.yaml
+
+package api
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/api"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -18,7 +19,7 @@ func (s *Server) GetConfig(c echo.Context) error {
 }
 
 func (s *Server) GetOpenAPISpec(c echo.Context) error {
-	spec, err := api.GetSwagger()
+	spec, err := GetSwagger()
 	if err != nil {
 		return err
 	}
@@ -32,4 +33,4 @@ func (s *Server) GetOpenAPISpec(c echo.Context) error {
 }
 
 // Ensure that we implement the server interface
-var _ api.ServerInterface = (*Server)(nil)
+var _ ServerInterface = (*Server)(nil)

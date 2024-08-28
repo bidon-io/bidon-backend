@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	adapterstore "github.com/bidon-io/bidon-backend/internal/adapter/store"
@@ -119,7 +119,7 @@ func (r *Router) RegisterRoutes(e *echo.Echo, g *echo.Group) {
 	g.POST("/loss/:ad_type", lossHandler.Handle)
 	g.POST("/win/:ad_type", winHandler.Handle)
 
-	api.RegisterHandlers(e, &Server{
+	api.RegisterHandlers(e, &api.Server{
 		ConfigHandler: &configHandler,
 	})
 }
