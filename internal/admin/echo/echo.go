@@ -346,6 +346,9 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) update(c
 
 func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) delete(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/bidon-io/bidon-backend/internal/device"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -342,7 +342,7 @@ func TestBidmachineAdapter_ExecuteRequest(t *testing.T) {
 		return &http.Response{
 			Status:        http.StatusText(http.StatusOK),
 			StatusCode:    http.StatusOK,
-			Body:          ioutil.NopCloser(bytes.NewBuffer(responseBody)),
+			Body:          io.NopCloser(bytes.NewBuffer(responseBody)),
 			ContentLength: int64(len(responseBody)),
 		}
 	})

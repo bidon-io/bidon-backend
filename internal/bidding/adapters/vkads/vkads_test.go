@@ -14,7 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -288,7 +288,7 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 				return &http.Response{
 					Status:        http.StatusText(http.StatusOK),
 					StatusCode:    http.StatusOK,
-					Body:          ioutil.NopCloser(bytes.NewBuffer(tc.responseBody)),
+					Body:          io.NopCloser(bytes.NewBuffer(tc.responseBody)),
 					ContentLength: int64(len(tc.responseBody)),
 				}
 			})
