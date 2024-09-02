@@ -17,7 +17,3 @@ jobs:
 
         - name: Run pre-commit checks
           run: docker compose run --rm go-pre-commit
-
-        - name: Clean up
-          run: docker compose down --rmi local -v
-          if: always()

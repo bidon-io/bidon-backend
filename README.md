@@ -10,7 +10,7 @@ docker compose up -d
 ## Set up pre-commit hooks
 ```shell
 brew install pre-commit
-pre-commit install # Always re-install hooks after making changes to .pre-commit-config.yaml
+pre-commit install
 ```
 
 ### Manage migrations
