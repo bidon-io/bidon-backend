@@ -7,6 +7,12 @@ cp -n .env.test.sample .env.test || true
 docker compose up -d
 ```
 
+## Set up pre-commit hooks
+```shell
+brew install pre-commit
+pre-commit install # Always re-install hooks after making changes to .pre-commit-config.yaml
+```
+
 ### Manage migrations
 ```shell
 go run ./cmd/bidon-migrate -help

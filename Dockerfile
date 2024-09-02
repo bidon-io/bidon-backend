@@ -60,3 +60,7 @@ COPY --from=bidon-migrate-builder --chown=deploy /bidon-migrate /bidon-migrate
 ENTRYPOINT [ "/bidon-migrate" ]
 
 CMD [ "status" ]
+
+FROM base AS pre-commit-deps
+
+RUN apk add --no-cache python3 git pre-commit
