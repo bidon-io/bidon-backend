@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"

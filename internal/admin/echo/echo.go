@@ -13,7 +13,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo-jwt/v4"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	session "github.com/spazzymoto/echo-scs-session"

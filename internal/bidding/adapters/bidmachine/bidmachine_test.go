@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/bidon-io/bidon-backend/internal/device"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/bidon-io/bidon-backend/internal/device"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
