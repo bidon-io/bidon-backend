@@ -1,16 +1,9 @@
 # BidOn
 ## Set up development environment
 ```shell
-cp -n .env.sample .env || true
-cp -n .env.test.sample .env.test || true
+make local-init
 
 docker compose up -d
-```
-
-## Set up pre-commit hooks
-```shell
-brew install pre-commit
-pre-commit install
 ```
 
 ### Manage migrations
