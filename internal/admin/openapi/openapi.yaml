@@ -1,0 +1,105 @@
+openapi: 3.0.3
+servers:
+  - url: /api
+info:
+  title: Admin API
+  version: 0.1.0
+paths:
+  /v2/auction_configurations:
+    get:
+      operationId: getAuctionConfigurations
+      summary: List auction configurations
+      tags:
+        - Auction configurations
+      responses:
+        '200':
+          description: A list of auction configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/auction-configuration-detailed.schema.json'
+    post:
+      operationId: createAuctionConfiguration
+      summary: Create auction configuration
+      tags:
+        - Auction configurations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/auction-configuration.schema.json'
+      responses:
+        '201':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /v2/auction_configurations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getAuctionConfiguration
+      tags:
+        - Auction configurations
+      summary: Get auction configuration
+      responses:
+        '200':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateAuctionConfiguration
+      tags:
+        - Auction configurations
+      summary: Update auction configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/auction-configuration-props.schema.json'
+      responses:
+        '200':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteAuctionConfiguration
+      tags:
+        - Auction configurations
+      summary: Delete auction configuration
+      responses:
+        '204':
+          description: Auction configuration deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  responses:
+    ErrorResponse:
+      description: An error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/error.schema.json'
+  parameters:
+    idParam:
+      name: id
+      in: path
+      required: true
+      description: 'An id of a resource'
+      schema:
+        $ref: './schemas/id.schema.json'

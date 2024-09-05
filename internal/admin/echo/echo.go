@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ import (
 func UseAuthorization(g *echo.Group, authService *auth.Service) {
 	sm := authService.GetSessionManager()
 	g.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-		Skipper: skipIfWebAppOrAuth("Bearer"),
+		Skipper: skipIfAny(skipIfWebAppOrAuth("Bearer"), skipIfAuthRoutes()),
 		Validator: func(username, password string, c echo.Context) (bool, error) {
 			if authService.IsSuperUser(username, password) {
 				c.Set("authCtx", stubAuthContext{})
@@ -34,7 +35,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(echojwt.WithConfig(echojwt.Config{
-		Skipper: skipIfWebAppOrAuth("Basic"),
+		Skipper: skipIfAny(skipIfWebAppOrAuth("Basic"), skipIfAuthRoutes()),
 		SuccessHandler: func(c echo.Context) {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(*auth.JWTClaims)
@@ -49,12 +50,13 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(session.LoadAndSaveWithConfig(session.SessionConfig{
-		Skipper:        skipIfNotWebApp(),
+		Skipper:        skipIfAny(skipIfNotWebApp(), skipIfAuthRoutes()),
 		SessionManager: sm,
 	}))
 	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			if skipIfNotWebApp()(c) {
+			skipper := skipIfAny(skipIfNotWebApp(), skipIfAuthRoutes())
+			if skipper(c) {
 				return next(c)
 			}
 
@@ -168,10 +170,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 			handler: &auctionConfigurationServiceHandler{service.AuctionConfigurationService},
 		},
 		{
-			group:   g.Group("/v2/auction_configurations"),
-			handler: &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service},
-		},
-		{
 			group:   g.Group("/countries"),
 			handler: &countryServiceHandler{service.CountryService},
 		},
@@ -207,9 +205,39 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 		r.group.DELETE("/:id", r.handler.delete)
 	}
 
+	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
+	serv := &Server{AucV2Handler: aucV2Handler}
+	api.RegisterHandlers(g, serv)
+
 	lineItemImportHandler := &lineItemImportHandler{service.LineItemService}
 	g.POST("/line_items/import", lineItemImportHandler.handleImport)
 }
+
+type Server struct {
+	AucV2Handler *auctionConfigurationV2ServiceHandler
+}
+
+func (s *Server) GetAuctionConfigurations(c echo.Context) error {
+	return s.AucV2Handler.list(c)
+}
+
+func (s *Server) CreateAuctionConfiguration(c echo.Context) error {
+	return s.AucV2Handler.create(c)
+}
+
+func (s *Server) GetAuctionConfiguration(c echo.Context, _ api.IdParam) error {
+	return s.AucV2Handler.get(c)
+}
+
+func (s *Server) UpdateAuctionConfiguration(c echo.Context, _ api.IdParam) error {
+	return s.AucV2Handler.update(c)
+}
+
+func (s *Server) DeleteAuctionConfiguration(c echo.Context, _ api.IdParam) error {
+	return s.AucV2Handler.delete(c)
+}
+
+var _ api.ServerInterface = (*Server)(nil)
 
 type resourceRoute struct {
 	group   *echo.Group
@@ -404,6 +432,25 @@ func skipIfAuthIs(prefixes ...string) middleware.Skipper {
 			}
 		}
 
+		return false
+	}
+}
+
+func skipIfAuthRoutes() middleware.Skipper {
+	return func(c echo.Context) bool {
+		return strings.HasPrefix(c.Path(), "/auth")
+	}
+}
+
+// Combine skippers with OR logic
+func skipIfAny(skippers ...middleware.Skipper) middleware.Skipper {
+	return func(c echo.Context) bool {
+		// Any skipper returning true will make the combined skipper skip
+		for _, skipper := range skippers {
+			if skipper(c) {
+				return true
+			}
+		}
 		return false
 	}
 }
