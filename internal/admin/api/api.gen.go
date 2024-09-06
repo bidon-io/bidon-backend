@@ -157,6 +157,50 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
+// CreateAppDemandProfileJSONBody defines parameters for CreateAppDemandProfile.
+type CreateAppDemandProfileJSONBody struct {
+	// AccountId A positive integer ID
+	AccountId int `json:"account_id"`
+
+	// AccountType The type of account associated with this demand profile
+	AccountType string `json:"account_type"`
+
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// Data Additional data associated with the demand profile
+	Data map[string]interface{} `json:"data"`
+
+	// DemandSourceId A positive integer ID
+	DemandSourceId int `json:"demand_source_id"`
+
+	// Id A positive integer primary ID, read-only
+	Id        *int                `json:"id,omitempty"`
+	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
+}
+
+// UpdateAppDemandProfileJSONBody defines parameters for UpdateAppDemandProfile.
+type UpdateAppDemandProfileJSONBody struct {
+	// AccountId A positive integer ID
+	AccountId *int `json:"account_id,omitempty"`
+
+	// AccountType The type of account associated with this demand profile
+	AccountType *string `json:"account_type,omitempty"`
+
+	// AppId A positive integer ID
+	AppId *int `json:"app_id,omitempty"`
+
+	// Data Additional data associated with the demand profile
+	Data *map[string]interface{} `json:"data,omitempty"`
+
+	// DemandSourceId A positive integer ID
+	DemandSourceId *int `json:"demand_source_id,omitempty"`
+
+	// Id A positive integer primary ID, read-only
+	Id        *int                `json:"id,omitempty"`
+	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
+}
+
 // CreateAppJSONBody defines parameters for CreateApp.
 type CreateAppJSONBody struct {
 	// AppKey A unique key for the app
@@ -217,7 +261,8 @@ type CreateAuctionConfigurationJSONBody struct {
 	Name string `json:"name"`
 
 	// Pricefloor Price floor for the auction configuration
-	Pricefloor float32 `json:"pricefloor"`
+	Pricefloor float32             `json:"pricefloor"`
+	PublicUid  *openapi_types.UUID `json:"public_uid,omitempty"`
 
 	// Rounds Auction rounds
 	Rounds []struct {
@@ -249,7 +294,8 @@ type UpdateAuctionConfigurationJSONBody struct {
 	Name string `json:"name"`
 
 	// Pricefloor Price floor for the auction configuration
-	Pricefloor float32 `json:"pricefloor"`
+	Pricefloor float32             `json:"pricefloor"`
+	PublicUid  *openapi_types.UUID `json:"public_uid,omitempty"`
 
 	// Rounds Auction rounds
 	Rounds []struct {
@@ -290,9 +336,10 @@ type CreateAuctionConfigurationV2JSONBody struct {
 	Id *int `json:"id,omitempty"`
 
 	// IsDefault Indicates if this is the default configuration
-	IsDefault  *bool   `json:"is_default,omitempty"`
-	Name       string  `json:"name"`
-	Pricefloor float32 `json:"pricefloor"`
+	IsDefault  *bool               `json:"is_default,omitempty"`
+	Name       string              `json:"name"`
+	Pricefloor float32             `json:"pricefloor"`
+	PublicUid  *openapi_types.UUID `json:"public_uid,omitempty"`
 
 	// SegmentId A positive integer ID
 	SegmentId *int `json:"segment_id,omitempty"`
@@ -336,9 +383,10 @@ type UpdateAuctionConfigurationV2JSONBody struct {
 	Id *int `json:"id,omitempty"`
 
 	// IsDefault Indicates if this is the default configuration
-	IsDefault  *bool    `json:"is_default,omitempty"`
-	Name       *string  `json:"name,omitempty"`
-	Pricefloor *float32 `json:"pricefloor,omitempty"`
+	IsDefault  *bool               `json:"is_default,omitempty"`
+	Name       *string             `json:"name,omitempty"`
+	Pricefloor *float32            `json:"pricefloor,omitempty"`
+	PublicUid  *openapi_types.UUID `json:"public_uid,omitempty"`
 
 	// SegmentId A positive integer ID
 	SegmentId *int `json:"segment_id,omitempty"`
@@ -358,6 +406,12 @@ type UpdateAuctionConfigurationV2JSONBodyBidding string
 
 // UpdateAuctionConfigurationV2JSONBodyDemands defines parameters for UpdateAuctionConfigurationV2.
 type UpdateAuctionConfigurationV2JSONBodyDemands string
+
+// CreateAppDemandProfileJSONRequestBody defines body for CreateAppDemandProfile for application/json ContentType.
+type CreateAppDemandProfileJSONRequestBody CreateAppDemandProfileJSONBody
+
+// UpdateAppDemandProfileJSONRequestBody defines body for UpdateAppDemandProfile for application/json ContentType.
+type UpdateAppDemandProfileJSONRequestBody UpdateAppDemandProfileJSONBody
 
 // CreateAppJSONRequestBody defines body for CreateApp for application/json ContentType.
 type CreateAppJSONRequestBody CreateAppJSONBody
@@ -379,6 +433,21 @@ type UpdateAuctionConfigurationV2JSONRequestBody UpdateAuctionConfigurationV2JSO
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List app demand profiles
+	// (GET /app_demand_profiles)
+	GetAppDemandProfiles(ctx echo.Context) error
+	// Create app demand profile
+	// (POST /app_demand_profiles)
+	CreateAppDemandProfile(ctx echo.Context) error
+	// Delete app demand profile
+	// (DELETE /app_demand_profiles/{id})
+	DeleteAppDemandProfile(ctx echo.Context, id IdParam) error
+	// Get app demand profile
+	// (GET /app_demand_profiles/{id})
+	GetAppDemandProfile(ctx echo.Context, id IdParam) error
+	// Update app demand profile
+	// (PATCH /app_demand_profiles/{id})
+	UpdateAppDemandProfile(ctx echo.Context, id IdParam) error
 	// List apps
 	// (GET /apps)
 	GetApps(ctx echo.Context) error
@@ -429,6 +498,72 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetAppDemandProfiles converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAppDemandProfiles(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAppDemandProfiles(ctx)
+	return err
+}
+
+// CreateAppDemandProfile converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateAppDemandProfile(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateAppDemandProfile(ctx)
+	return err
+}
+
+// DeleteAppDemandProfile converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteAppDemandProfile(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteAppDemandProfile(ctx, id)
+	return err
+}
+
+// GetAppDemandProfile converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAppDemandProfile(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAppDemandProfile(ctx, id)
+	return err
+}
+
+// UpdateAppDemandProfile converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateAppDemandProfile(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateAppDemandProfile(ctx, id)
+	return err
 }
 
 // GetApps converts echo context to params.
@@ -657,6 +792,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/app_demand_profiles", wrapper.GetAppDemandProfiles)
+	router.POST(baseURL+"/app_demand_profiles", wrapper.CreateAppDemandProfile)
+	router.DELETE(baseURL+"/app_demand_profiles/:id", wrapper.DeleteAppDemandProfile)
+	router.GET(baseURL+"/app_demand_profiles/:id", wrapper.GetAppDemandProfile)
+	router.PATCH(baseURL+"/app_demand_profiles/:id", wrapper.UpdateAppDemandProfile)
 	router.GET(baseURL+"/apps", wrapper.GetApps)
 	router.POST(baseURL+"/apps", wrapper.CreateApp)
 	router.DELETE(baseURL+"/apps/:id", wrapper.DeleteApp)
@@ -678,39 +818,47 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"/wIAAP//w8mNrR0xAAA=",
+	"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",
+	"VCk+6ZVGAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

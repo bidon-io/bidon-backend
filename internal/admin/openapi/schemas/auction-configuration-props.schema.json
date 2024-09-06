@@ -6,7 +6,9 @@
   "properties": {
     "id": {
       "$ref": "./primary-id.schema.json",
-      "description": "Primary ID of the auction configuration"
+    },
+    "public_uid": {
+      "$ref": "public-uid.schema.json"
     },
     "name": {
       "type": "string",

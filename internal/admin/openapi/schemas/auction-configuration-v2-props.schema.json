@@ -6,6 +6,9 @@
     "id": {
       "$ref": "primary-id.schema.json"
     },
+    "public_uid": {
+      "$ref": "public-uid.schema.json"
+    },
     "name": {
       "type": "string",
       "minLength": 1

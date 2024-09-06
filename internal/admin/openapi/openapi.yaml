@@ -253,6 +253,92 @@ paths:
           description: App deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /app_demand_profiles:
+    get:
+      operationId: getAppDemandProfiles
+      summary: List app demand profiles
+      tags:
+        - App demand profiles
+      responses:
+        '200':
+          description: A list of app demand profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/app-demand-profile-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createAppDemandProfile
+      summary: Create app demand profile
+      tags:
+        - App demand profiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/app-demand-profile.schema.json'
+      responses:
+        '201':
+          AppDemandProfileResponse:
+            description: An app demand profile
+            content:
+              application/json:
+                schema:
+                  $ref: './schemas/app-demand-profile.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /app_demand_profiles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getAppDemandProfile
+      tags:
+        - App demand profiles
+      summary: Get app demand profile
+      responses:
+        '200':
+          description: An app demand profile
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app-demand-profile-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateAppDemandProfile
+      tags:
+        - App demand profiles
+      summary: Update app demand profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/app-demand-profile-props.schema.json'
+      responses:
+        '200':
+          AppDemandProfileResponse:
+            description: An app demand profile
+            content:
+              application/json:
+                schema:
+                  $ref: './schemas/app-demand-profile.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteAppDemandProfile
+      tags:
+        - App demand profiles
+      summary: Delete app demand profile
+      responses:
+        '204':
+          description: App demand profile deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

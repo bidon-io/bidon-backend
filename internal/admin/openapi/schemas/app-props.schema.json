@@ -8,8 +8,7 @@
       "$ref": "id.schema.json"
     },
     "public_uid": {
-      "type": "string",
-      "format": "uuid"
+      "$ref": "public-uid.schema.json"
     },
     "platform_id": {
       "$ref": "platform-id.schema.json",

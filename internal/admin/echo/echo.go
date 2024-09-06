@@ -158,10 +158,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 
 	resourceRoutes := []resourceRoute{
 		{
-			group:   g.Group("/app_demand_profiles"),
-			handler: &appDemandProfileServiceHandler{service.AppDemandProfileService},
-		},
-		{
 			group:   g.Group("/countries"),
 			handler: &countryServiceHandler{service.CountryService},
 		},
@@ -198,12 +194,14 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 	}
 
 	appHandler := &appServiceHandler{service.AppService}
+	appDemandProfileHandler := appDemandProfileServiceHandler{service.AppDemandProfileService}
 	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
 	serv := &Server{
-		AppHandler:      appHandler,
-		AucCfgHandler:   aucHandler,
-		AucCfgV2Handler: aucV2Handler,
+		AppHandler:              appHandler,
+		AppDemandProfileHandler: &appDemandProfileHandler,
+		AucCfgHandler:           aucHandler,
+		AucCfgV2Handler:         aucV2Handler,
 	}
 	api.RegisterHandlers(g, serv)
 
@@ -212,9 +210,10 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 }
 
 type Server struct {
-	AppHandler      *appServiceHandler
-	AucCfgHandler   *auctionConfigurationServiceHandler
-	AucCfgV2Handler *auctionConfigurationV2ServiceHandler
+	AppHandler              *appServiceHandler
+	AppDemandProfileHandler *appDemandProfileServiceHandler
+	AucCfgHandler           *auctionConfigurationServiceHandler
+	AucCfgV2Handler         *auctionConfigurationV2ServiceHandler
 }
 
 // App handlers
@@ -237,6 +236,28 @@ func (s *Server) UpdateApp(c echo.Context, _ api.IdParam) error {
 
 func (s *Server) DeleteApp(c echo.Context, _ api.IdParam) error {
 	return s.AppHandler.delete(c)
+}
+
+// AppDemandProfile handlers
+
+func (s *Server) GetAppDemandProfiles(c echo.Context) error {
+	return s.AppDemandProfileHandler.list(c)
+}
+
+func (s *Server) CreateAppDemandProfile(c echo.Context) error {
+	return s.AppDemandProfileHandler.create(c)
+}
+
+func (s *Server) GetAppDemandProfile(c echo.Context, _ api.IdParam) error {
+	return s.AppDemandProfileHandler.get(c)
+}
+
+func (s *Server) UpdateAppDemandProfile(c echo.Context, _ api.IdParam) error {
+	return s.AppDemandProfileHandler.update(c)
+}
+
+func (s *Server) DeleteAppDemandProfile(c echo.Context, _ api.IdParam) error {
+	return s.AppDemandProfileHandler.delete(c)
 }
 
 // AuctionConfiguration handlers
