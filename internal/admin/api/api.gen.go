@@ -16,6 +16,19 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+)
+
+// Defines values for CreateAppJSONBodyPlatformId.
+const (
+	CreateAppJSONBodyPlatformIdAndroid CreateAppJSONBodyPlatformId = "android"
+	CreateAppJSONBodyPlatformIdIos     CreateAppJSONBodyPlatformId = "ios"
+)
+
+// Defines values for UpdateAppJSONBodyPlatformId.
+const (
+	UpdateAppJSONBodyPlatformIdAndroid UpdateAppJSONBodyPlatformId = "android"
+	UpdateAppJSONBodyPlatformIdIos     UpdateAppJSONBodyPlatformId = "ios"
 )
 
 // Defines values for CreateAuctionConfigurationJSONBodyAdType.
@@ -143,6 +156,52 @@ type ErrorResponse struct {
 		Message string `json:"message"`
 	} `json:"error"`
 }
+
+// CreateAppJSONBody defines parameters for CreateApp.
+type CreateAppJSONBody struct {
+	// AppKey A unique key for the app
+	AppKey string `json:"app_key"`
+
+	// HumanName The human-readable name of the app
+	HumanName string `json:"human_name"`
+
+	// Id A positive integer ID
+	Id int `json:"id"`
+
+	// PackageName The package name of the app
+	PackageName string                      `json:"package_name"`
+	PlatformId  CreateAppJSONBodyPlatformId `json:"platform_id"`
+	PublicUid   *openapi_types.UUID         `json:"public_uid,omitempty"`
+
+	// UserId A positive integer ID
+	UserId int `json:"user_id"`
+}
+
+// CreateAppJSONBodyPlatformId defines parameters for CreateApp.
+type CreateAppJSONBodyPlatformId string
+
+// UpdateAppJSONBody defines parameters for UpdateApp.
+type UpdateAppJSONBody struct {
+	// AppKey A unique key for the app
+	AppKey *string `json:"app_key,omitempty"`
+
+	// HumanName The human-readable name of the app
+	HumanName *string `json:"human_name,omitempty"`
+
+	// Id A positive integer ID
+	Id *int `json:"id,omitempty"`
+
+	// PackageName The package name of the app
+	PackageName *string                      `json:"package_name,omitempty"`
+	PlatformId  *UpdateAppJSONBodyPlatformId `json:"platform_id,omitempty"`
+	PublicUid   *openapi_types.UUID          `json:"public_uid,omitempty"`
+
+	// UserId A positive integer ID
+	UserId *int `json:"user_id,omitempty"`
+}
+
+// UpdateAppJSONBodyPlatformId defines parameters for UpdateApp.
+type UpdateAppJSONBodyPlatformId string
 
 // CreateAuctionConfigurationJSONBody defines parameters for CreateAuctionConfiguration.
 type CreateAuctionConfigurationJSONBody struct {
@@ -300,6 +359,12 @@ type UpdateAuctionConfigurationV2JSONBodyBidding string
 // UpdateAuctionConfigurationV2JSONBodyDemands defines parameters for UpdateAuctionConfigurationV2.
 type UpdateAuctionConfigurationV2JSONBodyDemands string
 
+// CreateAppJSONRequestBody defines body for CreateApp for application/json ContentType.
+type CreateAppJSONRequestBody CreateAppJSONBody
+
+// UpdateAppJSONRequestBody defines body for UpdateApp for application/json ContentType.
+type UpdateAppJSONRequestBody UpdateAppJSONBody
+
 // CreateAuctionConfigurationJSONRequestBody defines body for CreateAuctionConfiguration for application/json ContentType.
 type CreateAuctionConfigurationJSONRequestBody CreateAuctionConfigurationJSONBody
 
@@ -314,6 +379,21 @@ type UpdateAuctionConfigurationV2JSONRequestBody UpdateAuctionConfigurationV2JSO
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List apps
+	// (GET /apps)
+	GetApps(ctx echo.Context) error
+	// Create app
+	// (POST /apps)
+	CreateApp(ctx echo.Context) error
+	// Delete app
+	// (DELETE /apps/{id})
+	DeleteApp(ctx echo.Context, id IdParam) error
+	// Get app
+	// (GET /apps/{id})
+	GetApp(ctx echo.Context, id IdParam) error
+	// Update app
+	// (PATCH /apps/{id})
+	UpdateApp(ctx echo.Context, id IdParam) error
 	// List auction configurations
 	// (GET /auction_configurations)
 	GetAuctionConfigurations(ctx echo.Context) error
@@ -349,6 +429,72 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetApps converts echo context to params.
+func (w *ServerInterfaceWrapper) GetApps(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetApps(ctx)
+	return err
+}
+
+// CreateApp converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateApp(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateApp(ctx)
+	return err
+}
+
+// DeleteApp converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteApp(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteApp(ctx, id)
+	return err
+}
+
+// GetApp converts echo context to params.
+func (w *ServerInterfaceWrapper) GetApp(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetApp(ctx, id)
+	return err
+}
+
+// UpdateApp converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateApp(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateApp(ctx, id)
+	return err
 }
 
 // GetAuctionConfigurations converts echo context to params.
@@ -511,6 +657,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/apps", wrapper.GetApps)
+	router.POST(baseURL+"/apps", wrapper.CreateApp)
+	router.DELETE(baseURL+"/apps/:id", wrapper.DeleteApp)
+	router.GET(baseURL+"/apps/:id", wrapper.GetApp)
+	router.PATCH(baseURL+"/apps/:id", wrapper.UpdateApp)
 	router.GET(baseURL+"/auction_configurations", wrapper.GetAuctionConfigurations)
 	router.POST(baseURL+"/auction_configurations", wrapper.CreateAuctionConfiguration)
 	router.DELETE(baseURL+"/auction_configurations/:id", wrapper.DeleteAuctionConfiguration)
@@ -527,36 +678,39 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"YZBvbja/BwAA///vIrcHQigAAA==",
+	"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",
+	"/wIAAP//w8mNrR0xAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

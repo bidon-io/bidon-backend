@@ -169,6 +169,90 @@ paths:
           description: Auction configuration deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /apps:
+    get:
+      summary: List apps
+      operationId: getApps
+      tags:
+        - Apps
+      responses:
+        '200':
+          description: A list of apps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/app-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      summary: Create app
+      operationId: createApp
+      tags:
+        - Apps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/app.schema.json'
+      responses:
+        '201':
+          description: An app
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /apps/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getApp
+      tags:
+        - Apps
+      summary: Get app
+      responses:
+        '200':
+          description: An app
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateApp
+      tags:
+        - Apps
+      summary: Update app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/app-props.schema.json'
+      responses:
+        '200':
+          description: An app
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteApp
+      tags:
+        - Apps
+      summary: Delete app
+      responses:
+        '204':
+          description: App deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

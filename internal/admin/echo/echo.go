@@ -158,10 +158,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 
 	resourceRoutes := []resourceRoute{
 		{
-			group:   g.Group("/apps"),
-			handler: &appServiceHandler{service.AppService},
-		},
-		{
 			group:   g.Group("/app_demand_profiles"),
 			handler: &appDemandProfileServiceHandler{service.AppDemandProfileService},
 		},
@@ -201,9 +197,11 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 		r.group.DELETE("/:id", r.handler.delete)
 	}
 
+	appHandler := &appServiceHandler{service.AppService}
 	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
 	serv := &Server{
+		AppHandler:      appHandler,
 		AucCfgHandler:   aucHandler,
 		AucCfgV2Handler: aucV2Handler,
 	}
@@ -214,8 +212,31 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 }
 
 type Server struct {
+	AppHandler      *appServiceHandler
 	AucCfgHandler   *auctionConfigurationServiceHandler
 	AucCfgV2Handler *auctionConfigurationV2ServiceHandler
+}
+
+// App handlers
+
+func (s *Server) GetApps(c echo.Context) error {
+	return s.AppHandler.list(c)
+}
+
+func (s *Server) CreateApp(c echo.Context) error {
+	return s.AppHandler.create(c)
+}
+
+func (s *Server) GetApp(c echo.Context, _ api.IdParam) error {
+	return s.AppHandler.get(c)
+}
+
+func (s *Server) UpdateApp(c echo.Context, _ api.IdParam) error {
+	return s.AppHandler.update(c)
+}
+
+func (s *Server) DeleteApp(c echo.Context, _ api.IdParam) error {
+	return s.AppHandler.delete(c)
 }
 
 // AuctionConfiguration handlers
