@@ -158,10 +158,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 
 	resourceRoutes := []resourceRoute{
 		{
-			group:   g.Group("/demand_sources"),
-			handler: &demandSourceServiceHandler{service.DemandSourceService},
-		},
-		{
 			group:   g.Group("/demand_source_accounts"),
 			handler: &demandSourceAccountServiceHandler{service.DemandSourceAccountService},
 		},
@@ -194,12 +190,14 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
 	countryHandler := &countryServiceHandler{service.CountryService}
+	demandSourceHandler := &demandSourceServiceHandler{service.DemandSourceService}
 	serv := &Server{
 		AppHandler:              appHandler,
 		AppDemandProfileHandler: &appDemandProfileHandler,
 		AucCfgHandler:           aucHandler,
 		AucCfgV2Handler:         aucV2Handler,
 		CountryHandler:          countryHandler,
+		DemandSourceHandler:     demandSourceHandler,
 	}
 	api.RegisterHandlers(g, serv)
 
@@ -213,6 +211,7 @@ type Server struct {
 	AucCfgHandler           *auctionConfigurationServiceHandler
 	AucCfgV2Handler         *auctionConfigurationV2ServiceHandler
 	CountryHandler          *countryServiceHandler
+	DemandSourceHandler     *demandSourceServiceHandler
 }
 
 // App handlers
@@ -323,6 +322,28 @@ func (s *Server) UpdateCountry(c echo.Context, _ api.IdParam) error {
 
 func (s *Server) DeleteCountry(c echo.Context, _ api.IdParam) error {
 	return s.CountryHandler.delete(c)
+}
+
+// DemandSource handlers
+
+func (s *Server) GetDemandSources(c echo.Context) error {
+	return s.DemandSourceHandler.list(c)
+}
+
+func (s *Server) CreateDemandSource(c echo.Context) error {
+	return s.DemandSourceHandler.create(c)
+}
+
+func (s *Server) GetDemandSource(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceHandler.get(c)
+}
+
+func (s *Server) UpdateDemandSource(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceHandler.update(c)
+}
+
+func (s *Server) DeleteDemandSource(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceHandler.delete(c)
 }
 
 var _ api.ServerInterface = (*Server)(nil)

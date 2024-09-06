@@ -423,6 +423,90 @@ paths:
           description: Country deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /demand_sources:
+    get:
+      operationId: getDemandSources
+      summary: List demand sources
+      tags:
+        - Demand sources
+      responses:
+        '200':
+          description: A list of demand sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/demand-source.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createDemandSource
+      summary: Create demand source
+      tags:
+        - Demand sources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/demand-source-props.schema.json'
+      responses:
+        '201':
+          description: A demand source
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /demand_sources/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getDemandSource
+      tags:
+        - Demand sources
+      summary: Get demand source
+      responses:
+        '200':
+          description: A demand source
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateDemandSource
+      tags:
+        - Demand sources
+      summary: Update demand source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/demand-source-props.schema.json'
+      responses:
+        '200':
+          description: A demand source
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteDemandSource
+      tags:
+        - Demand sources
+      summary: Delete demand source
+      responses:
+        '204':
+          description: Demand source deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

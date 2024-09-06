@@ -20,5 +20,9 @@
       "minLength": 1,
       "description": "The API key associated with the demand source"
     }
-  }
+  },
+    "required": [
+      "human_name",
+      "api_key"
+    ]
 }
