@@ -162,10 +162,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 			handler: &lineItemServiceHandler{service.LineItemService},
 		},
 		{
-			group:   g.Group("/segments"),
-			handler: &segmentServiceHandler{service.SegmentService},
-		},
-		{
 			group: g.Group("/users"),
 			handler: &userHandler{
 				userServiceHandler: &userServiceHandler{service.UserService},

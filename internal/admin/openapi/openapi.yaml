@@ -591,6 +591,90 @@ paths:
           description: Demand source account deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /segments:
+    get:
+      operationId: getSegments
+      summary: List segments
+      tags:
+        - Segments
+      responses:
+        '200':
+          description: A list of segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/segment-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createSegment
+      summary: Create segment
+      tags:
+        - Segments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/segment.schema.json'
+      responses:
+        '201':
+          description: A segment
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/segment.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /segments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getSegment
+      tags:
+        - Segments
+      summary: Get segment
+      responses:
+        '200':
+          description: A segment
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/segment-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateSegment
+      tags:
+        - Segments
+      summary: Update segment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/segment-props.schema.json'
+      responses:
+        '200':
+          description: A segment
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/segment.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteSegment
+      tags:
+        - Segments
+      summary: Delete segment
+      responses:
+        '204':
+          description: Segment deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

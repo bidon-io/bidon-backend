@@ -14,6 +14,7 @@ type Server struct {
 	CountryHandler             *countryServiceHandler
 	DemandSourceHandler        *demandSourceServiceHandler
 	DemandSourceAccountHandler *demandSourceAccountServiceHandler
+	SegmentHandler             *segmentServiceHandler
 }
 
 var _ api.ServerInterface = (*Server)(nil)
@@ -26,6 +27,7 @@ func NewServer(service *admin.Service) *Server {
 	countryHandler := &countryServiceHandler{service.CountryService}
 	demandSourceHandler := &demandSourceServiceHandler{service.DemandSourceService}
 	demandSourceAccountHandler := &demandSourceAccountServiceHandler{service.DemandSourceAccountService}
+	segmentHandler := &segmentServiceHandler{service.SegmentService}
 
 	return &Server{
 		AppHandler:                 appHandler,
@@ -35,6 +37,7 @@ func NewServer(service *admin.Service) *Server {
 		CountryHandler:             countryHandler,
 		DemandSourceHandler:        demandSourceHandler,
 		DemandSourceAccountHandler: demandSourceAccountHandler,
+		SegmentHandler:             segmentHandler,
 	}
 }
 
@@ -190,4 +193,26 @@ func (s *Server) UpdateDemandSourceAccount(c echo.Context, _ api.IdParam) error 
 
 func (s *Server) DeleteDemandSourceAccount(c echo.Context, _ api.IdParam) error {
 	return s.DemandSourceAccountHandler.delete(c)
+}
+
+// Segment handlers
+
+func (s *Server) GetSegments(c echo.Context) error {
+	return s.SegmentHandler.list(c)
+}
+
+func (s *Server) CreateSegment(c echo.Context) error {
+	return s.SegmentHandler.create(c)
+}
+
+func (s *Server) GetSegment(c echo.Context, _ api.IdParam) error {
+	return s.SegmentHandler.get(c)
+}
+
+func (s *Server) UpdateSegment(c echo.Context, _ api.IdParam) error {
+	return s.SegmentHandler.update(c)
+}
+
+func (s *Server) DeleteSegment(c echo.Context, _ api.IdParam) error {
+	return s.SegmentHandler.delete(c)
 }

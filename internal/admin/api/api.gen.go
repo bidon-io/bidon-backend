@@ -413,6 +413,70 @@ type UpdateDemandSourceJSONBody struct {
 	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
 }
 
+// CreateSegmentJSONBody defines parameters for CreateSegment.
+type CreateSegmentJSONBody struct {
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// Description The description of the segment
+	Description string `json:"description"`
+
+	// Enabled Indicates if the segment is enabled
+	Enabled bool `json:"enabled"`
+
+	// Filters Filters applied to the segment
+	Filters []struct {
+		// Name The name of the filter
+		Name string `json:"name"`
+
+		// Operator The operator used in the filter
+		Operator string `json:"operator"`
+
+		// Type The type of filter
+		Type   string   `json:"type"`
+		Values []string `json:"values"`
+	} `json:"filters"`
+
+	// Id A positive integer primary ID, read-only
+	Id *int `json:"id,omitempty"`
+
+	// Name The name of the segment
+	Name      string             `json:"name"`
+	PublicUid openapi_types.UUID `json:"public_uid"`
+}
+
+// UpdateSegmentJSONBody defines parameters for UpdateSegment.
+type UpdateSegmentJSONBody struct {
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// Description The description of the segment
+	Description string `json:"description"`
+
+	// Enabled Indicates if the segment is enabled
+	Enabled bool `json:"enabled"`
+
+	// Filters Filters applied to the segment
+	Filters []struct {
+		// Name The name of the filter
+		Name string `json:"name"`
+
+		// Operator The operator used in the filter
+		Operator string `json:"operator"`
+
+		// Type The type of filter
+		Type   string   `json:"type"`
+		Values []string `json:"values"`
+	} `json:"filters"`
+
+	// Id A positive integer primary ID, read-only
+	Id *int `json:"id,omitempty"`
+
+	// Name The name of the segment
+	Name      string              `json:"name"`
+	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
+}
+
 // CreateAuctionConfigurationV2JSONBody defines parameters for CreateAuctionConfigurationV2.
 type CreateAuctionConfigurationV2JSONBody struct {
 	AdType CreateAuctionConfigurationV2JSONBodyAdType `json:"ad_type"`
@@ -543,6 +607,12 @@ type CreateDemandSourceJSONRequestBody CreateDemandSourceJSONBody
 // UpdateDemandSourceJSONRequestBody defines body for UpdateDemandSource for application/json ContentType.
 type UpdateDemandSourceJSONRequestBody UpdateDemandSourceJSONBody
 
+// CreateSegmentJSONRequestBody defines body for CreateSegment for application/json ContentType.
+type CreateSegmentJSONRequestBody CreateSegmentJSONBody
+
+// UpdateSegmentJSONRequestBody defines body for UpdateSegment for application/json ContentType.
+type UpdateSegmentJSONRequestBody UpdateSegmentJSONBody
+
 // CreateAuctionConfigurationV2JSONRequestBody defines body for CreateAuctionConfigurationV2 for application/json ContentType.
 type CreateAuctionConfigurationV2JSONRequestBody CreateAuctionConfigurationV2JSONBody
 
@@ -641,6 +711,21 @@ type ServerInterface interface {
 	// Update demand source
 	// (PATCH /demand_sources/{id})
 	UpdateDemandSource(ctx echo.Context, id IdParam) error
+	// List segments
+	// (GET /segments)
+	GetSegments(ctx echo.Context) error
+	// Create segment
+	// (POST /segments)
+	CreateSegment(ctx echo.Context) error
+	// Delete segment
+	// (DELETE /segments/{id})
+	DeleteSegment(ctx echo.Context, id IdParam) error
+	// Get segment
+	// (GET /segments/{id})
+	GetSegment(ctx echo.Context, id IdParam) error
+	// Update segment
+	// (PATCH /segments/{id})
+	UpdateSegment(ctx echo.Context, id IdParam) error
 	// List auction configurations V2
 	// (GET /v2/auction_configurations)
 	GetAuctionConfigurationsV2(ctx echo.Context) error
@@ -1059,6 +1144,72 @@ func (w *ServerInterfaceWrapper) UpdateDemandSource(ctx echo.Context) error {
 	return err
 }
 
+// GetSegments converts echo context to params.
+func (w *ServerInterfaceWrapper) GetSegments(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetSegments(ctx)
+	return err
+}
+
+// CreateSegment converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateSegment(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateSegment(ctx)
+	return err
+}
+
+// DeleteSegment converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteSegment(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteSegment(ctx, id)
+	return err
+}
+
+// GetSegment converts echo context to params.
+func (w *ServerInterfaceWrapper) GetSegment(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetSegment(ctx, id)
+	return err
+}
+
+// UpdateSegment converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateSegment(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateSegment(ctx, id)
+	return err
+}
+
 // GetAuctionConfigurationsV2 converts echo context to params.
 func (w *ServerInterfaceWrapper) GetAuctionConfigurationsV2(ctx echo.Context) error {
 	var err error
@@ -1183,6 +1334,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/demand_sources/:id", wrapper.DeleteDemandSource)
 	router.GET(baseURL+"/demand_sources/:id", wrapper.GetDemandSource)
 	router.PATCH(baseURL+"/demand_sources/:id", wrapper.UpdateDemandSource)
+	router.GET(baseURL+"/segments", wrapper.GetSegments)
+	router.POST(baseURL+"/segments", wrapper.CreateSegment)
+	router.DELETE(baseURL+"/segments/:id", wrapper.DeleteSegment)
+	router.GET(baseURL+"/segments/:id", wrapper.GetSegment)
+	router.PATCH(baseURL+"/segments/:id", wrapper.UpdateSegment)
 	router.GET(baseURL+"/v2/auction_configurations", wrapper.GetAuctionConfigurationsV2)
 	router.POST(baseURL+"/v2/auction_configurations", wrapper.CreateAuctionConfigurationV2)
 	router.DELETE(baseURL+"/v2/auction_configurations/:id", wrapper.DeleteAuctionConfigurationV2)
@@ -1194,54 +1350,60 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"H4sIAAAAAAAC/+RcXXPjttX+Kxi8uXg7I9leuZML3W3XbcbTtPHESXuR2dHABCQhS4IMAHpX3dF/7xwA",
+	"/AY/JJGU01xZJEHg4DkfzyFw4K84iKMkFkxohddfcUIkiZhm0lxx+gTX8JMyFUieaB4LvMbvBeIUxVtE",
+	"kGQqTmXA8AJzeJQQvccLLEjE8BpzihdYst9SLhnFay1TtsAq2LOIQK/fSLbFa/x/t4UUt/apuuUUH49H",
+	"eFslsVDMSPRXKWP5o7sDN4JYaCY0/CRJEvKAgIi3vyqQ8+vAoRj0akdrzNM8Q3EQpFIyeoOhkXvPDEqX",
+	"+pAYUb7hFK+zGze2zY0RZIG/yQTBe60Ttb41Ei5do1jubqkkW327ulvdLd+tnGR4gZlII7z+Bb8QIZg0",
+	"IIN2NNechAbbz0RSRvHHBdZchwD6e4p+ApkW2IqGlZZc7PBxgQkliWZy+YkdyiLnN8cSuwmjSCMkWSKZ",
+	"YkJzsUNuVPSJHRTaxhK9EsnjVCFCkWD6cyw/qRIAhEbxC15gEpH/GNlA3fErh58vnEYk2HPBzMUuJhRe",
+	"DfZE6pc4Vhok0uxLsCdiB212JDJQRvELhx8yFrkVR0zDDCIAeicNyNAsZNtUwfNUcH2wA7x+cn9TsQvh",
+	"2YEIyr5UdWFm+Xd28KojSUpqSJKx4Cdh+MMWr3/pNnuSJMtExonCx8XXkpf+Yt02CYnexjLamKt9GhGx",
+	"MW69wAkJPpEdyy5TxaRtRZJkA7b18VjGIEncZJeURURQGHXLQ1aZe+3Z/FBUx+9CBmZpfthXNtZ2HAJB",
+	"EKdCVy+0dUdKNDHGYe0gfvmVBRrXoHowfT45hLy4LSnThIcgUTuAeaNrI2kwBDSZ1NyGcYdLX1x2/Vh4",
+	"l9lLxxruJ/UCb4O59r0EngmhfriqHjKd+FVmzalLX6bFWMry4g1GOYB1a3bbYP+f9gzBE5MA2JaIKBUH",
+	"nGhG0Weu90jvuUJ2giizAxNUv2dip/d4/c4fDgeLaHypmZhQyuEnCRE08IjFmlLVdOxx60ES9bdLJI+I",
+	"PCxt+yR9CXmwSQe8Z1ouU5MStVvgkzExz3yssflDxpVihCcoDHFL02aAX1Zd0eN7Uzqb48CmcaJU8N9S",
+	"BimPyXjAGgELjyuU6Nbrf+b5UjJCyUvIEDQEd+zocagZV7jdO7ZrMWTQcg7RZ+Su6UXeUeQiQ74uKkbT",
+	"7j1pAJNfBrHY8l0qiYUitybf45n9ySdCVwLj8rY8jyE0S1FknAqT0yaSB2wbxrHsyVjs2B/KQ6P/f4BM",
+	"P4C4+6dWCH0hqbPdGwDVl8u4HP6yZMKDYhbFBqJZD3LtjSYKezRPFzqxcB/MJ9L9qeTqj17/LEcsCxCq",
+	"6rc3Ryn5RaP7J3iGzMMivrcMw74EYar4K/sHFzyCb1y7OBJll3f54CKNXoD2zg+KzqubjOSEy72eaxbZ",
+	"haCKbm1C5Onge640AOoa5LM2HZb7q75m0xZkE6zmWz0qiLh4tP0WT4mU5FAYSnW4H6Ff9PjQ37XmEYtT",
+	"7eE9+6AqKuICRTwMuWJBbAHM1Vf0bhYSXNrSiMQZssXQHz0U1DFjX6enh/eOMGR4sRqDhpLk8nVl7PQa",
+	"7Pe6GkKAOTBlPPoC8ynz/z2SHKjtCjzXCWPBbldjK7pJBYdv6I44SCjk+Bo9PlSiaT+/1cPYKdz4wimF",
+	"+NUqlWuQxduhkpUXiz0iDiSFkUdlXzSTgoSbz1xsRKz51q35ewT5957pPZMoewd95gJV3kFEMsQEfEPR",
+	"wq1f4jhkRJyTd3C1oWxL0tDDIY+CwrhMIb61CyRcuRUJ80YjR2iKk6U1JyUps6Yaiu0idsJSk2Jac7Fz",
+	"Tpmt3jyVnbW5LYMikoCFVQBDeVee+NxL7K8kTJmH0OGTlGhL4/cr7GX1Xvr0SWTWzWRpG8bdmJcA3KBd",
+	"XFlZ+Sdhsieb1SaIaXF5by87vxM/uOkWM69/sVRuT/SNUpbeu7bx+PwDun/37bfLd8g0Xq4QNM7zvkxr",
+	"EIhIlJip/fwMiR/5knnkqpJmrnwLnWXYhslxP0SO91VB7iuC3I+7zOSVQHDNKHrWEOX6s+3TguuxYUyt",
+	"vlVd8s8trHJ7Xj+rbmV07boVcbfuegm3e2tdbma/rJ7zvQ7/FoofkezxNZFxIgxGqNh6zPbYmltyXG2y",
+	"FMnkD5IMx/B9fdOpLmgzv+9u9wbA9ST302+oDVi59+Be/jboMpQe8CeklPP2iqwVdm1fcWEzD0hssqBf",
+	"SaizrTdf/Dsja239iCiy1s8unc4+J7jKUmcnYbHl1yZiKZU9N8Hs35PsgqqHkc7bPfAY7jBq6rbeSfeo",
+	"uH+PCnB8//Rotqg6Nk+LapluPC/IL04cabbd1zIftfKzxzBaLcJWn+U2YC6n0Xo+UvW2Pws1pXbI5fn1",
+	"j54FjphSZNf6Xva4oakagq7/rHmTl2vt7RRKEJvhOmKgwZTTiQrbUBIrrvkrfDkaaPJV5mIV2AlqHjRx",
+	"LG975vKWbo5dSMhjMEIiqIw5LeFdWTzI/KQQKL83G5BuSPT4sEAQIJaxCA81bOH+D3DbrWhkWD/Zd9sg",
+	"Lxy6mGB+b6wJ5gsHacqpb2/crZQUMrgb82aIbtDBCbcLdmX1LfCWh6ZmGMwsW0tzK5idmfazg6BAw5NP",
+	"159cBZ+pFsQdAuU8t6qRBgwTV64Mrr8q+6+P2kt3MkrPsOwl88yK+pZQ8y5Luag32cwMtNHh3+wDZIrH",
+	"GUU6rknasiPantKUcxg7bP98oWeifVvK0GP2FKWKmT3HU7ruT5eH9mRWSO25AP+uLnRqG50l6fBNTvep",
+	"70JRDl4u4olbqGNVF9S1P9jcR8lFvYG5EY4LV2gGodYMNf++N4EIruaNwTBiF0GxiPCwm2l+Vpb7S11V",
+	"JjRlWLXirb8WKYG9M+aKKMyvRX/QjIttDD0XxxIiLuBDD5yGSWUN+O7m3c2di0eCJByv8f3N3c29qfjX",
+	"ezMZ4LSNW/RwJbTm/o6ZTMY6I4/FIyD7HdP1IlWFa0d6Vnd3Jx3kGbaJ2FEz39hU9Jz7QWG2oZsktYJh",
+	"Zdkv3+PziZFP8LZ6YMkcHkojUGC2T+obYIE12Skw7/eepx8hYsTKA/cHyYhmjTMENk4wpf8S08Noh6Z8",
+	"hf7VmAQ5+bGh7Xfwpy7jJUe6bjpEqji0/4BXUwH4OJaGrUJ8Q/Sp+LjwetrtV06PlnlCplnTBB7Mfa8J",
+	"VLTwZ8/iY0MQZEehSKVBwJTapmF4GM38rajngLMYHG0uDTZnx5jBpjYSmN8xfR6S5ROfLTRcNLnNToQC",
+	"tSZEB/umFn5O6DWDUJYnDAlFd3+gUGTVckEo6mP5OYn9TCYfn7prXD2InKdzhRMIeNwhfZaMxyfRJtiZ",
+	"bQ7nxROocBbu8xlQh5dNT2h9DDY2ZXk9aDJSmpCHTiWe35ELFuTR4oK28G1TqcfrJgxPqdxMDNJ9Fuk0",
+	"TvEd7lBervC3LKHpb9DLJ/769Els3H8gambKaRei6QHeozdj01LL+Z5evbb7zVAya1N9L7v5RJqH784F",
+	"a3FSIJmUJHvCxxUs0RDp+chORbZXjkxX4uM3E58yzr4kPtkaX969wvshbzQHfQdFHflwni7mMeoHYFCa",
+	"eYZngUYfdX/IC6in8Ikcp3n5uTJsXR0l3Y1JwUUluk8JFTseSK1l1fSxqWs7C392z3TR46KHKXlxVsUD",
+	"4/VhMRGtzeK11+GuWVXo6Knfd6sF1q6St5OQPOW483BTzwmBkyjLW8A8Mn+1jFHo4sHfoI/ZfAcopvGX",
+	"lvMN83JehxB17frL0kfmw9Ya/D6ttrvbQN5sU3wfh3olmoVRz8ZqcUr4mZJ4+4LO/GYI7HwBrhMR95WD",
+	"0nUo/e0Zh+P98WLU4FTgCjnABZQ/JdW3Uvxp1D6L+5zgNhMx+gAvmZTBu5TV9IYzmPoMip6dmrstdoj7",
+	"z8bBc9pLg2p7PHt6an1rQeF/QMk+yuwLCq72vJMcn7M2c/Bi43zPSdSYT2dUUlQFABmYOSZ9RPicF/dP",
+	"Ye75qaN5ea8ybF0XxUmoUbmuOCXh0UHZlAcyW1kxfaTm2s5CZ53zXPQ56ZTs1XTNOdQP1NWDyUR0NYvr",
+	"XoejZnVgx0u9Dvy6GqtA6F+rK5YIlf+Z46xVQshMe4JCIQfnXBvyr6s3US2Uy/GGCoYGqrjTmy4oG/L5",
+	"1R+xcOjy+HJhWHlL1UPDw858BUSzR6w3VEV0rbjVVUg0NG6Zf2sgXzMTSWWI1/iWJBwfPx7/GwAA//8s",
+	"MTtshW4AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
