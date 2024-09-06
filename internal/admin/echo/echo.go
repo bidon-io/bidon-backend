@@ -161,12 +161,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 			group:   g.Group("/line_items"),
 			handler: &lineItemServiceHandler{service.LineItemService},
 		},
-		{
-			group: g.Group("/users"),
-			handler: &userHandler{
-				userServiceHandler: &userServiceHandler{service.UserService},
-			},
-		},
 	}
 	for _, r := range resourceRoutes {
 		r.group.GET("", r.handler.list)
@@ -411,10 +405,10 @@ func (h *userHandler) get(c echo.Context) error {
 	}
 
 	var id int64
-	idParam := c.Param("id")
-	if idParam == "me" {
+	if strings.HasSuffix(c.Path(), "/me") {
 		id = authCtx.UserID()
 	} else {
+		idParam := c.Param("id")
 		convID, err := strconv.Atoi(idParam)
 		if err != nil {
 			return fmt.Errorf("invalid id: %v", err)

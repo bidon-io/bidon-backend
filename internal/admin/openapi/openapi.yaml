@@ -675,6 +675,105 @@ paths:
           description: Segment deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /users:
+    get:
+      operationId: getUsers
+      summary: List users
+      tags:
+        - Users
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/user.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createUser
+      summary: Create user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/user.schema.json'
+      responses:
+        '201':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/user.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getUser
+      tags:
+        - Users
+      summary: Get user
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/user.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateUser
+      tags:
+        - Users
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/user-props.schema.json'
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/user.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteUser
+      tags:
+        - Users
+      summary: Delete user
+      responses:
+        '204':
+          description: User deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags:
+        - Users
+      summary: Get current user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/user.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:
