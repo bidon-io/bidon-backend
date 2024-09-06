@@ -7,12 +7,13 @@ import (
 )
 
 type Server struct {
-	AppHandler              *appServiceHandler
-	AppDemandProfileHandler *appDemandProfileServiceHandler
-	AucCfgHandler           *auctionConfigurationServiceHandler
-	AucCfgV2Handler         *auctionConfigurationV2ServiceHandler
-	CountryHandler          *countryServiceHandler
-	DemandSourceHandler     *demandSourceServiceHandler
+	AppHandler                 *appServiceHandler
+	AppDemandProfileHandler    *appDemandProfileServiceHandler
+	AucCfgHandler              *auctionConfigurationServiceHandler
+	AucCfgV2Handler            *auctionConfigurationV2ServiceHandler
+	CountryHandler             *countryServiceHandler
+	DemandSourceHandler        *demandSourceServiceHandler
+	DemandSourceAccountHandler *demandSourceAccountServiceHandler
 }
 
 var _ api.ServerInterface = (*Server)(nil)
@@ -24,14 +25,16 @@ func NewServer(service *admin.Service) *Server {
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
 	countryHandler := &countryServiceHandler{service.CountryService}
 	demandSourceHandler := &demandSourceServiceHandler{service.DemandSourceService}
+	demandSourceAccountHandler := &demandSourceAccountServiceHandler{service.DemandSourceAccountService}
 
 	return &Server{
-		AppHandler:              appHandler,
-		AppDemandProfileHandler: appDemandProfileHandler,
-		AucCfgHandler:           aucHandler,
-		AucCfgV2Handler:         aucV2Handler,
-		CountryHandler:          countryHandler,
-		DemandSourceHandler:     demandSourceHandler,
+		AppHandler:                 appHandler,
+		AppDemandProfileHandler:    appDemandProfileHandler,
+		AucCfgHandler:              aucHandler,
+		AucCfgV2Handler:            aucV2Handler,
+		CountryHandler:             countryHandler,
+		DemandSourceHandler:        demandSourceHandler,
+		DemandSourceAccountHandler: demandSourceAccountHandler,
 	}
 }
 
@@ -165,4 +168,26 @@ func (s *Server) UpdateDemandSource(c echo.Context, _ api.IdParam) error {
 
 func (s *Server) DeleteDemandSource(c echo.Context, _ api.IdParam) error {
 	return s.DemandSourceHandler.delete(c)
+}
+
+// Demand Source Account handlers
+
+func (s *Server) GetDemandSourceAccounts(c echo.Context) error {
+	return s.DemandSourceAccountHandler.list(c)
+}
+
+func (s *Server) CreateDemandSourceAccount(c echo.Context) error {
+	return s.DemandSourceAccountHandler.create(c)
+}
+
+func (s *Server) GetDemandSourceAccount(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceAccountHandler.get(c)
+}
+
+func (s *Server) UpdateDemandSourceAccount(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceAccountHandler.update(c)
+}
+
+func (s *Server) DeleteDemandSourceAccount(c echo.Context, _ api.IdParam) error {
+	return s.DemandSourceAccountHandler.delete(c)
 }

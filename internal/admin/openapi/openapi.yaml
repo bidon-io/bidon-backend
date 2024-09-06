@@ -507,6 +507,90 @@ paths:
           description: Demand source deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /demand_source_accounts:
+    get:
+      operationId: getDemandSourceAccounts
+      summary: List demand source accounts
+      tags:
+        - Demand source accounts
+      responses:
+        '200':
+          description: A list of demand source accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/demand-source-account-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createDemandSourceAccount
+      summary: Create demand source account
+      tags:
+        - Demand source accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/demand-source-account.schema.json'
+      responses:
+        '201':
+          description: A demand source account
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source-account.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /demand_source_accounts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getDemandSourceAccount
+      tags:
+        - Demand source accounts
+      summary: Get demand source account
+      responses:
+        '200':
+          description: A demand source account
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source-account-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateDemandSourceAccount
+      tags:
+        - Demand source accounts
+      summary: Update demand source account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/demand-source-account-props.schema.json'
+      responses:
+        '200':
+          description: A demand source account
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/demand-source-account-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteDemandSourceAccount
+      tags:
+        - Demand source accounts
+      summary: Delete demand source account
+      responses:
+        '204':
+          description: Demand source account deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

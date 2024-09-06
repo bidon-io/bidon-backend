@@ -158,10 +158,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 
 	resourceRoutes := []resourceRoute{
 		{
-			group:   g.Group("/demand_source_accounts"),
-			handler: &demandSourceAccountServiceHandler{service.DemandSourceAccountService},
-		},
-		{
 			group:   g.Group("/line_items"),
 			handler: &lineItemServiceHandler{service.LineItemService},
 		},
