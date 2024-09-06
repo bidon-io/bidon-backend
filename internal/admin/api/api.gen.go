@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -43,6 +44,56 @@ const (
 	UpdateAuctionConfigurationJSONBodyAdTypeBanner       UpdateAuctionConfigurationJSONBodyAdType = "banner"
 	UpdateAuctionConfigurationJSONBodyAdTypeInterstitial UpdateAuctionConfigurationJSONBodyAdType = "interstitial"
 	UpdateAuctionConfigurationJSONBodyAdTypeRewarded     UpdateAuctionConfigurationJSONBodyAdType = "rewarded"
+)
+
+// Defines values for CreateLineItemJSONBodyAdType.
+const (
+	CreateLineItemJSONBodyAdTypeBanner       CreateLineItemJSONBodyAdType = "banner"
+	CreateLineItemJSONBodyAdTypeInterstitial CreateLineItemJSONBodyAdType = "interstitial"
+	CreateLineItemJSONBodyAdTypeRewarded     CreateLineItemJSONBodyAdType = "rewarded"
+)
+
+// Defines values for CreateLineItemJSONBodyExtra1Format.
+const (
+	CreateLineItemJSONBodyExtra1FormatBANNER       CreateLineItemJSONBodyExtra1Format = "BANNER"
+	CreateLineItemJSONBodyExtra1FormatINTERSTITIAL CreateLineItemJSONBodyExtra1Format = "INTERSTITIAL"
+	CreateLineItemJSONBodyExtra1FormatMREC         CreateLineItemJSONBodyExtra1Format = "MREC"
+	CreateLineItemJSONBodyExtra1FormatREWARDED     CreateLineItemJSONBodyExtra1Format = "REWARDED"
+	CreateLineItemJSONBodyExtra1FormatVIDEO        CreateLineItemJSONBodyExtra1Format = "VIDEO"
+)
+
+// Defines values for CreateLineItemJSONBodyFormat.
+const (
+	CreateLineItemJSONBodyFormatADAPTIVE    CreateLineItemJSONBodyFormat = "ADAPTIVE"
+	CreateLineItemJSONBodyFormatBANNER      CreateLineItemJSONBodyFormat = "BANNER"
+	CreateLineItemJSONBodyFormatEmpty       CreateLineItemJSONBodyFormat = ""
+	CreateLineItemJSONBodyFormatLEADERBOARD CreateLineItemJSONBodyFormat = "LEADERBOARD"
+	CreateLineItemJSONBodyFormatMREC        CreateLineItemJSONBodyFormat = "MREC"
+)
+
+// Defines values for UpdateLineItemJSONBodyAdType.
+const (
+	UpdateLineItemJSONBodyAdTypeBanner       UpdateLineItemJSONBodyAdType = "banner"
+	UpdateLineItemJSONBodyAdTypeInterstitial UpdateLineItemJSONBodyAdType = "interstitial"
+	UpdateLineItemJSONBodyAdTypeRewarded     UpdateLineItemJSONBodyAdType = "rewarded"
+)
+
+// Defines values for UpdateLineItemJSONBodyExtra1Format.
+const (
+	UpdateLineItemJSONBodyExtra1FormatBANNER       UpdateLineItemJSONBodyExtra1Format = "BANNER"
+	UpdateLineItemJSONBodyExtra1FormatINTERSTITIAL UpdateLineItemJSONBodyExtra1Format = "INTERSTITIAL"
+	UpdateLineItemJSONBodyExtra1FormatMREC         UpdateLineItemJSONBodyExtra1Format = "MREC"
+	UpdateLineItemJSONBodyExtra1FormatREWARDED     UpdateLineItemJSONBodyExtra1Format = "REWARDED"
+	UpdateLineItemJSONBodyExtra1FormatVIDEO        UpdateLineItemJSONBodyExtra1Format = "VIDEO"
+)
+
+// Defines values for UpdateLineItemJSONBodyFormat.
+const (
+	UpdateLineItemJSONBodyFormatADAPTIVE    UpdateLineItemJSONBodyFormat = "ADAPTIVE"
+	UpdateLineItemJSONBodyFormatBANNER      UpdateLineItemJSONBodyFormat = "BANNER"
+	UpdateLineItemJSONBodyFormatEmpty       UpdateLineItemJSONBodyFormat = ""
+	UpdateLineItemJSONBodyFormatLEADERBOARD UpdateLineItemJSONBodyFormat = "LEADERBOARD"
+	UpdateLineItemJSONBodyFormatMREC        UpdateLineItemJSONBodyFormat = "MREC"
 )
 
 // Defines values for CreateAuctionConfigurationV2JSONBodyAdType.
@@ -413,6 +464,241 @@ type UpdateDemandSourceJSONBody struct {
 	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
 }
 
+// GetLineItemsParams defines parameters for GetLineItems.
+type GetLineItemsParams struct {
+	// UserId Filter by user ID
+	UserId *int64 `form:"user_id,omitempty" json:"user_id,omitempty"`
+
+	// AppId Filter by app ID
+	AppId *int64 `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// AdType Filter by ad type
+	AdType *interface{} `form:"ad_type,omitempty" json:"ad_type,omitempty"`
+
+	// AccountId Filter by account ID
+	AccountId *int64 `form:"account_id,omitempty" json:"account_id,omitempty"`
+
+	// AccountType Filter by account type
+	AccountType *string `form:"account_type,omitempty" json:"account_type,omitempty"`
+
+	// IsBidding Filter by bidding status
+	IsBidding *bool `form:"is_bidding,omitempty" json:"is_bidding,omitempty"`
+}
+
+// CreateLineItemJSONBody defines parameters for CreateLineItem.
+type CreateLineItemJSONBody struct {
+	// AccountId A positive integer ID
+	AccountId int `json:"account_id"`
+
+	// AccountType The type of account
+	AccountType string                       `json:"account_type"`
+	AdType      CreateLineItemJSONBodyAdType `json:"ad_type"`
+
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// BidFloor The minimum bid floor price
+	BidFloor string `json:"bid_floor"`
+
+	// Code The unique code for the line item
+	Code  string                       `json:"code"`
+	Extra CreateLineItemJSONBody_Extra `json:"extra"`
+
+	// Format The format of the ad
+	Format CreateLineItemJSONBodyFormat `json:"format"`
+
+	// HumanName The human-readable name of the line item
+	HumanName string `json:"human_name"`
+
+	// Id A positive integer primary ID, read-only
+	Id        *int               `json:"id,omitempty"`
+	PublicUid openapi_types.UUID `json:"public_uid"`
+}
+
+// CreateLineItemJSONBodyAdType defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyAdType string
+
+// CreateLineItemJSONBodyExtra0 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra0 struct {
+	// AdUnitId Ad unit ID (for Admob, Yandex)
+	AdUnitId string `json:"ad_unit_id"`
+}
+
+// CreateLineItemJSONBodyExtra1 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra1 struct {
+	// Format Ad format
+	Format CreateLineItemJSONBodyExtra1Format `json:"format"`
+
+	// SlotUuid Slot UUID (for Amazon)
+	SlotUuid string `json:"slot_uuid"`
+}
+
+// CreateLineItemJSONBodyExtra1Format defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra1Format string
+
+// CreateLineItemJSONBodyExtra2 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra2 struct {
+	// ZoneId Zone ID (for Applovin)
+	ZoneId string `json:"zone_id"`
+}
+
+// CreateLineItemJSONBodyExtra3 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra3 struct {
+	// SlotId Slot ID (for BigoAds, VKAds)
+	SlotId string `json:"slot_id"`
+}
+
+// CreateLineItemJSONBodyExtra4 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra4 struct {
+	// AdLocation Ad location (for Chartboost)
+	AdLocation string `json:"ad_location"`
+
+	// Mediation Optional mediation parameter
+	Mediation *string `json:"mediation,omitempty"`
+}
+
+// CreateLineItemJSONBodyExtra5 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra5 struct {
+	// PlacementId Placement ID (for Meta, UnityAds, Vungle, MobileFuse)
+	PlacementId string `json:"placement_id"`
+}
+
+// CreateLineItemJSONBodyExtra6 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra6 struct {
+	// SpotId Spot ID (for DTExchange)
+	SpotId string `json:"spot_id"`
+}
+
+// CreateLineItemJSONBodyExtra7 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra7 struct {
+	// InstanceId Instance ID (for IronSource)
+	InstanceId string `json:"instance_id"`
+}
+
+// CreateLineItemJSONBodyExtra8 defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyExtra8 struct {
+	// PlacementId Placement ID (for Mintegral)
+	PlacementId string `json:"placement_id"`
+
+	// UnitId Unit ID (for Mintegral)
+	UnitId string `json:"unit_id"`
+}
+
+// CreateLineItemJSONBody_Extra defines parameters for CreateLineItem.
+type CreateLineItemJSONBody_Extra struct {
+	union json.RawMessage
+}
+
+// CreateLineItemJSONBodyFormat defines parameters for CreateLineItem.
+type CreateLineItemJSONBodyFormat string
+
+// UpdateLineItemJSONBody defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBody struct {
+	// AccountId A positive integer ID
+	AccountId *int `json:"account_id,omitempty"`
+
+	// AccountType The type of account
+	AccountType *string                       `json:"account_type,omitempty"`
+	AdType      *UpdateLineItemJSONBodyAdType `json:"ad_type,omitempty"`
+
+	// AppId A positive integer ID
+	AppId *int `json:"app_id,omitempty"`
+
+	// BidFloor The minimum bid floor price
+	BidFloor *string `json:"bid_floor,omitempty"`
+
+	// Code The unique code for the line item
+	Code  *string                       `json:"code,omitempty"`
+	Extra *UpdateLineItemJSONBody_Extra `json:"extra,omitempty"`
+
+	// Format The format of the ad
+	Format *UpdateLineItemJSONBodyFormat `json:"format,omitempty"`
+
+	// HumanName The human-readable name of the line item
+	HumanName *string `json:"human_name,omitempty"`
+
+	// Id A positive integer primary ID, read-only
+	Id        *int                `json:"id,omitempty"`
+	PublicUid *openapi_types.UUID `json:"public_uid,omitempty"`
+}
+
+// UpdateLineItemJSONBodyAdType defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyAdType string
+
+// UpdateLineItemJSONBodyExtra0 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra0 struct {
+	// AdUnitId Ad unit ID (for Admob, Yandex)
+	AdUnitId string `json:"ad_unit_id"`
+}
+
+// UpdateLineItemJSONBodyExtra1 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra1 struct {
+	// Format Ad format
+	Format UpdateLineItemJSONBodyExtra1Format `json:"format"`
+
+	// SlotUuid Slot UUID (for Amazon)
+	SlotUuid string `json:"slot_uuid"`
+}
+
+// UpdateLineItemJSONBodyExtra1Format defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra1Format string
+
+// UpdateLineItemJSONBodyExtra2 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra2 struct {
+	// ZoneId Zone ID (for Applovin)
+	ZoneId string `json:"zone_id"`
+}
+
+// UpdateLineItemJSONBodyExtra3 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra3 struct {
+	// SlotId Slot ID (for BigoAds, VKAds)
+	SlotId string `json:"slot_id"`
+}
+
+// UpdateLineItemJSONBodyExtra4 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra4 struct {
+	// AdLocation Ad location (for Chartboost)
+	AdLocation string `json:"ad_location"`
+
+	// Mediation Optional mediation parameter
+	Mediation *string `json:"mediation,omitempty"`
+}
+
+// UpdateLineItemJSONBodyExtra5 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra5 struct {
+	// PlacementId Placement ID (for Meta, UnityAds, Vungle, MobileFuse)
+	PlacementId string `json:"placement_id"`
+}
+
+// UpdateLineItemJSONBodyExtra6 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra6 struct {
+	// SpotId Spot ID (for DTExchange)
+	SpotId string `json:"spot_id"`
+}
+
+// UpdateLineItemJSONBodyExtra7 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra7 struct {
+	// InstanceId Instance ID (for IronSource)
+	InstanceId string `json:"instance_id"`
+}
+
+// UpdateLineItemJSONBodyExtra8 defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyExtra8 struct {
+	// PlacementId Placement ID (for Mintegral)
+	PlacementId string `json:"placement_id"`
+
+	// UnitId Unit ID (for Mintegral)
+	UnitId string `json:"unit_id"`
+}
+
+// UpdateLineItemJSONBody_Extra defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBody_Extra struct {
+	union json.RawMessage
+}
+
+// UpdateLineItemJSONBodyFormat defines parameters for UpdateLineItem.
+type UpdateLineItemJSONBodyFormat string
+
 // CreateSegmentJSONBody defines parameters for CreateSegment.
 type CreateSegmentJSONBody struct {
 	// AppId A positive integer ID
@@ -623,6 +909,12 @@ type CreateDemandSourceJSONRequestBody CreateDemandSourceJSONBody
 // UpdateDemandSourceJSONRequestBody defines body for UpdateDemandSource for application/json ContentType.
 type UpdateDemandSourceJSONRequestBody UpdateDemandSourceJSONBody
 
+// CreateLineItemJSONRequestBody defines body for CreateLineItem for application/json ContentType.
+type CreateLineItemJSONRequestBody CreateLineItemJSONBody
+
+// UpdateLineItemJSONRequestBody defines body for UpdateLineItem for application/json ContentType.
+type UpdateLineItemJSONRequestBody UpdateLineItemJSONBody
+
 // CreateSegmentJSONRequestBody defines body for CreateSegment for application/json ContentType.
 type CreateSegmentJSONRequestBody CreateSegmentJSONBody
 
@@ -733,6 +1025,21 @@ type ServerInterface interface {
 	// Update demand source
 	// (PATCH /demand_sources/{id})
 	UpdateDemandSource(ctx echo.Context, id IdParam) error
+	// List line items
+	// (GET /line_items)
+	GetLineItems(ctx echo.Context, params GetLineItemsParams) error
+	// Create line item
+	// (POST /line_items)
+	CreateLineItem(ctx echo.Context) error
+	// Delete line item
+	// (DELETE /line_items/{id})
+	DeleteLineItem(ctx echo.Context, id IdParam) error
+	// Get line item
+	// (GET /line_items/{id})
+	GetLineItem(ctx echo.Context, id IdParam) error
+	// Update line item
+	// (PATCH /line_items/{id})
+	UpdateLineItem(ctx echo.Context, id IdParam) error
 	// List segments
 	// (GET /segments)
 	GetSegments(ctx echo.Context) error
@@ -1184,6 +1491,116 @@ func (w *ServerInterfaceWrapper) UpdateDemandSource(ctx echo.Context) error {
 	return err
 }
 
+// GetLineItems converts echo context to params.
+func (w *ServerInterfaceWrapper) GetLineItems(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLineItemsParams
+	// ------------- Optional query parameter "user_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "user_id", ctx.QueryParams(), &params.UserId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter user_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "app_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "app_id", ctx.QueryParams(), &params.AppId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "ad_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "ad_type", ctx.QueryParams(), &params.AdType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ad_type: %s", err))
+	}
+
+	// ------------- Optional query parameter "account_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account_id", ctx.QueryParams(), &params.AccountId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "account_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "account_type", ctx.QueryParams(), &params.AccountType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_type: %s", err))
+	}
+
+	// ------------- Optional query parameter "is_bidding" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "is_bidding", ctx.QueryParams(), &params.IsBidding)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter is_bidding: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetLineItems(ctx, params)
+	return err
+}
+
+// CreateLineItem converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateLineItem(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateLineItem(ctx)
+	return err
+}
+
+// DeleteLineItem converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteLineItem(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteLineItem(ctx, id)
+	return err
+}
+
+// GetLineItem converts echo context to params.
+func (w *ServerInterfaceWrapper) GetLineItem(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetLineItem(ctx, id)
+	return err
+}
+
+// UpdateLineItem converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateLineItem(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateLineItem(ctx, id)
+	return err
+}
+
 // GetSegments converts echo context to params.
 func (w *ServerInterfaceWrapper) GetSegments(ctx echo.Context) error {
 	var err error
@@ -1449,6 +1866,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/demand_sources/:id", wrapper.DeleteDemandSource)
 	router.GET(baseURL+"/demand_sources/:id", wrapper.GetDemandSource)
 	router.PATCH(baseURL+"/demand_sources/:id", wrapper.UpdateDemandSource)
+	router.GET(baseURL+"/line_items", wrapper.GetLineItems)
+	router.POST(baseURL+"/line_items", wrapper.CreateLineItem)
+	router.DELETE(baseURL+"/line_items/:id", wrapper.DeleteLineItem)
+	router.GET(baseURL+"/line_items/:id", wrapper.GetLineItem)
+	router.PATCH(baseURL+"/line_items/:id", wrapper.UpdateLineItem)
 	router.GET(baseURL+"/segments", wrapper.GetSegments)
 	router.POST(baseURL+"/segments", wrapper.CreateSegment)
 	router.DELETE(baseURL+"/segments/:id", wrapper.DeleteSegment)
@@ -1471,62 +1893,75 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"BYkZPnw9/DcAAP//Xlym1Mp1AAA=",
+	"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",
+	"4O7z7r8BAAD//xMzZGIMjAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

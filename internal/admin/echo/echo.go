@@ -156,21 +156,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 		return c.JSON(http.StatusOK, response)
 	})
 
-	resourceRoutes := []resourceRoute{
-		{
-			group:   g.Group("/line_items"),
-			handler: &lineItemServiceHandler{service.LineItemService},
-		},
-	}
-	for _, r := range resourceRoutes {
-		r.group.GET("", r.handler.list)
-		r.group.POST("", r.handler.create)
-		r.group.GET("/:id", r.handler.get)
-		r.group.PUT("/:id", r.handler.update)
-		r.group.PATCH("/:id", r.handler.update)
-		r.group.DELETE("/:id", r.handler.delete)
-	}
-
 	serv := NewServer(service)
 	api.RegisterHandlers(g, serv)
 

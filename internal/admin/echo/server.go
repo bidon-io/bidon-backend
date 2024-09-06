@@ -14,6 +14,7 @@ type Server struct {
 	CountryHandler             *countryServiceHandler
 	DemandSourceHandler        *demandSourceServiceHandler
 	DemandSourceAccountHandler *demandSourceAccountServiceHandler
+	LineItemHandler            *lineItemServiceHandler
 	SegmentHandler             *segmentServiceHandler
 	UserHandler                *userHandler
 }
@@ -28,6 +29,7 @@ func NewServer(service *admin.Service) *Server {
 	countryHandler := &countryServiceHandler{service.CountryService}
 	demandSourceHandler := &demandSourceServiceHandler{service.DemandSourceService}
 	demandSourceAccountHandler := &demandSourceAccountServiceHandler{service.DemandSourceAccountService}
+	lineItemHandler := &lineItemServiceHandler{service.LineItemService}
 	segmentHandler := &segmentServiceHandler{service.SegmentService}
 	usrHandler := &userHandler{
 		userServiceHandler: &userServiceHandler{service.UserService},
@@ -41,6 +43,7 @@ func NewServer(service *admin.Service) *Server {
 		CountryHandler:             countryHandler,
 		DemandSourceHandler:        demandSourceHandler,
 		DemandSourceAccountHandler: demandSourceAccountHandler,
+		LineItemHandler:            lineItemHandler,
 		SegmentHandler:             segmentHandler,
 		UserHandler:                usrHandler,
 	}
@@ -246,4 +249,26 @@ func (s *Server) UpdateUser(c echo.Context, _ api.IdParam) error {
 
 func (s *Server) DeleteUser(c echo.Context, _ api.IdParam) error {
 	return s.UserHandler.delete(c)
+}
+
+// LineItem handlers
+
+func (s *Server) GetLineItems(c echo.Context, _ api.GetLineItemsParams) error {
+	return s.LineItemHandler.list(c)
+}
+
+func (s *Server) CreateLineItem(c echo.Context) error {
+	return s.LineItemHandler.create(c)
+}
+
+func (s *Server) GetLineItem(c echo.Context, _ api.IdParam) error {
+	return s.LineItemHandler.get(c)
+}
+
+func (s *Server) UpdateLineItem(c echo.Context, _ api.IdParam) error {
+	return s.LineItemHandler.update(c)
+}
+
+func (s *Server) DeleteLineItem(c echo.Context, _ api.IdParam) error {
+	return s.LineItemHandler.delete(c)
 }
