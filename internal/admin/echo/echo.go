@@ -158,10 +158,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 
 	resourceRoutes := []resourceRoute{
 		{
-			group:   g.Group("/countries"),
-			handler: &countryServiceHandler{service.CountryService},
-		},
-		{
 			group:   g.Group("/demand_sources"),
 			handler: &demandSourceServiceHandler{service.DemandSourceService},
 		},
@@ -197,11 +193,13 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 	appDemandProfileHandler := appDemandProfileServiceHandler{service.AppDemandProfileService}
 	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
+	countryHandler := &countryServiceHandler{service.CountryService}
 	serv := &Server{
 		AppHandler:              appHandler,
 		AppDemandProfileHandler: &appDemandProfileHandler,
 		AucCfgHandler:           aucHandler,
 		AucCfgV2Handler:         aucV2Handler,
+		CountryHandler:          countryHandler,
 	}
 	api.RegisterHandlers(g, serv)
 
@@ -214,6 +212,7 @@ type Server struct {
 	AppDemandProfileHandler *appDemandProfileServiceHandler
 	AucCfgHandler           *auctionConfigurationServiceHandler
 	AucCfgV2Handler         *auctionConfigurationV2ServiceHandler
+	CountryHandler          *countryServiceHandler
 }
 
 // App handlers
@@ -302,6 +301,28 @@ func (s *Server) UpdateAuctionConfigurationV2(c echo.Context, _ api.IdParam) err
 
 func (s *Server) DeleteAuctionConfigurationV2(c echo.Context, _ api.IdParam) error {
 	return s.AucCfgV2Handler.delete(c)
+}
+
+// Country handlers
+
+func (s *Server) GetCountries(c echo.Context) error {
+	return s.CountryHandler.list(c)
+}
+
+func (s *Server) CreateCountry(c echo.Context) error {
+	return s.CountryHandler.create(c)
+}
+
+func (s *Server) GetCountry(c echo.Context, _ api.IdParam) error {
+	return s.CountryHandler.get(c)
+}
+
+func (s *Server) UpdateCountry(c echo.Context, _ api.IdParam) error {
+	return s.CountryHandler.update(c)
+}
+
+func (s *Server) DeleteCountry(c echo.Context, _ api.IdParam) error {
+	return s.CountryHandler.delete(c)
 }
 
 var _ api.ServerInterface = (*Server)(nil)
