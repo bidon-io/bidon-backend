@@ -25,48 +25,6 @@ const (
 	CreateAuctionConfigurationJSONBodyAdTypeRewarded     CreateAuctionConfigurationJSONBodyAdType = "rewarded"
 )
 
-// Defines values for CreateAuctionConfigurationJSONBodyBidding.
-const (
-	CreateAuctionConfigurationJSONBodyBiddingAdmob      CreateAuctionConfigurationJSONBodyBidding = "admob"
-	CreateAuctionConfigurationJSONBodyBiddingAmazon     CreateAuctionConfigurationJSONBodyBidding = "amazon"
-	CreateAuctionConfigurationJSONBodyBiddingApplovin   CreateAuctionConfigurationJSONBodyBidding = "applovin"
-	CreateAuctionConfigurationJSONBodyBiddingBidmachine CreateAuctionConfigurationJSONBodyBidding = "bidmachine"
-	CreateAuctionConfigurationJSONBodyBiddingBigoads    CreateAuctionConfigurationJSONBodyBidding = "bigoads"
-	CreateAuctionConfigurationJSONBodyBiddingChartboost CreateAuctionConfigurationJSONBodyBidding = "chartboost"
-	CreateAuctionConfigurationJSONBodyBiddingDtexchange CreateAuctionConfigurationJSONBodyBidding = "dtexchange"
-	CreateAuctionConfigurationJSONBodyBiddingGam        CreateAuctionConfigurationJSONBodyBidding = "gam"
-	CreateAuctionConfigurationJSONBodyBiddingInmobi     CreateAuctionConfigurationJSONBodyBidding = "inmobi"
-	CreateAuctionConfigurationJSONBodyBiddingIronsource CreateAuctionConfigurationJSONBodyBidding = "ironsource"
-	CreateAuctionConfigurationJSONBodyBiddingMeta       CreateAuctionConfigurationJSONBodyBidding = "meta"
-	CreateAuctionConfigurationJSONBodyBiddingMintegral  CreateAuctionConfigurationJSONBodyBidding = "mintegral"
-	CreateAuctionConfigurationJSONBodyBiddingMobilefuse CreateAuctionConfigurationJSONBodyBidding = "mobilefuse"
-	CreateAuctionConfigurationJSONBodyBiddingUnityads   CreateAuctionConfigurationJSONBodyBidding = "unityads"
-	CreateAuctionConfigurationJSONBodyBiddingVkads      CreateAuctionConfigurationJSONBodyBidding = "vkads"
-	CreateAuctionConfigurationJSONBodyBiddingVungle     CreateAuctionConfigurationJSONBodyBidding = "vungle"
-	CreateAuctionConfigurationJSONBodyBiddingYandex     CreateAuctionConfigurationJSONBodyBidding = "yandex"
-)
-
-// Defines values for CreateAuctionConfigurationJSONBodyDemands.
-const (
-	CreateAuctionConfigurationJSONBodyDemandsAdmob      CreateAuctionConfigurationJSONBodyDemands = "admob"
-	CreateAuctionConfigurationJSONBodyDemandsAmazon     CreateAuctionConfigurationJSONBodyDemands = "amazon"
-	CreateAuctionConfigurationJSONBodyDemandsApplovin   CreateAuctionConfigurationJSONBodyDemands = "applovin"
-	CreateAuctionConfigurationJSONBodyDemandsBidmachine CreateAuctionConfigurationJSONBodyDemands = "bidmachine"
-	CreateAuctionConfigurationJSONBodyDemandsBigoads    CreateAuctionConfigurationJSONBodyDemands = "bigoads"
-	CreateAuctionConfigurationJSONBodyDemandsChartboost CreateAuctionConfigurationJSONBodyDemands = "chartboost"
-	CreateAuctionConfigurationJSONBodyDemandsDtexchange CreateAuctionConfigurationJSONBodyDemands = "dtexchange"
-	CreateAuctionConfigurationJSONBodyDemandsGam        CreateAuctionConfigurationJSONBodyDemands = "gam"
-	CreateAuctionConfigurationJSONBodyDemandsInmobi     CreateAuctionConfigurationJSONBodyDemands = "inmobi"
-	CreateAuctionConfigurationJSONBodyDemandsIronsource CreateAuctionConfigurationJSONBodyDemands = "ironsource"
-	CreateAuctionConfigurationJSONBodyDemandsMeta       CreateAuctionConfigurationJSONBodyDemands = "meta"
-	CreateAuctionConfigurationJSONBodyDemandsMintegral  CreateAuctionConfigurationJSONBodyDemands = "mintegral"
-	CreateAuctionConfigurationJSONBodyDemandsMobilefuse CreateAuctionConfigurationJSONBodyDemands = "mobilefuse"
-	CreateAuctionConfigurationJSONBodyDemandsUnityads   CreateAuctionConfigurationJSONBodyDemands = "unityads"
-	CreateAuctionConfigurationJSONBodyDemandsVkads      CreateAuctionConfigurationJSONBodyDemands = "vkads"
-	CreateAuctionConfigurationJSONBodyDemandsVungle     CreateAuctionConfigurationJSONBodyDemands = "vungle"
-	CreateAuctionConfigurationJSONBodyDemandsYandex     CreateAuctionConfigurationJSONBodyDemands = "yandex"
-)
-
 // Defines values for UpdateAuctionConfigurationJSONBodyAdType.
 const (
 	UpdateAuctionConfigurationJSONBodyAdTypeBanner       UpdateAuctionConfigurationJSONBodyAdType = "banner"
@@ -74,46 +32,102 @@ const (
 	UpdateAuctionConfigurationJSONBodyAdTypeRewarded     UpdateAuctionConfigurationJSONBodyAdType = "rewarded"
 )
 
-// Defines values for UpdateAuctionConfigurationJSONBodyBidding.
+// Defines values for CreateAuctionConfigurationV2JSONBodyAdType.
 const (
-	UpdateAuctionConfigurationJSONBodyBiddingAdmob      UpdateAuctionConfigurationJSONBodyBidding = "admob"
-	UpdateAuctionConfigurationJSONBodyBiddingAmazon     UpdateAuctionConfigurationJSONBodyBidding = "amazon"
-	UpdateAuctionConfigurationJSONBodyBiddingApplovin   UpdateAuctionConfigurationJSONBodyBidding = "applovin"
-	UpdateAuctionConfigurationJSONBodyBiddingBidmachine UpdateAuctionConfigurationJSONBodyBidding = "bidmachine"
-	UpdateAuctionConfigurationJSONBodyBiddingBigoads    UpdateAuctionConfigurationJSONBodyBidding = "bigoads"
-	UpdateAuctionConfigurationJSONBodyBiddingChartboost UpdateAuctionConfigurationJSONBodyBidding = "chartboost"
-	UpdateAuctionConfigurationJSONBodyBiddingDtexchange UpdateAuctionConfigurationJSONBodyBidding = "dtexchange"
-	UpdateAuctionConfigurationJSONBodyBiddingGam        UpdateAuctionConfigurationJSONBodyBidding = "gam"
-	UpdateAuctionConfigurationJSONBodyBiddingInmobi     UpdateAuctionConfigurationJSONBodyBidding = "inmobi"
-	UpdateAuctionConfigurationJSONBodyBiddingIronsource UpdateAuctionConfigurationJSONBodyBidding = "ironsource"
-	UpdateAuctionConfigurationJSONBodyBiddingMeta       UpdateAuctionConfigurationJSONBodyBidding = "meta"
-	UpdateAuctionConfigurationJSONBodyBiddingMintegral  UpdateAuctionConfigurationJSONBodyBidding = "mintegral"
-	UpdateAuctionConfigurationJSONBodyBiddingMobilefuse UpdateAuctionConfigurationJSONBodyBidding = "mobilefuse"
-	UpdateAuctionConfigurationJSONBodyBiddingUnityads   UpdateAuctionConfigurationJSONBodyBidding = "unityads"
-	UpdateAuctionConfigurationJSONBodyBiddingVkads      UpdateAuctionConfigurationJSONBodyBidding = "vkads"
-	UpdateAuctionConfigurationJSONBodyBiddingVungle     UpdateAuctionConfigurationJSONBodyBidding = "vungle"
-	UpdateAuctionConfigurationJSONBodyBiddingYandex     UpdateAuctionConfigurationJSONBodyBidding = "yandex"
+	CreateAuctionConfigurationV2JSONBodyAdTypeBanner       CreateAuctionConfigurationV2JSONBodyAdType = "banner"
+	CreateAuctionConfigurationV2JSONBodyAdTypeInterstitial CreateAuctionConfigurationV2JSONBodyAdType = "interstitial"
+	CreateAuctionConfigurationV2JSONBodyAdTypeRewarded     CreateAuctionConfigurationV2JSONBodyAdType = "rewarded"
 )
 
-// Defines values for UpdateAuctionConfigurationJSONBodyDemands.
+// Defines values for CreateAuctionConfigurationV2JSONBodyBidding.
 const (
-	UpdateAuctionConfigurationJSONBodyDemandsAdmob      UpdateAuctionConfigurationJSONBodyDemands = "admob"
-	UpdateAuctionConfigurationJSONBodyDemandsAmazon     UpdateAuctionConfigurationJSONBodyDemands = "amazon"
-	UpdateAuctionConfigurationJSONBodyDemandsApplovin   UpdateAuctionConfigurationJSONBodyDemands = "applovin"
-	UpdateAuctionConfigurationJSONBodyDemandsBidmachine UpdateAuctionConfigurationJSONBodyDemands = "bidmachine"
-	UpdateAuctionConfigurationJSONBodyDemandsBigoads    UpdateAuctionConfigurationJSONBodyDemands = "bigoads"
-	UpdateAuctionConfigurationJSONBodyDemandsChartboost UpdateAuctionConfigurationJSONBodyDemands = "chartboost"
-	UpdateAuctionConfigurationJSONBodyDemandsDtexchange UpdateAuctionConfigurationJSONBodyDemands = "dtexchange"
-	UpdateAuctionConfigurationJSONBodyDemandsGam        UpdateAuctionConfigurationJSONBodyDemands = "gam"
-	UpdateAuctionConfigurationJSONBodyDemandsInmobi     UpdateAuctionConfigurationJSONBodyDemands = "inmobi"
-	UpdateAuctionConfigurationJSONBodyDemandsIronsource UpdateAuctionConfigurationJSONBodyDemands = "ironsource"
-	UpdateAuctionConfigurationJSONBodyDemandsMeta       UpdateAuctionConfigurationJSONBodyDemands = "meta"
-	UpdateAuctionConfigurationJSONBodyDemandsMintegral  UpdateAuctionConfigurationJSONBodyDemands = "mintegral"
-	UpdateAuctionConfigurationJSONBodyDemandsMobilefuse UpdateAuctionConfigurationJSONBodyDemands = "mobilefuse"
-	UpdateAuctionConfigurationJSONBodyDemandsUnityads   UpdateAuctionConfigurationJSONBodyDemands = "unityads"
-	UpdateAuctionConfigurationJSONBodyDemandsVkads      UpdateAuctionConfigurationJSONBodyDemands = "vkads"
-	UpdateAuctionConfigurationJSONBodyDemandsVungle     UpdateAuctionConfigurationJSONBodyDemands = "vungle"
-	UpdateAuctionConfigurationJSONBodyDemandsYandex     UpdateAuctionConfigurationJSONBodyDemands = "yandex"
+	CreateAuctionConfigurationV2JSONBodyBiddingAdmob      CreateAuctionConfigurationV2JSONBodyBidding = "admob"
+	CreateAuctionConfigurationV2JSONBodyBiddingAmazon     CreateAuctionConfigurationV2JSONBodyBidding = "amazon"
+	CreateAuctionConfigurationV2JSONBodyBiddingApplovin   CreateAuctionConfigurationV2JSONBodyBidding = "applovin"
+	CreateAuctionConfigurationV2JSONBodyBiddingBidmachine CreateAuctionConfigurationV2JSONBodyBidding = "bidmachine"
+	CreateAuctionConfigurationV2JSONBodyBiddingBigoads    CreateAuctionConfigurationV2JSONBodyBidding = "bigoads"
+	CreateAuctionConfigurationV2JSONBodyBiddingChartboost CreateAuctionConfigurationV2JSONBodyBidding = "chartboost"
+	CreateAuctionConfigurationV2JSONBodyBiddingDtexchange CreateAuctionConfigurationV2JSONBodyBidding = "dtexchange"
+	CreateAuctionConfigurationV2JSONBodyBiddingGam        CreateAuctionConfigurationV2JSONBodyBidding = "gam"
+	CreateAuctionConfigurationV2JSONBodyBiddingInmobi     CreateAuctionConfigurationV2JSONBodyBidding = "inmobi"
+	CreateAuctionConfigurationV2JSONBodyBiddingIronsource CreateAuctionConfigurationV2JSONBodyBidding = "ironsource"
+	CreateAuctionConfigurationV2JSONBodyBiddingMeta       CreateAuctionConfigurationV2JSONBodyBidding = "meta"
+	CreateAuctionConfigurationV2JSONBodyBiddingMintegral  CreateAuctionConfigurationV2JSONBodyBidding = "mintegral"
+	CreateAuctionConfigurationV2JSONBodyBiddingMobilefuse CreateAuctionConfigurationV2JSONBodyBidding = "mobilefuse"
+	CreateAuctionConfigurationV2JSONBodyBiddingUnityads   CreateAuctionConfigurationV2JSONBodyBidding = "unityads"
+	CreateAuctionConfigurationV2JSONBodyBiddingVkads      CreateAuctionConfigurationV2JSONBodyBidding = "vkads"
+	CreateAuctionConfigurationV2JSONBodyBiddingVungle     CreateAuctionConfigurationV2JSONBodyBidding = "vungle"
+	CreateAuctionConfigurationV2JSONBodyBiddingYandex     CreateAuctionConfigurationV2JSONBodyBidding = "yandex"
+)
+
+// Defines values for CreateAuctionConfigurationV2JSONBodyDemands.
+const (
+	CreateAuctionConfigurationV2JSONBodyDemandsAdmob      CreateAuctionConfigurationV2JSONBodyDemands = "admob"
+	CreateAuctionConfigurationV2JSONBodyDemandsAmazon     CreateAuctionConfigurationV2JSONBodyDemands = "amazon"
+	CreateAuctionConfigurationV2JSONBodyDemandsApplovin   CreateAuctionConfigurationV2JSONBodyDemands = "applovin"
+	CreateAuctionConfigurationV2JSONBodyDemandsBidmachine CreateAuctionConfigurationV2JSONBodyDemands = "bidmachine"
+	CreateAuctionConfigurationV2JSONBodyDemandsBigoads    CreateAuctionConfigurationV2JSONBodyDemands = "bigoads"
+	CreateAuctionConfigurationV2JSONBodyDemandsChartboost CreateAuctionConfigurationV2JSONBodyDemands = "chartboost"
+	CreateAuctionConfigurationV2JSONBodyDemandsDtexchange CreateAuctionConfigurationV2JSONBodyDemands = "dtexchange"
+	CreateAuctionConfigurationV2JSONBodyDemandsGam        CreateAuctionConfigurationV2JSONBodyDemands = "gam"
+	CreateAuctionConfigurationV2JSONBodyDemandsInmobi     CreateAuctionConfigurationV2JSONBodyDemands = "inmobi"
+	CreateAuctionConfigurationV2JSONBodyDemandsIronsource CreateAuctionConfigurationV2JSONBodyDemands = "ironsource"
+	CreateAuctionConfigurationV2JSONBodyDemandsMeta       CreateAuctionConfigurationV2JSONBodyDemands = "meta"
+	CreateAuctionConfigurationV2JSONBodyDemandsMintegral  CreateAuctionConfigurationV2JSONBodyDemands = "mintegral"
+	CreateAuctionConfigurationV2JSONBodyDemandsMobilefuse CreateAuctionConfigurationV2JSONBodyDemands = "mobilefuse"
+	CreateAuctionConfigurationV2JSONBodyDemandsUnityads   CreateAuctionConfigurationV2JSONBodyDemands = "unityads"
+	CreateAuctionConfigurationV2JSONBodyDemandsVkads      CreateAuctionConfigurationV2JSONBodyDemands = "vkads"
+	CreateAuctionConfigurationV2JSONBodyDemandsVungle     CreateAuctionConfigurationV2JSONBodyDemands = "vungle"
+	CreateAuctionConfigurationV2JSONBodyDemandsYandex     CreateAuctionConfigurationV2JSONBodyDemands = "yandex"
+)
+
+// Defines values for UpdateAuctionConfigurationV2JSONBodyAdType.
+const (
+	UpdateAuctionConfigurationV2JSONBodyAdTypeBanner       UpdateAuctionConfigurationV2JSONBodyAdType = "banner"
+	UpdateAuctionConfigurationV2JSONBodyAdTypeInterstitial UpdateAuctionConfigurationV2JSONBodyAdType = "interstitial"
+	UpdateAuctionConfigurationV2JSONBodyAdTypeRewarded     UpdateAuctionConfigurationV2JSONBodyAdType = "rewarded"
+)
+
+// Defines values for UpdateAuctionConfigurationV2JSONBodyBidding.
+const (
+	UpdateAuctionConfigurationV2JSONBodyBiddingAdmob      UpdateAuctionConfigurationV2JSONBodyBidding = "admob"
+	UpdateAuctionConfigurationV2JSONBodyBiddingAmazon     UpdateAuctionConfigurationV2JSONBodyBidding = "amazon"
+	UpdateAuctionConfigurationV2JSONBodyBiddingApplovin   UpdateAuctionConfigurationV2JSONBodyBidding = "applovin"
+	UpdateAuctionConfigurationV2JSONBodyBiddingBidmachine UpdateAuctionConfigurationV2JSONBodyBidding = "bidmachine"
+	UpdateAuctionConfigurationV2JSONBodyBiddingBigoads    UpdateAuctionConfigurationV2JSONBodyBidding = "bigoads"
+	UpdateAuctionConfigurationV2JSONBodyBiddingChartboost UpdateAuctionConfigurationV2JSONBodyBidding = "chartboost"
+	UpdateAuctionConfigurationV2JSONBodyBiddingDtexchange UpdateAuctionConfigurationV2JSONBodyBidding = "dtexchange"
+	UpdateAuctionConfigurationV2JSONBodyBiddingGam        UpdateAuctionConfigurationV2JSONBodyBidding = "gam"
+	UpdateAuctionConfigurationV2JSONBodyBiddingInmobi     UpdateAuctionConfigurationV2JSONBodyBidding = "inmobi"
+	UpdateAuctionConfigurationV2JSONBodyBiddingIronsource UpdateAuctionConfigurationV2JSONBodyBidding = "ironsource"
+	UpdateAuctionConfigurationV2JSONBodyBiddingMeta       UpdateAuctionConfigurationV2JSONBodyBidding = "meta"
+	UpdateAuctionConfigurationV2JSONBodyBiddingMintegral  UpdateAuctionConfigurationV2JSONBodyBidding = "mintegral"
+	UpdateAuctionConfigurationV2JSONBodyBiddingMobilefuse UpdateAuctionConfigurationV2JSONBodyBidding = "mobilefuse"
+	UpdateAuctionConfigurationV2JSONBodyBiddingUnityads   UpdateAuctionConfigurationV2JSONBodyBidding = "unityads"
+	UpdateAuctionConfigurationV2JSONBodyBiddingVkads      UpdateAuctionConfigurationV2JSONBodyBidding = "vkads"
+	UpdateAuctionConfigurationV2JSONBodyBiddingVungle     UpdateAuctionConfigurationV2JSONBodyBidding = "vungle"
+	UpdateAuctionConfigurationV2JSONBodyBiddingYandex     UpdateAuctionConfigurationV2JSONBodyBidding = "yandex"
+)
+
+// Defines values for UpdateAuctionConfigurationV2JSONBodyDemands.
+const (
+	UpdateAuctionConfigurationV2JSONBodyDemandsAdmob      UpdateAuctionConfigurationV2JSONBodyDemands = "admob"
+	UpdateAuctionConfigurationV2JSONBodyDemandsAmazon     UpdateAuctionConfigurationV2JSONBodyDemands = "amazon"
+	UpdateAuctionConfigurationV2JSONBodyDemandsApplovin   UpdateAuctionConfigurationV2JSONBodyDemands = "applovin"
+	UpdateAuctionConfigurationV2JSONBodyDemandsBidmachine UpdateAuctionConfigurationV2JSONBodyDemands = "bidmachine"
+	UpdateAuctionConfigurationV2JSONBodyDemandsBigoads    UpdateAuctionConfigurationV2JSONBodyDemands = "bigoads"
+	UpdateAuctionConfigurationV2JSONBodyDemandsChartboost UpdateAuctionConfigurationV2JSONBodyDemands = "chartboost"
+	UpdateAuctionConfigurationV2JSONBodyDemandsDtexchange UpdateAuctionConfigurationV2JSONBodyDemands = "dtexchange"
+	UpdateAuctionConfigurationV2JSONBodyDemandsGam        UpdateAuctionConfigurationV2JSONBodyDemands = "gam"
+	UpdateAuctionConfigurationV2JSONBodyDemandsInmobi     UpdateAuctionConfigurationV2JSONBodyDemands = "inmobi"
+	UpdateAuctionConfigurationV2JSONBodyDemandsIronsource UpdateAuctionConfigurationV2JSONBodyDemands = "ironsource"
+	UpdateAuctionConfigurationV2JSONBodyDemandsMeta       UpdateAuctionConfigurationV2JSONBodyDemands = "meta"
+	UpdateAuctionConfigurationV2JSONBodyDemandsMintegral  UpdateAuctionConfigurationV2JSONBodyDemands = "mintegral"
+	UpdateAuctionConfigurationV2JSONBodyDemandsMobilefuse UpdateAuctionConfigurationV2JSONBodyDemands = "mobilefuse"
+	UpdateAuctionConfigurationV2JSONBodyDemandsUnityads   UpdateAuctionConfigurationV2JSONBodyDemands = "unityads"
+	UpdateAuctionConfigurationV2JSONBodyDemandsVkads      UpdateAuctionConfigurationV2JSONBodyDemands = "vkads"
+	UpdateAuctionConfigurationV2JSONBodyDemandsVungle     UpdateAuctionConfigurationV2JSONBodyDemands = "vungle"
+	UpdateAuctionConfigurationV2JSONBodyDemandsYandex     UpdateAuctionConfigurationV2JSONBodyDemands = "yandex"
 )
 
 // IdParam A positive integer ID
@@ -134,6 +148,70 @@ type ErrorResponse struct {
 type CreateAuctionConfigurationJSONBody struct {
 	AdType CreateAuctionConfigurationJSONBodyAdType `json:"ad_type"`
 
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// Id A positive integer primary ID, read-only
+	Id *int `json:"id,omitempty"`
+
+	// Name Name of the auction configuration
+	Name string `json:"name"`
+
+	// Pricefloor Price floor for the auction configuration
+	Pricefloor float32 `json:"pricefloor"`
+
+	// Rounds Auction rounds
+	Rounds []struct {
+		// Demands List of demands for the round
+		Demands []string `json:"demands"`
+
+		// Id Round ID
+		Id string `json:"id"`
+
+		// Timeout Timeout for the round in milliseconds
+		Timeout int `json:"timeout"`
+	} `json:"rounds"`
+}
+
+// CreateAuctionConfigurationJSONBodyAdType defines parameters for CreateAuctionConfiguration.
+type CreateAuctionConfigurationJSONBodyAdType string
+
+// UpdateAuctionConfigurationJSONBody defines parameters for UpdateAuctionConfiguration.
+type UpdateAuctionConfigurationJSONBody struct {
+	AdType UpdateAuctionConfigurationJSONBodyAdType `json:"ad_type"`
+
+	// AppId A positive integer ID
+	AppId int `json:"app_id"`
+
+	// Id A positive integer primary ID, read-only
+	Id *int `json:"id,omitempty"`
+
+	// Name Name of the auction configuration
+	Name string `json:"name"`
+
+	// Pricefloor Price floor for the auction configuration
+	Pricefloor float32 `json:"pricefloor"`
+
+	// Rounds Auction rounds
+	Rounds []struct {
+		// Demands List of demands for the round
+		Demands []string `json:"demands"`
+
+		// Id Round ID
+		Id string `json:"id"`
+
+		// Timeout Timeout for the round in milliseconds
+		Timeout int `json:"timeout"`
+	} `json:"rounds"`
+}
+
+// UpdateAuctionConfigurationJSONBodyAdType defines parameters for UpdateAuctionConfiguration.
+type UpdateAuctionConfigurationJSONBodyAdType string
+
+// CreateAuctionConfigurationV2JSONBody defines parameters for CreateAuctionConfigurationV2.
+type CreateAuctionConfigurationV2JSONBody struct {
+	AdType CreateAuctionConfigurationV2JSONBodyAdType `json:"ad_type"`
+
 	// AdUnitIds List of ad unit IDs
 	AdUnitIds *[]int `json:"ad_unit_ids,omitempty"`
 
@@ -141,10 +219,10 @@ type CreateAuctionConfigurationJSONBody struct {
 	AppId *int `json:"app_id,omitempty"`
 
 	// Bidding List of bidding sources
-	Bidding *[]CreateAuctionConfigurationJSONBodyBidding `json:"bidding,omitempty"`
+	Bidding *[]CreateAuctionConfigurationV2JSONBodyBidding `json:"bidding,omitempty"`
 
 	// Demands List of demand sources
-	Demands *[]CreateAuctionConfigurationJSONBodyDemands `json:"demands,omitempty"`
+	Demands *[]CreateAuctionConfigurationV2JSONBodyDemands `json:"demands,omitempty"`
 
 	// ExternalWinNotifications Whether external win notifications are enabled
 	ExternalWinNotifications *bool `json:"external_win_notifications,omitempty"`
@@ -167,18 +245,18 @@ type CreateAuctionConfigurationJSONBody struct {
 	Timeout *int32 `json:"timeout,omitempty"`
 }
 
-// CreateAuctionConfigurationJSONBodyAdType defines parameters for CreateAuctionConfiguration.
-type CreateAuctionConfigurationJSONBodyAdType string
+// CreateAuctionConfigurationV2JSONBodyAdType defines parameters for CreateAuctionConfigurationV2.
+type CreateAuctionConfigurationV2JSONBodyAdType string
 
-// CreateAuctionConfigurationJSONBodyBidding defines parameters for CreateAuctionConfiguration.
-type CreateAuctionConfigurationJSONBodyBidding string
+// CreateAuctionConfigurationV2JSONBodyBidding defines parameters for CreateAuctionConfigurationV2.
+type CreateAuctionConfigurationV2JSONBodyBidding string
 
-// CreateAuctionConfigurationJSONBodyDemands defines parameters for CreateAuctionConfiguration.
-type CreateAuctionConfigurationJSONBodyDemands string
+// CreateAuctionConfigurationV2JSONBodyDemands defines parameters for CreateAuctionConfigurationV2.
+type CreateAuctionConfigurationV2JSONBodyDemands string
 
-// UpdateAuctionConfigurationJSONBody defines parameters for UpdateAuctionConfiguration.
-type UpdateAuctionConfigurationJSONBody struct {
-	AdType *UpdateAuctionConfigurationJSONBodyAdType `json:"ad_type,omitempty"`
+// UpdateAuctionConfigurationV2JSONBody defines parameters for UpdateAuctionConfigurationV2.
+type UpdateAuctionConfigurationV2JSONBody struct {
+	AdType *UpdateAuctionConfigurationV2JSONBodyAdType `json:"ad_type,omitempty"`
 
 	// AdUnitIds List of ad unit IDs
 	AdUnitIds *[]int `json:"ad_unit_ids,omitempty"`
@@ -187,10 +265,10 @@ type UpdateAuctionConfigurationJSONBody struct {
 	AppId *int `json:"app_id,omitempty"`
 
 	// Bidding List of bidding sources
-	Bidding *[]UpdateAuctionConfigurationJSONBodyBidding `json:"bidding,omitempty"`
+	Bidding *[]UpdateAuctionConfigurationV2JSONBodyBidding `json:"bidding,omitempty"`
 
 	// Demands List of demand sources
-	Demands *[]UpdateAuctionConfigurationJSONBodyDemands `json:"demands,omitempty"`
+	Demands *[]UpdateAuctionConfigurationV2JSONBodyDemands `json:"demands,omitempty"`
 
 	// ExternalWinNotifications Whether external win notifications are enabled
 	ExternalWinNotifications *bool `json:"external_win_notifications,omitempty"`
@@ -213,14 +291,14 @@ type UpdateAuctionConfigurationJSONBody struct {
 	Timeout *int32 `json:"timeout,omitempty"`
 }
 
-// UpdateAuctionConfigurationJSONBodyAdType defines parameters for UpdateAuctionConfiguration.
-type UpdateAuctionConfigurationJSONBodyAdType string
+// UpdateAuctionConfigurationV2JSONBodyAdType defines parameters for UpdateAuctionConfigurationV2.
+type UpdateAuctionConfigurationV2JSONBodyAdType string
 
-// UpdateAuctionConfigurationJSONBodyBidding defines parameters for UpdateAuctionConfiguration.
-type UpdateAuctionConfigurationJSONBodyBidding string
+// UpdateAuctionConfigurationV2JSONBodyBidding defines parameters for UpdateAuctionConfigurationV2.
+type UpdateAuctionConfigurationV2JSONBodyBidding string
 
-// UpdateAuctionConfigurationJSONBodyDemands defines parameters for UpdateAuctionConfiguration.
-type UpdateAuctionConfigurationJSONBodyDemands string
+// UpdateAuctionConfigurationV2JSONBodyDemands defines parameters for UpdateAuctionConfigurationV2.
+type UpdateAuctionConfigurationV2JSONBodyDemands string
 
 // CreateAuctionConfigurationJSONRequestBody defines body for CreateAuctionConfiguration for application/json ContentType.
 type CreateAuctionConfigurationJSONRequestBody CreateAuctionConfigurationJSONBody
@@ -228,23 +306,44 @@ type CreateAuctionConfigurationJSONRequestBody CreateAuctionConfigurationJSONBod
 // UpdateAuctionConfigurationJSONRequestBody defines body for UpdateAuctionConfiguration for application/json ContentType.
 type UpdateAuctionConfigurationJSONRequestBody UpdateAuctionConfigurationJSONBody
 
+// CreateAuctionConfigurationV2JSONRequestBody defines body for CreateAuctionConfigurationV2 for application/json ContentType.
+type CreateAuctionConfigurationV2JSONRequestBody CreateAuctionConfigurationV2JSONBody
+
+// UpdateAuctionConfigurationV2JSONRequestBody defines body for UpdateAuctionConfigurationV2 for application/json ContentType.
+type UpdateAuctionConfigurationV2JSONRequestBody UpdateAuctionConfigurationV2JSONBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List auction configurations
-	// (GET /v2/auction_configurations)
+	// (GET /auction_configurations)
 	GetAuctionConfigurations(ctx echo.Context) error
 	// Create auction configuration
-	// (POST /v2/auction_configurations)
+	// (POST /auction_configurations)
 	CreateAuctionConfiguration(ctx echo.Context) error
 	// Delete auction configuration
-	// (DELETE /v2/auction_configurations/{id})
+	// (DELETE /auction_configurations/{id})
 	DeleteAuctionConfiguration(ctx echo.Context, id IdParam) error
 	// Get auction configuration
-	// (GET /v2/auction_configurations/{id})
+	// (GET /auction_configurations/{id})
 	GetAuctionConfiguration(ctx echo.Context, id IdParam) error
 	// Update auction configuration
-	// (PATCH /v2/auction_configurations/{id})
+	// (PATCH /auction_configurations/{id})
 	UpdateAuctionConfiguration(ctx echo.Context, id IdParam) error
+	// List auction configurations V2
+	// (GET /v2/auction_configurations)
+	GetAuctionConfigurationsV2(ctx echo.Context) error
+	// Create auction configuration V2
+	// (POST /v2/auction_configurations)
+	CreateAuctionConfigurationV2(ctx echo.Context) error
+	// Delete auction configuration
+	// (DELETE /v2/auction_configurations/{id})
+	DeleteAuctionConfigurationV2(ctx echo.Context, id IdParam) error
+	// Get auction configuration V2
+	// (GET /v2/auction_configurations/{id})
+	GetAuctionConfigurationV2(ctx echo.Context, id IdParam) error
+	// Update auction configuration V2
+	// (PATCH /v2/auction_configurations/{id})
+	UpdateAuctionConfigurationV2(ctx echo.Context, id IdParam) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -318,6 +417,72 @@ func (w *ServerInterfaceWrapper) UpdateAuctionConfiguration(ctx echo.Context) er
 	return err
 }
 
+// GetAuctionConfigurationsV2 converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAuctionConfigurationsV2(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAuctionConfigurationsV2(ctx)
+	return err
+}
+
+// CreateAuctionConfigurationV2 converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateAuctionConfigurationV2(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateAuctionConfigurationV2(ctx)
+	return err
+}
+
+// DeleteAuctionConfigurationV2 converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteAuctionConfigurationV2(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteAuctionConfigurationV2(ctx, id)
+	return err
+}
+
+// GetAuctionConfigurationV2 converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAuctionConfigurationV2(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAuctionConfigurationV2(ctx, id)
+	return err
+}
+
+// UpdateAuctionConfigurationV2 converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateAuctionConfigurationV2(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id IdParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateAuctionConfigurationV2(ctx, id)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -346,42 +511,52 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/v2/auction_configurations", wrapper.GetAuctionConfigurations)
-	router.POST(baseURL+"/v2/auction_configurations", wrapper.CreateAuctionConfiguration)
-	router.DELETE(baseURL+"/v2/auction_configurations/:id", wrapper.DeleteAuctionConfiguration)
-	router.GET(baseURL+"/v2/auction_configurations/:id", wrapper.GetAuctionConfiguration)
-	router.PATCH(baseURL+"/v2/auction_configurations/:id", wrapper.UpdateAuctionConfiguration)
+	router.GET(baseURL+"/auction_configurations", wrapper.GetAuctionConfigurations)
+	router.POST(baseURL+"/auction_configurations", wrapper.CreateAuctionConfiguration)
+	router.DELETE(baseURL+"/auction_configurations/:id", wrapper.DeleteAuctionConfiguration)
+	router.GET(baseURL+"/auction_configurations/:id", wrapper.GetAuctionConfiguration)
+	router.PATCH(baseURL+"/auction_configurations/:id", wrapper.UpdateAuctionConfiguration)
+	router.GET(baseURL+"/v2/auction_configurations", wrapper.GetAuctionConfigurationsV2)
+	router.POST(baseURL+"/v2/auction_configurations", wrapper.CreateAuctionConfigurationV2)
+	router.DELETE(baseURL+"/v2/auction_configurations/:id", wrapper.DeleteAuctionConfigurationV2)
+	router.GET(baseURL+"/v2/auction_configurations/:id", wrapper.GetAuctionConfigurationV2)
+	router.PATCH(baseURL+"/v2/auction_configurations/:id", wrapper.UpdateAuctionConfigurationV2)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"YZBvbja/BwAA///vIrcHQigAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

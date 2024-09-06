@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "auction-configuration-detailed.schema.json",
-  "title": "AuctionConfigurationDetailed (Deprecated)",
+  "title": "AuctionConfigurationDetailed",
   "allOf": [
     {
-      "$ref": "./auction-configuration.schema.json"
+      "$ref": "./auction-configuration-v2.schema.json"
     },
     {
       "type": "object",
       "properties": {
         "app": {
-          "$ref": "./app.schema.json",
+          "$ref": "./app.schema.json"
         }
       }
     }

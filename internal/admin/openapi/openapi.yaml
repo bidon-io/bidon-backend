@@ -5,7 +5,7 @@ info:
   title: Admin API
   version: 0.1.0
 paths:
-  /v2/auction_configurations:
+  /auction_configurations:
     get:
       operationId: getAuctionConfigurations
       summary: List auction configurations
@@ -40,7 +40,7 @@ paths:
                 $ref: './schemas/auction-configuration.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /v2/auction_configurations/{id}:
+  /auction_configurations/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -79,6 +79,88 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
     delete:
       operationId: deleteAuctionConfiguration
+      tags:
+        - Auction configurations
+      summary: Delete auction configuration
+      responses:
+        '204':
+          description: Auction configuration deleted successfully
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /v2/auction_configurations:
+    get:
+      operationId: getAuctionConfigurationsV2
+      summary: List auction configurations V2
+      tags:
+        - Auction configurations
+      responses:
+        '200':
+          description: A list of auction configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/auction-configuration-v2-detailed.schema.json'
+    post:
+      operationId: createAuctionConfigurationV2
+      summary: Create auction configuration V2
+      tags:
+        - Auction configurations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/auction-configuration-v2.schema.json'
+      responses:
+        '201':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration-v2.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /v2/auction_configurations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      operationId: getAuctionConfigurationV2
+      tags:
+        - Auction configurations
+      summary: Get auction configuration V2
+      responses:
+        '200':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration-v2-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: updateAuctionConfigurationV2
+      tags:
+        - Auction configurations
+      summary: Update auction configuration V2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/auction-configuration-v2-props.schema.json'
+      responses:
+        '200':
+          description: An auction configuration
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auction-configuration-v2.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteAuctionConfigurationV2
       tags:
         - Auction configurations
       summary: Delete auction configuration

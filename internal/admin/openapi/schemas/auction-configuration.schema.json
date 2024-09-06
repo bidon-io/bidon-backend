@@ -1,18 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "AuctionConfiguration",
-  "type": "object",
+  "$id": "auction-configuration.schema.json",
+  "title": "AuctionConfiguration (Deprecated)",
   "allOf": [
     {
       "$ref": "./auction-configuration-props.schema.json"
     },
     {
-      "required": [
-        "id",
-        "name",
-        "ad_type",
-        "pricefloor"
-      ]
+      "type": "object",
+      "required": ["id", "name", "app_id", "ad_type", "rounds", "pricefloor"]
     }
   ]
 }

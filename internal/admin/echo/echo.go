@@ -166,10 +166,6 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 			handler: &appDemandProfileServiceHandler{service.AppDemandProfileService},
 		},
 		{
-			group:   g.Group("/auction_configurations"),
-			handler: &auctionConfigurationServiceHandler{service.AuctionConfigurationService},
-		},
-		{
 			group:   g.Group("/countries"),
 			handler: &countryServiceHandler{service.CountryService},
 		},
@@ -205,8 +201,12 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 		r.group.DELETE("/:id", r.handler.delete)
 	}
 
+	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
 	aucV2Handler := &auctionConfigurationV2ServiceHandler{service.AuctionConfigurationV2Service}
-	serv := &Server{AucV2Handler: aucV2Handler}
+	serv := &Server{
+		AucCfgHandler:   aucHandler,
+		AucCfgV2Handler: aucV2Handler,
+	}
 	api.RegisterHandlers(g, serv)
 
 	lineItemImportHandler := &lineItemImportHandler{service.LineItemService}
@@ -214,27 +214,52 @@ func RegisterAdminService(g *echo.Group, service *admin.Service) {
 }
 
 type Server struct {
-	AucV2Handler *auctionConfigurationV2ServiceHandler
+	AucCfgHandler   *auctionConfigurationServiceHandler
+	AucCfgV2Handler *auctionConfigurationV2ServiceHandler
 }
 
+// AuctionConfiguration handlers
+
 func (s *Server) GetAuctionConfigurations(c echo.Context) error {
-	return s.AucV2Handler.list(c)
+	return s.AucCfgHandler.list(c)
 }
 
 func (s *Server) CreateAuctionConfiguration(c echo.Context) error {
-	return s.AucV2Handler.create(c)
+	return s.AucCfgHandler.create(c)
 }
 
 func (s *Server) GetAuctionConfiguration(c echo.Context, _ api.IdParam) error {
-	return s.AucV2Handler.get(c)
+	return s.AucCfgHandler.get(c)
 }
 
 func (s *Server) UpdateAuctionConfiguration(c echo.Context, _ api.IdParam) error {
-	return s.AucV2Handler.update(c)
+	return s.AucCfgHandler.update(c)
 }
 
 func (s *Server) DeleteAuctionConfiguration(c echo.Context, _ api.IdParam) error {
-	return s.AucV2Handler.delete(c)
+	return s.AucCfgHandler.delete(c)
+}
+
+// AuctionConfigurationV2 handlers
+
+func (s *Server) GetAuctionConfigurationsV2(c echo.Context) error {
+	return s.AucCfgV2Handler.list(c)
+}
+
+func (s *Server) CreateAuctionConfigurationV2(c echo.Context) error {
+	return s.AucCfgV2Handler.create(c)
+}
+
+func (s *Server) GetAuctionConfigurationV2(c echo.Context, _ api.IdParam) error {
+	return s.AucCfgV2Handler.get(c)
+}
+
+func (s *Server) UpdateAuctionConfigurationV2(c echo.Context, _ api.IdParam) error {
+	return s.AucCfgV2Handler.update(c)
+}
+
+func (s *Server) DeleteAuctionConfigurationV2(c echo.Context, _ api.IdParam) error {
+	return s.AucCfgV2Handler.delete(c)
 }
 
 var _ api.ServerInterface = (*Server)(nil)
