@@ -69,56 +69,6 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 	})
 }
 
-func RegisterAuthService(g *echo.Group, service *auth.Service) {
-	g.POST("/login", func(c echo.Context) error {
-		var r auth.LogInRequest
-		if err := c.Bind(&r); err != nil {
-			return err
-		}
-
-		err := service.LogInWithSession(c.Request().Context(), r)
-		if err != nil {
-			if errors.Is(err, auth.ErrInvalidCredentials) {
-				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-			}
-
-			return err
-		}
-
-		return c.JSON(http.StatusOK, map[string]any{"success": true})
-	}, session.LoadAndSaveWithConfig(session.SessionConfig{
-		SessionManager: service.GetSessionManager(),
-	}))
-	g.POST("/logout", func(c echo.Context) error {
-		err := service.DestroySession(c.Request().Context())
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(http.StatusOK, map[string]any{"success": true})
-	}, session.LoadAndSaveWithConfig(session.SessionConfig{
-		SessionManager: service.GetSessionManager(),
-	}))
-
-	g.POST("/authorize", func(c echo.Context) error {
-		var r auth.LogInRequest
-		if err := c.Bind(&r); err != nil {
-			return err
-		}
-
-		response, err := service.LogInWithAccessToken(c.Request().Context(), r)
-		if err != nil {
-			if errors.Is(err, auth.ErrInvalidCredentials) {
-				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-			}
-
-			return err
-		}
-
-		return c.JSON(http.StatusOK, response)
-	})
-}
-
 type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
 type appDemandProfileServiceHandler = resourceServiceHandler[admin.AppDemandProfileResource, admin.AppDemandProfile, admin.AppDemandProfileAttrs]
 type auctionConfigurationServiceHandler = resourceServiceHandler[admin.AuctionConfigurationResource, admin.AuctionConfiguration, admin.AuctionConfigurationAttrs]

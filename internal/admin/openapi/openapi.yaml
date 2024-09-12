@@ -1,11 +1,12 @@
 openapi: 3.0.3
 servers:
   - url: /api
+  - url: /auth
 info:
   title: Admin API
   version: 0.1.0
 paths:
-  /auction_configurations:
+  /api/auction_configurations:
     get:
       operationId: getAuctionConfigurations
       summary: List auction configurations
@@ -40,7 +41,7 @@ paths:
                 $ref: './schemas/auction-configuration.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /auction_configurations/{id}:
+  /api/auction_configurations/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -87,7 +88,7 @@ paths:
           description: Auction configuration deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /v2/auction_configurations:
+  /api/v2/auction_configurations:
     get:
       operationId: getAuctionConfigurationsV2
       summary: List auction configurations V2
@@ -122,7 +123,7 @@ paths:
                 $ref: './schemas/auction-configuration-v2.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /v2/auction_configurations/{id}:
+  /api/v2/auction_configurations/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -169,7 +170,7 @@ paths:
           description: Auction configuration deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /apps:
+  /api/apps:
     get:
       summary: List apps
       operationId: getApps
@@ -206,7 +207,7 @@ paths:
                 $ref: './schemas/app.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /apps/{id}:
+  /api/apps/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -253,7 +254,7 @@ paths:
           description: App deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /app_demand_profiles:
+  /api/app_demand_profiles:
     get:
       operationId: getAppDemandProfiles
       summary: List app demand profiles
@@ -291,7 +292,7 @@ paths:
                   $ref: './schemas/app-demand-profile.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /app_demand_profiles/{id}:
+  /api/app_demand_profiles/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -339,7 +340,7 @@ paths:
           description: App demand profile deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /countries:
+  /api/countries:
     get:
       operationId: getCountries
       summary: List countries
@@ -376,7 +377,7 @@ paths:
                 $ref: './schemas/country.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /countries/{id}:
+  /api/countries/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -423,7 +424,7 @@ paths:
           description: Country deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /demand_sources:
+  /api/demand_sources:
     get:
       operationId: getDemandSources
       summary: List demand sources
@@ -460,7 +461,7 @@ paths:
                 $ref: './schemas/demand-source.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /demand_sources/{id}:
+  /api/demand_sources/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -507,7 +508,7 @@ paths:
           description: Demand source deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /demand_source_accounts:
+  /api/demand_source_accounts:
     get:
       operationId: getDemandSourceAccounts
       summary: List demand source accounts
@@ -544,7 +545,7 @@ paths:
                 $ref: './schemas/demand-source-account.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /demand_source_accounts/{id}:
+  /api/demand_source_accounts/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -591,7 +592,7 @@ paths:
           description: Demand source account deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /line_items:
+  /api/line_items:
     get:
       operationId: getLineItems
       summary: List line items
@@ -668,7 +669,7 @@ paths:
                 $ref: './schemas/line-item.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /line_items/{id}:
+  /api/line_items/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -715,7 +716,7 @@ paths:
           description: Line item deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /segments:
+  /api/segments:
     get:
       operationId: getSegments
       summary: List segments
@@ -752,7 +753,7 @@ paths:
                 $ref: './schemas/segment.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /segments/{id}:
+  /api/segments/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -799,7 +800,7 @@ paths:
           description: Segment deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /users:
+  /api/users:
     get:
       operationId: getUsers
       summary: List users
@@ -836,7 +837,7 @@ paths:
                 $ref: './schemas/user.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /users/{id}:
+  /api/users/{id}:
     parameters:
       - $ref: '#/components/parameters/idParam'
     get:
@@ -883,7 +884,7 @@ paths:
           description: User deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /users/me:
+  /api/users/me:
     get:
       operationId: getCurrentUser
       tags:
@@ -898,7 +899,7 @@ paths:
                 $ref: './schemas/user.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /rest/resources:
+  /api/rest/resources:
     get:
       operationId: getResources
       summary: List resources permissions
@@ -913,7 +914,7 @@ paths:
                 $ref: './schemas/resources.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /line_items/import:
+  /api/line_items/import:
     post:
       summary: Import Line Items from CSV
       operationId: importLineItems
@@ -960,6 +961,82 @@ paths:
       responses:
         '204':
           description: "No Content, the CSV was imported successfully."
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  # Auth-specific routes
+  /auth/login:
+    post:
+      summary: User login
+      operationId: logIn
+      tags:
+        - Authentication
+      servers:
+        - url: /auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/login-request.schema.json'
+      responses:
+        '200':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/success-response.schema.json'
+        '401':
+          description: Unauthorized, invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/error.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/logout:
+    post:
+      summary: User logout
+      operationId: logOut
+      tags:
+        - Authentication
+      servers:
+        - url: /auth
+      responses:
+        '200':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/success-response.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/authorize:
+    post:
+      summary: Issue access token
+      operationId: authorizeUser
+      tags:
+        - Authentication
+      servers:
+        - url: /auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/login-request.schema.json'
+      responses:
+        '200':
+          description: Authorization successful, returns user data and access token
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/login-response.schema.json'
+        '401':
+          description: Unauthorized, invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/error.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
 components:

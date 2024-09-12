@@ -2,10 +2,13 @@ package adminecho
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/api"
+	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	"github.com/labstack/echo/v4"
+	session "github.com/spazzymoto/echo-scs-session"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +16,7 @@ import (
 
 type Server struct {
 	*admin.Service
+	AuthService                *auth.Service
 	AppHandler                 *appServiceHandler
 	AppDemandProfileHandler    *appDemandProfileServiceHandler
 	AucCfgHandler              *auctionConfigurationServiceHandler
@@ -28,7 +32,7 @@ type Server struct {
 
 var _ api.ServerInterface = (*Server)(nil)
 
-func NewServer(service *admin.Service) *Server {
+func NewServer(service *admin.Service, authService *auth.Service) *Server {
 	appHandler := &appServiceHandler{service.AppService}
 	appDemandProfileHandler := &appDemandProfileServiceHandler{service.AppDemandProfileService}
 	aucHandler := &auctionConfigurationServiceHandler{service.AuctionConfigurationService}
@@ -45,6 +49,7 @@ func NewServer(service *admin.Service) *Server {
 
 	return &Server{
 		Service:                    service,
+		AuthService:                authService,
 		AppHandler:                 appHandler,
 		AppDemandProfileHandler:    appDemandProfileHandler,
 		AucCfgHandler:              aucHandler,
@@ -348,6 +353,8 @@ func (s *Server) GetResources(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// Import LineItems handlers
+
 type lineItemImportHandler struct {
 	service *admin.LineItemService
 }
@@ -389,4 +396,67 @@ func (h *lineItemImportHandler) handleImport(c echo.Context) error {
 
 func (s *Server) ImportLineItems(ctx echo.Context) error {
 	return s.LineItemImportHandler.handleImport(ctx)
+}
+
+// Auth handlers
+
+func (s *Server) AuthorizeUser(c echo.Context) error {
+	var r auth.LogInRequest
+	if err := c.Bind(&r); err != nil {
+		return err
+	}
+
+	response, err := s.AuthService.LogInWithAccessToken(c.Request().Context(), r)
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		}
+
+		return err
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (s *Server) LogIn(ctx echo.Context) error {
+	middleware := session.LoadAndSaveWithConfig(session.SessionConfig{
+		SessionManager: s.AuthService.GetSessionManager(),
+	})
+
+	handler := func(c echo.Context) error {
+		var r auth.LogInRequest
+		if err := c.Bind(&r); err != nil {
+			return err
+		}
+
+		err := s.AuthService.LogInWithSession(c.Request().Context(), r)
+		if err != nil {
+			if errors.Is(err, auth.ErrInvalidCredentials) {
+				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+			}
+
+			return err
+		}
+
+		return c.JSON(http.StatusOK, map[string]any{"success": true})
+	}
+
+	return middleware(handler)(ctx)
+}
+
+func (s *Server) LogOut(ctx echo.Context) error {
+	middleware := session.LoadAndSaveWithConfig(session.SessionConfig{
+		SessionManager: s.AuthService.GetSessionManager(),
+	})
+
+	handler := func(c echo.Context) error {
+		err := s.AuthService.DestroySession(c.Request().Context())
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, map[string]any{"success": true})
+	}
+
+	return middleware(handler)(ctx)
 }

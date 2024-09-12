@@ -86,15 +86,11 @@ func main() {
 	authService := auth.NewAuthService(store.UserRepo, authConfig)
 	adminService := admin.NewService(store)
 
-	authGroup := e.Group("/auth")
-	config.UseCommonMiddleware(authGroup, "bidon-admin", logger)
-	adminecho.RegisterAuthService(authGroup, authService)
-
-	apiGroup := e.Group("/api")
-	config.UseCommonMiddleware(apiGroup, "bidon-admin", logger)
-	adminecho.UseAuthorization(apiGroup, authService)
-	serv := adminecho.NewServer(adminService)
-	api.RegisterHandlers(apiGroup, serv)
+	g := e.Group("")
+	config.UseCommonMiddleware(g, "bidon-admin", logger)
+	adminecho.UseAuthorization(g, authService)
+	serv := adminecho.NewServer(adminService, authService)
+	api.RegisterHandlers(g, serv)
 
 	e.Use(echoprometheus.NewMiddleware("admin"))   // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
