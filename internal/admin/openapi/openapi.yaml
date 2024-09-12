@@ -898,6 +898,21 @@ paths:
                 $ref: './schemas/user.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /rest/resources:
+    get:
+      operationId: getResources
+      summary: List resources permissions
+      tags:
+          - Resources
+      responses:
+        '200':
+          description: A list of resources permissions
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/resources.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

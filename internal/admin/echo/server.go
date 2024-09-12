@@ -1,12 +1,15 @@
 package adminecho
 
 import (
+	"context"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type Server struct {
+	*admin.Service
 	AppHandler                 *appServiceHandler
 	AppDemandProfileHandler    *appDemandProfileServiceHandler
 	AucCfgHandler              *auctionConfigurationServiceHandler
@@ -36,6 +39,7 @@ func NewServer(service *admin.Service) *Server {
 	}
 
 	return &Server{
+		Service:                    service,
 		AppHandler:                 appHandler,
 		AppDemandProfileHandler:    appDemandProfileHandler,
 		AucCfgHandler:              aucHandler,
@@ -271,4 +275,39 @@ func (s *Server) UpdateLineItem(c echo.Context, _ api.IdParam) error {
 
 func (s *Server) DeleteLineItem(c echo.Context, _ api.IdParam) error {
 	return s.LineItemHandler.delete(c)
+}
+
+func (s *Server) GetResources(c echo.Context) error {
+	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
+
+	services := []interface {
+		Meta(context.Context, admin.AuthContext) admin.ResourceMeta
+	}{
+		s.AppService,
+		s.AppDemandProfileService,
+		s.AuctionConfigurationService,
+		s.AuctionConfigurationV2Service,
+		s.CountryService,
+		s.DemandSourceService,
+		s.DemandSourceAccountService,
+		s.LineItemService,
+		s.SegmentService,
+		s.UserService,
+	}
+
+	response := make(map[string]admin.ResourceMeta, len(services))
+
+	for _, s := range services {
+		meta := s.Meta(c.Request().Context(), authCtx)
+		if !meta.Permissions.Read {
+			continue
+		}
+
+		response[meta.Key] = meta
+	}
+
+	return c.JSON(http.StatusOK, response)
 }

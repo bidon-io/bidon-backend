@@ -121,59 +121,11 @@ func RegisterAuthService(g *echo.Group, service *auth.Service) {
 }
 
 func RegisterAdminService(g *echo.Group, service *admin.Service) {
-	g.GET("/rest/resources", func(c echo.Context) error {
-		authCtx, err := getAuthContext(c)
-		if err != nil {
-			return err
-		}
-
-		services := []interface {
-			Meta(context.Context, admin.AuthContext) admin.ResourceMeta
-		}{
-			service.AppService,
-			service.AppDemandProfileService,
-			service.AuctionConfigurationService,
-			service.AuctionConfigurationV2Service,
-			service.CountryService,
-			service.DemandSourceService,
-			service.DemandSourceAccountService,
-			service.LineItemService,
-			service.SegmentService,
-			service.UserService,
-		}
-
-		response := make(map[string]admin.ResourceMeta, len(services))
-
-		for _, s := range services {
-			meta := s.Meta(c.Request().Context(), authCtx)
-			if !meta.Permissions.Read {
-				continue
-			}
-
-			response[meta.Key] = meta
-		}
-
-		return c.JSON(http.StatusOK, response)
-	})
-
 	serv := NewServer(service)
 	api.RegisterHandlers(g, serv)
 
 	lineItemImportHandler := &lineItemImportHandler{service.LineItemService}
 	g.POST("/line_items/import", lineItemImportHandler.handleImport)
-}
-
-type resourceRoute struct {
-	group   *echo.Group
-	handler resourceHandler
-}
-
-type resourceHandler interface {
-	list(c echo.Context) error
-	create(c echo.Context) error
-	get(c echo.Context) error
-	update(c echo.Context) error
-	delete(c echo.Context) error
 }
 
 type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
