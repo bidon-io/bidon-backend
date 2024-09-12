@@ -8,7 +8,7 @@
     },
     {
       "type": "object",
-      "required": ["id", "public_uid", "human_name", "api_key"]
+      "required": ["human_name", "api_key"]
     }
   ]
 }

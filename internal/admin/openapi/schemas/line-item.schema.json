@@ -9,8 +9,6 @@
     {
       "type": "object",
       "required": [
-        "id",
-        "public_uid",
         "human_name",
         "app_id",
         "bid_floor",

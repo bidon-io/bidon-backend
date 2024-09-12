@@ -8,7 +8,7 @@
     },
     {
       "type": "object",
-      "required": ["id", "public_uid", "user_id", "type", "demand_source_id", "is_bidding", "extra"]
+      "required": ["user_id", "type", "demand_source_id", "is_bidding", "extra"]
     }
   ]
 }

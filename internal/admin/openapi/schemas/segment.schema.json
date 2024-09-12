@@ -8,7 +8,7 @@
     },
     {
       "type": "object",
-      "required": ["id", "public_uid", "name", "description", "filters", "enabled", "app_id"]
+      "required": ["name", "description", "filters", "enabled", "app_id"]
     }
   ]
 }

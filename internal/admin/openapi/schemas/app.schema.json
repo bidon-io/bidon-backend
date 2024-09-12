@@ -8,7 +8,6 @@
     },
     {
       "required": [
-        "id",
         "platform_id",
         "human_name",
         "package_name",

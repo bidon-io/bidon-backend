@@ -21,8 +21,8 @@
       "description": "The API key associated with the demand source"
     }
   },
-    "required": [
-      "human_name",
-      "api_key"
-    ]
+  "required": [
+    "human_name",
+    "api_key"
+  ]
 }

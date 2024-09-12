@@ -8,7 +8,7 @@
     },
     {
       "type": "object",
-      "required": ["id", "app_id", "demand_source_id", "account_id", "account_type", "data"]
+      "required": ["app_id", "demand_source_id", "account_id", "account_type", "data"]
     }
   ]
 }

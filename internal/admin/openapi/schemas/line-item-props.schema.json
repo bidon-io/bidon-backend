@@ -49,5 +49,5 @@
       "description": "Additional configuration specific to the demand source"
     }
   },
-    "required": ["human_name", "app_id", "bid_floor", "ad_type", "format", "account_id", "account_type", "code"]
+  "required": ["human_name", "app_id", "bid_floor", "ad_type", "format", "account_id", "account_type", "code"]
 }

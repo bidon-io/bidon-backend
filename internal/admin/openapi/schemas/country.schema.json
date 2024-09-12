@@ -8,7 +8,7 @@
     },
     {
       "type": "object",
-      "required": ["id", "human_name", "alpha_2_code", "alpha_3_code"]
+      "required": ["human_name", "alpha_2_code", "alpha_3_code"]
     }
   ]
 }
