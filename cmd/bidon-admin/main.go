@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/admin/openapi"
 	"io/fs"
 	"log"
 	"net/http"
@@ -99,6 +100,9 @@ func main() {
 	redocFileSystem, _ := fs.Sub(web.FS, "redoc")
 	redocWebServer := http.FileServer(http.FS(redocFileSystem))
 	e.GET("/redoc/*", echo.WrapHandler(http.StripPrefix("/redoc/", redocWebServer)))
+
+	oapiWebServer := http.FileServer(http.FS(openapi.FS))
+	e.GET("/openapi/*", echo.WrapHandler(http.StripPrefix("/openapi/", oapiWebServer)))
 
 	uiFileSystem, _ := fs.Sub(web.FS, "ui")
 	uiWebServer := echo.WrapHandler(http.FileServer(http.FS(uiFileSystem)))
