@@ -2,10 +2,13 @@ package adminecho
 
 import (
 	"context"
+	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Server struct {
@@ -18,6 +21,7 @@ type Server struct {
 	DemandSourceHandler        *demandSourceServiceHandler
 	DemandSourceAccountHandler *demandSourceAccountServiceHandler
 	LineItemHandler            *lineItemServiceHandler
+	LineItemImportHandler      *lineItemImportHandler
 	SegmentHandler             *segmentServiceHandler
 	UserHandler                *userHandler
 }
@@ -33,6 +37,7 @@ func NewServer(service *admin.Service) *Server {
 	demandSourceHandler := &demandSourceServiceHandler{service.DemandSourceService}
 	demandSourceAccountHandler := &demandSourceAccountServiceHandler{service.DemandSourceAccountService}
 	lineItemHandler := &lineItemServiceHandler{service.LineItemService}
+	liImportHandler := &lineItemImportHandler{service.LineItemService}
 	segmentHandler := &segmentServiceHandler{service.SegmentService}
 	usrHandler := &userHandler{
 		userServiceHandler: &userServiceHandler{service.UserService},
@@ -48,6 +53,7 @@ func NewServer(service *admin.Service) *Server {
 		DemandSourceHandler:        demandSourceHandler,
 		DemandSourceAccountHandler: demandSourceAccountHandler,
 		LineItemHandler:            lineItemHandler,
+		LineItemImportHandler:      liImportHandler,
 		SegmentHandler:             segmentHandler,
 		UserHandler:                usrHandler,
 	}
@@ -231,6 +237,36 @@ func (s *Server) DeleteSegment(c echo.Context, _ api.IdParam) error {
 
 // User handlers
 
+type userHandler struct {
+	*userServiceHandler
+}
+
+func (h *userHandler) get(c echo.Context) error {
+	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
+
+	var id int64
+	if strings.HasSuffix(c.Path(), "/me") {
+		id = authCtx.UserID()
+	} else {
+		idParam := c.Param("id")
+		convID, err := strconv.Atoi(idParam)
+		if err != nil {
+			return fmt.Errorf("invalid id: %v", err)
+		}
+		id = int64(convID)
+	}
+
+	resource, err := h.service.Find(c.Request().Context(), authCtx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resource)
+}
+
 func (s *Server) GetUsers(c echo.Context) error {
 	return s.UserHandler.list(c)
 }
@@ -310,4 +346,47 @@ func (s *Server) GetResources(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+type lineItemImportHandler struct {
+	service *admin.LineItemService
+}
+
+func (h *lineItemImportHandler) handleImport(c echo.Context) error {
+	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
+
+	attrs := admin.LineItemImportCSVAttrs{}
+	if err := c.Bind(&attrs); err != nil {
+		return err
+	}
+
+	fileHeader, err := c.FormFile("csv")
+	if err != nil {
+		return err
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return fmt.Errorf("open csv file: %v", err)
+	}
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			c.Logger().Errorf("close csv file: %v", err)
+		}
+	}()
+
+	err = h.service.ImportCSV(c.Request().Context(), authCtx, file, attrs)
+	if err != nil {
+		return fmt.Errorf("import csv: %v", err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (s *Server) ImportLineItems(ctx echo.Context) error {
+	return s.LineItemImportHandler.handleImport(ctx)
 }

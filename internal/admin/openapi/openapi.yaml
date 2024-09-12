@@ -913,6 +913,55 @@ paths:
                 $ref: './schemas/resources.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /line_items/import:
+    post:
+      summary: Import Line Items from CSV
+      operationId: importLineItems
+      tags:
+        - Line Items
+      description: |
+        Use this endpoint to upload a CSV file for importing line items.
+
+        Example `curl` usage:
+
+        ```bash
+        curl -u admins@appodeal.com:password --basic \
+        -F app_id=123 -F account_id=123 -F is_bidding=true \
+        -F csv=@line_items.csv https://bidon-go.appodeal.com/api/line_items/import
+        ```
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                app_id:
+                  type: integer
+                  format: int64
+                  description: "The ID of the app to which the line items belong."
+                account_id:
+                  type: integer
+                  format: int64
+                  description: "The ID of the account associated with the line items."
+                is_bidding:
+                  type: boolean
+                  description: "Indicates whether the line items are for bidding."
+                csv:
+                  type: string
+                  format: binary
+                  description: "The CSV file containing the line items to import."
+              required:
+                - app_id
+                - account_id
+                - csv
+      security:
+        - basicAuth: [ ]
+      responses:
+        '204':
+          description: "No Content, the CSV was imported successfully."
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 components:
   responses:
     ErrorResponse:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"github.com/bidon-io/bidon-backend/internal/admin/openapi"
 	"io/fs"
 	"log"
@@ -92,7 +93,8 @@ func main() {
 	apiGroup := e.Group("/api")
 	config.UseCommonMiddleware(apiGroup, "bidon-admin", logger)
 	adminecho.UseAuthorization(apiGroup, authService)
-	adminecho.RegisterAdminService(apiGroup, adminService)
+	serv := adminecho.NewServer(adminService)
+	api.RegisterHandlers(apiGroup, serv)
 
 	e.Use(echoprometheus.NewMiddleware("admin"))   // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics

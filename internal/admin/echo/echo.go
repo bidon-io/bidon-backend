@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"net/http"
 	"strconv"
 	"strings"
@@ -118,14 +117,6 @@ func RegisterAuthService(g *echo.Group, service *auth.Service) {
 
 		return c.JSON(http.StatusOK, response)
 	})
-}
-
-func RegisterAdminService(g *echo.Group, service *admin.Service) {
-	serv := NewServer(service)
-	api.RegisterHandlers(g, serv)
-
-	lineItemImportHandler := &lineItemImportHandler{service.LineItemService}
-	g.POST("/line_items/import", lineItemImportHandler.handleImport)
 }
 
 type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
@@ -329,73 +320,4 @@ func skipIfAny(skippers ...middleware.Skipper) middleware.Skipper {
 		}
 		return false
 	}
-}
-
-type userHandler struct {
-	*userServiceHandler
-}
-
-func (h *userHandler) get(c echo.Context) error {
-	authCtx, err := getAuthContext(c)
-	if err != nil {
-		return err
-	}
-
-	var id int64
-	if strings.HasSuffix(c.Path(), "/me") {
-		id = authCtx.UserID()
-	} else {
-		idParam := c.Param("id")
-		convID, err := strconv.Atoi(idParam)
-		if err != nil {
-			return fmt.Errorf("invalid id: %v", err)
-		}
-		id = int64(convID)
-	}
-
-	resource, err := h.service.Find(c.Request().Context(), authCtx, id)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, resource)
-}
-
-type lineItemImportHandler struct {
-	service *admin.LineItemService
-}
-
-func (h *lineItemImportHandler) handleImport(c echo.Context) error {
-	authCtx, err := getAuthContext(c)
-	if err != nil {
-		return err
-	}
-
-	attrs := admin.LineItemImportCSVAttrs{}
-	if err := c.Bind(&attrs); err != nil {
-		return err
-	}
-
-	fileHeader, err := c.FormFile("csv")
-	if err != nil {
-		return err
-	}
-
-	file, err := fileHeader.Open()
-	if err != nil {
-		return fmt.Errorf("open csv file: %v", err)
-	}
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			c.Logger().Errorf("close csv file: %v", err)
-		}
-	}()
-
-	err = h.service.ImportCSV(c.Request().Context(), authCtx, file, attrs)
-	if err != nil {
-		return fmt.Errorf("import csv: %v", err)
-	}
-
-	return c.NoContent(http.StatusNoContent)
 }
