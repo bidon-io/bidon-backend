@@ -1,7 +1,4 @@
 openapi: 3.0.3
-servers:
-  - url: /api
-  - url: /auth
 info:
   title: Admin API
   version: 0.1.0
