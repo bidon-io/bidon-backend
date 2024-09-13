@@ -2,6 +2,7 @@ package adminecho
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bidon-io/bidon-backend/internal/admin"
@@ -459,4 +460,20 @@ func (s *Server) LogOut(ctx echo.Context) error {
 	}
 
 	return middleware(handler)(ctx)
+}
+
+// Utility handlers
+
+func (s *Server) GetOpenAPISpec(c echo.Context) error {
+	spec, err := api.GetSwagger()
+	if err != nil {
+		return err
+	}
+
+	swaggerJSON, err := json.Marshal(spec)
+	if err != nil {
+		return fmt.Errorf("failed to generate OpenAPI spec")
+	}
+
+	return c.JSONBlob(http.StatusOK, swaggerJSON)
 }

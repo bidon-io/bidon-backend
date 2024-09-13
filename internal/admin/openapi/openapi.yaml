@@ -963,6 +963,24 @@ paths:
           description: "No Content, the CSV was imported successfully."
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /api/openapi.json:
+    get:
+      summary: Get OpenAPI specification
+      operationId: getOpenAPISpec
+      description: Returns the OpenAPI JSON specification for the API.
+      tags:
+        - Utility
+      responses:
+        '200':
+          description: OpenAPI JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+        default:
+          $ref: '#/components/responses/ErrorResponse'
   # Auth-specific routes
   /auth/login:
     post:
