@@ -7,21 +7,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bidon-io/bidon-backend/internal/auctionv2"
-	"github.com/bidon-io/bidon-backend/internal/bidding"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
-
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/auction/store"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
+	auctionv2mocks "github.com/bidon-io/bidon-backend/internal/auctionv2/mocks"
+	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-
-	auctionv2mocks "github.com/bidon-io/bidon-backend/internal/auctionv2/mocks"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	handlersmocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers/mocks"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
@@ -53,7 +52,7 @@ func testHelperAuctionV2Handler(t *testing.T) *apihandlers.AuctionHandler {
 			PriceFloor: &pf,
 			UID:        "123_amazon",
 			BidType:    schema.RTBBidType,
-			Timeout:    5000,
+			Timeout:    store.AdUnitTimeout,
 			Extra: map[string]any{
 				"slot_uuid": "uuid1",
 			},
@@ -64,7 +63,7 @@ func testHelperAuctionV2Handler(t *testing.T) *apihandlers.AuctionHandler {
 			PriceFloor: &pf,
 			UID:        "123_meta",
 			BidType:    schema.RTBBidType,
-			Timeout:    5000,
+			Timeout:    store.AdUnitTimeout,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -75,7 +74,7 @@ func testHelperAuctionV2Handler(t *testing.T) *apihandlers.AuctionHandler {
 			PriceFloor: &pf,
 			UID:        "123_mobilefuse",
 			BidType:    schema.RTBBidType,
-			Timeout:    5000,
+			Timeout:    store.AdUnitTimeout,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -85,7 +84,7 @@ func testHelperAuctionV2Handler(t *testing.T) *apihandlers.AuctionHandler {
 			Label:    "vungle",
 			UID:      "123_vungle",
 			BidType:  schema.RTBBidType,
-			Timeout:  5000,
+			Timeout:  store.AdUnitTimeout,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
@@ -96,7 +95,7 @@ func testHelperAuctionV2Handler(t *testing.T) *apihandlers.AuctionHandler {
 			PriceFloor: &gamPf,
 			UID:        "123_gam",
 			BidType:    schema.CPMBidType,
-			Timeout:    5000,
+			Timeout:    store.AdUnitTimeout,
 			Extra: map[string]any{
 				"placement_id": "123",
 			},
