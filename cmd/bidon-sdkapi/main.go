@@ -152,7 +152,7 @@ func main() {
 	}
 	adUnitsMatcher := &auctionstore.AdUnitsMatcher{
 		DB:    db,
-		Cache: config.NewMemoryCacheOf[[]auction.AdUnit](10 * time.Minute),
+		Cache: config.NewRedisCacheOf[[]auction.AdUnit](rdb, 2*time.Hour),
 	}
 	biddingBuilder := &bidding.Builder{
 		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHttpClient),
