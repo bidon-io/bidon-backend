@@ -28,7 +28,7 @@ func NewRedisCacheOf[T any](client *redis.Client, ttl time.Duration) *RedisCache
 	}
 }
 
-// Get retrieves a value from the cache or loads it using the provided `load` function if not found.
+// Get retrieves a value from the cache or loads it using the load function if not found.
 func (c *RedisCache[T]) Get(ctx context.Context, key []byte, load func(ctx context.Context) (T, error)) (T, error) {
 	var zero T
 
