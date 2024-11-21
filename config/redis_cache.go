@@ -35,7 +35,7 @@ func (c *RedisCache[T]) Get(ctx context.Context, key []byte, load func(ctx conte
 		Key:   string(key),
 		Value: &result,
 		TTL:   c.ttl,
-		Do: func(*cache.Item) (interface{}, error) {
+		Do: func(*cache.Item) (any, error) {
 			return load(ctx)
 		},
 	})
