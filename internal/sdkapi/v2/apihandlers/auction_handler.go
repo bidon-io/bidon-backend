@@ -140,7 +140,7 @@ func (h *AuctionHandler) buildResponse(
 
 	// Store CPM AdUnits from AuctionConfiguration
 	for _, adUnit := range *auctionResult.CPMAdUnits {
-		if isCOPPA && adapter.Key(adUnit.DemandID) == adapter.ApplovinKey {
+		if isCOPPA && adapter.IsDisabledForCOPPA(adapter.Key(adUnit.DemandID)) {
 			continue
 		}
 		response.AdUnits = append(response.AdUnits, adUnit)

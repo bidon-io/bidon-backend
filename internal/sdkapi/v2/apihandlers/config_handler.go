@@ -98,7 +98,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		if isIOS && cfg.Key() == adapter.AmazonKey {
 			continue
 		}
-		if isCOPPA && cfg.Key() == adapter.ApplovinKey {
+		if isCOPPA && adapter.IsDisabledForCOPPA(cfg.Key()) {
 			continue
 		}
 		// TODO: Hack for Merge Block Android, versions 2.6.64 and 2.6.59
