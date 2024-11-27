@@ -2,9 +2,11 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -14,11 +16,11 @@ import (
 
 type AppFetcher struct {
 	DB    *db.DB
-	Cache cache
+	Cache cache[sdkapi.App]
 }
 
-type cache interface {
-	Get(context.Context, []byte, func(ctx context.Context) (sdkapi.App, error)) (sdkapi.App, error)
+type cache[T any] interface {
+	Get(context.Context, []byte, func(ctx context.Context) (T, error)) (T, error)
 }
 
 func (f *AppFetcher) FetchCached(ctx context.Context, appKey, appBundle string) (app sdkapi.App, err error) {
@@ -50,7 +52,18 @@ func (f *AppFetcher) Fetch(ctx context.Context, appKey, appBundle string) (app s
 }
 
 type AdapterInitConfigsFetcher struct {
-	DB *db.DB
+	DB    *db.DB
+	Cache cache[[]sdkapi.AdapterInitConfig]
+}
+
+func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigsCached(ctx context.Context, appID int64, adapterKeys []adapter.Key, setAmazonSlots bool, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
+	key, err := f.cacheKey(appID, adapterKeys, setAmazonSlots, setOrder)
+	if err != nil {
+		return nil, err
+	}
+	return f.Cache.Get(ctx, key, func(ctx context.Context) ([]sdkapi.AdapterInitConfig, error) {
+		return f.FetchAdapterInitConfigs(ctx, appID, adapterKeys, setAmazonSlots, setOrder)
+	})
 }
 
 func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, setAmazonSlots bool, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
@@ -145,4 +158,30 @@ func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID 
 	}
 
 	return slots, nil
+}
+
+func (f *AdapterInitConfigsFetcher) cacheKey(appID int64, adapterKeys []adapter.Key, setAmazonSlots bool, setOrder bool) ([]byte, error) {
+	// Sort adapter keys to get deterministic cache key
+	sort.Slice(adapterKeys, func(i, j int) bool {
+		return adapterKeys[i] < adapterKeys[j]
+	})
+	cacheKeyData := struct {
+		AppID          int64         `json:"app_id"`
+		AdapterKeys    []adapter.Key `json:"adapter_keys"`
+		SetAmazonSlots bool          `json:"set_amazon_slots"`
+		SetOrder       bool          `json:"set_order"`
+	}{
+		AppID:          appID,
+		AdapterKeys:    adapterKeys,
+		SetAmazonSlots: setAmazonSlots,
+		SetOrder:       setOrder,
+	}
+	jsonData, err := json.Marshal(cacheKeyData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	hash := sha256.Sum256(jsonData)
+	return hash[:], nil
 }

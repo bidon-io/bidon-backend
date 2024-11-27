@@ -203,7 +203,9 @@ func main() {
 		DB:    db,
 		Cache: lineItemsCache,
 	}
-	adapterInitConfigsFetcher := &sdkapistore.AdapterInitConfigsFetcher{DB: db}
+	initConfigsCache := config.NewRedisCacheOf[[]sdkapi.AdapterInitConfig](rdbCache, 10*time.Minute, "init_configs")
+	initConfigsCache.Monitor(meter)
+	adapterInitConfigsFetcher := &sdkapistore.AdapterInitConfigsFetcher{DB: db, Cache: initConfigsCache}
 	configsCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdbCache, 10*time.Minute, "configs")
 	configsCache.Monitor(meter)
 	configurationFetcher := &adapterstore.ConfigurationFetcher{

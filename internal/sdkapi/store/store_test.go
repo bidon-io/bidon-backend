@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/go-redis/redismock/v9"
 	"os"
 	"testing"
 	"time"
@@ -140,7 +141,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 		})
 	}
 
-	fetcher := &AdapterInitConfigsFetcher{DB: tx}
+	rdb, _ := redismock.NewClientMock()
+	initConfigsCache := config.NewRedisCacheOf[[]sdkapi.AdapterInitConfig](rdb, 10*time.Minute, "init_configs")
+
+	fetcher := &AdapterInitConfigsFetcher{DB: tx, Cache: initConfigsCache}
 
 	tests := []struct {
 		name           string
