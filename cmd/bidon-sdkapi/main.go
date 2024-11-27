@@ -203,9 +203,11 @@ func main() {
 		DB:    db,
 		Cache: lineItemsCache,
 	}
-	initConfigsCache := config.NewRedisCacheOf[[]sdkapi.AdapterInitConfig](rdbCache, 10*time.Minute, "init_configs")
-	initConfigsCache.Monitor(meter)
-	adapterInitConfigsFetcher := &sdkapistore.AdapterInitConfigsFetcher{DB: db, Cache: initConfigsCache}
+	profilesCache := config.NewRedisCacheOf[[]dbpkg.AppDemandProfile](rdbCache, 10*time.Minute, "app_demand_profiles")
+	profilesCache.Monitor(meter)
+	amazonSlotsCache := config.NewRedisCacheOf[[]sdkapi.AmazonSlot](rdbCache, 10*time.Minute, "amazon_slots")
+	amazonSlotsCache.Monitor(meter)
+	adapterInitConfigsFetcher := &sdkapistore.AdapterInitConfigsFetcher{DB: db, ProfilesCache: profilesCache, AmazonSlotsCache: amazonSlotsCache}
 	configsCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdbCache, 10*time.Minute, "configs")
 	configsCache.Monitor(meter)
 	configurationFetcher := &adapterstore.ConfigurationFetcher{
