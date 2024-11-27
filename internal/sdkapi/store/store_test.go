@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/go-redis/redismock/v9"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"os"
 	"testing"
 	"time"
@@ -102,6 +103,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
+	rdb, _ := redismock.NewClientMock()
+
 	keys := adapter.Keys
 
 	demandSources := make([]db.DemandSource, len(keys))
@@ -141,9 +144,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 		})
 	}
 
-	rdb, _ := redismock.NewClientMock()
 	initConfigsCache := config.NewRedisCacheOf[[]sdkapi.AdapterInitConfig](rdb, 10*time.Minute, "init_configs")
-
 	fetcher := &AdapterInitConfigsFetcher{DB: tx, Cache: initConfigsCache}
 
 	tests := []struct {
@@ -288,13 +289,13 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys, tt.setAmazonSlots, tt.setOrder)
+			got, err := fetcher.FetchAdapterInitConfigsCached(context.Background(), tt.appID, tt.adapterKeys, tt.setAmazonSlots, tt.setOrder)
 			if err != nil {
-				t.Fatalf("FetchAdapterInitConfigs() error = %v", err)
+				t.Fatalf("FetchAdapterInitConfigsCached() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("FetchAdapterInitConfigs() mismatch (-want +got):\n%s", diff)
+			if diff := cmp.Diff(tt.want, cmpopts.SortSlices(got)); diff != "" {
+				t.Errorf("FetchAdapterInitConfigsCached() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -303,6 +304,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
+
+	rdb, _ := redismock.NewClientMock()
 
 	demandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
 		source.APIKey = string(adapter.AmazonKey)
@@ -364,7 +367,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 		item.Extra = map[string]any{"slot_uuid": "amazon_slot_rewarded", "format": "REWARDED"}
 	})
 
-	fetcher := &AdapterInitConfigsFetcher{DB: tx}
+	initConfigsCache := config.NewRedisCacheOf[[]sdkapi.AdapterInitConfig](rdb, 10*time.Minute, "init_configs")
+	fetcher := &AdapterInitConfigsFetcher{DB: tx, Cache: initConfigsCache}
 
 	tests := []struct {
 		name           string
@@ -422,13 +426,13 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Amazon(t *testing.T) 
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fetcher.FetchAdapterInitConfigs(context.Background(), tt.appID, tt.adapterKeys, tt.setAmazonSlots, false)
+			got, err := fetcher.FetchAdapterInitConfigsCached(context.Background(), tt.appID, tt.adapterKeys, tt.setAmazonSlots, false)
 			if err != nil {
-				t.Fatalf("FetchAdapterInitConfigs() error = %v", err)
+				t.Fatalf("FetchAdapterInitConfigsCached() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("FetchAdapterInitConfigs() mismatch (-want +got):\n%s", diff)
+			if diff := cmp.Diff(tt.want, got, cmpopts.SortSlices(got)); diff != "" {
+				t.Errorf("FetchAdapterInitConfigsCached() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
