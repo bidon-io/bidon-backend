@@ -57,26 +57,7 @@ type AdapterInitConfigsFetcher struct {
 }
 
 func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, setAmazonSlots bool, setOrder bool) ([]sdkapi.AdapterInitConfig, error) {
-	cacheKey, err := f.profilesCacheKey(appID, adapterKeys)
-	if err != nil {
-		return nil, fmt.Errorf("generate profiles cache key: %w", err)
-	}
-
-	dbProfiles, err := f.ProfilesCache.Get(ctx, cacheKey, func(ctx context.Context) ([]db.AppDemandProfile, error) {
-		var profiles []db.AppDemandProfile
-		err := f.DB.
-			WithContext(ctx).
-			Select("app_demand_profiles.id, app_demand_profiles.data").
-			Where("app_id", appID).
-			InnerJoins("Account", f.DB.Select("id", "extra")).
-			InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where(map[string]any{"api_key": adapterKeys})).
-			Find(&profiles).
-			Error
-		if err != nil {
-			return nil, fmt.Errorf("find app demand profiles: %v", err)
-		}
-		return profiles, nil
-	})
+	dbProfiles, err := f.fetchAppDemandProfilesCached(ctx, appID, adapterKeys)
 	if err != nil {
 		return nil, fmt.Errorf("fetch profiles from cache or DB: %w", err)
 	}
@@ -108,7 +89,7 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 		if setAmazonSlots {
 			amazonConfig, ok := config.(*sdkapi.AmazonInitConfig)
 			if ok {
-				amazonConfig.Slots, err = f.fetchAmazonSlots(ctx, appID)
+				amazonConfig.Slots, err = f.fetchAmazonSlotsCached(ctx, appID)
 				if err != nil {
 					return nil, fmt.Errorf("fetch amazon slots: %v", err)
 				}
@@ -121,47 +102,75 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 	return configs, nil
 }
 
-func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID int64) ([]sdkapi.AmazonSlot, error) {
+func (f *AdapterInitConfigsFetcher) fetchAppDemandProfilesCached(ctx context.Context, appID int64, adapterKeys []adapter.Key) ([]db.AppDemandProfile, error) {
+	cacheKey, err := f.profilesCacheKey(appID, adapterKeys)
+	if err != nil {
+		return nil, fmt.Errorf("generate profiles cache key: %w", err)
+	}
+
+	return f.ProfilesCache.Get(ctx, cacheKey, func(ctx context.Context) ([]db.AppDemandProfile, error) {
+		return f.fetchAppDemandProfiles(ctx, appID, adapterKeys)
+	})
+}
+
+func (f *AdapterInitConfigsFetcher) fetchAppDemandProfiles(ctx context.Context, appID int64, adapterKeys []adapter.Key) ([]db.AppDemandProfile, error) {
+	var profiles []db.AppDemandProfile
+	err := f.DB.
+		WithContext(ctx).
+		Select("app_demand_profiles.id, app_demand_profiles.data").
+		Where("app_id", appID).
+		InnerJoins("Account", f.DB.Select("id", "extra")).
+		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where(map[string]any{"api_key": adapterKeys})).
+		Find(&profiles).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("find app demand profiles: %v", err)
+	}
+	return profiles, nil
+}
+
+func (f *AdapterInitConfigsFetcher) fetchAmazonSlotsCached(ctx context.Context, appID int64) ([]sdkapi.AmazonSlot, error) {
 	cacheKey := f.amazonSlotsCacheKey(appID)
 
-	slots, err := f.AmazonSlotsCache.Get(ctx, cacheKey, func(ctx context.Context) ([]sdkapi.AmazonSlot, error) {
-		var dbLineItems []db.LineItem
-		err := f.DB.
-			WithContext(ctx).
-			Select("line_items.id, line_items.extra, line_items.ad_type, line_items.format").
-			Where("app_id", appID).
-			InnerJoins("Account", f.DB.Select("id")).
-			InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapter.AmazonKey)).
-			Order("line_items.id").
-			Find(&dbLineItems).
-			Error
-		if err != nil {
-			return nil, fmt.Errorf("find line items: %v", err)
-		}
-
-		slots := make([]sdkapi.AmazonSlot, 0, len(dbLineItems))
-		for _, lineItem := range dbLineItems {
-			slot := sdkapi.AmazonSlot{}
-
-			slotUUID, ok := lineItem.Extra["slot_uuid"].(string)
-			if !ok {
-				return nil, fmt.Errorf("slot_uuid is either missing or not a string")
-			}
-			slot.SlotUUID = slotUUID
-
-			format, ok := lineItem.Extra["format"].(string)
-			if !ok {
-				return nil, fmt.Errorf("format is either missing or not a string")
-			}
-			slot.Format = format
-
-			slots = append(slots, slot)
-		}
-
-		return slots, nil
+	return f.AmazonSlotsCache.Get(ctx, cacheKey, func(ctx context.Context) ([]sdkapi.AmazonSlot, error) {
+		return f.fetchAmazonSlots(ctx, appID)
 	})
+}
+
+func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID int64) ([]sdkapi.AmazonSlot, error) {
+	var dbLineItems []db.LineItem
+
+	err := f.DB.
+		WithContext(ctx).
+		Select("line_items.id, line_items.extra, line_items.ad_type, line_items.format").
+		Where("app_id", appID).
+		InnerJoins("Account", f.DB.Select("id")).
+		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapter.AmazonKey)).
+		Order("line_items.id").
+		Find(&dbLineItems).
+		Error
+
 	if err != nil {
-		return nil, fmt.Errorf("fetch amazon slots from cache or DB: %w", err)
+		return nil, fmt.Errorf("find line items: %v", err)
+	}
+
+	slots := make([]sdkapi.AmazonSlot, 0, len(dbLineItems))
+	for _, lineItem := range dbLineItems {
+		slot := sdkapi.AmazonSlot{}
+
+		slotUUID, ok := lineItem.Extra["slot_uuid"].(string)
+		if !ok {
+			return nil, fmt.Errorf("slot_uuid is either missing or not a string")
+		}
+		slot.SlotUUID = slotUUID
+
+		format, ok := lineItem.Extra["format"].(string)
+		if !ok {
+			return nil, fmt.Errorf("format is either missing or not a string")
+		}
+		slot.Format = format
+
+		slots = append(slots, slot)
 	}
 
 	return slots, nil
