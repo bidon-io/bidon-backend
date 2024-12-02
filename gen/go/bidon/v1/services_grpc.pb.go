@@ -29,7 +29,8 @@ const (
 //
 // *
 // The BiddingService implements the OpenRTB 3.x protocol for real-time bidding.
-// The BiddingService represents the intermediary of bidding chain, it could be an exchange or a bidder.
+// The BiddingService represents the intermediary of bidding chain, it could be
+// an exchange or a bidder.
 type BiddingServiceClient interface {
 	Bid(ctx context.Context, in *v3.Openrtb, opts ...grpc.CallOption) (*v3.Openrtb, error)
 }
@@ -58,7 +59,8 @@ func (c *biddingServiceClient) Bid(ctx context.Context, in *v3.Openrtb, opts ...
 //
 // *
 // The BiddingService implements the OpenRTB 3.x protocol for real-time bidding.
-// The BiddingService represents the intermediary of bidding chain, it could be an exchange or a bidder.
+// The BiddingService represents the intermediary of bidding chain, it could be
+// an exchange or a bidder.
 type BiddingServiceServer interface {
 	Bid(context.Context, *v3.Openrtb) (*v3.Openrtb, error)
 	mustEmbedUnimplementedBiddingServiceServer()

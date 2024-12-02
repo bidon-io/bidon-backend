@@ -24,15 +24,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Context object for the bid request is stored in the context field of the OpenRTB 3.0 BidRequest object.
-// It's a container for AdCom v1.0 objects: User, Device, Site, App, Regs, and other objects as definied in
-// the AdCom v1.0 specification.
+// Context object for the bid request is stored in the context field of the
+// OpenRTB 3.0 BidRequest object. It's a container for AdCom v1.0 objects: User,
+// Device, Site, App, Regs, and other objects as definied in the AdCom v1.0
+// specification.
 //
-//	Layer-4 domain object structure that provides context for the items being offered conforming to the specification
-//	and version referenced in openrtb. domainspec and openrtb. domainver.
-//	For AdCOM v1.x, the objects allowed here all of which are optional are one of the
-//	DistributionChannel subtypes (i. e., Site, App, or Dooh),
-//	User, Device, Regs, Restrictions, and any objects subordinate to these as specified by AdCOM.
+//	Layer-4 domain object structure that provides context for the items being
+//	offered conforming to the specification and version referenced in openrtb.
+//	domainspec and openrtb. domainver. For AdCOM v1.x, the objects allowed here
+//	all of which are optional are one of the DistributionChannel subtypes (i.
+//	e., Site, App, or Dooh), User, Device, Regs, Restrictions, and any objects
+//	subordinate to these as specified by AdCOM.
 type Context struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
