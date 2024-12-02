@@ -7,16 +7,15 @@ use crate::com::iabtechlab::adcom::v1 as adcom;
 use crate::com::iabtechlab::adcom::v1::context::DistributionChannel;
 use crate::com::iabtechlab::openrtb::v3 as openrtb;
 use crate::com::iabtechlab::openrtb::v3::AuctionType;
-use crate::models::{AdFormat, AuctionRequest, DeviceConnectionType, DeviceType, Geo, Segment};
-use crate::{bidon, models};
+use crate::protocol::{AdFormat, AuctionRequest, DeviceConnectionType, DeviceType, Geo, Segment};
+use crate::{bidon, protocol};
 use anyhow::{anyhow, Result};
 use bidon::v1::mediation::{Demand, Orientation};
-use models::AdObjectOrientation;
 use prost::{Extendable, Message};
+use protocol::AdObjectOrientation;
 use serde_json::Value;
 use std::collections::HashMap;
 
-//TODO As it takes auction_request's ownership, it should be possible to remove most of the .clone() calls.
 pub(crate) fn try_from(
     auction_request: AuctionRequest,
     bidon_version: &String,
@@ -70,7 +69,7 @@ fn serialize_context(auction_request: &AuctionRequest, bidon_version: &String) -
 }
 
 fn convert_app(
-    api_app: &models::App,
+    api_app: &protocol::App,
     bidon_version: &String,
 ) -> Result<adcom::context::distribution_channel::App> {
     let mut app = adcom::context::distribution_channel::App {
@@ -95,7 +94,7 @@ fn convert_app(
     Ok(app)
 }
 
-fn convert_device(api_device: &models::Device, geo: Option<&Geo>) -> adcom::context::Device {
+fn convert_device(api_device: &protocol::Device, geo: Option<&Geo>) -> adcom::context::Device {
     let device = adcom::context::Device {
         // Map standard fields
         r#type: convert_device_type(api_device.r#type.clone()).map(|dt| dt as i32),
@@ -155,7 +154,7 @@ fn convert_connection_type(connection_type: DeviceConnectionType) -> adcom::enum
     }
 }
 
-fn convert_geo(geo: &models::Geo) -> adcom::context::Geo {
+fn convert_geo(geo: &protocol::Geo) -> adcom::context::Geo {
     let geo = adcom::context::Geo {
         r#type: Some(adcom::enums::LocationType::Unknown as i32), // TODO
         lat: geo.lat.map(|t| t as f32),
@@ -172,7 +171,7 @@ fn convert_geo(geo: &models::Geo) -> adcom::context::Geo {
 }
 
 fn convert_user(
-    api_user: &models::User,
+    api_user: &protocol::User,
     segment: Option<&Segment>,
 ) -> Result<adcom::context::User> {
     let mut user = adcom::context::User {
@@ -204,7 +203,7 @@ fn convert_segment(api_segment: &Segment) -> bidon::v1::mediation::Segment {
     segment
 }
 
-fn convert_session(api_session: &models::Session) -> MediationSession {
+fn convert_session(api_session: &protocol::Session) -> MediationSession {
     MediationSession {
         id: Some(api_session.id.to_string().clone()),
         launch_ts: Some(api_session.launch_ts),
@@ -224,7 +223,7 @@ fn convert_session(api_session: &models::Session) -> MediationSession {
     }
 }
 
-fn convert_regs(api_regs: &models::Regulations) -> Result<adcom::context::Regs> {
+fn convert_regs(api_regs: &protocol::Regulations) -> Result<adcom::context::Regs> {
     let mut regs = adcom::context::Regs {
         coppa: api_regs.coppa,
         gdpr: api_regs.gdpr.clone(),
@@ -249,7 +248,7 @@ fn convert_iab(iab_json: &HashMap<String, Value>) -> Result<String> {
     serde_json::to_string(&iab_json).map_err(Into::into)
 }
 
-fn convert_ad_object_to_item(ad_object: &models::AdObject) -> Result<openrtb::Item> {
+fn convert_ad_object_to_item(ad_object: &protocol::AdObject) -> Result<openrtb::Item> {
     let mut item = openrtb::Item {
         id: ad_object.auction_id.clone(),
         flr: Some(ad_object.auction_pricefloor as f32),
@@ -289,7 +288,7 @@ fn convert_ad_orientation(orientation: &AdObjectOrientation) -> Orientation {
     }
 }
 
-fn convert_banner_ad(api_banner: &models::BannerAdObject) -> bidon::v1::mediation::BannerAd {
+fn convert_banner_ad(api_banner: &protocol::BannerAdObject) -> bidon::v1::mediation::BannerAd {
     let banner = bidon::v1::mediation::BannerAd {
         format: Some(convert_ad_format(api_banner.format) as i32),
     };
@@ -366,7 +365,7 @@ fn convert_demand(api_demand: &HashMap<String, Value>) -> Result<HashMap<String,
 mod tests {
     use super::*;
     use crate::bidon::v1::mediation::MEDIATION_USER;
-    use crate::models::{App, Device, Session, User};
+    use crate::protocol::{App, Device, Session, User};
     use serde_json::json;
     use std::collections::HashMap;
     use uuid::Uuid;
@@ -552,7 +551,7 @@ mod tests {
 
     #[test]
     fn test_convert_regs() {
-        let api_regs = models::Regulations {
+        let api_regs = protocol::Regulations {
             coppa: Some(true),
             gdpr: Some(true),
             us_privacy: Some("1YNN".to_string()),
@@ -572,7 +571,7 @@ mod tests {
 
     #[test]
     fn test_convert_ad_object_to_item() {
-        let ad_object = models::AdObject {
+        let ad_object = protocol::AdObject {
             auction_id: Some("auction_id".to_string()),
             auction_key: Some("auction_key".to_string()),
             auction_configuration_id: Some(123i64),
@@ -587,7 +586,7 @@ mod tests {
                     "token_start_ts": 1234567990
                 }),
             )]),
-            banner: Some(models::BannerAdObject {
+            banner: Some(protocol::BannerAdObject {
                 format: AdFormat::Banner,
             }),
             interstitial: Some(json!({"interstitial": "value"})),
