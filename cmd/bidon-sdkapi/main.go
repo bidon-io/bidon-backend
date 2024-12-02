@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 	"time"
+
+	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
+	"google.golang.org/grpc"
 
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -36,6 +40,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
 
+	pb "github.com/bidon-io/bidon-backend/gen/go/bidon/v1"
 	"github.com/bool64/cache"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
@@ -302,6 +307,27 @@ func main() {
 		e.Logger.Warn(err)
 	}()
 
+	grpcServer := grpc.NewServer()
+	go func() {
+		grpcPort := os.Getenv("GRPC_PORT")
+		if grpcPort == "" {
+			grpcPort = "50051"
+		}
+		grpcAddr := fmt.Sprintf(":%s", grpcPort)
+
+		lis, err := net.Listen("tcp", grpcAddr)
+		if err != nil {
+			log.Fatalf("Failed to listen on %s: %v", grpcAddr, err)
+		}
+
+		pb.RegisterBiddingServiceServer(grpcServer, &grpcserver.Server{})
+
+		log.Printf("gRPC server is listening on %s", grpcAddr)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve gRPC server: %v", err)
+		}
+	}()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -310,4 +336,6 @@ func main() {
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Errorf("failed to gracefully shutdown http server: %v", err)
 	}
+
+	grpcServer.GracefulStop()
 }

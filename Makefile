@@ -7,6 +7,7 @@ init:
 	@cp -n .env.test.sample .env.test || true
 
 install-deps:
+	@brew ls --versions buf || brew install bufbuild/buf/buf@1.47.2
 	@brew ls --versions pre-commit || brew install pre-commit
 	@pre-commit install
 
