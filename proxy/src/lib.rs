@@ -1,4 +1,4 @@
-use crate::bidding::Api as BiddingApi;
+use crate::bidding::BiddingService as BiddingApi;
 use axum::routing::post;
 use axum::Router;
 

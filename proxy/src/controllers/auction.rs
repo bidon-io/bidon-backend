@@ -1,19 +1,18 @@
-use crate::bidding::Api as BiddingAPI;
-use crate::extractor::BidonOpenRTBExtractor;
+use crate::bidding::BiddingService;
+use crate::extractor::BidonOpenRtbExtractor;
 use crate::models::GetAuctionAdTypeParameter;
 use axum::extract::State;
 use axum::{extract::Path, http::StatusCode, response::IntoResponse};
 use prost::bytes::BytesMut;
 use prost::Message;
 
-// #[axum::debug_handler]
 pub async fn get_auction_handler<A>(
     Path(ad_type): Path<String>,
     State(mut auction): State<Box<A>>,
-    BidonOpenRTBExtractor(openrtb_request): BidonOpenRTBExtractor,
+    BidonOpenRtbExtractor(openrtb_request): BidonOpenRtbExtractor,
 ) -> impl IntoResponse
 where
-    A: BiddingAPI + Send + Sync,
+    A: BiddingService + Send + Sync,
 {
     // TODO use ad_type to determine the bidding type.
     let _ad_type = match ad_type.parse::<GetAuctionAdTypeParameter>() {

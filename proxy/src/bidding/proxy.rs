@@ -1,5 +1,5 @@
-use crate::bidding::Api;
 use crate::bidding::BiddingError;
+use crate::bidding::BiddingService;
 use crate::bidon::v1::bidding_service_client::BiddingServiceClient;
 use crate::com::iabtechlab::openrtb::v3::Openrtb;
 use tonic::transport::Channel;
@@ -17,14 +17,14 @@ impl ProxyBiddingService {
 }
 
 #[async_trait::async_trait]
-impl Api for ProxyBiddingService {
-    async fn bid(&mut self, bidding_request: Openrtb) -> Result<Openrtb, BiddingError> {
-        let request = Request::new(bidding_request);
-        let response = self
+impl BiddingService for ProxyBiddingService {
+    async fn bid(&mut self, request: Openrtb) -> Result<Openrtb, BiddingError> {
+        let grpc_request = Request::new(request);
+        let grpc_response = self
             .grpc_client
-            .bid(request)
+            .bid(grpc_request)
             .await
             .map_err(|e| BiddingError::new(e.to_string()))?;
-        Ok(response.into_inner())
+        Ok(grpc_response.into_inner())
     }
 }
