@@ -16,7 +16,7 @@ impl EchoBiddingService {
 
 #[async_trait::async_trait]
 impl BiddingService for EchoBiddingService {
-    async fn bid(&mut self, request: Openrtb) -> Result<Openrtb, BiddingError> {
+    async fn bid(&self, request: Openrtb) -> Result<Openrtb, BiddingError> {
         Ok(request)
     }
 }

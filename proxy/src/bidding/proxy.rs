@@ -18,10 +18,11 @@ impl ProxyBiddingService {
 
 #[async_trait::async_trait]
 impl BiddingService for ProxyBiddingService {
-    async fn bid(&mut self, request: Openrtb) -> Result<Openrtb, BiddingError> {
+    async fn bid(&self, request: Openrtb) -> Result<Openrtb, BiddingError> {
         let grpc_request = Request::new(request);
         let grpc_response = self
             .grpc_client
+            .clone() // Cloning is required here, because Tonic gRPC clients are mutable. Cloning is cheap.
             .bid(grpc_request)
             .await
             .map_err(|e| BiddingError::new(e.to_string()))?;

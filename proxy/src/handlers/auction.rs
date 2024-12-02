@@ -8,7 +8,7 @@ use prost::Message;
 
 pub async fn get_auction_handler<S>(
     Path(ad_type): Path<String>,
-    State(mut bidding_service): State<Box<S>>,
+    State(bidding_service): State<Box<S>>,
     AuctionRequestPayload(request): AuctionRequestPayload,
 ) -> impl IntoResponse
 where
