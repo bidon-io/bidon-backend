@@ -2,7 +2,7 @@ REGISTRY ?= "ghcr.io/bidon-io"
 
 .PHONY: test
 
-init:
+init: update-submodules
 	@cp -n .env.sample .env || true
 	@cp -n .env.test.sample .env.test || true
 
@@ -12,6 +12,9 @@ install-deps:
 	@pre-commit install
 
 local-init: init install-deps
+
+update-submodules:
+	git submodule update --remote --recursive
 
 test:
 	docker compose run --rm go-test
