@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	pb "github.com/bidon-io/bidon-backend/gen/go/bidon/v1"
 	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
 	"google.golang.org/grpc"
 
@@ -40,7 +41,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
 
-	pb "github.com/bidon-io/bidon-backend/gen/go/bidon/v1"
 	"github.com/bool64/cache"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
