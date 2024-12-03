@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	pb "github.com/bidon-io/bidon-backend/gen/go/bidon/v1"
 	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/bidon/v1"
 	"google.golang.org/grpc"
