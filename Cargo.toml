@@ -19,13 +19,13 @@ name = "integration_test"
 path = "proxy/tests/integration_tests.rs"
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait = "0.1"
 
 # gRPC and Protobuf
 tonic = "0.11.0"
 prost = { git = 'https://github.com/bidon-io/prost', branch = "extensions" }
 
-serde = "1.0.215"
+serde = "1.0"
 serde_json = "1.0"
 validator = { version = "0.16", features = ["derive"] }
 swagger = { version = "6.5.0", features = ["serdejson"] }
@@ -42,7 +42,6 @@ thiserror = "2.0.3"
 
 [dev-dependencies]
 axum-test-helper = "0.4.0"
-serde_json = "1.0.133"
 
 [patch.crates-io]
 prost = { git = 'https://github.com/bidon-io/prost', branch = "extensions" }
