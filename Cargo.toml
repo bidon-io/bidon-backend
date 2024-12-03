@@ -1,8 +1,8 @@
 [package]
-name = "bidon"
+name = "bidon_proxy"
 version = "0.0.1"
-authors = ["bulat.fattakhov@appodeal.com", "ivan.doroshenko@appodeal.com"]
-description = "Bidon OpenRTB 3.0"
+authors = ["bf@bidon.org", "ivd@bidon.org"]
+description = "Bidon SDK Proxy"
 license = "Apache-2.0" # TODO: Check the license
 edition = "2021"
 
