@@ -21,7 +21,7 @@ COPY . .
 
 FROM base AS pre-commit-deps
 
-RUN apk add --no-cache python3 git pre-commit
+RUN apk add --no-cache python3 git pre-commit curl
 
 # Install buf at version 1.47.2
 ENV BIN="/usr/local/bin" \
