@@ -2,8 +2,8 @@ package grpcserver
 
 import (
 	"context"
-	pb "github.com/bidon-io/bidon-backend/gen/go/bidon/v1"
-	v3 "github.com/bidon-io/bidon-backend/gen/go/com/iabtechlab/openrtb/v3"
+	pb "github.com/bidon-io/bidon-backend/pkg/proto/bidon/v1"
+	v3 "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/openrtb/v3"
 )
 
 type Server struct {

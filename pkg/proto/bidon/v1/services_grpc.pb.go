@@ -8,7 +8,7 @@ package bidonv1
 
 import (
 	context "context"
-	v3 "github.com/bidon-io/bidon-backend/gen/go/com/iabtechlab/openrtb/v3"
+	v3 "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/openrtb/v3"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
