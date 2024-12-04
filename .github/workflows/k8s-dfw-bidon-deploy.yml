@@ -60,4 +60,4 @@ jobs:
 
       - name: Deploy app
         working-directory: ./prod
-        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-dfw-bidon-app-${{ inputs.app }} TAG=$TAG
+        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-dfw-${{ inputs.app }} TAG=$TAG
