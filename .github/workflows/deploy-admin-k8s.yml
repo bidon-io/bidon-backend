@@ -23,10 +23,10 @@ jobs:
     runs-on: [self-hosted]
     environment: production
     env:
-      TAG: ${{ inputs.tag }}
+      TAG: ${{ 'latest' }}
     steps:
       - name: Get latest release
-        if: ${{ inputs.tag == 'latest' }}
+        if: ${{ 'latest' == 'latest' }}
         id: latest-release
         uses: octokit/request-action@v2.1.7
         with:
@@ -35,7 +35,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_RUNNER }}
 
       - name: Set TAG
-        if: ${{ inputs.tag == 'latest' }}
+        if: ${{ 'latest' == 'latest' }}
         run: echo "TAG=${{ fromJson(steps.latest-release.outputs.data).tag_name }}" >> $GITHUB_ENV
 
       - name: Checks-out repository devops
