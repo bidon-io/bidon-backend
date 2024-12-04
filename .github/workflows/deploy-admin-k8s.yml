@@ -39,7 +39,7 @@ jobs:
         run: echo "TAG=${{ fromJson(steps.latest-release.outputs.data).tag_name }}" >> $GITHUB_ENV
 
       - name: Set Ansible vault password
-        run: echo $ANSIBLE_VAULT_PASSWORD_FILE_BIDON > $ANSIBLE_VAULT_PASSWORD_FILE
+        run: export ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON
 
       - name: Checks-out repository devops
         uses: actions/checkout@v4
