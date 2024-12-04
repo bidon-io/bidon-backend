@@ -1,21 +1,34 @@
-name: Deploy bidon-admin K8S
+name: K8S DFW Deploy bidon
 
 on:
-  # workflow_call:
-  #   inputs:
-  #     tag:
-  #       type: string
-  #       required: true
-  #       default: latest
-  # workflow_dispatch:
-  #   inputs:
-  #     tag:
-  #       type: string
-  #       required: true
-  #       default: latest
-  push:
-    branches:
-      - "DO-2683/bidon-app-helm-deploy"
+  workflow_call:
+    inputs:
+      app:
+        description: App to deploy
+        type: choice
+        required: true
+        default: bidon-admin
+        options:
+          - bidon-admin
+          - bidon-sdkapi
+      tag:
+        type: string
+        required: true
+        default: latest
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App to deploy
+        type: choice
+        required: true
+        default: bidon-admin
+        options:
+          - bidon-admin
+          - bidon-sdkapi
+      tag:
+        type: string
+        required: true
+        default: latest
 
 jobs:
   deploy:
@@ -23,7 +36,7 @@ jobs:
     runs-on: [self-hosted]
     environment: production
     env:
-      TAG: ${{ 'latest' }}
+      TAG: ${{ inputs.tag }}
     steps:
       # - name: Get latest release
       #   if: ${{ inputs.tag == 'latest' }}
@@ -47,4 +60,4 @@ jobs:
 
       - name: Deploy admin
         working-directory: ./prod
-        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-bidon-app-bidon-admin TAG=$TAG
+        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-bidon-app-${{ inputs.app }} TAG=$TAG
