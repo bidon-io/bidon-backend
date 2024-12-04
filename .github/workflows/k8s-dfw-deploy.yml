@@ -1,4 +1,4 @@
-name: K8S DFW Deploy bidon
+name: K8S DFW Deploy Bidon app
 
 on:
   workflow_call:
@@ -32,7 +32,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy bidon-admin K8S
+    name: Deploy K8S DFW Bidon app
     runs-on: [self-hosted]
     environment: production
     env:
@@ -55,9 +55,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: bidon-io/devops
-          ref: DO-2683/bidon-app-helm-deploy
+          ref: master
           token: ${{ secrets.PAT_RUNNER }}
 
-      - name: Deploy admin
+      - name: Deploy app
         working-directory: ./prod
         run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-bidon-app-${{ inputs.app }} TAG=$TAG
