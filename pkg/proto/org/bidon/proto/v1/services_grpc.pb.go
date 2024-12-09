@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: bidon/v1/services.proto
+// source: org/bidon/proto/v1/services.proto
 
-package bidonv1
+package protov1
 
 import (
 	context "context"
@@ -20,7 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BiddingService_Bid_FullMethodName = "/bidon.v1.BiddingService/Bid"
+	BiddingService_Bid_FullMethodName = "/org.bidon.proto.v1.BiddingService/Bid"
 )
 
 // BiddingServiceClient is the client API for BiddingService service.
@@ -119,7 +119,7 @@ func _BiddingService_Bid_Handler(srv interface{}, ctx context.Context, dec func(
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var BiddingService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "bidon.v1.BiddingService",
+	ServiceName: "org.bidon.proto.v1.BiddingService",
 	HandlerType: (*BiddingServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -128,5 +128,5 @@ var BiddingService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "bidon/v1/services.proto",
+	Metadata: "org/bidon/proto/v1/services.proto",
 }
