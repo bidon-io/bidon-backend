@@ -7,14 +7,9 @@ use tracing_subscriber::{
 pub async fn run(listener: tokio::net::TcpListener) -> Result<(), Box<dyn std::error::Error>> {
     init_logger();
 
-    let mut bidding_service = ProxyBiddingService::new(settings().grpc_url());
+    let bidding_service = ProxyBiddingService::new(settings().grpc_url()).await?;
 
     println!("Connecting to the gRPC server at {}", settings().grpc_url());
-
-    bidding_service
-        .connect()
-        .await
-        .expect("Failed to connect to the gRPC server");
 
     let app = bidon::create_app(Box::new(bidding_service));
 
@@ -32,12 +27,4 @@ fn init_logger() {
         )
         .with(fmt::layer())
         .init();
-
-    let format = fmt::format()
-        .with_target(true)
-        .with_level(true)
-        .with_thread_ids(false)
-        .compact();
-
-    tracing_subscriber::fmt().event_format(format).init();
 }
