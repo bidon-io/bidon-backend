@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_BIDON_BACKEND_TOKEN }}
           url: ${{ secrets.CODECOV_URL }}
-          files: codecov/coverage.out
+          files: testcov/coverage.out
           #directory: ./testcov/
           fail_ci_if_error: true
 
