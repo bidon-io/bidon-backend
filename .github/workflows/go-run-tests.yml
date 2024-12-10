@@ -17,15 +17,12 @@ jobs:
       - run: docker compose run -v $(pwd)/testcov:/app/testcov --rm go-test -coverprofile=testcov/coverage.out -covermode=atomic ./...
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_BIDON_BACKEND_TOKEN }}
           url: ${{ secrets.CODECOV_URL }}
-          files: testcov/coverage.out
-          #directory: ./testcov/
+          directory: ./testcov/
           fail_ci_if_error: true
-
-          verbose: true
 
       - run: docker compose down --rmi local -v
         if: always()
