@@ -24,5 +24,7 @@ jobs:
           directory: ./testcov/
           fail_ci_if_error: true
 
+          verbose: true
+
       - run: docker compose down --rmi local -v
         if: always()
