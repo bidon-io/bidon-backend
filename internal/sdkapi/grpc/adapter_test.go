@@ -4,6 +4,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/bidon-io/bidon-backend/internal/adapter"
+
 	adcom "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1"
 	adcomctx "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1/context"
 	pbctx "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1/context"
@@ -16,8 +21,12 @@ import (
 	"github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1/mediation"
 )
 
+func ptr[T any](t T) *T {
+	return &t
+}
+
 func TestAuctionRequestAdapter_OpenRTBToAuctionRequest(t *testing.T) {
-	adapter := NewAuctionRequestAdapter()
+	a := NewAuctionRequestAdapter()
 
 	buildValidRequest := func() *v3.Openrtb {
 		app := &adcomctx.DistributionChannel_App{
@@ -132,69 +141,99 @@ func TestAuctionRequestAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		input       *v3.Openrtb
-		expectError bool
-		verify      func(t *testing.T, ar *schema.AuctionV2Request, err error)
+		name   string
+		input  *v3.Openrtb
+		want   *schema.AuctionV2Request
+		errMsg string
 	}{
 		{
 			name:  "valid request with extensions",
 			input: buildValidRequest(),
-			verify: func(t *testing.T, ar *schema.AuctionV2Request, err error) {
-				if err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-				if ar == nil {
-					t.Fatal("expected non-nil AuctionV2Request, got nil")
-				}
-				if ar.TMax != 1000 {
-					t.Errorf("expected TMax=1000, got %d", ar.TMax)
-				}
-				if ar.Test != true {
-					t.Errorf("expected Test=true, got %v", ar.Test)
-				}
-				if ar.App.Bundle != "com.example.app" {
-					t.Errorf("expected App.Bundle=com.example.app, got %s", ar.App.Bundle)
-				}
-				if ar.User.IDFA != "IDFA-12345" {
-					t.Errorf("expected User.IDFA=IDFA-12345, got %s", ar.User.IDFA)
-				}
-				if ar.AdObject.AuctionID != "auction_id_123" {
-					t.Errorf("expected AdObject.AuctionID=auction_id_123, got %s", ar.AdObject.AuctionID)
-				}
-				if ar.AdObject.AuctionKey != "auction_key_789" {
-					t.Errorf("expected AdObject.AuctionKey=auction_key_789, got %s", ar.AdObject.AuctionKey)
-				}
-				if ar.AdObject.PriceFloor != 0.5 {
-					t.Errorf("expected AdObject.PriceFloor=0.5, got %f", ar.AdObject.PriceFloor)
-				}
-				demand, ok := ar.AdObject.Demands["demand_key"]
-				if !ok {
-					t.Errorf("expected demand_key in AdObject.Demands, not found")
-				} else {
-					if demand["token"] != "token_value" {
-						t.Errorf("expected token_value in demands, got %v", demand["token"])
-					}
-				}
+			want: &schema.AuctionV2Request{
+				TMax: 1000,
+				Test: true,
+				BaseRequest: schema.BaseRequest{
+					Device: schema.Device{
+						Geo:            &schema.Geo{},
+						UserAgent:      "Mozilla/5.0",
+						Manufacturer:   "Apple",
+						Model:          "iPhone",
+						OS:             "iOS",
+						OSVersion:      "14.4",
+						JS:             func() *int { i := 0; return &i }(),
+						ConnectionType: "ConnectionType_UNKNOWN",
+						Type:           "DeviceType_UNKNOWN",
+					},
+					Session: schema.Session{
+						ID:          "session_id",
+						LaunchTS:    1617187200,
+						RAMUsed:     1024,
+						RAMSize:     2048,
+						StorageFree: 512,
+						StorageUsed: 256,
+						Battery:     80.5,
+						CPUUsage:    func() *float64 { f := 10.6; return &f }(),
+					},
+					App: schema.App{
+						Bundle:           "com.example.app",
+						Key:              "app_key",
+						Framework:        "flutter",
+						Version:          "1.0",
+						FrameworkVersion: "1.22",
+						PluginVersion:    "1.0.0",
+						SKAdN:            []string{"skadn1", "skadn2"},
+						SDKVersion:       "2.0.0",
+					},
+					User: schema.User{
+						IDFA:                        "IDFA-12345",
+						TrackingAuthorizationStatus: "authorized",
+						IDFV:                        "IDFV-12345",
+						IDG:                         "IDG-12345",
+						Consent:                     map[string]any{},
+						COPPA:                       nil,
+					},
+					Geo: &schema.Geo{},
+					Regulations: &schema.Regulations{
+						COPPA:     true,
+						GDPR:      true,
+						USPrivacy: "1YNN",
+						EUPrivacy: "1",
+						IAB:       map[string]any{"key": "value"},
+					},
+					Ext:   "",
+					Token: "",
+					Segment: schema.Segment{
+						ID:  "segment_id",
+						UID: "segment_uid",
+						Ext: "",
+					},
+				},
+				AdObject: schema.AdObjectV2{
+					AuctionID:               "auction_id_123",
+					AuctionKey:              "auction_key_789",
+					AuctionConfigurationID:  0,
+					AuctionConfigurationUID: "config_uid_456",
+					PriceFloor:              0.5,
+					Orientation:             "PORTRAIT",
+					Demands: map[adapter.Key]map[string]any{
+						"demand_key": {
+							"token":           "token_value",
+							"status":          "status_value",
+							"token_start_ts":  int64(1234567000),
+							"token_finish_ts": int64(1234567890),
+						},
+					},
+					Banner:       nil,
+					Interstitial: nil,
+					Rewarded:     nil,
+				},
+				AdCache: nil,
 			},
 		},
 		{
-			name:  "nil request",
-			input: &v3.Openrtb{
-				// no Request field
-			},
-			expectError: true,
-			verify: func(t *testing.T, ar *schema.AuctionV2Request, err error) {
-				if err == nil {
-					t.Fatal("expected an error, got none")
-				}
-				if ar != nil {
-					t.Fatal("expected ar=nil, got a non-nil value")
-				}
-				if msg := err.Error(); msg == "" || !strings.Contains(msg, "request is nil") {
-					t.Errorf("expected error containing 'request is nil', got %q", msg)
-				}
-			},
+			name:   "nil request",
+			input:  &v3.Openrtb{},
+			errMsg: "request is nil",
 		},
 		{
 			name: "empty context",
@@ -205,18 +244,7 @@ func TestAuctionRequestAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 					},
 				},
 			},
-			expectError: true,
-			verify: func(t *testing.T, ar *schema.AuctionV2Request, err error) {
-				if err == nil {
-					t.Fatal("expected an error, got none")
-				}
-				if ar != nil {
-					t.Fatal("expected ar=nil, got non-nil")
-				}
-				if msg := err.Error(); !strings.Contains(msg, "request context is empty") {
-					t.Errorf("expected error containing 'request context is empty', got %q", msg)
-				}
-			},
+			errMsg: "request context is empty",
 		},
 		{
 			name: "no items",
@@ -225,35 +253,26 @@ func TestAuctionRequestAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 				r.GetRequest().Item = nil
 				return r
 			}(),
-			expectError: true,
-			verify: func(t *testing.T, ar *schema.AuctionV2Request, err error) {
-				if err == nil {
-					t.Fatal("expected an error, got none")
-				}
-				if ar != nil {
-					t.Fatal("expected ar=nil, got non-nil")
-				}
-				if msg := err.Error(); !strings.Contains(msg, "no items in request") {
-					t.Errorf("expected error containing 'no items in request', got %q", msg)
-				}
-			},
+			errMsg: "no items in request",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ar, err := adapter.OpenRTBToAuctionRequest(tc.input)
-			if tc.expectError && err == nil {
-				t.Fatal("expected an error but got none")
-			} else if !tc.expectError && err != nil {
-				t.Fatalf("expected no error but got %v", err)
+			ar, err := a.OpenRTBToAuctionRequest(tc.input)
+			if (err != nil) != (tc.errMsg != "") {
+				t.Fatalf("expected error=%s, got %v", tc.errMsg, err)
 			}
 
-			tc.verify(t, ar, err)
+			if tc.errMsg != "" && err != nil {
+				if msg := err.Error(); !strings.Contains(msg, tc.errMsg) {
+					t.Errorf("expected error containing 'no items in request', got %q", msg)
+				}
+			}
+
+			if diff := cmp.Diff(tc.want, ar, cmpopts.EquateEmpty(), cmpopts.IgnoreUnexported(schema.AuctionV2Request{}, schema.BaseRequest{})); diff != "" {
+				t.Errorf("AuctionV2Request mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
-}
-
-func ptr[T any](t T) *T {
-	return &t
 }
