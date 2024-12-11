@@ -3,6 +3,7 @@ package grpcserver
 import (
 	"encoding/json"
 	"fmt"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -122,11 +123,6 @@ func parseAdObject(r *v3.Request) (schema.AdObjectV2, error) {
 	if err != nil {
 		return schema.AdObjectV2{}, fmt.Errorf("parseAdObject: %w", err)
 	}
-	//
-	//mi, err := getMediationExtension[*mediation.PlacementExt](placement, mediation.E_PlacementExt)
-	//if err != nil {
-	//	return schema.AdObjectV2{}, fmt.Errorf("parseAdObject: %w", err)
-	//}
 
 	var banner *schema.BannerAdObject
 	if b := mi.GetBanner(); b != nil {
@@ -316,7 +312,6 @@ func parseRegs(c *pbctx.Context) (*schema.Regulations, error) {
 		return &schema.Regulations{}, fmt.Errorf("parseRegs: %w", err)
 	}
 
-	// Note: mr.GetIab() is a JSON string, parse it using parseJson.
 	return &schema.Regulations{
 		COPPA:     r.GetCoppa(),
 		GDPR:      r.GetGdpr(),

@@ -1,11 +1,12 @@
 package grpcserver
 
 import (
+	"strings"
+	"testing"
+
 	adcom "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1"
 	adcomctx "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1/context"
 	pbctx "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1/context"
-	"strings"
-	"testing"
 
 	"google.golang.org/protobuf/proto"
 
