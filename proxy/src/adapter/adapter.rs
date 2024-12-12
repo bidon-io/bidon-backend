@@ -351,6 +351,88 @@ fn convert_demand(demand: &HashMap<String, Value>) -> Result<HashMap<String, med
     Ok(demands)
 }
 
+// TODO: this is a temporary function to convert the OpenRTB response to the AuctionResponse
+// fix it later
+pub(crate) fn try_into(openrtb: openrtb::Openrtb) -> Result<sdk::AuctionResponse> {
+    // Extract the Response from Openrtb
+    let response = match openrtb.payload_oneof {
+        Some(openrtb::openrtb::PayloadOneof::Response(response)) => response,
+        _ => return Err(anyhow!("OpenRTB payload is not a Response")),
+    };
+
+    // Extract bid information from the response
+    let mut ad_units = Vec::new();
+    let mut no_bids = Vec::new();
+
+    for seatbid in response.seatbid {
+        for bid in seatbid.bid {
+            // Extract bid extension data
+            let bid_ext = bid
+                .extension_set
+                .extension_data(mediation::BID_EXT)
+                .map_err(|_| anyhow!("Missing mediation ad object extension in bid"))?;
+            let ad_unit = sdk::AdUnit {
+                label: bid_ext.label.clone().ok_or(anyhow!("Label is missing"))?,
+                uid: bid.item.unwrap_or_default(),
+                demand_id: bid.cid.unwrap_or_default(),
+                // Start of Selection
+                pricefloor: Some(bid.price.unwrap_or_default() as f64),
+                bid_type: bid_ext
+                    .bid_type
+                    .clone()
+                    .ok_or(anyhow!("Bid type is missing"))?,
+                ext: Some(
+                    serde_json::to_value(bid_ext.ext.clone())
+                        .unwrap_or_default()
+                        .as_object()
+                        .map(|map| map.clone().into_iter().collect::<HashMap<String, Value>>())
+                        .unwrap_or_default(),
+                ),
+            };
+            if bid.price.unwrap_or_default() > 0.0 {
+                ad_units.push(ad_unit);
+            } else {
+                no_bids.push(ad_unit);
+            }
+        }
+    }
+
+    // Extract auction configuration from response extensions
+    let auction_ext = response
+        .extension_set
+        .extension_data(mediation::AUCTION_RESPONSE_EXT)
+        .map_err(|_| anyhow!("Missing mediation ad object extension in response"))?;
+
+    let auction_response = sdk::AuctionResponse {
+        ad_units,
+        auction_id: response.id.unwrap_or_default(),
+        no_bids: Some(no_bids),
+        token: auction_ext.token.clone().unwrap_or_default(),
+        external_win_notifications: auction_ext
+            .external_win_notifications
+            .clone()
+            .unwrap_or_default(),
+        segment: auction_ext
+            .segment
+            .as_ref()
+            .map(|s| sdk::Segment {
+                id: s.id.clone(),
+                uid: s.uid.clone(),
+                ext: s.ext.clone(),
+            })
+            .ok_or(anyhow!("Segment is missing"))?,
+        auction_configuration_id: auction_ext.auction_configuration_id.unwrap_or_default(),
+        auction_configuration_uid: auction_ext
+            .auction_configuration_uid
+            .clone()
+            .unwrap_or_default(),
+        auction_pricefloor: auction_ext.auction_pricefloor.unwrap_or_default(),
+        auction_timeout: auction_ext.auction_timeout.unwrap_or_default(),
+    };
+
+    Ok(auction_response)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -360,61 +442,108 @@ mod tests {
     use std::io::Cursor;
     use uuid::Uuid;
 
+    fn create_test_auction_request() -> sdk::AuctionRequest {
+        sdk::AuctionRequest {
+            ad_object: sdk::AdObject {
+                auction_id: Some("auction123".to_string()),
+                auction_key: Some("key123".to_string()),
+                auction_configuration_id: Some(456),
+                auction_configuration_uid: Some("config789".to_string()),
+                auction_pricefloor: 1.0,
+                orientation: None,
+                demands: HashMap::new(),
+                banner: None,
+                interstitial: None,
+                rewarded: None,
+            },
+            adapters: HashMap::new(),
+            app: sdk::App {
+                bundle: "com.example.app".to_string(),
+                framework: "".to_string(),
+                framework_version: None,
+                key: "".to_string(),
+                plugin_version: None,
+                sdk_version: None,
+                skadn: None,
+                version: "".to_string(),
+            },
+            device: sdk::Device {
+                device_type: Some(sdk::DeviceType::Phone),
+                ua: "Mozilla/5.0".to_string(),
+                make: "Apple".to_string(),
+                model: "iPhone".to_string(),
+                os: "iOS".to_string(),
+                osv: "14.4".to_string(),
+                hwv: "A14".to_string(),
+                h: 1920,
+                w: 1080,
+                ppi: 326,
+                pxratio: 2.0,
+                js: 1,
+                language: "en".to_string(),
+                carrier: Some("Verizon".to_string()),
+                mccmnc: Some("310012".to_string()),
+                connection_type: sdk::DeviceConnectionType::Wifi,
+                geo: None,
+            },
+            ext: None,
+            geo: Some(sdk::Geo {
+                lat: Some(37.7749),
+                lon: Some(-122.4194),
+                accuracy: Some(10.6),
+                country: Some("US".to_string()),
+                city: Some("San Francisco".to_string()),
+                zip: Some("94103".to_string()),
+                utcoffset: Some(-8),
+                lastfix: Some(1234567890),
+            }),
+            regs: None,
+            segment: Some(sdk::Segment {
+                id: None,
+                uid: None,
+                ext: None,
+            }),
+            session: sdk::Session {
+                id: Uuid::new_v4(),
+                launch_ts: 1234567890,
+                launch_monotonic_ts: 1234567890,
+                start_ts: 1234567890,
+                start_monotonic_ts: 1234567890,
+                ts: 1234567890,
+                monotonic_ts: 1234567890,
+                memory_warnings_ts: vec![],
+                memory_warnings_monotonic_ts: vec![],
+                ram_used: 1024,
+                ram_size: 2048,
+                storage_free: Some(512),
+                storage_used: Some(256),
+                battery: 80.5,
+                cpu_usage: 10.6,
+            },
+            test: Some(false),
+            tmax: Some(500),
+            token: None,
+            user: sdk::User {
+                idfa: Some(Uuid::new_v4()),
+                tracking_authorization_status: "authorized".to_string(),
+                idfv: Some(Uuid::new_v4()),
+                idg: Some(Uuid::new_v4()),
+                coppa: None,
+                consent: Some(HashMap::from([
+                    ("meta".to_string(), json!({"consent": true})),
+                    ("gdpr".to_string(), json!({"status": "granted"})),
+                ])),
+            },
+        }
+    }
+
     #[test]
     fn test_convert_device() {
-        let device = sdk::Device {
-            device_type: Some(sdk::DeviceType::Phone),
-            ua: "Mozilla/5.0".to_string(),
-            make: "Apple".to_string(),
-            model: "iPhone".to_string(),
-            os: "iOS".to_string(),
-            osv: "14.4".to_string(),
-            hwv: "A14".to_string(),
-            h: 1920,
-            w: 1080,
-            ppi: 326,
-            pxratio: 2.0,
-            js: 1,
-            language: "en".to_string(),
-            carrier: Some("Verizon".to_string()),
-            mccmnc: Some("310012".to_string()),
-            connection_type: sdk::DeviceConnectionType::Wifi,
-            geo: None,
-        };
+        let request = create_test_auction_request();
+        let adcom_device =
+            convert_device(&request.device, &request.session, request.geo.as_ref()).unwrap();
 
-        let id = Uuid::new_v4();
-
-        let session = sdk::Session {
-            id,
-            launch_ts: 1234567890,
-            launch_monotonic_ts: 1234567890,
-            start_ts: 1234567890,
-            start_monotonic_ts: 1234567890,
-            ts: 1234567890,
-            monotonic_ts: 1234567890,
-            memory_warnings_ts: vec![1234567890],
-            memory_warnings_monotonic_ts: vec![1234567890],
-            ram_used: 1024,
-            ram_size: 2048,
-            storage_free: Some(512),
-            storage_used: Some(256),
-            battery: 80.5,
-            cpu_usage: 10.6,
-        };
-
-        let geo = Some(sdk::Geo {
-            lat: Some(37.7749),
-            lon: Some(-122.4194),
-            accuracy: Some(10.6),
-            country: Some("US".to_string()),
-            city: Some("San Francisco".to_string()),
-            zip: Some("94103".to_string()),
-            utcoffset: Some(-8),
-            lastfix: Some(1234567890),
-        });
-
-        let adcom_device = convert_device(&device, &session, geo.as_ref()).unwrap();
-
+        // Test standard fields
         assert_eq!(
             adcom_device.r#type,
             Some(adcom::enums::DeviceType::Phone as i32)
@@ -422,10 +551,7 @@ mod tests {
         assert_eq!(adcom_device.ua, Some("Mozilla/5.0".to_string()));
         assert_eq!(adcom_device.make, Some("Apple".to_string()));
         assert_eq!(adcom_device.model, Some("iPhone".to_string()));
-        assert_eq!(
-            adcom_device.os,
-            Some(adcom::enums::OperatingSystem::Ios as i32)
-        );
+        assert_eq!(adcom_device.os, Some(OperatingSystem::Ios as i32));
         assert_eq!(adcom_device.osv, Some("14.4".to_string()));
         assert_eq!(adcom_device.hwv, Some("A14".to_string()));
         assert_eq!(adcom_device.h, Some(1920));
@@ -440,39 +566,33 @@ mod tests {
             adcom_device.contype,
             Some(adcom::enums::ConnectionType::Wifi as i32)
         );
-        assert_eq!(adcom_device.geo.as_ref().unwrap().lat, Some(37.7749));
-        assert_eq!(adcom_device.geo.as_ref().unwrap().lon, Some(-122.4194));
-        assert_eq!(adcom_device.geo.as_ref().unwrap().accur, Some(10));
-        assert_eq!(
-            adcom_device.geo.as_ref().unwrap().country,
-            Some("US".to_string())
-        );
-        assert_eq!(
-            adcom_device.geo.as_ref().unwrap().city,
-            Some("San Francisco".to_string())
-        );
-        assert_eq!(
-            adcom_device.geo.as_ref().unwrap().zip,
-            Some("94103".to_string())
-        );
-        assert_eq!(adcom_device.geo.as_ref().unwrap().utcoffset, Some(-8));
-        assert_eq!(adcom_device.geo.as_ref().unwrap().lastfix, Some(1234567890));
 
+        // Test geo fields
+        let geo = adcom_device.geo.unwrap();
+        assert_eq!(geo.lat, Some(37.7749));
+        assert_eq!(geo.lon, Some(-122.4194));
+        assert_eq!(geo.accur, Some(10)); // Converted from f64 to i32
+        assert_eq!(geo.country, Some("US".to_string()));
+        assert_eq!(geo.city, Some("San Francisco".to_string()));
+        assert_eq!(geo.zip, Some("94103".to_string()));
+        assert_eq!(geo.utcoffset, Some(-8));
+        assert_eq!(geo.lastfix, Some(1234567890));
+
+        // Test device extension fields
         let device_ext = adcom_device
             .extension_set
             .extension_data(mediation::DEVICE_EXT)
             .unwrap();
-
-        assert_eq!(device_ext.id, Some(id.to_string()));
+        assert_eq!(device_ext.id, Some(request.session.id.to_string()));
         assert_eq!(device_ext.launch_ts, Some(1234567890));
-        assert_eq!(device_ext.ram_used, Some(1024));
         assert_eq!(device_ext.launch_monotonic_ts, Some(1234567890));
         assert_eq!(device_ext.start_ts, Some(1234567890));
         assert_eq!(device_ext.start_monotonic_ts, Some(1234567890));
         assert_eq!(device_ext.ts, Some(1234567890));
         assert_eq!(device_ext.monotonic_ts, Some(1234567890));
-        assert_eq!(device_ext.memory_warnings_ts, vec![1234567890]);
-        assert_eq!(device_ext.memory_warnings_monotonic_ts, vec![1234567890]);
+        assert!(device_ext.memory_warnings_ts.is_empty());
+        assert!(device_ext.memory_warnings_monotonic_ts.is_empty());
+        assert_eq!(device_ext.ram_used, Some(1024));
         assert_eq!(device_ext.ram_size, Some(2048));
         assert_eq!(device_ext.storage_free, Some(512));
         assert_eq!(device_ext.storage_used, Some(256));
@@ -670,5 +790,82 @@ mod tests {
             Some("{\"interstitial\":\"value\"}".to_string())
         );
         assert_eq!(placement_ext.rewarded, Some("\"rewarded\"".to_string()));
+    }
+
+    #[test]
+    fn test_openrtb_to_auction_response() {
+        // Create a mock OpenRTB response
+        let response = openrtb::Response {
+            id: Some("auction123".to_string()),
+            bidid: None,
+            nbr: None,
+            seatbid: vec![openrtb::SeatBid {
+                bid: vec![openrtb::Bid {
+                    id: Some("bid1".to_string()),
+                    item: Some("item1".to_string()),
+                    price: Some(2.5),
+                    cid: Some("demand1".to_string()),
+                    extension_set: {
+                        let mut ext = prost::ExtensionSet::default();
+                        let bid_ext = mediation::BidExt {
+                            label: Some("key123".to_string()),
+                            bid_type: Some("bid_type".to_string()),
+                            ext: HashMap::new(),
+                        };
+                        ext.set_extension_data(mediation::BID_EXT, bid_ext).unwrap();
+                        ext
+                    },
+                    ..Default::default()
+                }],
+                seat: None,
+                ..Default::default()
+            }],
+            extension_set: {
+                let mut ext = prost::ExtensionSet::default();
+                let auction_response_ext = mediation::AuctionResponseExt {
+                    auction_id: Some("auction123".to_string()),
+                    auction_configuration_id: Some(456),
+                    auction_configuration_uid: Some("config789".to_string()),
+                    token: Some("key123".to_string()),
+                    auction_pricefloor: Some(1.0),
+                    auction_timeout: Some(500),
+                    external_win_notifications: Some(true),
+                    segment: Some(mediation::Segment {
+                        id: Some("segment_id".to_string()),
+                        uid: Some("segment_uid".to_string()),
+                        ext: None,
+                    }),
+                };
+                ext.set_extension_data(mediation::AUCTION_RESPONSE_EXT, auction_response_ext)
+                    .unwrap();
+                ext
+            },
+            ..Default::default()
+        };
+
+        let openrtb = openrtb::Openrtb {
+            ver: Some("3.0".to_string()),
+            domainspec: Some("adcom".to_string()),
+            domainver: Some("1.0".to_string()),
+            payload_oneof: Some(openrtb::openrtb::PayloadOneof::Response(response)),
+        };
+
+        let auction_response = try_into(openrtb).unwrap();
+
+        // Test assertions
+        assert_eq!(auction_response.auction_id, "auction123");
+        assert_eq!(auction_response.auction_configuration_id, 456);
+        assert_eq!(auction_response.auction_configuration_uid, "config789");
+        assert_eq!(auction_response.auction_pricefloor, 1.0);
+        assert_eq!(auction_response.auction_timeout, 500);
+        assert_eq!(auction_response.token, "key123");
+
+        // Test ad units
+        assert!(!auction_response.ad_units.is_empty());
+        let ad_unit = &auction_response.ad_units[0];
+        assert_eq!(ad_unit.label, "key123");
+        assert_eq!(ad_unit.uid, "item1");
+        assert_eq!(ad_unit.demand_id, "demand1");
+        assert_eq!(ad_unit.pricefloor, Some(2.5));
     }
 }
