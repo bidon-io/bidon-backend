@@ -12,9 +12,7 @@ mod common;
 use bidon::com::iabtechlab::openrtb::v3 as openrtb;
 use bidon::com::iabtechlab::openrtb::v3::openrtb::PayloadOneof;
 use bidon::com::iabtechlab::openrtb::v3::Openrtb;
-use bidon::com::iabtechlab::openrtb::v3::{
-    Bid, Request as OpenrtbRequest, Response as OpenrtbResponse, SeatBid,
-};
+use bidon::com::iabtechlab::openrtb::v3::Response as OpenrtbResponse;
 use bidon::org::bidon::proto::v1::mediation;
 use bidon::org::bidon::proto::v1::mediation::{
     APP_EXT, AUCTION_RESPONSE_EXT, BID_EXT, DEVICE_EXT, USER_EXT,
