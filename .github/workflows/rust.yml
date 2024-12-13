@@ -38,8 +38,8 @@ jobs:
       run: cargo test --verbose
       env:
         CARGO_INCREMENTAL: '0'
-        RUSTFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort'
-        RUSTDOCFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort'
+        RUSTFLAGS: '-Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off'
+        RUSTDOCFLAGS: '-Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off'
     - name: rust-grcov
       uses: actions-rs/grcov@v0.1
     - name: Codecov
