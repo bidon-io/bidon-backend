@@ -410,7 +410,6 @@ pub(crate) fn try_into(openrtb: openrtb::Openrtb) -> Result<sdk::AuctionResponse
         token: auction_ext.token.clone().unwrap_or_default(),
         external_win_notifications: auction_ext
             .external_win_notifications
-            .clone()
             .unwrap_or_default(),
         segment: auction_ext
             .segment

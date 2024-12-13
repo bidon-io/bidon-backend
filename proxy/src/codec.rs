@@ -1,8 +1,7 @@
-use std::{
-    marker::PhantomData,
-    sync::{atomic::AtomicPtr, OnceLock},
-};
+use std::marker::PhantomData;
 
+use anyhow::Result;
+use once_cell::sync::OnceCell;
 use prost::{ExtensionRegistry, Message};
 use tonic::{
     codec::{BufferSettings, Codec, DecodeBuf, Decoder, EncodeBuf, Encoder},
@@ -16,17 +15,14 @@ pub struct ProstRegistryCodec<T, U> {
     _pd: PhantomData<(T, U)>,
 }
 
-static REGISTRY: OnceLock<AtomicPtr<ExtensionRegistry>> = OnceLock::new();
+static REGISTRY: OnceCell<ExtensionRegistry> = OnceCell::new();
 
 /// Initialize the global extension registry.
 /// This must be called before any decoding operations.
-///
-/// # Safety
-/// This function is unsafe because it stores a raw pointer to the registry.
-/// The caller must ensure that the registry outlives all uses of the codec.
-pub unsafe fn init_registry(registry: ExtensionRegistry) {
-    let ptr = Box::into_raw(Box::new(registry));
-    REGISTRY.get_or_init(|| AtomicPtr::new(ptr));
+pub fn init_registry(registry: ExtensionRegistry) -> Result<()> {
+    REGISTRY
+        .set(registry)
+        .map_err(|_| anyhow::anyhow!("Registry already initialized"))
 }
 
 impl<T, U> ProstRegistryCodec<T, U>
@@ -133,10 +129,8 @@ impl<U: Message + Default> Decoder for ProstDecoder<U> {
     type Item = U;
     type Error = Status;
     fn decode(&mut self, buf: &mut DecodeBuf<'_>) -> Result<Option<Self::Item>, Self::Error> {
-        let item = if let Some(registry_ptr) = REGISTRY.get() {
-            Message::decode_with_extensions(buf, unsafe {
-                &*registry_ptr.load(std::sync::atomic::Ordering::Acquire)
-            })
+        let item = if let Some(registry) = REGISTRY.get() {
+            Message::decode_with_extensions(buf, registry)
         } else {
             Message::decode(buf)
         }

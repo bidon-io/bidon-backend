@@ -216,6 +216,7 @@ dependencies = [
  "derive-new",
  "derive_more",
  "dotenvy",
+ "once_cell",
  "prost 0.12.1",
  "prost-build 0.12.1",
  "serde",
@@ -1274,7 +1275,7 @@ dependencies = [
 [[package]]
 name = "prost"
 version = "0.12.1"
-source = "git+https://github.com/bidon-io/prost?branch=extensions#f4de8443e0cdbe8697dcaf2b49980d5a492af1a0"
+source = "git+https://github.com/bidon-io/prost?branch=extensions#3e1bba4"
 dependencies = [
  "bytes 1.9.0",
  "prost-derive 0.12.1",
@@ -1293,7 +1294,7 @@ dependencies = [
 [[package]]
 name = "prost-build"
 version = "0.12.1"
-source = "git+https://github.com/bidon-io/prost?branch=extensions#f4de8443e0cdbe8697dcaf2b49980d5a492af1a0"
+source = "git+https://github.com/bidon-io/prost?branch=extensions#3e1bba4"
 dependencies = [
  "bytes 1.9.0",
  "heck 0.4.1",
@@ -1335,7 +1336,7 @@ dependencies = [
 [[package]]
 name = "prost-derive"
 version = "0.12.1"
-source = "git+https://github.com/bidon-io/prost?branch=extensions#f4de8443e0cdbe8697dcaf2b49980d5a492af1a0"
+source = "git+https://github.com/bidon-io/prost?branch=extensions#3e1bba4"
 dependencies = [
  "anyhow",
  "itertools 0.11.0",
@@ -1360,7 +1361,7 @@ dependencies = [
 [[package]]
 name = "prost-types"
 version = "0.12.1"
-source = "git+https://github.com/bidon-io/prost?branch=extensions#f4de8443e0cdbe8697dcaf2b49980d5a492af1a0"
+source = "git+https://github.com/bidon-io/prost?branch=extensions#3e1bba4"
 dependencies = [
  "prost 0.12.1",
 ]

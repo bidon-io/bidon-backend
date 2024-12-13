@@ -18,9 +18,7 @@ async fn main() {
         registry
     };
     // Initialize the registry. This should be done once in the application at startup.
-    unsafe {
-        bidon::codec::init_registry(registry);
-    }
+    bidon::codec::init_registry(registry).unwrap();
 
     let listen_addr = format!("0.0.0.0:{}", config::settings().port());
 

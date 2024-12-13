@@ -98,9 +98,7 @@ async fn test_auction() {
         registry
     };
     // Initialize the registry
-    unsafe {
-        bidon::codec::init_registry(registry);
-    }
+    bidon::codec::init_registry(registry).unwrap();
 
     // Start the mock gRPC server
     let addr = "[::1]:50051".parse().unwrap();
