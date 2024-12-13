@@ -11,12 +11,14 @@ use anyhow::{anyhow, Result};
 use prost::{Extendable, Message};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::net::IpAddr;
 
 pub(crate) fn try_from(
     request: sdk::AuctionRequest,
     bidon_version: String,
+    ip: IpAddr,
 ) -> Result<openrtb::Openrtb> {
-    let context = convert_context(&request, bidon_version)?;
+    let context = convert_context(&request, bidon_version, ip)?;
 
     // Convert AuctionRequest to Openrtb::Request
     let openrtb_request = openrtb::Request {
@@ -38,7 +40,11 @@ pub(crate) fn try_from(
     })
 }
 
-fn convert_context(request: &sdk::AuctionRequest, bidon_version: String) -> Result<Context> {
+fn convert_context(
+    request: &sdk::AuctionRequest,
+    bidon_version: String,
+    ip: IpAddr,
+) -> Result<Context> {
     // Create the AdCOM Context message
     Ok(Context {
         distribution_channel: DistributionChannel {
@@ -48,7 +54,7 @@ fn convert_context(request: &sdk::AuctionRequest, bidon_version: String) -> Resu
             ..Default::default()
         }
         .into(),
-        device: convert_device(&request.device, &request.session, request.geo.as_ref())?.into(),
+        device: convert_device(&request.device, &request.session, request.geo.as_ref(), ip)?.into(),
         user: convert_user(&request.user, request.segment.as_ref())?.into(),
         regs: match request.regs.as_ref() {
             Some(t) => convert_regs(t)?.into(),
@@ -88,6 +94,7 @@ fn convert_device(
     device: &sdk::Device,
     session: &sdk::Session,
     geo: Option<&sdk::Geo>,
+    ip: IpAddr,
 ) -> Result<adcom::context::Device> {
     let mut adcom_device = adcom::context::Device {
         // Map standard fields
@@ -108,6 +115,11 @@ fn convert_device(
         mccmnc: device.clone().mccmnc,
         contype: Some(Into::into(convert_connection_type(device.connection_type))),
         geo: geo.map(convert_geo),
+        ip: Some(ip.to_string()),
+        ipv6: match ip {
+            IpAddr::V4(_) => None,
+            IpAddr::V6(ip) => Some(ip.to_string()),
+        },
         ..Default::default()
     };
 
@@ -408,9 +420,7 @@ pub(crate) fn try_into(openrtb: openrtb::Openrtb) -> Result<sdk::AuctionResponse
         auction_id: response.id.unwrap_or_default(),
         no_bids: Some(no_bids),
         token: auction_ext.token.clone().unwrap_or_default(),
-        external_win_notifications: auction_ext
-            .external_win_notifications
-            .unwrap_or_default(),
+        external_win_notifications: auction_ext.external_win_notifications.unwrap_or_default(),
         segment: auction_ext
             .segment
             .as_ref()
@@ -439,6 +449,7 @@ mod tests {
     use serde_json::json;
     use std::collections::HashMap;
     use std::io::Cursor;
+    use std::net::Ipv4Addr;
     use uuid::Uuid;
 
     fn create_test_auction_request() -> sdk::AuctionRequest {
@@ -539,8 +550,9 @@ mod tests {
     #[test]
     fn test_convert_device() {
         let request = create_test_auction_request();
+        let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
         let adcom_device =
-            convert_device(&request.device, &request.session, request.geo.as_ref()).unwrap();
+            convert_device(&request.device, &request.session, request.geo.as_ref(), ip).unwrap();
 
         // Test standard fields
         assert_eq!(

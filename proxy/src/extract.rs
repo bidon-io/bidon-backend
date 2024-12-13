@@ -3,6 +3,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRequest, Json, Request};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum_client_ip::InsecureClientIp;
 
 use crate::adapter;
 use crate::com::iabtechlab::openrtb::v3::Openrtb;
@@ -12,6 +13,7 @@ pub struct AuctionRequestPayload(pub Openrtb);
 
 pub enum AuctionRequestRejection {
     MissingBidonVersionHeader,
+    MissingIpAddress,
     InvalidJson(JsonRejection),
     InvalidBiddingRequest,
 }
@@ -29,6 +31,9 @@ impl IntoResponse for AuctionRequestRejection {
             }
             AuctionRequestRejection::MissingBidonVersionHeader => {
                 (StatusCode::BAD_REQUEST, "Missing x-bidon-version header").into_response()
+            }
+            AuctionRequestRejection::MissingIpAddress => {
+                (StatusCode::BAD_REQUEST, "Missing client ip address").into_response()
             }
         }
     }
@@ -53,11 +58,16 @@ where
             // Return an error response if the header is missing
             .ok_or(AuctionRequestRejection::InvalidBiddingRequest)?;
 
-        let Json(auction_request) = Json::<AuctionRequest>::from_request(req, state)
-            .await
-            .map_err(AuctionRequestRejection::InvalidJson)?;
+        let (parts, body) = req.into_parts();
+        let InsecureClientIp(ip) = InsecureClientIp::from(&parts.headers, &parts.extensions)
+            .map_err(|_| AuctionRequestRejection::MissingIpAddress)?;
 
-        let openrtb_request = adapter::try_from(auction_request, bidon_version)
+        let Json(auction_request) =
+            Json::<AuctionRequest>::from_request(Request::from_parts(parts, body), state)
+                .await
+                .map_err(AuctionRequestRejection::InvalidJson)?;
+
+        let openrtb_request = adapter::try_from(auction_request, bidon_version, ip)
             .map_err(|_| AuctionRequestRejection::InvalidBiddingRequest)?;
 
         Ok(AuctionRequestPayload(openrtb_request))

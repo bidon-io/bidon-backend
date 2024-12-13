@@ -129,19 +129,17 @@ async fn test_auction() {
         .await
         .post("/v2/auction/banner")
         .header("x-bidon-version", "TestValue")
+        .header("X-Forwarded-For", "127.0.0.1")
         .json(&get_auction_request())
         .send()
         .await;
 
     // Get response text once and store it
-    // let response_text = response.text().await;
-    // println!("Response: {:?}", response_text);
     // Assert the response
     assert_eq!(response.status(), StatusCode::OK);
-    assert!(
-        !response.text().await.is_empty(),
-        "Output must not be empty"
-    );
+    let response_text = response.text().await;
+    // println!("Response: {:?}", response_text);
+    assert!(!response_text.is_empty(), "Output must not be empty");
 
     // Optional: Shutdown the mock server
     server_handle.abort();
