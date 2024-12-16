@@ -4,7 +4,7 @@ use crate::com::iabtechlab::adcom::v1::enums::{ConnectionType, OperatingSystem};
 use crate::com::iabtechlab::openrtb::v3 as openrtb;
 use crate::com::iabtechlab::openrtb::v3::AuctionType;
 use crate::org::bidon::proto::v1::context::Context;
-use crate::org::bidon::proto::v1::mediation;
+use crate::org::bidon::proto::v1::mediation::{self, RequestExt, SdkAdapter};
 use crate::sdk;
 use crate::sdk::AdObjectOrientation;
 use anyhow::{anyhow, Result};
@@ -14,14 +14,15 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 
 pub(crate) fn try_from(
-    request: sdk::AuctionRequest,
+    request: &sdk::AuctionRequest,
     bidon_version: String,
     ip: IpAddr,
+    ad_type: sdk::GetAuctionAdTypeParameter,
 ) -> Result<openrtb::Openrtb> {
     let context = convert_context(&request, bidon_version, ip)?;
 
     // Convert AuctionRequest to Openrtb::Request
-    let openrtb_request = openrtb::Request {
+    let mut openrtb_request = openrtb::Request {
         id: request.ad_object.auction_id.to_owned(),
         test: request.test,
         tmax: request.tmax.map(|t| t as u32),
@@ -30,6 +31,19 @@ pub(crate) fn try_from(
         item: vec![convert_ad_object_to_item(&request.ad_object)?],
         ..Default::default()
     };
+
+    let request_ext = RequestExt {
+        ad_type: Some(convert_ad_type(&ad_type) as i32),
+        adapters: request
+            .adapters
+            .clone()
+            .into_iter()
+            .map(|(k, v)| (k, convert_adapter(&v)))
+            .collect(),
+        ext: request.ext.clone(),
+    };
+
+    openrtb_request.set_extension_data(mediation::REQUEST_EXT, request_ext)?;
 
     // Create Openrtb instance with the converted request
     Ok(openrtb::Openrtb {
@@ -194,6 +208,21 @@ fn convert_user(user: &sdk::User, segment: Option<&sdk::Segment>) -> Result<adco
     adcom_user.set_extension_data(mediation::USER_EXT, user_ext)?;
 
     Ok(adcom_user)
+}
+
+fn convert_adapter(adapter: &sdk::Adapter) -> SdkAdapter {
+    SdkAdapter {
+        version: Some(adapter.version.clone()),
+        sdk_version: Some(adapter.sdk_version.clone()),
+    }
+}
+
+fn convert_ad_type(ad_type: &sdk::GetAuctionAdTypeParameter) -> mediation::AdType {
+    match ad_type {
+        sdk::GetAuctionAdTypeParameter::Banner => mediation::AdType::Banner,
+        sdk::GetAuctionAdTypeParameter::Interstitial => mediation::AdType::Interstitial,
+        sdk::GetAuctionAdTypeParameter::Rewarded => mediation::AdType::Rewarded,
+    }
 }
 
 fn convert_segment(segment: &sdk::Segment) -> mediation::Segment {
@@ -878,5 +907,114 @@ mod tests {
         assert_eq!(ad_unit.uid, "item1");
         assert_eq!(ad_unit.demand_id, "demand1");
         assert_eq!(ad_unit.pricefloor, Some(2.5));
+    }
+
+    #[test]
+    fn test_request_ext() {
+        // Create a test auction request with adapters
+        let mut request = create_test_auction_request();
+
+        // Add test adapters
+        request.adapters = HashMap::from([
+            (
+                "adapter1".to_string(),
+                sdk::Adapter {
+                    version: "1.0".to_string(),
+                    sdk_version: "2.0".to_string(),
+                },
+            ),
+            (
+                "adapter2".to_string(),
+                sdk::Adapter {
+                    version: "3.0".to_string(),
+                    sdk_version: "4.0".to_string(),
+                },
+            ),
+        ]);
+
+        // Add test ad type
+        let ad_type = sdk::GetAuctionAdTypeParameter::Banner;
+
+        // Convert to OpenRTB
+        let openrtb = try_from(
+            &request,
+            "1.0".to_string(),
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            ad_type,
+        )
+        .unwrap();
+
+        // Extract the request from OpenRTB
+        let openrtb_request = match openrtb.payload_oneof.unwrap() {
+            openrtb::openrtb::PayloadOneof::Request(req) => req,
+            _ => panic!("Expected Request payload"),
+        };
+
+        // Get the request extension
+        let request_ext = openrtb_request
+            .extension_set
+            .extension_data(mediation::REQUEST_EXT)
+            .unwrap();
+
+        // Test ad type
+        assert_eq!(request_ext.ad_type, Some(mediation::AdType::Banner as i32));
+
+        // Test adapters
+        assert_eq!(request_ext.adapters.len(), 2);
+
+        let adapter1 = request_ext.adapters.get("adapter1").unwrap();
+        assert_eq!(adapter1.version, Some("1.0".to_string()));
+        assert_eq!(adapter1.sdk_version, Some("2.0".to_string()));
+
+        let adapter2 = request_ext.adapters.get("adapter2").unwrap();
+        assert_eq!(adapter2.version, Some("3.0".to_string()));
+        assert_eq!(adapter2.sdk_version, Some("4.0".to_string()));
+
+        // Test other ad types
+        let interstitial_request = try_from(
+            &request,
+            "1.0".to_string(),
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            sdk::GetAuctionAdTypeParameter::Interstitial,
+        )
+        .unwrap();
+
+        let interstitial_request = match interstitial_request.payload_oneof.unwrap() {
+            openrtb::openrtb::PayloadOneof::Request(req) => req,
+            _ => panic!("Expected Request payload"),
+        };
+
+        let interstitial_ext = interstitial_request
+            .extension_set
+            .extension_data(mediation::REQUEST_EXT)
+            .unwrap();
+
+        assert_eq!(
+            interstitial_ext.ad_type,
+            Some(mediation::AdType::Interstitial as i32)
+        );
+
+        let rewarded_request = try_from(
+            &request,
+            "1.0".to_string(),
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            sdk::GetAuctionAdTypeParameter::Rewarded,
+        )
+        .unwrap();
+
+        let rewarded_request = match rewarded_request.payload_oneof.unwrap() {
+            openrtb::openrtb::PayloadOneof::Request(req) => req,
+            _ => panic!("Expected Request payload"),
+        };
+
+        let rewarded_ext = rewarded_request
+            .extension_set
+            .extension_data(mediation::REQUEST_EXT)
+            .unwrap();
+
+        assert_eq!(
+            rewarded_ext.ad_type,
+            Some(mediation::AdType::Rewarded as i32)
+        );
     }
 }
