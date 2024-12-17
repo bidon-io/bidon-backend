@@ -19,7 +19,7 @@ type Server struct {
 	GeoCoder       Geocoder
 }
 
-func NewServer(auctionService AuctionService, appFetcher AppFetcher, geoCoder *geocoder.Geocoder) *Server {
+func NewServer(auctionService AuctionService, appFetcher AppFetcher, geoCoder Geocoder) *Server {
 	return &Server{
 		AuctionService: auctionService,
 		AppFetcher:     appFetcher,
