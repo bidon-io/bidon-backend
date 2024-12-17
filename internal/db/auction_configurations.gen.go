@@ -19,8 +19,8 @@ const TableNameAuctionConfiguration = "auction_configurations"
 type AuctionConfiguration struct {
 	ID                       int64                 `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true" json:"id"`
 	Name                     sql.NullString        `gorm:"column:name;type:character varying" json:"name"`
-	AppID                    int64                 `gorm:"column:app_id;type:bigint;not null;uniqueIndex:auction_configurations_default_uniq_idx,priority:2;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:2;index:index_auction_configurations_on_app_id,priority:1" json:"app_id"`
-	AdType                   AdType                `gorm:"column:ad_type;type:integer;not null;uniqueIndex:auction_configurations_default_uniq_idx,priority:1;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:1" json:"ad_type"`
+	AppID                    int64                 `gorm:"column:app_id;type:bigint;not null;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:2;uniqueIndex:auction_configurations_default_uniq_idx,priority:2;index:index_auction_configurations_on_app_id,priority:1" json:"app_id"`
+	AdType                   AdType                `gorm:"column:ad_type;type:integer;not null;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:1;uniqueIndex:auction_configurations_default_uniq_idx,priority:1" json:"ad_type"`
 	Rounds                   []auction.RoundConfig `gorm:"column:rounds;type:jsonb;default:[];serializer:json" json:"rounds"`
 	Status                   sql.NullInt32         `gorm:"column:status;type:integer" json:"status"`
 	Settings                 map[string]any        `gorm:"column:settings;type:jsonb;default:{};serializer:json" json:"settings"`
@@ -34,7 +34,7 @@ type AuctionConfiguration struct {
 	Demands                  pq.StringArray        `gorm:"column:demands;type:character varying[];default:ARRAY[]" json:"demands"`
 	Bidding                  pq.StringArray        `gorm:"column:bidding;type:character varying[];default:ARRAY[]" json:"bidding"`
 	AdUnitIds                pq.Int64Array         `gorm:"column:ad_unit_ids;type:bigint[];default:ARRAY[]" json:"ad_unit_ids"`
-	IsDefault                *bool                 `gorm:"column:is_default;type:boolean;not null;uniqueIndex:auction_configurations_default_uniq_idx,priority:3;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:3;default:false" json:"is_default"`
+	IsDefault                *bool                 `gorm:"column:is_default;type:boolean;not null;uniqueIndex:auction_configurations_default_segment_uniq_idx,priority:3;uniqueIndex:auction_configurations_default_uniq_idx,priority:3;default:false" json:"is_default"`
 	DeletedAt                gorm.DeletedAt        `gorm:"column:deleted_at;type:timestamp(6) without time zone" json:"deleted_at"`
 	App                      App                   `json:"app"`
 	Segment                  *Segment              `json:"segment"`

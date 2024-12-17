@@ -2,14 +2,12 @@ package grpcserver
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"github.com/bidon-io/bidon-backend/internal/ad"
-	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/auctionv2"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	v3 "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/openrtb/v3"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1"
 )
@@ -18,24 +16,25 @@ type Server struct {
 	pb.UnimplementedBiddingServiceServer
 	AuctionService AuctionService
 	AppFetcher     AppFetcher
+	GeoCoder       Geocoder
 }
 
-func NewServer(auctionService AuctionService, appFetcher AppFetcher) *Server {
+func NewServer(auctionService AuctionService, appFetcher AppFetcher, geoCoder *geocoder.Geocoder) *Server {
 	return &Server{
 		AuctionService: auctionService,
 		AppFetcher:     appFetcher,
+		GeoCoder:       geoCoder,
 	}
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AppFetcher AuctionService
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AppFetcher AuctionService Geocoder
 
 type AppFetcher interface {
 	FetchCached(ctx context.Context, appKey, appBundle string) (sdkapi.App, error)
 }
 
-type ConfigFetcher interface {
-	FetchByUIDCached(ctx context.Context, appId int64, id, uid string) *auction.Config
-	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64, version string) (*auction.Config, error)
+type Geocoder interface {
+	Lookup(ctx context.Context, ipString string) (geocoder.GeoData, error)
 }
 
 type AuctionService interface {
@@ -54,11 +53,16 @@ func (s *Server) Bid(ctx context.Context, o *v3.Openrtb) (*v3.Openrtb, error) {
 		return &v3.Openrtb{}, err
 	}
 
+	geo, err := s.GeoCoder.Lookup(ctx, ar.Device.IP)
+	if err != nil {
+		return &v3.Openrtb{}, fmt.Errorf("failed to lookup ip: %w", err)
+	}
+
 	params := &auctionv2.ExecutionParams{
 		Req:     ar,
 		AppID:   app.ID,
-		Country: ar.Geo.Country,
-		GeoData: buildGeoData(ar.Geo),
+		Country: geo.CountryCode,
+		GeoData: geo,
 		Log: func(s string) {
 			log.Print(s)
 		},
@@ -78,15 +82,4 @@ func (s *Server) Bid(ctx context.Context, o *v3.Openrtb) (*v3.Openrtb, error) {
 	}
 
 	return response, nil
-}
-
-// TODO: we don't have IP - which is necessary for bidding
-func buildGeoData(geo *schema.Geo) geocoder.GeoData {
-	return geocoder.GeoData{
-		CountryCode: geo.Country,
-		CityName:    geo.City,
-		Lat:         geo.Lat,
-		Lon:         geo.Lon,
-		Accuracy:    int(geo.Accuracy),
-	}
 }
