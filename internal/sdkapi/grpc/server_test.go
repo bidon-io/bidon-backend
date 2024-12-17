@@ -111,11 +111,7 @@ func buildServer(p *serverParams) *Server {
 		EventLogger:    &event.Logger{Engine: &engine.Log{}},
 	}
 
-	return &Server{
-		AppFetcher:     appFetcher,
-		GeoCoder:       gcoder,
-		AuctionService: auctionService,
-	}
+	return NewServer(auctionService, appFetcher, gcoder)
 }
 
 func TestServer_Bid(t *testing.T) {
