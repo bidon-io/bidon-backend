@@ -50,14 +50,13 @@ func (f *AdCacheAdaptersFilter) Filter(OS ad.OS, adType ad.Type, adapters []adap
 	for _, adapterKey := range adapters {
 		maxCount := f.DefaultMaxCacheCount
 
-		// Comment settings, since default is 1
-		//if platformSettings, platformExists := f.Settings[OS]; platformExists {
-		//	if adTypeSettings, demandExists := platformSettings[adapterKey]; demandExists {
-		//		if specificMax, exists := adTypeSettings[adType]; exists {
-		//			maxCount = specificMax
-		//		}
-		//	}
-		//}
+		if platformSettings, platformExists := f.Settings[OS]; platformExists {
+			if adTypeSettings, demandExists := platformSettings[adapterKey]; demandExists {
+				if specificMax, exists := adTypeSettings[adType]; exists {
+					maxCount = specificMax
+				}
+			}
+		}
 
 		if count, found := demandCount[adapterKey]; !found || count < maxCount {
 			filteredAdapters = append(filteredAdapters, adapterKey)
