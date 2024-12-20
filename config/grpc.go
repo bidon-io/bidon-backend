@@ -84,14 +84,12 @@ func NewMetrics() *Metrics {
 	}
 }
 
-// UnaryServerInterceptor returns a configured unary interceptor for metrics
 func (m *Metrics) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return m.ServerMetrics.UnaryServerInterceptor(
 		grpcprom.WithExemplarFromContext(exemplarFromContext),
 	)
 }
 
-// StreamServerInterceptor returns a configured stream interceptor for metrics
 func (m *Metrics) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return m.ServerMetrics.StreamServerInterceptor(
 		grpcprom.WithExemplarFromContext(exemplarFromContext),
@@ -113,7 +111,6 @@ func unaryErrorInterceptor(logger *zap.SugaredLogger) grpc.UnaryServerIntercepto
 				"error", err,
 			)
 
-			// Use the current hub to capture the error in Sentry
 			hub := sentry.CurrentHub()
 			if hub != nil {
 				hub.Scope().SetContext("gRPC", map[string]interface{}{
@@ -184,7 +181,6 @@ func exemplarFromContext(ctx context.Context) prometheus.Labels {
 	return nil
 }
 
-// zapToGRPCLoggerAdapter converts zap logger to grpc logger
 func zapToGRPCLoggerAdapter(l *zap.SugaredLogger) logging.Logger {
 	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
 		switch lvl {
@@ -202,7 +198,6 @@ func zapToGRPCLoggerAdapter(l *zap.SugaredLogger) logging.Logger {
 	})
 }
 
-// LogTraceID extracts trace ID from context for logging
 func logTraceID(ctx context.Context) logging.Fields {
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 		return logging.Fields{"traceID", span.TraceID().String()}
