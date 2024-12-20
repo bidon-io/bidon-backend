@@ -34,7 +34,7 @@ func NewGRPCServer(logger *zap.Logger) *grpc.Server {
 			unaryErrorInterceptor(rpcLogger),
 			recovery.UnaryServerInterceptor(
 				recovery.WithRecoveryHandler(
-					newPanicRecoveryHandler(metrics.Registry, rpcLogger),
+					newPanicRecoveryHandler(metrics, rpcLogger),
 				),
 			),
 		),
@@ -47,7 +47,7 @@ func NewGRPCServer(logger *zap.Logger) *grpc.Server {
 			streamErrorInterceptor(rpcLogger),
 			recovery.StreamServerInterceptor(
 				recovery.WithRecoveryHandler(
-					newPanicRecoveryHandler(metrics.Registry, rpcLogger),
+					newPanicRecoveryHandler(metrics, rpcLogger),
 				),
 			),
 		),
@@ -59,23 +59,28 @@ func NewGRPCServer(logger *zap.Logger) *grpc.Server {
 }
 
 type Metrics struct {
-	Registry      *prometheus.Registry
 	ServerMetrics *grpcprom.ServerMetrics
+	PanicsTotal   prometheus.Counter
 }
 
 // NewMetrics creates a new metrics instance with configured collectors
 func NewMetrics() *Metrics {
-	reg := prometheus.NewRegistry()
 	srvMetrics := grpcprom.NewServerMetrics(
 		grpcprom.WithServerHandlingTimeHistogram(
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
 		),
 	)
+
+	reg := prometheus.DefaultRegisterer.(*prometheus.Registry)
+	panicsTotal := promauto.With(reg).NewCounter(prometheus.CounterOpts{
+		Name: "grpc_req_panics_recovered_total",
+		Help: "Total number of gRPC requests recovered from internal panic.",
+	})
 	reg.MustRegister(srvMetrics)
 
 	return &Metrics{
-		Registry:      reg,
 		ServerMetrics: srvMetrics,
+		PanicsTotal:   panicsTotal,
 	}
 }
 
@@ -156,14 +161,9 @@ func streamErrorInterceptor(logger *zap.SugaredLogger) grpc.StreamServerIntercep
 	}
 }
 
-func newPanicRecoveryHandler(reg prometheus.Registerer, logger *zap.SugaredLogger) func(p any) error {
-	panicsTotal := promauto.With(reg).NewCounter(prometheus.CounterOpts{
-		Name: "grpc_req_panics_recovered_total",
-		Help: "Total number of gRPC requests recovered from internal panic.",
-	})
-
+func newPanicRecoveryHandler(metrics *Metrics, logger *zap.SugaredLogger) func(p any) error {
 	return func(p any) error {
-		panicsTotal.Inc()
+		metrics.PanicsTotal.Inc()
 
 		logger.Errorw("recovered from panic",
 			"panic", p,
