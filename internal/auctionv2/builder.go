@@ -3,7 +3,7 @@ package auctionv2
 import (
 	"context"
 	"errors"
-	"math/big"
+	"math"
 	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -17,19 +17,12 @@ import (
 )
 
 type Builder struct {
-	ConfigFetcher                ConfigFetcher
 	AdUnitsMatcher               AdUnitsMatcher
 	BiddingBuilder               BiddingBuilder
 	BiddingAdaptersConfigBuilder BiddingAdaptersConfigBuilder
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . ConfigFetcher AdUnitsMatcher BiddingBuilder BiddingAdaptersConfigBuilder
-
-type ConfigFetcher interface {
-	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64, version string) (*auction.Config, error)
-	FetchByUIDCached(ctx context.Context, appId int64, id, uid string) *auction.Config
-}
-
+//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AdUnitsMatcher BiddingBuilder BiddingAdaptersConfigBuilder
 type AdUnitsMatcher interface {
 	MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error)
 }
@@ -54,6 +47,7 @@ type BuildParams struct {
 	GeoData              geocoder.GeoData
 	AuctionKey           string
 	AdUnitIds            []int64
+	AuctionConfiguration *auction.Config
 }
 
 type AuctionResult struct {
@@ -64,43 +58,35 @@ type AuctionResult struct {
 	Stat                 *Stat
 }
 
+func (a AuctionResult) GetDuration() int64 {
+	if a.Stat != nil {
+		return a.Stat.DurationTS
+	}
+
+	return 0
+}
+
 type Stat struct {
 	StartTS    int64
 	EndTS      int64
 	DurationTS int64
 }
 
+const cent = 0.01
+
 func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResult, error) {
 	start := time.Now()
 
-	var auctionConfig *auction.Config
-	var err error
-
-	// Fetch Auction
-	if params.AuctionKey != "" {
-		publicUid, success := new(big.Int).SetString(params.AuctionKey, 32)
-		if !success {
-			return nil, auction.InvalidAuctionKey
-		}
-
-		auctionConfig = b.ConfigFetcher.FetchByUIDCached(ctx, params.AppID, "0", publicUid.String())
-		if auctionConfig == nil {
-			return nil, auction.InvalidAuctionKey
-		}
-	} else {
-		auctionConfig, err = b.ConfigFetcher.Match(ctx, params.AppID, params.AdType, params.Segment.ID, "v2")
+	if params.AuctionConfiguration == nil {
+		return nil, auction.ErrNoAdsFound
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	demandAdapters := adapter.GetCommonAdapters(auctionConfig.Demands, params.Adapters)
-	biddingAdapters := adapter.GetCommonAdapters(auctionConfig.Bidding, params.Adapters)
+	demandAdapters := adapter.GetCommonAdapters(params.AuctionConfiguration.Demands, params.Adapters)
+	biddingAdapters := adapter.GetCommonAdapters(params.AuctionConfiguration.Bidding, params.Adapters)
 	if len(demandAdapters) == 0 && len(biddingAdapters) == 0 {
 		return nil, auction.ErrNoAdsFound
 	}
-	if len(auctionConfig.AdUnitIDs) == 0 {
+	if len(params.AuctionConfiguration.AdUnitIDs) == 0 {
 		return nil, auction.ErrNoAdsFound
 	}
 
@@ -110,31 +96,13 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		AdType:     params.AdType,
 		AdFormat:   params.AdFormat,
 		DeviceType: params.DeviceType,
-		AdUnitIDs:  auctionConfig.AdUnitIDs,
+		AdUnitIDs:  params.AuctionConfiguration.AdUnitIDs,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	adUnitsMap := auction.BuildAdUnitsMap(&adUnits)
-	var cpmAdUnits []auction.AdUnit
-	for _, adUnit := range adUnits {
-		// Use auction pricefloor as BM CPM price
-		if adUnit.DemandID == string(adapter.BidmachineKey) && adUnit.IsCPM() {
-			adUnit.PriceFloor = &params.PriceFloor
-			cpmAdUnits = append(cpmAdUnits, adUnit)
-			continue
-		}
-
-		if adUnit.GetPriceFloor() > params.PriceFloor && adUnit.IsCPM() {
-			cpmAdUnits = append(cpmAdUnits, adUnit)
-		}
-	}
-
-	// Bidding
-	params.MergedAuctionRequest.AdObject.AuctionConfigurationID = auctionConfig.ID
-	params.MergedAuctionRequest.AdObject.AuctionConfigurationUID = auctionConfig.UID
-
 	adapterConfigs, err := b.BiddingAdaptersConfigBuilder.Build(ctx, params.AppID, params.Adapters, adUnitsMap)
 	if err != nil {
 		return nil, err
@@ -146,11 +114,28 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 		BiddingRequest: biddingRequest,
 		GeoData:        params.GeoData,
 		AdapterConfigs: adapterConfigs,
-		AuctionConfig:  *auctionConfig,
+		AuctionConfig:  *params.AuctionConfiguration,
 		StartTS:        start.UnixMilli(),
 	})
 	if err != nil && !errors.Is(err, bidding.ErrNoAdaptersMatched) {
 		return nil, err
+	}
+
+	maxPrice := biddingAuctionResult.GetMaxBidPrice() + cent // Try to get 1 cent more than the max bid price
+	maxPrice = math.Max(maxPrice, params.PriceFloor)
+	var cpmAdUnits []auction.AdUnit
+	for _, adUnit := range adUnits {
+		if !adUnit.IsCPM() {
+			continue
+		}
+		// Use bidding price as floor for Bidmachine and Admob
+		if adUnit.DemandID == string(adapter.BidmachineKey) || adUnit.DemandID == string(adapter.AdmobKey) {
+			adUnit.PriceFloor = &maxPrice
+		}
+
+		if adUnit.GetPriceFloor() >= params.PriceFloor {
+			cpmAdUnits = append(cpmAdUnits, adUnit)
+		}
 	}
 
 	if len(cpmAdUnits) == 0 && len(biddingAuctionResult.Bids) == 0 {
@@ -160,7 +145,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*AuctionResul
 
 	// Build Result
 	auctionResult := AuctionResult{
-		AuctionConfiguration: auctionConfig,
+		AuctionConfiguration: params.AuctionConfiguration,
 		AdUnits:              &adUnits,
 		CPMAdUnits:           &cpmAdUnits,
 		BiddingAuctionResult: &biddingAuctionResult,

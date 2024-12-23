@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"gorm.io/gorm"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/db"
-	"gorm.io/gorm"
 )
 
 type ConfigFetcher struct {
@@ -22,7 +23,7 @@ func (m *ConfigFetcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 
 	query := m.DB.
 		WithContext(ctx).
-		Select("id", "public_uid", "external_win_notifications", "rounds", "demands", "bidding", "ad_unit_ids", "timeout").
+		Select("id", "public_uid", "external_win_notifications", "rounds", "demands", "bidding", "ad_unit_ids", "pricefloor", "timeout").
 		Where(map[string]any{
 			"app_id":  appID,
 			"ad_type": db.AdTypeFromDomain(adType),
@@ -57,6 +58,7 @@ func (m *ConfigFetcher) Match(ctx context.Context, appID int64, adType ad.Type, 
 		Demands:                  db.StringArrayToAdapterKeys(&dbConfig.Demands),
 		Bidding:                  db.StringArrayToAdapterKeys(&dbConfig.Bidding),
 		AdUnitIDs:                dbConfig.AdUnitIds,
+		PriceFloor:               dbConfig.Pricefloor,
 		Timeout:                  int(dbConfig.Timeout),
 	}
 
@@ -108,7 +110,7 @@ func (m *ConfigFetcher) FetchByUID(ctx context.Context, appID int64, id, uid str
 
 	err := m.DB.
 		WithContext(ctx).
-		Select("id", "public_uid", "external_win_notifications", "rounds", "demands", "bidding", "ad_unit_ids", "timeout").
+		Select("id", "public_uid", "external_win_notifications", "rounds", "demands", "bidding", "ad_unit_ids", "pricefloor", "timeout").
 		Where(filter).
 		Order("created_at DESC").
 		Take(dbConfig).
@@ -125,6 +127,7 @@ func (m *ConfigFetcher) FetchByUID(ctx context.Context, appID int64, id, uid str
 		Demands:                  db.StringArrayToAdapterKeys(&dbConfig.Demands),
 		Bidding:                  db.StringArrayToAdapterKeys(&dbConfig.Bidding),
 		AdUnitIDs:                dbConfig.AdUnitIds,
+		PriceFloor:               dbConfig.Pricefloor,
 		Timeout:                  int(dbConfig.Timeout),
 	}
 

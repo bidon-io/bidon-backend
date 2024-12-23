@@ -5,21 +5,21 @@ package mocks
 
 import (
 	"context"
-	"sync"
-
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/auctionv2"
+	"sync"
 )
 
-// Ensure, that ConfigFetcherMock does implement auction.ConfigFetcher.
+// Ensure, that ConfigFetcherMock does implement auctionv2.ConfigFetcher.
 // If this is not the case, regenerate this file with moq.
-var _ auction.ConfigFetcher = &ConfigFetcherMock{}
+var _ auctionv2.ConfigFetcher = &ConfigFetcherMock{}
 
-// ConfigFetcherMock is a mock implementation of auction.ConfigFetcher.
+// ConfigFetcherMock is a mock implementation of auctionv2.ConfigFetcher.
 //
 //	func TestSomethingThatUsesConfigFetcher(t *testing.T) {
 //
-//		// make and configure a mocked auction.ConfigFetcher
+//		// make and configure a mocked auctionv2.ConfigFetcher
 //		mockedConfigFetcher := &ConfigFetcherMock{
 //			FetchByUIDCachedFunc: func(ctx context.Context, appId int64, id string, uid string) *auction.Config {
 //				panic("mock out the FetchByUIDCached method")
@@ -29,7 +29,7 @@ var _ auction.ConfigFetcher = &ConfigFetcherMock{}
 //			},
 //		}
 //
-//		// use mockedConfigFetcher in code that requires auction.ConfigFetcher
+//		// use mockedConfigFetcher in code that requires auctionv2.ConfigFetcher
 //		// and then make assertions.
 //
 //	}
@@ -163,74 +163,74 @@ func (mock *ConfigFetcherMock) MatchCalls() []struct {
 	return calls
 }
 
-// Ensure, that AdUnitsMatcherMock does implement auction.AdUnitsMatcher.
+// Ensure, that AuctionBuilderMock does implement auctionv2.AuctionBuilder.
 // If this is not the case, regenerate this file with moq.
-var _ auction.AdUnitsMatcher = &AdUnitsMatcherMock{}
+var _ auctionv2.AuctionBuilder = &AuctionBuilderMock{}
 
-// AdUnitsMatcherMock is a mock implementation of auction.AdUnitsMatcher.
+// AuctionBuilderMock is a mock implementation of auctionv2.AuctionBuilder.
 //
-//	func TestSomethingThatUsesAdUnitsMatcher(t *testing.T) {
+//	func TestSomethingThatUsesAuctionBuilder(t *testing.T) {
 //
-//		// make and configure a mocked auction.AdUnitsMatcher
-//		mockedAdUnitsMatcher := &AdUnitsMatcherMock{
-//			MatchCachedFunc: func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
-//				panic("mock out the MatchCached method")
+//		// make and configure a mocked auctionv2.AuctionBuilder
+//		mockedAuctionBuilder := &AuctionBuilderMock{
+//			BuildFunc: func(ctx context.Context, params *auctionv2.BuildParams) (*auctionv2.AuctionResult, error) {
+//				panic("mock out the Build method")
 //			},
 //		}
 //
-//		// use mockedAdUnitsMatcher in code that requires auction.AdUnitsMatcher
+//		// use mockedAuctionBuilder in code that requires auctionv2.AuctionBuilder
 //		// and then make assertions.
 //
 //	}
-type AdUnitsMatcherMock struct {
-	// MatchCachedFunc mocks the MatchCached method.
-	MatchCachedFunc func(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error)
+type AuctionBuilderMock struct {
+	// BuildFunc mocks the Build method.
+	BuildFunc func(ctx context.Context, params *auctionv2.BuildParams) (*auctionv2.AuctionResult, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// MatchCached holds details about calls to the MatchCached method.
-		MatchCached []struct {
+		// Build holds details about calls to the Build method.
+		Build []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Params is the params argument value.
-			Params *auction.BuildParams
+			Params *auctionv2.BuildParams
 		}
 	}
-	lockMatchCached sync.RWMutex
+	lockBuild sync.RWMutex
 }
 
-// MatchCached calls MatchCachedFunc.
-func (mock *AdUnitsMatcherMock) MatchCached(ctx context.Context, params *auction.BuildParams) ([]auction.AdUnit, error) {
-	if mock.MatchCachedFunc == nil {
-		panic("AdUnitsMatcherMock.MatchCachedFunc: method is nil but AdUnitsMatcher.MatchCached was just called")
+// Build calls BuildFunc.
+func (mock *AuctionBuilderMock) Build(ctx context.Context, params *auctionv2.BuildParams) (*auctionv2.AuctionResult, error) {
+	if mock.BuildFunc == nil {
+		panic("AuctionBuilderMock.BuildFunc: method is nil but AuctionBuilder.Build was just called")
 	}
 	callInfo := struct {
 		Ctx    context.Context
-		Params *auction.BuildParams
+		Params *auctionv2.BuildParams
 	}{
 		Ctx:    ctx,
 		Params: params,
 	}
-	mock.lockMatchCached.Lock()
-	mock.calls.MatchCached = append(mock.calls.MatchCached, callInfo)
-	mock.lockMatchCached.Unlock()
-	return mock.MatchCachedFunc(ctx, params)
+	mock.lockBuild.Lock()
+	mock.calls.Build = append(mock.calls.Build, callInfo)
+	mock.lockBuild.Unlock()
+	return mock.BuildFunc(ctx, params)
 }
 
-// MatchCachedCalls gets all the calls that were made to MatchCached.
+// BuildCalls gets all the calls that were made to Build.
 // Check the length with:
 //
-//	len(mockedAdUnitsMatcher.MatchCachedCalls())
-func (mock *AdUnitsMatcherMock) MatchCachedCalls() []struct {
+//	len(mockedAuctionBuilder.BuildCalls())
+func (mock *AuctionBuilderMock) BuildCalls() []struct {
 	Ctx    context.Context
-	Params *auction.BuildParams
+	Params *auctionv2.BuildParams
 } {
 	var calls []struct {
 		Ctx    context.Context
-		Params *auction.BuildParams
+		Params *auctionv2.BuildParams
 	}
-	mock.lockMatchCached.RLock()
-	calls = mock.calls.MatchCached
-	mock.lockMatchCached.RUnlock()
+	mock.lockBuild.RLock()
+	calls = mock.calls.Build
+	mock.lockBuild.RUnlock()
 	return calls
 }

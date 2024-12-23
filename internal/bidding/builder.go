@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -53,6 +54,15 @@ type AuctionResult struct {
 	RoundNumber int
 }
 
+func (a AuctionResult) GetMaxBidPrice() float64 {
+	maxPrice := 0.0
+	for _, bid := range a.Bids {
+		maxPrice = math.Max(maxPrice, bid.Price())
+	}
+
+	return maxPrice
+}
+
 type AmazonSlot struct {
 	SlotUUID   string `json:"slot_uuid"`
 	PricePoint string `json:"price_point"`
@@ -88,7 +98,11 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 			},
 		},
 		Device: b.BuildDevice(br.Device, br.User, params.GeoData),
-		Imp:    []openrtb2.Imp{},
+		Imp: []openrtb2.Imp{
+			{
+				BidFloor: br.Imp.GetBidFloorForBidding(),
+			},
+		},
 		Regs: &openrtb2.Regs{
 			COPPA: *bool2int(br.GetRegulations().COPPA),
 			GDPR:  bool2int(br.GetRegulations().GDPR),
@@ -194,6 +208,7 @@ func (b *Builder) processAdapter(
 		for _, demandResponse := range demandResponses {
 			demandResponse.StartTS = params.StartTS
 			demandResponse.EndTS = time.Now().UnixMilli()
+			b.setTokenResponse(demandResponse, &br)
 
 			bids <- *demandResponse
 		}
@@ -219,6 +234,7 @@ func (b *Builder) processAdapter(
 	demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
 	demandResponse.StartTS = params.StartTS
 	demandResponse.EndTS = time.Now().UnixMilli()
+	b.setTokenResponse(demandResponse, &br)
 	if demandResponse.Error != nil {
 		bids <- *demandResponse
 		return
@@ -226,8 +242,6 @@ func (b *Builder) processAdapter(
 
 	demandResponse, err = bidder.Adapter.ParseBids(demandResponse)
 	demandResponse.Error = err
-
-	b.setTokenResponse(demandResponse, &br)
 
 	bids <- *demandResponse
 }
