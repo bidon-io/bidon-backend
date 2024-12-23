@@ -4,9 +4,12 @@ import (
 	"context"
 	"runtime/debug"
 
+	"google.golang.org/grpc/status"
+
 	"github.com/getsentry/sentry-go"
+	grpczap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -15,46 +18,41 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // NewGRPCServer creates a new gRPC server with all middleware configured
 func NewGRPCServer(logger *zap.Logger) *grpc.Server {
 	metrics := NewMetrics()
-	rpcLogger := logger.Named("grpc_server").Sugar()
+
+	// Enable gRPC system log redirection to Zap
+	grpcLogger := logger.Named("grpc_server")
+	grpczap.ReplaceGrpcLoggerV2(grpcLogger)
 
 	srv := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
 			metrics.UnaryServerInterceptor(),
-			logging.UnaryServerInterceptor(
-				zapToGRPCLoggerAdapter(rpcLogger),
-				logging.WithFieldsFromContext(logTraceID),
-			),
-			unaryErrorInterceptor(rpcLogger),
+			grpczap.UnaryServerInterceptor(grpcLogger),
+			unaryErrorInterceptor(),
 			recovery.UnaryServerInterceptor(
 				recovery.WithRecoveryHandler(
-					newPanicRecoveryHandler(metrics, rpcLogger),
+					newPanicRecoveryHandler(metrics, grpcLogger),
 				),
 			),
 		),
 		grpc.ChainStreamInterceptor(
 			metrics.StreamServerInterceptor(),
-			logging.StreamServerInterceptor(
-				zapToGRPCLoggerAdapter(rpcLogger),
-				logging.WithFieldsFromContext(logTraceID),
-			),
-			streamErrorInterceptor(rpcLogger),
+			grpczap.StreamServerInterceptor(grpcLogger),
+			streamErrorInterceptor(),
 			recovery.StreamServerInterceptor(
 				recovery.WithRecoveryHandler(
-					newPanicRecoveryHandler(metrics, rpcLogger),
+					newPanicRecoveryHandler(metrics, grpcLogger),
 				),
 			),
 		),
 	)
 
 	metrics.ServerMetrics.InitializeMetrics(srv)
-
 	return srv
 }
 
@@ -96,23 +94,23 @@ func (m *Metrics) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	)
 }
 
-func unaryErrorInterceptor(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
+// unaryErrorInterceptor logs errors and sends them to Sentry
+func unaryErrorInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (resp interface{}, err error) {
-		resp, err = handler(ctx, req)
-
+	) (interface{}, error) {
+		resp, err := handler(ctx, req)
 		if err != nil {
-			logger.Errorw("gRPC error",
-				"method", info.FullMethod,
-				"error", err,
+			logger := ctxzap.Extract(ctx)
+			logger.Error("gRPC Unary call error",
+				zap.String("method", info.FullMethod),
+				zap.Error(err),
 			)
 
-			hub := sentry.CurrentHub()
-			if hub != nil {
+			if hub := sentry.CurrentHub(); hub != nil {
 				hub.Scope().SetContext("gRPC", map[string]interface{}{
 					"method": info.FullMethod,
 					"error":  err.Error(),
@@ -120,12 +118,12 @@ func unaryErrorInterceptor(logger *zap.SugaredLogger) grpc.UnaryServerIntercepto
 				hub.CaptureException(err)
 			}
 		}
-
 		return resp, err
 	}
 }
 
-func streamErrorInterceptor(logger *zap.SugaredLogger) grpc.StreamServerInterceptor {
+// streamErrorInterceptor logs errors and sends them to Sentry
+func streamErrorInterceptor() grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
 		stream grpc.ServerStream,
@@ -133,17 +131,16 @@ func streamErrorInterceptor(logger *zap.SugaredLogger) grpc.StreamServerIntercep
 		handler grpc.StreamHandler,
 	) error {
 		err := handler(srv, stream)
-
 		if err != nil {
-			logger.Errorw("gRPC stream error",
-				"method", info.FullMethod,
-				"error", err,
-				"isClientStream", info.IsClientStream,
-				"isServerStream", info.IsServerStream,
+			logger := ctxzap.Extract(stream.Context())
+			logger.Error("gRPC Stream call error",
+				zap.String("method", info.FullMethod),
+				zap.Bool("isClientStream", info.IsClientStream),
+				zap.Bool("isServerStream", info.IsServerStream),
+				zap.Error(err),
 			)
 
-			hub := sentry.CurrentHub()
-			if hub != nil {
+			if hub := sentry.CurrentHub(); hub != nil {
 				hub.Scope().SetContext("gRPC", map[string]interface{}{
 					"method":         info.FullMethod,
 					"error":          err.Error(),
@@ -153,22 +150,20 @@ func streamErrorInterceptor(logger *zap.SugaredLogger) grpc.StreamServerIntercep
 				hub.CaptureException(err)
 			}
 		}
-
 		return err
 	}
 }
 
-func newPanicRecoveryHandler(metrics *Metrics, logger *zap.SugaredLogger) func(p any) error {
-	return func(p any) error {
+func newPanicRecoveryHandler(metrics *Metrics, logger *zap.Logger) func(p interface{}) error {
+	return func(p interface{}) error {
 		metrics.PanicsTotal.Inc()
 
-		logger.Errorw("recovered from panic",
-			"panic", p,
-			"stack", string(debug.Stack()),
+		logger.Error("Recovered from panic",
+			zap.Any("panic", p),
+			zap.String("stack", string(debug.Stack())),
 		)
 
 		sentry.CurrentHub().Recover(p)
-
 		return status.Errorf(codes.Internal, "%s", p)
 	}
 }
@@ -177,30 +172,6 @@ func newPanicRecoveryHandler(metrics *Metrics, logger *zap.SugaredLogger) func(p
 func exemplarFromContext(ctx context.Context) prometheus.Labels {
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 		return prometheus.Labels{"traceID": span.TraceID().String()}
-	}
-	return nil
-}
-
-func zapToGRPCLoggerAdapter(l *zap.SugaredLogger) logging.Logger {
-	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
-		switch lvl {
-		case logging.LevelDebug:
-			l.Debugw(msg, fields...)
-		case logging.LevelInfo:
-			l.Infow(msg, fields...)
-		case logging.LevelWarn:
-			l.Warnw(msg, fields...)
-		case logging.LevelError:
-			l.Errorw(msg, fields...)
-		default:
-			l.Infow(msg, fields...)
-		}
-	})
-}
-
-func logTraceID(ctx context.Context) logging.Fields {
-	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
-		return logging.Fields{"traceID", span.TraceID().String()}
 	}
 	return nil
 }
