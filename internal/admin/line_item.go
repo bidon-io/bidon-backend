@@ -258,6 +258,37 @@ func (csv gamLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs
 	return lineItemAttrs, nil
 }
 
+type mintegralLineItemCSV struct {
+	AdFormat    string          `csv:"ad_format"`
+	BidFloor    decimal.Decimal `csv:"bid_floor"`
+	PlacementID string          `csv:"placement_id"`
+	UnitID      string          `csv:"unit_id"`
+}
+
+func (csv mintegralLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"placement_id": csv.PlacementID,
+			"unit_id":      csv.UnitID,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
 type inmobiLineItemCSV struct {
 	AdFormat    string          `csv:"ad_format"`
 	BidFloor    decimal.Decimal `csv:"bid_floor"`
@@ -484,6 +515,17 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		csvLineItems = make([]LineItemCSV, len(inmobiLineItems))
 		for i, inmobiLineItem := range inmobiLineItems {
 			csvLineItems[i] = inmobiLineItem
+		}
+	case adapter.MintegralKey:
+		var mintegralLineItems []mintegralLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &mintegralLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(mintegralLineItems))
+		for i, mintegralLineItem := range mintegralLineItems {
+			csvLineItems[i] = mintegralLineItem
 		}
 	case adapter.UnityAdsKey:
 		var unityLineItems []unityAdsLineItemCSV
