@@ -108,7 +108,6 @@ func TestAuctionAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 			AuctionId:               proto.String("auction_id_123"),
 			AuctionKey:              proto.String("auction_key_789"),
 			AuctionConfigurationUid: proto.String("config_uid_456"),
-			Orientation:             ptr(mediation.Orientation_PORTRAIT),
 			Demands: map[string]*mediation.Demand{
 				"demand_key": {
 					Token:         proto.String("token_value"),
@@ -118,6 +117,14 @@ func TestAuctionAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 				},
 			},
 		}
+
+		placement.Display = &adcom.Placement_DisplayPlacement{}
+		displayPlacementExt := &mediation.DisplayPlacementExt{
+			Format:      ptr(mediation.AdFormat_BANNER),
+			Orientation: ptr(mediation.Orientation_PORTRAIT),
+		}
+		proto.SetExtension(placement.Display, mediation.E_DisplayPlacementExt, displayPlacementExt)
+
 		proto.SetExtension(placement, mediation.E_PlacementExt, placementExt)
 
 		placementBytes, err := proto.Marshal(placement)
@@ -240,7 +247,7 @@ func TestAuctionAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 							"token_finish_ts": int64(1234567890),
 						},
 					},
-					Banner:       nil,
+					Banner:       &schema.BannerAdObject{Format: "BANNER"},
 					Interstitial: nil,
 					Rewarded:     nil,
 				},
