@@ -121,17 +121,27 @@ func parseAdapters(ext *mediation.RequestExt) schema.Adapters {
 }
 
 func parseAdType(ext *mediation.RequestExt) ad.Type {
-	mAdType := ext.GetAdType()
-	switch mAdType {
-	case mediation.AdType_AD_TYPE_BANNER:
-		return ad.BannerType
-	case mediation.AdType_AD_TYPE_INTERSTITIAL:
-		return ad.InterstitialType
-	case mediation.AdType_AD_TYPE_REWARDED:
-		return ad.RewardedType
-	default:
+	// Get placement from request item
+	placement := ext.GetPlacement()
+	if placement == nil {
 		return ad.UnknownType
 	}
+
+	// Check if rewarded
+	if placement.GetReward() {
+		return ad.RewardedType
+	}
+
+	// Check display placement
+	display := placement.GetDisplay()
+	if display != nil {
+		if display.GetInstl() == 1 {
+			return ad.InterstitialType
+		}
+		return ad.BannerType
+	}
+
+	return ad.UnknownType
 }
 
 func parseBaseRequest(req *v3.Request) (schema.BaseRequest, error) {
@@ -207,21 +217,31 @@ func parseAdObject(r *v3.Request) (schema.AdObjectV2, error) {
 		return schema.AdObjectV2{}, fmt.Errorf("parseAdObject: %w", err)
 	}
 
-	var banner *schema.BannerAdObject
-	if b := mi.GetBanner(); b != nil {
-		banner = &schema.BannerAdObject{
-			Format: ad.Format(b.GetFormat().String()),
-		}
+	var rewarded *schema.RewardedAdObject
+	if placement.GetReward() {
+		rewarded = &schema.RewardedAdObject{}
 	}
 
 	var interstitial *schema.InterstitialAdObject
-	if inter := mi.GetInterstitial(); inter != "" {
-		interstitial = &schema.InterstitialAdObject{}
+	var banner *schema.BannerAdObject
+	var orientation string
+	if display := placement.GetDisplay(); display != nil {
+		if display.GetInstl() == 1 {
+			interstitial = &schema.InterstitialAdObject{}
+		} else if display.GetInstl() == 0 {
+			dpi, err := getMediationExtension[*mediation.DisplayPlacementExt](display, mediation.E_DisplayPlacementExt)
+			if err != nil {
+				return schema.AdObjectV2{}, fmt.Errorf("parseAdObject: Missing DisplayPlacementExt %w", err)
+			}
+			orientation = dpi.GetOrientation().String()
+			banner = &schema.BannerAdObject{
+				Format: ad.Format(dpi.GetFormat().String()),
+			}
+		}
 	}
 
-	var rewarded *schema.RewardedAdObject
-	if rew := mi.GetRewarded(); rew != "" {
-		rewarded = &schema.RewardedAdObject{}
+	if rewarded == nil && interstitial == nil && banner == nil {
+		return schema.AdObjectV2{}, fmt.Errorf("parseAdObject: no ad type found")
 	}
 
 	demands := make(map[adapter.Key]map[string]any)
@@ -238,7 +258,7 @@ func parseAdObject(r *v3.Request) (schema.AdObjectV2, error) {
 	return schema.AdObjectV2{
 		AuctionID:               i.GetId(),
 		AuctionConfigurationUID: mi.GetAuctionConfigurationUid(),
-		Orientation:             mi.GetOrientation().String(),
+		Orientation:             orientation,
 		PriceFloor:              float64(i.GetFlr()),
 		AuctionKey:              mi.GetAuctionKey(),
 		Demands:                 demands,
