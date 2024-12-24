@@ -112,6 +112,8 @@ services:
       ENVIRONMENT: production
       APP_SECRET: ${APP_SECRET}
       SNOWFLAKE_NODE_ID: ${SNOWFLAKE_NODE_ID}
+      SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
       DATABASE_URL: postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon
       DATABASE_REPLICA_URL: postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon
       REDIS_URL: redis://redis:6379/0
@@ -119,6 +121,20 @@ services:
       - "3200:3200"
     logging: *default-logging
     <<: *restart-policy
+
+  bidon-admin-init:
+    image: curlimages/curl:latest
+    depends_on:
+      bidon-admin:
+        condition: service_started
+    environment:
+      SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/init-admin.sh"]
+    network_mode: "service:bidon-admin"
+    restart: "no"
 
   bidon-sdkapi:
     image: ghcr.io/bidon-io/bidon-sdkapi:latest
