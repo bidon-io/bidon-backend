@@ -204,16 +204,16 @@ func parseAdObject(r *v3.Request) (schema.AdObjectV2, ad.Type, error) {
 	var banner *schema.BannerAdObject
 	var orientation string
 	if display := placement.GetDisplay(); display != nil {
+		dpi, err := getMediationExtension[*mediation.DisplayPlacementExt](display, mediation.E_DisplayPlacementExt)
+		if err != nil {
+			return schema.AdObjectV2{}, ad.UnknownType, fmt.Errorf("parseAdObject: Missing DisplayPlacementExt %w", err)
+		}
+		orientation = dpi.GetOrientation().String()
 		if display.GetInstl() == 1 {
 			adType = ad.InterstitialType
 			interstitial = &schema.InterstitialAdObject{}
 		} else if display.GetInstl() == 0 {
 			adType = ad.BannerType
-			dpi, err := getMediationExtension[*mediation.DisplayPlacementExt](display, mediation.E_DisplayPlacementExt)
-			if err != nil {
-				return schema.AdObjectV2{}, ad.UnknownType, fmt.Errorf("parseAdObject: Missing DisplayPlacementExt %w", err)
-			}
-			orientation = dpi.GetOrientation().String()
 			banner = &schema.BannerAdObject{
 				Format: ad.Format(dpi.GetFormat().String()),
 			}
