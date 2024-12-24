@@ -1,6 +1,7 @@
 use crate::com::iabtechlab::adcom::v1 as adcom;
 use crate::com::iabtechlab::adcom::v1::context::DistributionChannel;
 use crate::com::iabtechlab::adcom::v1::enums::{ConnectionType, OperatingSystem};
+use crate::com::iabtechlab::adcom::v1::placement::placement::DisplayPlacement;
 use crate::com::iabtechlab::openrtb::v3 as openrtb;
 use crate::com::iabtechlab::openrtb::v3::AuctionType;
 use crate::org::bidon::proto::v1::context::Context;
@@ -282,23 +283,21 @@ fn convert_ad_object_to_item(
     ad_type: sdk::GetAuctionAdTypeParameter,
 ) -> Result<openrtb::Item> {
     let mut placement = adcom::placement::Placement {
-        display: Some(adcom::placement::placement::DisplayPlacement {
-            extension_set: {
-                let mut ext = prost::ExtensionSet::default();
-                let display_placement_ext = mediation::DisplayPlacementExt {
-                    orientation: ad_object
-                        .orientation
-                        .map(|o| convert_ad_orientation(&o) as i32),
-                    format: ad_object
-                        .banner
-                        .as_ref()
-                        .map(|b| convert_banner_format(b.format) as i32),
-                };
-                ext.set_extension_data(mediation::DISPLAY_PLACEMENT_EXT, display_placement_ext)?;
-                ext
-            },
-            ..Default::default()
-        }),
+        display: match (ad_object.orientation, ad_object.banner.as_ref()) {
+            (None, None) => None,
+            (orientation, banner) => Some(DisplayPlacement {
+                extension_set: {
+                    let mut ext = prost::ExtensionSet::default();
+                    let dpe = mediation::DisplayPlacementExt {
+                        orientation: orientation.map(|o| convert_ad_orientation(&o) as i32),
+                        format: banner.map(|b| convert_banner_format(b.format) as i32),
+                    };
+                    ext.set_extension_data(mediation::DISPLAY_PLACEMENT_EXT, dpe)?;
+                    ext
+                },
+                ..Default::default()
+            }),
+        },
         ..Default::default()
     };
 
@@ -306,11 +305,11 @@ fn convert_ad_object_to_item(
     match ad_type {
         sdk::GetAuctionAdTypeParameter::Banner => {
             // Regular banner. 0 is false, 1 is true
-            placement.display.as_mut().map(|d| d.instl = Some(0));
+            placement.display.get_or_insert(Default::default()).instl = Some(0);
         }
         sdk::GetAuctionAdTypeParameter::Interstitial => {
             // Interstitial can be either display or video. 0 is false, 1 is true
-            placement.display.as_mut().map(|d| d.instl = Some(1));
+            placement.display.get_or_insert(Default::default()).instl = Some(1);
             placement.video = Some(adcom::placement::placement::VideoPlacement {
                 ptype: Some(adcom::enums::VideoPlacementSubtype::Interstitial as i32),
                 ..Default::default()
