@@ -624,6 +624,11 @@ func TestParseAdObject(t *testing.T) {
 				display := &adcom.Placement_DisplayPlacement{
 					Instl: proto.Int32(int32(1)),
 				}
+				displayExt := &mediation.DisplayPlacementExt{
+					Orientation: ptr(mediation.Orientation_PORTRAIT),
+				}
+				proto.SetExtension(display, mediation.E_DisplayPlacementExt, displayExt)
+
 				placement := &adcom.Placement{
 					Display: display,
 				}
@@ -644,6 +649,7 @@ func TestParseAdObject(t *testing.T) {
 				AuctionConfigurationUID: "config-123",
 				Interstitial:            &schema.InterstitialAdObject{},
 				Demands:                 map[adapter.Key]map[string]any{},
+				Orientation:             "PORTRAIT",
 			},
 			wantAd: ad.InterstitialType,
 		},

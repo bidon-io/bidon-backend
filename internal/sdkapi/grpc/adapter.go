@@ -209,6 +209,7 @@ func parseAdObject(r *v3.Request) (schema.AdObjectV2, ad.Type, error) {
 			return schema.AdObjectV2{}, ad.UnknownType, fmt.Errorf("parseAdObject: Missing DisplayPlacementExt %w", err)
 		}
 		orientation = dpi.GetOrientation().String()
+
 		if display.GetInstl() == 1 {
 			adType = ad.InterstitialType
 			interstitial = &schema.InterstitialAdObject{}
