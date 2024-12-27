@@ -376,6 +376,37 @@ func (csv unityAdsLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, 
 	return lineItemAttrs, nil
 }
 
+type vkAdsLineItemCSV struct {
+	AdFormat  string          `csv:"ad_format"`
+	BidFloor  decimal.Decimal `csv:"bid_floor"`
+	SlotID    string          `csv:"slot_id"`
+	Mediation string          `csv:"mediation"`
+}
+
+func (csv vkAdsLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"slot_id":   csv.SlotID,
+			"mediation": csv.Mediation,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
 type yandexLineItemCSV struct {
 	AdFormat string          `csv:"ad_format"`
 	BidFloor decimal.Decimal `csv:"bid_floor"`
@@ -578,6 +609,17 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		for i, unityAdsLineItem := range unityLineItems {
 			csvLineItems[i] = unityAdsLineItem
 		}
+	case adapter.VKAdsKey:
+		var vkAdsLineItems []vkAdsLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &vkAdsLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(vkAdsLineItems))
+		for i, vkAdsLineItem := range vkAdsLineItems {
+			csvLineItems[i] = vkAdsLineItem
+		}
 	case adapter.YandexKey:
 		var yandexLineItems []yandexLineItemCSV
 		err = csvutil.Unmarshal(csvInput, &yandexLineItems)
@@ -612,6 +654,15 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		lineItemsAttrs[i], err = csvLineItem.buildLineItemAttrs(account, attrs)
 		if err != nil {
 			return fmt.Errorf("build line item attrs: %v", err)
+		}
+
+		v := lineItemAttrsValidator{
+			attrs:                   &lineItemsAttrs[i],
+			demandSourceAccountRepo: s.store.DemandSourceAccounts(),
+		}
+		err = v.validateExtraField(account)
+		if err != nil {
+			return fmt.Errorf("validate extra field: %v", err)
 		}
 	}
 
@@ -727,6 +778,10 @@ func (v *lineItemAttrsValidator) ValidateWithContext(ctx context.Context) error 
 		return v8n.NewInternalError(err)
 	}
 
+	return v.validateExtraField(account)
+}
+
+func (v *lineItemAttrsValidator) validateExtraField(account *DemandSourceAccount) error {
 	return v8n.ValidateStruct(v.attrs,
 		v8n.Field(&v.attrs.Extra, v.extraRule(account)),
 	)
