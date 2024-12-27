@@ -407,6 +407,35 @@ func (csv vkAdsLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, att
 	return lineItemAttrs, nil
 }
 
+type vungleLineItemCSV struct {
+	AdFormat    string          `csv:"ad_format"`
+	BidFloor    decimal.Decimal `csv:"bid_floor"`
+	PlacementID string          `csv:"placement_id"`
+}
+
+func (csv vungleLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"placement_id": csv.PlacementID,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
 type yandexLineItemCSV struct {
 	AdFormat string          `csv:"ad_format"`
 	BidFloor decimal.Decimal `csv:"bid_floor"`
@@ -619,6 +648,17 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		csvLineItems = make([]LineItemCSV, len(vkAdsLineItems))
 		for i, vkAdsLineItem := range vkAdsLineItems {
 			csvLineItems[i] = vkAdsLineItem
+		}
+	case adapter.VungleKey:
+		var vungleLineItems []vungleLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &vungleLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(vungleLineItems))
+		for i, vungleLineItem := range vungleLineItems {
+			csvLineItems[i] = vungleLineItem
 		}
 	case adapter.YandexKey:
 		var yandexLineItems []yandexLineItemCSV
