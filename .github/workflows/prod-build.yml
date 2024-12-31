@@ -40,6 +40,8 @@ jobs:
 
       - name: Checks-out repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build and Push image
         uses: nick-fields/retry@v3
