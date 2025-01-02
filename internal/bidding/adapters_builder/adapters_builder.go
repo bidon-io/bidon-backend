@@ -3,8 +3,9 @@ package adapters_builder
 import (
 	"context"
 	"fmt"
-	"github.com/bidon-io/bidon-backend/config"
 	"net/http"
+
+	"github.com/bidon-io/bidon-backend/config"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vkads"
 
