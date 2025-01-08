@@ -24,7 +24,8 @@ where
         }
         Err(err) => {
             tracing::error!("Bidding error: {:?}", err);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+            // See ../internal/sdkapi/errors.go for the list of errors. All errors are mapped to 422.
+            (StatusCode::UNPROCESSABLE_ENTITY, "Internal Server Error").into_response()
         }
     }
 }
