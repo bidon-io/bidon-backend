@@ -24,7 +24,31 @@ where
         }
         Err(err) => {
             tracing::error!("Bidding error: {:?}", err);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+
+            let http_status = match err.code() {
+                // Map gRPC status codes to HTTP status codes, sorted by gRPC status code.
+                // Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+                tonic::Code::Cancelled => StatusCode::from_u16(499).unwrap(),
+                tonic::Code::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
+                tonic::Code::InvalidArgument => StatusCode::BAD_REQUEST,
+                tonic::Code::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
+                tonic::Code::NotFound => StatusCode::NOT_FOUND,
+                tonic::Code::AlreadyExists => StatusCode::CONFLICT,
+                tonic::Code::PermissionDenied => StatusCode::FORBIDDEN,
+                tonic::Code::ResourceExhausted => StatusCode::TOO_MANY_REQUESTS,
+                tonic::Code::FailedPrecondition => StatusCode::BAD_REQUEST,
+                tonic::Code::Aborted => StatusCode::CONFLICT,
+                tonic::Code::OutOfRange => StatusCode::BAD_REQUEST,
+                tonic::Code::Unimplemented => StatusCode::NOT_IMPLEMENTED,
+                tonic::Code::Internal => StatusCode::INTERNAL_SERVER_ERROR,
+                tonic::Code::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
+                tonic::Code::DataLoss => StatusCode::INTERNAL_SERVER_ERROR,
+                tonic::Code::Unauthenticated => StatusCode::UNAUTHORIZED,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            let message = err.message().to_string();
+
+            (http_status, Json::from(message)).into_response()
         }
     }
 }
