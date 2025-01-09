@@ -55,4 +55,4 @@ jobs:
 
       - name: Production mirror traffic
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
-        run: make bidon-prod-traffic STAGE=${{ inputs.stage-number }} ACTION=${{ inputs.mirror-traffic }
+        run: make bidon-prod-traffic STAGE=${{ inputs.stage-number }} ACTION=${{ inputs.mirror-traffic }}
