@@ -54,11 +54,11 @@ impl IntoResponse for BiddingError {
         let (status_code, error_message) = match self {
             BiddingError::GrpcError(status) => {
                 // Try to parse the status message as JSON
-                let code = serde_json::from_str::<GrpcError>(status.message())
+                let code = serde_json::from_str::<GrpcErrorMessage>(status.message())
                     .inspect_err(|e| tracing::debug!("Error parsing gRPC error: {}", e))
                     .ok()
                     .and_then(|e| {
-                        StatusCode::from_u16(e.code as u16)
+                        StatusCode::from_u16(e.error.code as u16)
                             .inspect_err(|e| {
                                 tracing::debug!("Error parsing gRPC error code: {}", e)
                             })
@@ -92,10 +92,16 @@ impl IntoResponse for BiddingError {
     }
 }
 
-#[derive(serde::Deserialize)]
-pub struct GrpcError {
-    pub message: String,
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct GrpcErrorMessage {
+    #[serde(rename = "error")]
+    pub error: GrpcErrorDetails,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct GrpcErrorDetails {
     pub code: i32,
+    pub message: String,
 }
 
 #[cfg(test)]
@@ -137,7 +143,7 @@ mod tests {
     #[tokio::test]
     async fn test_bidding_error_grpc_json_response() {
         // Create a JSON string representing a GrpcError
-        let grpc_error_json = r#"{"message": "Custom error message", "code": 422}"#;
+        let grpc_error_json = r#"{"error": {"message": "Custom error message", "code": 422}}"#;
 
         // Create the error with the JSON string as the status message
         let error = BiddingError::GrpcError(Status::invalid_argument(grpc_error_json));
