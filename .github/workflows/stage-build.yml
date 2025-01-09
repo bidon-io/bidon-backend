@@ -10,6 +10,12 @@ on:
         options:
           - 1
           - 2
+      mirror-traffic:
+        type: choice
+        default: false
+        options: 'disable'
+          - 'disable'
+          - 'enable'
       refresh-db:
         type: boolean
         description: Refresh DB
@@ -36,6 +42,8 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
+          branch: 'DO-2750/staging-mirror'
+
       - name: Refresh DB
         if: ${{ inputs.refresh-db == true }}
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
@@ -44,3 +52,7 @@ jobs:
       - name: Deploy stage
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
         run: make bidon-backend STAGE=${{ inputs.stage-number }}
+
+      - name: Production mirror traffic
+        working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
+        run: make bidon-prod-traffic STAGE=${{ inputs.stage-number }} ACTION=${{ inputs.mirror-traffic }
