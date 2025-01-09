@@ -43,8 +43,6 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
-          ref: 'DO-2750/staging-mirror'
-
       - name: Refresh DB
         if: ${{ inputs.refresh-db == true }}
         working-directory: ./${{ secrets.ANSIBLE_SECRET }}/stage
