@@ -97,3 +97,70 @@ pub struct GrpcError {
     pub message: String,
     pub code: i32,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use axum::body::to_bytes;
+    use axum::response::Response;
+    use serde_json::Value;
+    use tokio; // Ensure Tokio is included in your dependencies
+
+    #[tokio::test]
+    async fn test_bidding_error_response() {
+        // Create the error
+        let error = BiddingError::GrpcError(Status::invalid_argument("Invalid input"));
+
+        // Convert the error into an Axum response
+        let response: Response = error.into_response();
+
+        // Assert that the status code is BAD_REQUEST (400)
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        // Split the response into parts to extract the body
+        let (_, body) = response.into_parts();
+
+        // Convert the body into bytes asynchronously
+        let bytes = to_bytes(body, usize::MAX)
+            .await
+            .expect("Failed to read body");
+
+        // Deserialize the bytes into a JSON value
+        let body_json: Value = serde_json::from_slice(&bytes).expect("Failed to parse JSON");
+
+        // Assert the JSON structure and values
+        assert_eq!(body_json["error"], "Invalid input");
+        assert_eq!(body_json["code"], 400);
+    }
+
+    #[tokio::test]
+    async fn test_bidding_error_grpc_json_response() {
+        // Create a JSON string representing a GrpcError
+        let grpc_error_json = r#"{"message": "Custom error message", "code": 422}"#;
+
+        // Create the error with the JSON string as the status message
+        let error = BiddingError::GrpcError(Status::invalid_argument(grpc_error_json));
+
+        // Convert the error into an Axum response
+        let response: Response = error.into_response();
+
+        // Assert that the status code matches the one in our JSON (422)
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+        // Split the response into parts to extract the body
+        let (_, body) = response.into_parts();
+
+        // Convert the body into bytes asynchronously
+        let bytes = to_bytes(body, usize::MAX)
+            .await
+            .expect("Failed to read body");
+
+        // Deserialize the bytes into a JSON value
+        let body_json: Value = serde_json::from_slice(&bytes).expect("Failed to parse JSON");
+
+        // Assert the JSON structure and values
+        assert_eq!(body_json["error"], grpc_error_json);
+        assert_eq!(body_json["code"], 422);
+    }
+}
