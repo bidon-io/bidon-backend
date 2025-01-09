@@ -52,10 +52,21 @@ impl BiddingError {
 impl IntoResponse for BiddingError {
     fn into_response(self) -> Response {
         let (status_code, error_message) = match self {
-            BiddingError::GrpcError(status) => (
-                Self::grpc_to_http_status(status.code()),
-                status.message().to_string(),
-            ),
+            BiddingError::GrpcError(status) => {
+                // Try to parse the status message as JSON
+                let code = serde_json::from_str::<GrpcError>(status.message())
+                    .inspect_err(|e| tracing::debug!("Error parsing gRPC error: {}", e))
+                    .ok()
+                    .and_then(|e| {
+                        StatusCode::from_u16(e.code as u16)
+                            .inspect_err(|e| {
+                                tracing::debug!("Error parsing gRPC error code: {}", e)
+                            })
+                            .ok()
+                    })
+                    .unwrap_or_else(|| Self::grpc_to_http_status(status.code()));
+                (code, status.message().to_string())
+            }
             BiddingError::HttpError(status, msg) => {
                 (status, format!("Upstream HTTP service error: {}", msg))
             }
@@ -79,4 +90,10 @@ impl IntoResponse for BiddingError {
 
         (status_code, body).into_response()
     }
+}
+
+#[derive(serde::Deserialize)]
+pub struct GrpcError {
+    pub message: String,
+    pub code: i32,
 }
