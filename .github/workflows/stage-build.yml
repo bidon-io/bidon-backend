@@ -12,8 +12,8 @@ on:
           - 2
       mirror-traffic:
         type: choice
-        default: false
-        options: 'disable'
+        default: 'disable'
+        options:
           - 'disable'
           - 'enable'
       refresh-db:
