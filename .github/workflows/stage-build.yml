@@ -12,6 +12,7 @@ on:
           - 2
       mirror-traffic:
         type: choice
+        description: Production traffic
         default: 'disable'
         options:
           - 'disable'
@@ -42,7 +43,7 @@ jobs:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
 
-          branch: 'DO-2750/staging-mirror'
+          ref: 'DO-2750/staging-mirror'
 
       - name: Refresh DB
         if: ${{ inputs.refresh-db == true }}
