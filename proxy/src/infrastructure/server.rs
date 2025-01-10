@@ -12,7 +12,7 @@ pub async fn run(listener: tokio::net::TcpListener) -> Result<(), Box<dyn std::e
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayerBuilder::new()
         .with_ignore_patterns(&["/metrics"])
-        .with_prefix("ghostlink")
+        .with_prefix("bidon_proxy")
         .with_default_metrics()
         .build_pair();
 
@@ -50,5 +50,11 @@ pub async fn run(listener: tokio::net::TcpListener) -> Result<(), Box<dyn std::e
 }
 
 async fn health() -> impl IntoResponse {
-    StatusCode::OK
+    match tonic::transport::Endpoint::new(settings().grpc_url()) {
+        Ok(endpoint) => match endpoint.connect().await {
+            Ok(_) => StatusCode::OK,
+            Err(_) => StatusCode::SERVICE_UNAVAILABLE,
+        },
+        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
+    }
 }
