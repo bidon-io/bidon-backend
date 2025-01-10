@@ -4,7 +4,6 @@ use axum::{
     Json,
 };
 use derive_more::Display;
-use serde_json::json;
 use tonic::Status;
 
 #[derive(Debug, Display)]
@@ -53,19 +52,26 @@ impl IntoResponse for BiddingError {
     fn into_response(self) -> Response {
         let (status_code, error_message) = match self {
             BiddingError::GrpcError(status) => {
-                // Try to parse the status message as JSON
-                let code = serde_json::from_str::<GrpcErrorMessage>(status.message())
-                    .inspect_err(|e| tracing::debug!("Error parsing gRPC error: {}", e))
-                    .ok()
-                    .and_then(|e| {
-                        StatusCode::from_u16(e.error.code as u16)
+                match serde_json::from_str::<GrpcErrorMessage>(status.message()) {
+                    Ok(e) => {
+                        let code = StatusCode::from_u16(e.error.code as u16)
                             .inspect_err(|e| {
                                 tracing::debug!("Error parsing gRPC error code: {}", e)
                             })
-                            .ok()
-                    })
-                    .unwrap_or_else(|| Self::grpc_to_http_status(status.code()));
-                (code, status.message().to_string())
+                            .unwrap_or_else(|_| Self::grpc_to_http_status(status.code()));
+                        (code, e.error.message)
+                    }
+                    Err(e) => {
+                        let msg = format!(
+                            "Error parsing gRPC error from: '{}', err: {}",
+                            status.message(),
+                            e
+                        );
+                        tracing::debug!(msg);
+
+                        (Self::grpc_to_http_status(status.code()), msg)
+                    }
+                }
             }
             BiddingError::HttpError(status, msg) => {
                 (status, format!("Upstream HTTP service error: {}", msg))
@@ -83,12 +89,14 @@ impl IntoResponse for BiddingError {
             ),
         };
 
-        let body = Json(json!({
-            "error": error_message,
-            "code": status_code.as_u16()
-        }));
+        let error = GrpcErrorMessage {
+            error: GrpcErrorDetails {
+                code: status_code.as_u16(),
+                message: error_message,
+            },
+        };
 
-        (status_code, body).into_response()
+        (status_code, Json(error)).into_response()
     }
 }
 
@@ -100,7 +108,7 @@ pub struct GrpcErrorMessage {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct GrpcErrorDetails {
-    pub code: i32,
+    pub code: u16,
     pub message: String,
 }
 
@@ -136,8 +144,11 @@ mod tests {
         let body_json: Value = serde_json::from_slice(&bytes).expect("Failed to parse JSON");
 
         // Assert the JSON structure and values
-        assert_eq!(body_json["error"], "Invalid input");
-        assert_eq!(body_json["code"], 400);
+        assert_eq!(
+            body_json["error"]["message"],
+            "Error parsing gRPC error from: 'Invalid input', err: expected value at line 1 column 1"
+        );
+        assert_eq!(body_json["error"]["code"], 400);
     }
 
     #[tokio::test]
@@ -166,7 +177,7 @@ mod tests {
         let body_json: Value = serde_json::from_slice(&bytes).expect("Failed to parse JSON");
 
         // Assert the JSON structure and values
-        assert_eq!(body_json["error"], grpc_error_json);
-        assert_eq!(body_json["code"], 422);
+        assert_eq!(body_json["error"]["message"], "Custom error message");
+        assert_eq!(body_json["error"]["code"], 422);
     }
 }
