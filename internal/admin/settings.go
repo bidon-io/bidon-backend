@@ -4,6 +4,7 @@ import (
 	v8n "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"regexp"
 )
 
 type PasswordUpdateRequest struct {
@@ -15,13 +16,32 @@ type PasswordUpdateRequest struct {
 func (r *PasswordUpdateRequest) Validate() error {
 	return v8n.ValidateStruct(r,
 		v8n.Field(&r.CurrentPassword, v8n.Required),
-		v8n.Field(&r.NewPassword, v8n.Required, v8n.Length(6, 50)),
-		v8n.Field(&r.NewPasswordConfirmation, v8n.Required, v8n.By(func(value interface{}) error {
-			if value.(string) != r.NewPassword {
-				return v8n.NewError("validation_mismatch", "New password and confirmation do not match")
-			}
-			return nil
-		})),
+		v8n.Field(&r.NewPassword,
+			v8n.Required,
+			v8n.Length(8, 50), // Minimum length of 8 characters
+			v8n.By(func(value interface{}) error {
+				password := value.(string)
+				if !regexp.MustCompile(`[A-Z]`).MatchString(password) {
+					return v8n.NewError("validation_uppercase", "Password must include at least one uppercase letter")
+				}
+				if !regexp.MustCompile(`[a-z]`).MatchString(password) {
+					return v8n.NewError("validation_lowercase", "Password must include at least one lowercase letter")
+				}
+				if !regexp.MustCompile(`\d`).MatchString(password) {
+					return v8n.NewError("validation_digit", "Password must include at least one number")
+				}
+				return nil
+			}),
+		),
+		v8n.Field(&r.NewPasswordConfirmation,
+			v8n.Required,
+			v8n.By(func(value interface{}) error {
+				if value.(string) != r.NewPassword {
+					return v8n.NewError("validation_mismatch", "New password and confirmation do not match")
+				}
+				return nil
+			}),
+		),
 	)
 }
 

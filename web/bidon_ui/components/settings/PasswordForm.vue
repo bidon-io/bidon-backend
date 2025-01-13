@@ -52,20 +52,21 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 
 const { errors, useFieldModel, handleSubmit } = useForm({
-  validationSchema: computed(()
-    => yup.object({
+  validationSchema: computed(() =>
+    yup.object({
       currentPassword: yup.string().required().label("Current Password"),
       newPassword: yup
         .string()
         .required("New Password is required")
         .min(8, "Password must be at least 8 characters")
+        .max(50, "Password must be at most 50 characters")
         .matches(/[A-Z]/, "Password must include at least one uppercase letter")
         .matches(/[a-z]/, "Password must include at least one lowercase letter")
         .matches(/\d/, "Password must include at least one number")
         .label("New Password"),
       newPasswordConfirmation: yup
         .string()
-        .oneOf([yup.ref('newPassword'), null], 'Passwords must match')
+        .oneOf([yup.ref("newPassword"), null], "Passwords must match")
         .required()
         .label("Confirm New Password"),
     }),

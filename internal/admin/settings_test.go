@@ -48,10 +48,90 @@ func TestSettingsService_UpdatePassword(t *testing.T) {
 			},
 			requestPayload: PasswordUpdateRequest{
 				CurrentPassword:         "oldpassword",
-				NewPassword:             "newpassword",
-				NewPasswordConfirmation: "newpassword",
+				NewPassword:             "NewPassword1",
+				NewPasswordConfirmation: "NewPassword1",
 			},
 			expectedHTTPStatus: http.StatusNoContent,
+		},
+		{
+			name: "missing uppercase letter",
+			authCtx: &AuthContextMock{
+				UserIDFunc: func() int64 { return 1 },
+				IsAdminFunc: func() bool {
+					return false
+				},
+			},
+			requestPayload: PasswordUpdateRequest{
+				CurrentPassword:         "oldpassword",
+				NewPassword:             "newpassword1",
+				NewPasswordConfirmation: "newpassword1",
+			},
+			expectedHTTPStatus:  http.StatusBadRequest,
+			expectedErrorString: "new_password: Password must include at least one uppercase letter.",
+		},
+		{
+			name: "missing lowercase letter",
+			authCtx: &AuthContextMock{
+				UserIDFunc: func() int64 { return 1 },
+				IsAdminFunc: func() bool {
+					return false
+				},
+			},
+			requestPayload: PasswordUpdateRequest{
+				CurrentPassword:         "oldpassword",
+				NewPassword:             "NEWPASSWORD1",
+				NewPasswordConfirmation: "NEWPASSWORD1",
+			},
+			expectedHTTPStatus:  http.StatusBadRequest,
+			expectedErrorString: "new_password: Password must include at least one lowercase letter.",
+		},
+		{
+			name: "missing number",
+			authCtx: &AuthContextMock{
+				UserIDFunc: func() int64 { return 1 },
+				IsAdminFunc: func() bool {
+					return false
+				},
+			},
+			requestPayload: PasswordUpdateRequest{
+				CurrentPassword:         "oldpassword",
+				NewPassword:             "NewPassword",
+				NewPasswordConfirmation: "NewPassword",
+			},
+			expectedHTTPStatus:  http.StatusBadRequest,
+			expectedErrorString: "new_password: Password must include at least one number.",
+		},
+		{
+			name: "password too short",
+			authCtx: &AuthContextMock{
+				UserIDFunc: func() int64 { return 1 },
+				IsAdminFunc: func() bool {
+					return false
+				},
+			},
+			requestPayload: PasswordUpdateRequest{
+				CurrentPassword:         "oldpassword",
+				NewPassword:             "Short1",
+				NewPasswordConfirmation: "Short1",
+			},
+			expectedHTTPStatus:  http.StatusBadRequest,
+			expectedErrorString: "new_password: the length must be between 8 and 50.",
+		},
+		{
+			name: "password confirmation mismatch",
+			authCtx: &AuthContextMock{
+				UserIDFunc: func() int64 { return 1 },
+				IsAdminFunc: func() bool {
+					return false
+				},
+			},
+			requestPayload: PasswordUpdateRequest{
+				CurrentPassword:         "oldpassword",
+				NewPassword:             "NewPassword1",
+				NewPasswordConfirmation: "Mismatch1",
+			},
+			expectedHTTPStatus:  http.StatusBadRequest,
+			expectedErrorString: "new_password_confirmation: New password and confirmation do not match.",
 		},
 		{
 			name: "incorrect current password",
@@ -63,8 +143,8 @@ func TestSettingsService_UpdatePassword(t *testing.T) {
 			},
 			requestPayload: PasswordUpdateRequest{
 				CurrentPassword:         "wrongpassword",
-				NewPassword:             "newpassword",
-				NewPasswordConfirmation: "newpassword",
+				NewPassword:             "NewPassword1",
+				NewPasswordConfirmation: "NewPassword1",
 			},
 			expectedHTTPStatus:  http.StatusForbidden,
 			expectedErrorString: "current password is incorrect",
@@ -79,27 +159,11 @@ func TestSettingsService_UpdatePassword(t *testing.T) {
 			},
 			requestPayload: PasswordUpdateRequest{
 				CurrentPassword:         "oldpassword",
-				NewPassword:             "newpassword",
-				NewPasswordConfirmation: "newpassword",
+				NewPassword:             "NewPassword1",
+				NewPasswordConfirmation: "NewPassword1",
 			},
 			expectedHTTPStatus:  http.StatusNotFound,
 			expectedErrorString: "user not found",
-		},
-		{
-			name: "password confirmation mismatch",
-			authCtx: &AuthContextMock{
-				UserIDFunc: func() int64 { return 1 },
-				IsAdminFunc: func() bool {
-					return false
-				},
-			},
-			requestPayload: PasswordUpdateRequest{
-				CurrentPassword:         "oldpassword",
-				NewPassword:             "newpassword",
-				NewPasswordConfirmation: "mismatch",
-			},
-			expectedHTTPStatus:  http.StatusBadRequest,
-			expectedErrorString: "new_password_confirmation: New password and confirmation do not match.",
 		},
 	}
 
