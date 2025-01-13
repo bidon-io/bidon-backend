@@ -960,6 +960,15 @@ paths:
           description: "No Content, the CSV was imported successfully."
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /api/settings/password:
+    patch:
+      summary: Update current user password
+      operationId: updatePassword
+      tags:
+        - Settings
+      responses:
+        '200':
+          description: Authorization successful, returns user data and access token
   /api/openapi.json:
     get:
       summary: Get OpenAPI specification
