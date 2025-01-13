@@ -967,8 +967,8 @@ paths:
       tags:
         - Settings
       responses:
-        '200':
-          description: Authorization successful, returns user data and access token
+        '204':
+          description: Password Update successful
   /api/openapi.json:
     get:
       summary: Get OpenAPI specification
