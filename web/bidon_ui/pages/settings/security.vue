@@ -3,10 +3,7 @@
     <NavigationContainer>
       <GoBackButton :path="resourcePath" />
     </NavigationContainer>
-    <PasswordForm
-      :submit-error="error"
-      @submit="handleSubmit"
-    />
+    <PasswordForm :submit-error="error" @submit="handleSubmit" />
   </PageContainer>
 </template>
 

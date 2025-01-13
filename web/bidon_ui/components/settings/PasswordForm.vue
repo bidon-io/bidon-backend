@@ -1,19 +1,39 @@
 <template>
   <transition-group name="p-message" tag="div">
     <Message v-for="(msg, index) in errorMsgs" :key="index" severity="error">{{
-        msg
-      }}</Message>
+      msg
+    }}</Message>
   </transition-group>
   <form @submit="onSubmit">
     <FormCard title="Password">
-      <FormField label="Current Password" :error="errors.currentPassword" required>
-        <InputText v-model="currentPassword" type="password" placeholder="Current Password" />
+      <FormField
+        label="Current Password"
+        :error="errors.currentPassword"
+        required
+      >
+        <InputText
+          v-model="currentPassword"
+          type="password"
+          placeholder="Current Password"
+        />
       </FormField>
-      <FormField label="New Password" :error="errors.newPassword"  required>
-        <InputText v-model="newPassword" type="password" placeholder="New Password" />
+      <FormField label="New Password" :error="errors.newPassword" required>
+        <InputText
+          v-model="newPassword"
+          type="password"
+          placeholder="New Password"
+        />
       </FormField>
-      <FormField label="Confirm New Password" :error="errors.newPasswordConfirmation"  required>
-        <InputText v-model="newPasswordConfirmation" type="password" placeholder="Confirm New Password" />
+      <FormField
+        label="Confirm New Password"
+        :error="errors.newPasswordConfirmation"
+        required
+      >
+        <InputText
+          v-model="newPasswordConfirmation"
+          type="password"
+          placeholder="Confirm New Password"
+        />
       </FormField>
       <FormSubmitButton />
     </FormCard>
@@ -32,7 +52,8 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 
 const { errors, useFieldModel, handleSubmit } = useForm({
-  validationSchema: computed(() => yup.object({
+  validationSchema: computed(()
+    => yup.object({
       currentPassword: yup.string().required().label("Current Password"),
       newPassword: yup
         .string()
