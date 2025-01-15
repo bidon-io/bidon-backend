@@ -194,7 +194,7 @@ const filters = ref<
 
 // Fetch resources
 const {
-  data: resources,
+  data: collection,
   status,
   error,
   execute: fetchData,
@@ -202,8 +202,7 @@ const {
   "fetch-resources",
   async () => {
     const params = buildQueryParams();
-    const response = await $apiFetch(props.resourcesPath, { params });
-    return response;
+    return await $apiFetch(`/v2${props.resourcesPath}`, { params });
   },
   {
     default: () => [],
@@ -211,8 +210,11 @@ const {
   },
 );
 
-// const totalRecords = computed(() => resources.value?.length ?? 0);
-const totalRecords = computed(() => 1000);
+const resources = computed(() => collection.value?.items ?? []);
+const totalRecords = computed(() => collection.value?.meta?.totalCount ?? 0);
+
+console.log("resources", resources.value);
+console.log("totalRecords", totalRecords.value);
 
 const onFilter = async () => {
   await fetchData();
