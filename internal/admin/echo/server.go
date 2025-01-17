@@ -315,7 +315,7 @@ func (s *Server) GetLineItems(c echo.Context, _ api.GetLineItemsParams) error {
 	return s.LineItemHandler.list(c)
 }
 
-func (s *Server) GetLineItemsV2(c echo.Context, _ api.GetLineItemsV2Params) error {
+func (s *Server) GetLineItemsCollection(c echo.Context, _ api.GetLineItemsCollectionParams) error {
 	return s.LineItemHandler.listCollection(c)
 }
 

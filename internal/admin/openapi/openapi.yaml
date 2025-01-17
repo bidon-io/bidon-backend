@@ -43,7 +43,7 @@ paths:
       operationId: getAuctionConfigurationsCollection
       summary: List auction configurations
       tags:
-        - Auction configurations Collection
+        - Auction Configurations Collection
       parameters:
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/appId'
@@ -150,7 +150,7 @@ paths:
       operationId: getAuctionConfigurationsCollectionV2
       summary: List auction configurations V2
       tags:
-        - Auction configurations Collection
+        - Auction Configurations Collection
       parameters:
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/appId'
@@ -730,12 +730,12 @@ paths:
           description: Line item deleted successfully
         default:
           $ref: '#/components/responses/ErrorResponse'
-  /api/v2/line_items:
+  /api/line_items_collection:
     get:
-      operationId: getLineItemsV2
+      operationId: getLineItemsCollection
       summary: List line items
       tags:
-        - Line items
+        - Line Items Collection
       parameters:
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/appId'

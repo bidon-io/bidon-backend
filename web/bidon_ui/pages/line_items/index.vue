@@ -22,5 +22,5 @@ const columns = [
   ResourceTableFields.AccountType,
 ];
 const resourcesPath = "/line_items";
-const collectionPath = "/v2/line_items";
+const collectionPath = "/line_items_collection";
 </script>
