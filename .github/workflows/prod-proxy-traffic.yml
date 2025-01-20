@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.PAT_RUNNER }}
 
       - name: Checks-out repository devops
-        if: ${{ inputs.traffic == enable }}
+        if: ${{ inputs.traffic == 'enable' }}
         uses: actions/checkout@v4
         with:
           repository: bidon-io/devops
