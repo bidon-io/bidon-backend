@@ -8,19 +8,16 @@
         :path="resourcesPath"
       />
     </NavigationContainer>
-    <ResourceCard
-      title="API Key"
-      :fields="fields"
-      :resource="resource"
-    />
+    <ResourceCard title="API Key" :fields="fields" :resource="resource" />
   </PageContainer>
 </template>
 
-<script setup>
-import {$apiFetch} from "~/utils/$apiFetch";
+<script setup lang="ts">
+import { $apiFetch } from "~/utils/$apiFetch";
 
 const route = useRoute();
 const id = route.params.id;
+
 const resourcesPath = "/api_keys";
 
 const resource = await $apiFetch(`${resourcesPath}/${id}`);

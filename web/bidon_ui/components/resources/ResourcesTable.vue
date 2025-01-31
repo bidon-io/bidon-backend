@@ -200,6 +200,7 @@ const deleteHandle = useDeleteResource({
     )),
 });
 
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
 const copyField = (field: any) => {
   navigator.clipboard.writeText(field);
 };

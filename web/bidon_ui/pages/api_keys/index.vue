@@ -1,13 +1,19 @@
 <template>
   <NavigationContainer v-if="resource?.permissions?.create">
-    <Button :disabled="buttonDisabled" @click="createApiToken" label="Generate Token" icon="pi pi-cog" class="p-button-success"></Button>
+    <Button
+      :disabled="buttonDisabled"
+      class="p-button-success"
+      label="Generate Token"
+      icon="pi pi-cog"
+      @click="createApiToken"
+    ></Button>
   </NavigationContainer>
   <ResourcesTable :columns="columns" :resources-path="resourcesPath" />
 </template>
 
 <script setup lang="ts">
-import {$apiFetch} from "~/utils/$apiFetch";
-import {useToast} from "primevue/usetoast";
+import { $apiFetch } from "~/utils/$apiFetch";
+import { useToast } from "primevue/usetoast";
 
 const toast = useToast();
 
@@ -27,13 +33,13 @@ const createApiToken = async () => {
   const apiKey = await $apiFetch("/api_keys", {
     method: "POST",
   }).catch((error) => {
-    console.error(error)
+    console.error(error);
     toast.add({
       severity: "error",
       summary: `${error.response.status} ${error.response.statusText}`,
       detail: error.response?.data?.error?.message,
     });
-  })
+  });
 
   buttonDisabled.value = false;
 
@@ -42,5 +48,5 @@ const createApiToken = async () => {
   }
 
   navigateTo(`/api_keys/${apiKey.id}`);
-}
+};
 </script>
