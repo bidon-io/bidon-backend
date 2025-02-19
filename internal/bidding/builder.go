@@ -26,6 +26,7 @@ import (
 type Builder struct {
 	AdaptersBuilder     AdaptersBuilder
 	NotificationHandler NotificationHandler
+	BidCacher           BidCacher
 }
 
 var ErrNoAdaptersMatched = errors.New("no adapters matched")
@@ -38,6 +39,10 @@ type AdaptersBuilder interface {
 
 type NotificationHandler interface {
 	HandleBiddingRound(context.Context, *schema.Imp, AuctionResult, string, string) error
+}
+
+type BidCacher interface {
+	ApplyBidCache(ctx context.Context, br *schema.BiddingRequest, result *AuctionResult) []adapters.DemandResponse
 }
 
 type BuildParams struct {
@@ -176,6 +181,9 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	for bid := range bids {
 		auctionResult.Bids = append(auctionResult.Bids, bid)
 	}
+
+	// Cache Bids
+	auctionResult.Bids = b.BidCacher.ApplyBidCache(ctx, &br, &auctionResult)
 
 	b.NotificationHandler.HandleBiddingRound(ctx, &br.Imp, auctionResult, br.App.Bundle, string(br.AdType))
 

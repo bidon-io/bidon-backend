@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/benbjohnson/clock"
 	"log"
 	"net"
 	"net/http"
@@ -207,6 +208,7 @@ func main() {
 	biddingBuilderV2 := &bidding.Builder{
 		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHttpClient),
 		NotificationHandler: notificationHandlerV2,
+		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
 	}
 	biddingAdaptersCfgCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, 10*time.Minute, "bidding_adapters_cfg")
 	err = biddingAdaptersCfgCache.Monitor(meter)

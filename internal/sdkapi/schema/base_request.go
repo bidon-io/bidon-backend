@@ -2,8 +2,9 @@ package schema
 
 import (
 	"encoding/json"
-	"github.com/Masterminds/semver/v3"
 	"strings"
+
+	"github.com/Masterminds/semver/v3"
 )
 
 type BaseRequest struct {
