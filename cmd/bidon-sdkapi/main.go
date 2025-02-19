@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/bool64/cache"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
@@ -50,6 +49,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/openapi"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
+	"github.com/bidon-io/bidon-backend/pkg/clock"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1"
 )
 

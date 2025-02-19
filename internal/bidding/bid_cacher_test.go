@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/go-cmp/cmp"
 
@@ -13,13 +12,14 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/pkg/clock"
 )
 
 func TestBidCache_ApplyBidCache(t *testing.T) {
 	redisClient, mock := redismock.NewClusterMock()
-	clck := clock.NewMock()
-	clck.Set(time.Now())
-	bidCache := &bidding.BidCache{Redis: redisClient, Clock: clck}
+	mockTime := clock.NewMock()
+	mockTime.Set(time.Now())
+	bidCache := &bidding.BidCache{Redis: redisClient, Clock: mockTime}
 
 	ctx := context.Background()
 	br := &schema.BiddingRequest{
@@ -57,7 +57,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.ApplovinKey: {
 						Bid:       adapters.DemandResponse{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{Price: 2.0}},
-						CreatedAt: clck.Now(),
+						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 				},
