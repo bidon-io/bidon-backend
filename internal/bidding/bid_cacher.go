@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/benbjohnson/clock"
 	"time"
+
+	"github.com/benbjohnson/clock"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/redis/go-redis/v9"
 )
 
 const TTL = 5 * 60 * time.Second

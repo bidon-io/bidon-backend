@@ -5,11 +5,12 @@ package mocks
 
 import (
 	"context"
+	"sync"
+
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"sync"
 )
 
 // Ensure, that AdaptersBuilderMock does implement bidding.AdaptersBuilder.

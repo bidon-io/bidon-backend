@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/config"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
 func TestNewAdEvent(t *testing.T) {

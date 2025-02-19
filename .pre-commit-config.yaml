@@ -18,3 +18,11 @@ repos:
         entry: buf generate
         language: system
         pass_filenames: false
+      - id: golangci-lint
+        name: golangci-lint
+        description: Only modified files are linted, so linters like 'unused' that need to scan all files won't work as expected.
+        entry: golangci-lint run --new-from-rev HEAD --fix
+        types: [ go ]
+        language: golang
+        require_serial: true
+        pass_filenames: false
