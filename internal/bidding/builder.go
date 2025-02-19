@@ -86,12 +86,12 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	br := params.BiddingRequest
 	config := params.AuctionConfig
 
-	bidId, err := uuid.NewV4()
+	bidID, err := uuid.NewV4()
 	if err != nil {
 		return emptyResponse, fmt.Errorf("cannot generate Bid UUID: %s", err)
 	}
 	baseBidRequest := openrtb.BidRequest{
-		ID:   bidId.String(),
+		ID:   bidID.String(),
 		Test: *bool2int(br.Test),
 		AT:   1,
 		TMax: 2000,
@@ -186,7 +186,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	// Cache Bids
 	auctionResult.Bids = b.BidCacher.ApplyBidCache(ctx, &br, &auctionResult)
 
-	b.NotificationHandler.HandleBiddingRound(ctx, &br.Imp, auctionResult, br.App.Bundle, string(br.AdType))
+	b.NotificationHandler.HandleBiddingRound(ctx, &br.Imp, auctionResult, br.App.Bundle, string(br.AdType)) //nolint:errcheck
 
 	return auctionResult, nil
 }

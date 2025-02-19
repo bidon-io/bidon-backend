@@ -42,6 +42,8 @@ func TestNewNotificationEvent(t *testing.T) {
 }
 
 func testImplementEvent(t *testing.T, e any) {
+	t.Helper()
+
 	_, ok := e.(Event)
 	if !ok {
 		t.Errorf("NewAdEvent: expected event to implement Event interface")
