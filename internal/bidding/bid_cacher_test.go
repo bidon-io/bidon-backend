@@ -25,7 +25,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 	br := &schema.BiddingRequest{
 		BaseRequest: schema.BaseRequest{
 			Session: schema.Session{ID: "session1"},
-			Ext:     "{\"bid_cache\": true}",
+			Ext:     "{\"ext\":{\"bid_cache\": true}}",
 		},
 		AdType: "banner",
 	}
@@ -67,6 +67,98 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{Price: 3.0}},
 			},
 		},
+		{
+			name: "no bids, has cache",
+			bids: []adapters.DemandResponse{},
+			cacheGet: bidding.Cache{
+				Bids: map[adapter.Key]bidding.CacheEntry{
+					adapter.ApplovinKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{Price: 2.0}},
+						CreatedAt: mockTime.Now(),
+						AuctionID: "session1",
+					},
+					adapter.VKAdsKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+						CreatedAt: mockTime.Now(),
+						AuctionID: "session1",
+					},
+				},
+			},
+			cacheSet: bidding.Cache{
+				Bids: map[adapter.Key]bidding.CacheEntry{
+					adapter.VKAdsKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+						CreatedAt: mockTime.Now(),
+						AuctionID: "session1",
+					},
+				},
+			},
+			want: []adapters.DemandResponse{
+				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{Price: 2.0}},
+			},
+		},
+		{
+			name: "no bids, has expired cache",
+			bids: []adapters.DemandResponse{},
+			cacheGet: bidding.Cache{
+				Bids: map[adapter.Key]bidding.CacheEntry{
+					adapter.ApplovinKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{Price: 2.0}},
+						CreatedAt: mockTime.Now().Add(-6 * time.Minute), // Highest bid, but expired
+						AuctionID: "session1",
+					},
+					adapter.VKAdsKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+						CreatedAt: mockTime.Now(),
+						AuctionID: "session1",
+					},
+				},
+			},
+			cacheSet: bidding.Cache{},
+			want: []adapters.DemandResponse{
+				{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+			},
+		},
+		{
+			name: "has bids, has cache",
+			bids: []adapters.DemandResponse{
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{Price: 2.0}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{Price: 2.5}},
+			},
+			cacheGet: bidding.Cache{
+				Bids: map[adapter.Key]bidding.CacheEntry{
+					adapter.VungleKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{Price: 3.0}},
+						CreatedAt: mockTime.Now().Add(-1 * time.Minute),
+						AuctionID: "session1",
+					},
+					adapter.VKAdsKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+						CreatedAt: mockTime.Now().Add(-3 * time.Minute),
+						AuctionID: "session1",
+					},
+				},
+			},
+			cacheSet: bidding.Cache{
+				Bids: map[adapter.Key]bidding.CacheEntry{
+					adapter.VKAdsKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+						CreatedAt: mockTime.Now().Add(-3 * time.Minute),
+						AuctionID: "session1",
+					},
+					adapter.MetaKey: {
+						Bid:       adapters.DemandResponse{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{Price: 2.5}},
+						CreatedAt: mockTime.Now(),
+						AuctionID: "session1",
+					},
+				},
+			},
+			want: []adapters.DemandResponse{
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{Price: 1.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{Price: 3.0}},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -96,60 +188,4 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			}
 		})
 	}
-
-	// path: cache is empty, result has bids
-	//mock.ExpectGetDel("bidding:session1:banner").SetVal("")
-	//mock.ExpectSet("bidding:session1:banner", "", bidding.TTL).SetVal("OK")
-	//
-	//response := bidCache.ApplyBidCache(ctx, br, aucResult)
-	//if len(response) != 1 {
-	//	t.Errorf("expected 1 bid, got %d", len(response))
-	//}
-	//if response[0].DemandID != adapter.ApplovinKey {
-	//	t.Errorf("expected demand ID %s, got %s", adapter.ApplovinKey, response[0].DemandID)
-	//}
-
-	//// Edge case : cache has expired entries
-	//expiredCache := bidding.Cache{
-	//	Bids: map[adapter.Key]bidding.CacheEntry{
-	//		adapter.BidmachineKey: {Bid: adapters.DemandResponse{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{Price: 1.0}}, CreatedAt: time.Now().Add(-10 * time.Minute)},
-	//	},
-	//}
-	//bytes, _ := expiredCache.MarshalBinary()
-	//mock.ExpectGetDel("bidding:session1:banner").SetVal(string(bytes))
-	//mock.ExpectSet("bidding:session1:banner", "", bidding.TTL).SetVal("OK")
-	//
-	//response = bidCache.ApplyBidCache(ctx, br, aucResult)
-	//if len(response) != 1 {
-	//	t.Errorf("expected 1 bid, got %d", len(response))
-	//}
-	//if response[0].DemandID != adapter.ApplovinKey {
-	//	t.Errorf("expected demand ID %s, got %s", adapter.ApplovinKey, response[0].DemandID)
-	//}
-	//
-	//// Edge case: no bids in result and cache
-	//aucResult.Bids = []adapters.DemandResponse{}
-	//mock.ExpectGetDel("bidding:session1:banner").SetVal("")
-	//mock.ExpectSet("bidding:session1:banner", "", bidding.TTL).SetVal("OK")
-	//
-	//response = bidCache.ApplyBidCache(ctx, br, aucResult)
-	//if len(response) != 0 {
-	//	t.Errorf("expected 0 bids, got %d", len(response))
-	//}
-	//
-	//// Edge case: no bid_cache field in request
-	//br.Ext = ""
-	//response = bidCache.ApplyBidCache(ctx, br, aucResult)
-	//if len(response) != 0 {
-	//	t.Errorf("expected 0 bids, got %d", len(response))
-	//}
-	//
-	//if err := mock.ExpectationsWereMet(); err != nil {
-	//	t.Errorf("unmet expectations: %v", err)
-	//}
-	// expectation: '{"Bids":{"applovin":{"Bid":{"DemandID":"applovin","RequestID":"","RawRequest":"","RawResponse":"","Status":0,"Bid":{"Payload":"","Signaldata":"","ID":"","ImpID":"","AdID":"","SeatID":"","DemandID":"","Price":2,"LURL":"","NURL":"","BURL":""},"Error":null,"TagID":"","PlacementID":"","SlotUUID":"","TimeoutURL":"","StartTS":0,"EndTS":0,"Token":{"Value":"","Status":"","StartTS":0,"EndTS":0}},"CreatedAt":"0001-01-01T00:00:00Z","AuctionID":""}}}',
-	//    but gave: '&{Bids:map[applovin:{Bid:{DemandID:applovin RequestID: RawRequest: RawResponse: Status:0 Bid:0x140000ca370 Error:<nil> TagID: PlacementID: SlotUUID: TimeoutURL: StartTS:0 EndTS:0 Token:{Value: Status: StartTS:0 EndTS:0}} CreatedAt:2025-02-19 11:12:11.249578 +0100 CET m=+0.005820168 AuctionID:session1}]}'
-	// expectation: '{"Bids":{"applovin":{"Bid":{"DemandID":"applovin","RequestID":"","RawRequest":"","RawResponse":"","Status":0,"Bid":{"Payload":"","Signaldata":"","ID":"","ImpID":"","AdID":"","SeatID":"","DemandID":"","Price":2,"LURL":"","NURL":"","BURL":""},"Error":null,"TagID":"","PlacementID":"","SlotUUID":"","TimeoutURL":"","StartTS":0,"EndTS":0,"Token":{"Value":"","Status":"","StartTS":0,"EndTS":0}},"CreatedAt":"2025-02-19T12:51:20.716083+01:00","AuctionID":"session1"}}}',
-	//    but gave: '{"Bids":{"applovin":{"Bid":{"DemandID":"applovin","RequestID":"","RawRequest":"","RawResponse":"","Status":0,"Bid":{"Payload":"","Signaldata":"","ID":"","ImpID":"","AdID":"","SeatID":"","DemandID":"","Price":2,"LURL":"","NURL":"","BURL":""},"Error":null,"TagID":"","PlacementID":"","SlotUUID":"","TimeoutURL":"","StartTS":0,"EndTS":0,"Token":{"Value":"","Status":"","StartTS":0,"EndTS":0}},"CreatedAt":"2025-02-19T12:51:20.714632+01:00","AuctionID":"session1"}}}'
-
 }

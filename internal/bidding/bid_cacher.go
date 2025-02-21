@@ -45,7 +45,7 @@ type CacheEntry struct {
 // The cache key is generated based on the session ID and the ad type
 // TTL is set to 5 minutes
 func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest, result *AuctionResult) []adapters.DemandResponse {
-	if _, ok := br.GetExtData()["bid_cache"]; !ok { // If the request has bid_cache field, only then cache the bids
+	if _, ok := br.GetNestedExtData()["bid_cache"]; !ok { // If the request has bid_cache field, only then cache the bids
 		return result.Bids
 	}
 	cacheKey := fmt.Sprintf("bidding:%s:%s", br.Session.ID, br.AdType)

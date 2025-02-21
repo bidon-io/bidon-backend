@@ -75,6 +75,18 @@ func (r *BaseRequest) GetExtData() map[string]any {
 	return r.extData
 }
 
+func (r *BaseRequest) GetNestedExtData() map[string]any {
+	if r.extData == nil {
+		return map[string]any{}
+	}
+
+	if nested, ok := r.extData["ext"].(map[string]any); ok {
+		return nested
+	}
+
+	return map[string]any{}
+}
+
 func (r *BaseRequest) GetMediationMode() string {
 	ext := r.GetExtData()
 	if mode, ok := ext["mediation_mode"].(string); ok {

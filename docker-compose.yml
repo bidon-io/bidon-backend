@@ -87,17 +87,65 @@ services:
       test: pg_isready -U bidon -d bidon_test
       interval: 5s
 
-  redis:
-    image: redis:7.0.0-alpine
-    volumes:
-      - redisdata:/data
+  redis1:
+    image: redis:7.4-alpine
+    command: >
+      redis-server --cluster-enabled yes --cluster-config-file /data/nodes.conf
+      --cluster-node-timeout 5000 --appendonly yes --port 7001
+      --bind 0.0.0.0 --protected-mode no --cluster-announce-ip 192.168.64.1 --cluster-announce-port 7001 --cluster-announce-bus-port 17001
     ports:
-      - '6381:6379'
-    healthcheck:
-      test: redis-cli ping
-      interval: 1s
-      timeout: 3s
-      retries: 30
+      - "7001:7001"
+      - "17001:17001"
+    networks:
+      redis-cluster-net:
+        ipv4_address: 192.168.240.100
+    restart: always
+    volumes:
+      - redis-data-1:/data
+  redis2:
+    image: redis:7.4-alpine
+    command: >
+      redis-server --cluster-enabled yes --cluster-config-file /data/nodes.conf
+      --cluster-node-timeout 5000 --appendonly yes --port 7002
+      --bind 0.0.0.0 --protected-mode no --cluster-announce-ip 192.168.64.1 --cluster-announce-port 7002 --cluster-announce-bus-port 17002
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    networks:
+      redis-cluster-net:
+        ipv4_address: 192.168.240.101
+    restart: always
+    volumes:
+      - redis-data-2:/data
+  redis3:
+    image: redis:7.4-alpine
+    command: >
+      redis-server --cluster-enabled yes --cluster-config-file /data/nodes.conf
+      --cluster-node-timeout 5000 --appendonly yes --port 7003
+      --bind 0.0.0.0 --protected-mode no --cluster-announce-ip 192.168.64.1 --cluster-announce-port 7003 --cluster-announce-bus-port 17003
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    restart: always
+    volumes:
+      - redis-data-3:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 192.168.240.102
+  redis-cluster-setup:
+    image: redis:7.4-alpine
+    depends_on:
+      - redis1
+      - redis2
+      - redis3
+    entrypoint: >
+      sh -c "
+        sleep 10 &&
+        echo yes | redis-cli --cluster create 192.168.240.100:7001 192.168.240.101:7002 192.168.240.102:7003 --cluster-replicas 0
+      "
+    networks:
+      redis-cluster-net:
+        ipv4_address: 192.168.240.103
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
@@ -170,6 +218,17 @@ volumes:
   redisdata:
   cargo-cache:
   target-cache:
+  redis-data-1:
+  redis-data-2:
+  redis-data-3:
 
 networks:
   precommit-network:
+  redis-cluster-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
+    ipam:
+      config:
+        - subnet: 192.168.240.0/20
+          gateway: 192.168.240.1

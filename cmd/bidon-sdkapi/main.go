@@ -68,7 +68,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("config.NewLogger(): %v", err)
 	}
-	defer logger.Sync()
+	defer logger.Sync() //nolint:errcheck
 
 	sentryConf := config.Sentry()
 	err = sentry.Init(sentryConf.ClientOptions)
@@ -168,7 +168,7 @@ func main() {
 			Cache: segmentCache,
 		},
 	}
-	biddingHttpClient := &http.Client{
+	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,
 		Transport: otelhttp.NewTransport(&http.Transport{
 			MaxConnsPerHost:     30 * cpus,
@@ -179,14 +179,14 @@ func main() {
 	notificationHandler := notification.Handler{
 		AuctionResultRepo: notificationstore.AuctionResultRepo{Redis: rdb},
 		Sender: notification.EventSender{
-			HttpClient:  biddingHttpClient,
+			HttpClient:  biddingHTTPClient,
 			EventLogger: eventLogger,
 		},
 	}
 	notificationHandlerV2 := notification.HandlerV2{
 		AuctionResultRepo: notificationstore.AuctionResultV2Repo{Redis: rdb},
 		Sender: notification.EventSender{
-			HttpClient:  biddingHttpClient,
+			HttpClient:  biddingHTTPClient,
 			EventLogger: eventLogger,
 		},
 	}
@@ -200,11 +200,11 @@ func main() {
 		Cache: adUnitsCache,
 	}
 	biddingBuilder := &bidding.Builder{
-		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHttpClient),
+		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHTTPClient),
 		NotificationHandler: notificationHandler,
 	}
 	biddingBuilderV2 := &bidding.Builder{
-		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHttpClient),
+		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHTTPClient),
 		NotificationHandler: notificationHandlerV2,
 		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
 	}
