@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -52,7 +53,7 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest,
 	inCache := &Cache{Bids: make(map[adapter.Key]CacheEntry)}
 	err := b.Redis.GetDel(ctx, cacheKey).Scan(inCache)
 	if err != nil && !errors.Is(err, redis.Nil) { // Some error occurred while fetching the cache
-		fmt.Printf("Error fetching bid cache: %v\n", err)
+		log.Printf("Error fetching bid cache: %v\n", err)
 		return result.Bids
 	}
 
@@ -96,7 +97,7 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest,
 		bytes, _ := inCache.MarshalBinary()
 		err = b.Redis.Set(ctx, cacheKey, string(bytes), TTL).Err()
 		if err != nil {
-			fmt.Printf("Error writing bid cache: %v\n", err)
+			log.Printf("Error writing bid cache: %v\n", err)
 		}
 	}
 
