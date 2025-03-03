@@ -37,9 +37,88 @@ type Cache struct {
 }
 
 type CacheEntry struct {
-	Bid       adapters.DemandResponse
+	Bid       CachedBid
 	CreatedAt time.Time
 	AuctionID string // AuctionID for which the bid was made, it will help to send notifications in future
+}
+
+type CachedBid struct {
+	DemandID    adapter.Key
+	RequestID   string
+	Status      int
+	TagID       string
+	PlacementID string
+	SlotUUID    string
+	TimeoutURL  string
+	StartTS     int64
+	EndTS       int64
+	Token       adapters.Token
+	Payload     string
+	Signaldata  string
+	ID          string
+	ImpID       string
+	AdID        string
+	SeatID      string
+	Price       float64
+	LURL        string
+	NURL        string
+	BURL        string
+}
+
+func cachedBidFromDemandResponse(dr adapters.DemandResponse) CachedBid {
+	return CachedBid{
+		DemandID:    dr.DemandID,
+		RequestID:   dr.RequestID,
+		Status:      dr.Status,
+		TagID:       dr.TagID,
+		PlacementID: dr.PlacementID,
+		SlotUUID:    dr.SlotUUID,
+		TimeoutURL:  dr.TimeoutURL,
+		StartTS:     dr.StartTS,
+		EndTS:       dr.EndTS,
+		Payload:     dr.Bid.Payload,
+		Signaldata:  dr.Bid.Signaldata,
+		ID:          dr.Bid.ID,
+		ImpID:       dr.Bid.ImpID,
+		AdID:        dr.Bid.AdID,
+		SeatID:      dr.Bid.SeatID,
+		Price:       dr.Bid.Price,
+		LURL:        dr.Bid.LURL,
+		NURL:        dr.Bid.NURL,
+		BURL:        dr.Bid.BURL,
+		Token:       dr.Token,
+	}
+}
+
+func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
+	return adapters.DemandResponse{
+		DemandID:    cb.DemandID,
+		RequestID:   cb.RequestID,
+		RawRequest:  "",
+		RawResponse: "",
+		Status:      cb.Status,
+		Bid: &adapters.BidDemandResponse{
+			Payload:    cb.Payload,
+			Signaldata: cb.Signaldata,
+			ID:         cb.ID,
+			ImpID:      cb.ImpID,
+			AdID:       cb.AdID,
+			SeatID:     cb.SeatID,
+			DemandID:   cb.DemandID,
+			Price:      cb.Price,
+			LURL:       cb.LURL,
+			NURL:       cb.NURL,
+			BURL:       cb.BURL,
+		},
+		Error:       nil,
+		TagID:       cb.TagID,
+		PlacementID: cb.PlacementID,
+		SlotUUID:    cb.SlotUUID,
+		TimeoutURL:  cb.TimeoutURL,
+		StartTS:     cb.StartTS,
+		EndTS:       cb.EndTS,
+		Token:       cb.Token,
+	}
 }
 
 // ApplyBidCache gets the auction result, stores it in the cache and enhances response with the cache data if available
@@ -76,9 +155,9 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest,
 	// Select the highest bid for each adapter
 	now := b.Clock.Now()
 	for _, bid := range toCache {
-		cacheEntry := CacheEntry{Bid: bid, CreatedAt: now, AuctionID: br.Session.ID}
+		cacheEntry := CacheEntry{Bid: cachedBidFromDemandResponse(bid), CreatedAt: now, AuctionID: br.Session.ID}
 		if existing, ok := inCache.Bids[bid.DemandID]; ok {
-			if bid.Price() > existing.Bid.Price() {
+			if bid.Price() > existing.Bid.Price {
 				inCache.Bids[bid.DemandID] = cacheEntry
 				// TODO: Send LURL notification here for the existing bid
 			}
@@ -90,7 +169,7 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest,
 	// Get the highest bid from cache and put it in the response
 	demand, bid := getMax(&inCache.Bids)
 	delete(inCache.Bids, demand)
-	toResponse = append(toResponse, bid.Bid)
+	toResponse = append(toResponse, bid.Bid.toDemandResponse())
 
 	// Write the rest cache back to Redis if not empty
 	if len(inCache.Bids) > 0 {
@@ -105,7 +184,6 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, br *schema.BiddingRequest,
 }
 
 // splitBids splits the given bids into two slices: one for bids that can be cached and one for bids that should be included in the response.
-// It returns two slices: toResponse and toCache.
 func splitBids(bids []adapters.DemandResponse) (toResponse, toCache []adapters.DemandResponse) {
 	for _, bid := range bids {
 		if bid.CanCache() {
@@ -124,7 +202,7 @@ func getMax(m *map[adapter.Key]CacheEntry) (adapter.Key, CacheEntry) {
 	first := true
 
 	for demand, entry := range *m {
-		if first || entry.Bid.Price() > maxValue.Bid.Price() {
+		if first || entry.Bid.Price > maxValue.Bid.Price {
 			maxDemand = demand
 			maxValue = entry
 			first = false

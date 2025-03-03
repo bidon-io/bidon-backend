@@ -75,6 +75,9 @@ func (dr *DemandResponse) Price() float64 {
 // CanCache returns true if the bidder can cache the bid response. For now, it returns false just for BM and Amazon.
 // Probably should be part of the BidderInterface in the future.
 func (dr *DemandResponse) CanCache() bool {
+	if !dr.IsBid() {
+		return false
+	}
 	if dr.DemandID == adapter.BidmachineKey || dr.DemandID == adapter.AmazonKey {
 		return false
 	}
