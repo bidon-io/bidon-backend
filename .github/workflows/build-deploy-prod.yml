@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build and push nightly images
-    uses: ./.github/workflows/prod-build.yml
+    uses: ./.github/workflows/build-images.yml
     secrets: inherit
     with:
       tag: nightly
@@ -15,7 +15,7 @@ jobs:
   deploy:
     name: Deploy prod
     needs: build
-    uses: ./.github/workflows/prod-deploy.yml
+    uses: ./.github/workflows/deploy-prod.yml
     secrets: inherit
     with:
       tag: nightly
