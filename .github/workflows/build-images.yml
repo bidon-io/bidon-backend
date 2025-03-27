@@ -1,0 +1,87 @@
+name: Build and Push Images
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      registry: &registry_input
+        description: Registry
+        type: string
+        required: true
+        default: ghcr.io/bidon-io
+      tag:
+        description: Image tag
+        type: string
+        required: false
+  workflow_call:
+    inputs:
+      registry: *registry_input
+      tag:
+        type: string
+        required: true
+
+env:
+  REGISTRY: ${{ inputs.registry || 'ghcr.io/bidon-io' }}
+  VERSION: ${{ github.ref_name == 'main' && github.sha || github.ref_name }}
+  TAG: ${{ github.event_name == 'release' && !github.event.release.prerelease && 'latest' || inputs.tag }}
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: [self-hosted]
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [admin, sdkapi, migrate, proxy]
+    steps:
+      - name: Login registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_ADDRESS }}
+          username: ${{ secrets.REGISTRY_USERNAME_DEPLOY }}
+          password: ${{ secrets.REGISTRY_PASSWORD_DEPLOY }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.USER_RUNNER }}
+          password: ${{ secrets.PAT_RUNNER }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build and push image
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 12
+          max_attempts: 3
+          command: make docker-build-push-prod-${{ matrix.component }}
+
+  sentry-release:
+    name: Create Sentry release
+    needs: [build]
+    if: github.event_name == 'release'
+    runs-on: [self-hosted]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+          SENTRY_ORG: sentry
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+        with:
+          environment: production
+          projects: bidon-admin bidon-sdkapi
+          release: ${{ github.ref }}

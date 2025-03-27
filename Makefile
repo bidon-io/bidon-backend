@@ -19,22 +19,27 @@ update-submodules:
 test:
 	docker compose run --rm go-test
 
+tags = -t $(REGISTRY)/bidon-sdkapi:$(VERSION)
+ifneq ($(TAG),)
+	tags += -t $(REGISTRY)/bidon-admin:$(TAG)
+endif
+
 docker-build-push-prod-admin:
 	docker buildx build --platform linux/amd64 --provenance=false \
 	--target bidon-admin --cache-to type=inline --cache-from $(REGISTRY)/bidon-admin \
-	-t $(REGISTRY)/bidon-admin:$(TAG) -t $(REGISTRY)/bidon-admin:latest --push .
+	$(tags) --push .
 
 docker-build-push-prod-sdkapi:
 	docker buildx build --platform linux/amd64 --provenance=false \
 	--target bidon-sdkapi --cache-to type=inline --cache-from $(REGISTRY)/bidon-sdkapi \
-	-t $(REGISTRY)/bidon-sdkapi:$(TAG) -t $(REGISTRY)/bidon-sdkapi:latest --push .
+	$(tags) --push .
 
 docker-build-push-prod-migrate:
 	docker buildx build --platform linux/amd64 --provenance=false \
 	--target bidon-migrate --cache-to type=inline --cache-from $(REGISTRY)/bidon-migrate \
-	-t $(REGISTRY)/bidon-migrate:$(TAG) -t $(REGISTRY)/bidon-migrate:latest --push .
+	$(tags) --push .
 
 docker-build-push-prod-proxy:
 	docker buildx build --platform linux/amd64 --provenance=false \
 	--target bidon-proxy --cache-to type=inline --cache-from $(REGISTRY)/bidon-proxy \
-	-t $(REGISTRY)/bidon-proxy:$(TAG) -t $(REGISTRY)/bidon-proxy:latest --push .
+	$(tags) --push .

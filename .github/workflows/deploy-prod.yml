@@ -1,0 +1,38 @@
+name: Deploy Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag'
+        type: string
+        required: false
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name == 'main' && github.sha || github.ref_name }}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: [self-hosted]
+    environment: production
+    steps:
+      - name: Check out devops repository
+        uses: actions/checkout@v4
+        with:
+          repository: bidon-io/devops
+          ref: master
+          token: ${{ secrets.PAT_RUNNER }}
+
+      - name: Deploy bidon-admin
+        working-directory: ./prod
+        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-dfw-bidon-admin
+
+      - name: Deploy bidon-sdkapi
+        working-directory: ./prod
+        run: ANSIBLE_VAULT_PASSWORD_FILE=$ANSIBLE_VAULT_PASSWORD_FILE_BIDON && make k8s-dfw-bidon-sdkapi

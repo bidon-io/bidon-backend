@@ -1,0 +1,22 @@
+name: Build and Deploy Prod
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build and push nightly images
+    uses: ./.github/workflows/build-images.yml
+    secrets: inherit
+    with:
+      tag: nightly
+
+  deploy:
+    name: Deploy prod
+    needs: build
+    uses: ./.github/workflows/deploy-prod.yml
+    secrets: inherit
+    with:
+      tag: nightly
+
