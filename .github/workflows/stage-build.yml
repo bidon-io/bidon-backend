@@ -24,7 +24,7 @@ env:
 jobs:
   build:
     name: Build and push images
-    uses: ./.github/workflows/build-images.yml
+    uses: ./.github/workflows/prod-build.yml
     secrets: inherit
     with:
       tag: stage${{ inputs.stage-number }}
