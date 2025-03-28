@@ -25,7 +25,7 @@ on:
 
 env:
   REGISTRY: ${{ inputs.registry || 'ghcr.io/bidon-io' }}
-  VERSION: ${{ github.ref_name == 'main' && github.sha || format('stage-{0}', github.sha) }}
+  VERSION: ${{ github.sha }}
   TAG: ${{ github.event_name == 'release' && !github.event.release.prerelease && 'latest' || inputs.tag }}
 
 jobs:
