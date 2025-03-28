@@ -36,7 +36,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: [admin, sdkapi, migrate, proxy]
+        component: [bidon-admin, bidmon-sdkapi, bidon-migrate, bidon-proxy]
+    env:
+      TARGET: ${{ matrix.component }}
     steps:
       - name: Login registry
         uses: docker/login-action@v3
@@ -65,7 +67,7 @@ jobs:
         with:
           timeout_minutes: 12
           max_attempts: 3
-          command: make docker-build-push-prod-${{ matrix.component }}
+          command: make docker-build-push-prod
 
   sentry-release:
     name: Create Sentry release
