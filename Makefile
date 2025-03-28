@@ -1,4 +1,4 @@
-REGISTRY ?= "ghcr.io/bidon-io"
+REGISTRY ?= ghcr.io/bidon-io
 
 .PHONY: test
 
@@ -19,27 +19,24 @@ update-submodules:
 test:
 	docker compose run --rm go-test
 
-tags = -t $(REGISTRY)/bidon-sdkapi:$(VERSION)
+tags = -t $(REGISTRY)/$(TARGET):$(VERSION)
 ifneq ($(TAG),)
-	tags += -t $(REGISTRY)/bidon-admin:$(TAG)
+	tags += -t $(REGISTRY)/$(TARGET):$(TAG)
 endif
 
-docker-build-push-prod-admin:
+docker-build-push-prod:
 	docker buildx build --platform linux/amd64 --provenance=false \
-	--target bidon-admin --cache-to type=inline --cache-from $(REGISTRY)/bidon-admin \
+	--target $(TARGET) --cache-to type=inline --cache-from $(REGISTRY)/$(TARGET) \
 	$(tags) --push .
 
-docker-build-push-prod-sdkapi:
-	docker buildx build --platform linux/amd64 --provenance=false \
-	--target bidon-sdkapi --cache-to type=inline --cache-from $(REGISTRY)/bidon-sdkapi \
-	$(tags) --push .
+docker-build-push-prod-admin: TARGET=bidon-admin
+docker-build-push-prod-admin: docker-build-push-prod
 
-docker-build-push-prod-migrate:
-	docker buildx build --platform linux/amd64 --provenance=false \
-	--target bidon-migrate --cache-to type=inline --cache-from $(REGISTRY)/bidon-migrate \
-	$(tags) --push .
+docker-build-push-prod-sdkapi: TARGET=bidon-sdkapi
+docker-build-push-prod-sdkapi: docker-build-push-prod
 
-docker-build-push-prod-proxy:
-	docker buildx build --platform linux/amd64 --provenance=false \
-	--target bidon-proxy --cache-to type=inline --cache-from $(REGISTRY)/bidon-proxy \
-	$(tags) --push .
+docker-build-push-prod-migrate: TARGET=bidon-migrate
+docker-build-push-prod-migrate: docker-build-push-prod
+
+docker-build-push-prod-proxy: TARGET=bidon-proxy
+docker-build-push-prod-proxy: docker-build-push-prod
