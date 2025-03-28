@@ -29,14 +29,14 @@ docker-build-push-prod:
 	--target $(TARGET) --cache-to type=inline --cache-from $(REGISTRY)/$(TARGET) \
 	$(tags) --push .
 
-docker-build-push-prod-admin: TARGET=bidon-admin
+docker-build-push-prod-admin: override TARGET=bidon-admin
 docker-build-push-prod-admin: docker-build-push-prod
 
-docker-build-push-prod-sdkapi: TARGET=bidon-sdkapi
+docker-build-push-prod-sdkapi: override TARGET=bidon-sdkapi
 docker-build-push-prod-sdkapi: docker-build-push-prod
 
-docker-build-push-prod-migrate: TARGET=bidon-migrate
+docker-build-push-prod-migrate: override TARGET=bidon-migrate
 docker-build-push-prod-migrate: docker-build-push-prod
 
-docker-build-push-prod-proxy: TARGET=bidon-proxy
+docker-build-push-prod-proxy: override TARGET=bidon-proxy
 docker-build-push-prod-proxy: docker-build-push-prod
