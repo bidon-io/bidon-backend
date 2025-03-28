@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
     with:
       tag: stage${{ inputs.stage-number }}
-      registry: ${{ secrets.REGISTRY_ADDRESS }}/bidon/stage
+      registry: internal
 
   deploy:
     name: Deploy stage
