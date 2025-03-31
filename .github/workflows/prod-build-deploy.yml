@@ -10,6 +10,7 @@ jobs:
     uses: ./.github/workflows/prod-build.yml
     secrets: inherit
     with:
+      version: ${{ github.sha }}
       tag: nightly
 
   deploy:
