@@ -66,8 +66,6 @@ jobs:
 
       - name: Build and push image
         uses: nick-fields/retry@v3
-        env:
-          REGISTRY: ${{ inputs.registry == 'internal' && format('{0}/{1}', secrets.REGISTRY_ADDRESS, 'bidon/stage') }}
         with:
           timeout_minutes: 12
           max_attempts: 3

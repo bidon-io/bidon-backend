@@ -20,6 +20,7 @@ on:
 
 env:
   STAGE: ${{ inputs.stage-number }}
+  REGISTRY: ${{ secrets.REGISTRY_ADDRESS }}/bidon/stage
 
 jobs:
   build:
@@ -28,7 +29,7 @@ jobs:
     secrets: inherit
     with:
       tag: stage${{ inputs.stage-number }}
-      registry: internal
+      registry: ${{ env.REGISTRY }}
 
   deploy:
     name: Deploy stage
