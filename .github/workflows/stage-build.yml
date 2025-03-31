@@ -40,6 +40,7 @@ jobs:
         with:
           repository: ${{ secrets.ANSIBLE_SECRET }}/devops
           token: ${{ secrets.PAT_RUNNER }}
+          ref: 'DO-2952/bidon-runner-token'
 
       - name: Refresh DB
         if: inputs.refresh-db
