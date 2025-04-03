@@ -8,7 +8,7 @@
         :path="resourcesPath"
       />
     </NavigationContainer>
-    <ResourceCard title="API Key" :fields="fields" :resource="resource" />
+    <ResourceCard title="API Credential" :fields="fields" :resource="resource" />
   </PageContainer>
 </template>
 
@@ -21,10 +21,12 @@ const id = route.params.id;
 const resourcesPath = "/api_keys";
 
 const resource = await $apiFetch(`${resourcesPath}/${id}`);
+const serverUrl = `${window.location.origin}/api`;
 
 const fields = [
   { label: "ID", key: "id" },
-  { label: "Value", key: "value", copyable: true },
+  { label: "Endpoint", type: "static", value: serverUrl, copyable: true },
+  { label: "API Key", key: "value", copyable: true },
   { label: "Last Accessed At", key: "lastAccessedAt" },
 ];
 </script>
