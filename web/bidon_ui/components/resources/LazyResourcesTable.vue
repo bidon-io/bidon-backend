@@ -10,7 +10,7 @@
     :rows-per-page-options="[12, 24, 36, 48]"
     filter-display="row"
     class="whitespace-nowrap"
-    :total-records="totalRecords"
+    :total-records
     :loading="status === 'pending'"
     lazy
     @filter="onFilter"
@@ -49,11 +49,11 @@
       <template v-if="column.filter" #filter="{ filterModel, filterCallback }">
         <InputText
           v-if="column.filter.type === 'input'"
-          v-model="filterModel.value"
+          v-model.lazy="filterModel.value"
           type="text"
           class="p-column-filter"
           :placeholder="column.filter.placeholder"
-          @input="() => debouncedFilter(filterCallback)"
+          @input="debouncedFilter(filterCallback)"
         />
         <Dropdown
           v-if="['select', 'select-filter'].includes(column.filter.type)"
@@ -291,24 +291,12 @@ watch(
   { deep: true },
 );
 
-// Ensure we reload data when filters change
-watch(
-  filters,
-  () => {
-    fetchData();
-  },
-  { deep: true },
-);
-
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
-  hook: (id: number) => {
-    if (collection.value?.items) {
-      collection.value.items = collection.value.items.filter(
-        (item: { id: number }) => item.id !== id,
-      );
-    }
-  },
+  hook: (id: number) =>
+    (resources.value = resources.value.filter(
+      (item: { id: number }) => item.id !== id,
+    )),
 });
 
 const copyField = (field: string) => {
