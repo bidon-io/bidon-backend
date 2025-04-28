@@ -10,9 +10,9 @@ import (
 
 func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 	// Exit check if configuration w/o segment and not default
-	isDefault := ac.IsDefault == nil || !*ac.IsDefault
+	isNotDefault := ac.IsDefault == nil || !*ac.IsDefault
 	withSegment := ac.SegmentID != nil && ac.SegmentID.Valid
-	if !withSegment && isDefault {
+	if !withSegment && isNotDefault {
 		return nil
 	}
 
