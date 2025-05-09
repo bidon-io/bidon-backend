@@ -28,9 +28,17 @@
       :copyable="column.copyable"
       :filter-field="column.filter?.field"
       :show-filter-menu="false"
+      :body-class="column.bodyClass"
+      :body-style="column.bodyStyle"
+      :header-style="column.headerStyle"
     >
       <template
-        v-if="column.link || column.associatedResourcesLink || column.copyable"
+        v-if="
+          column.link ||
+          column.associatedResourcesLink ||
+          column.copyable ||
+          column.template
+        "
         #body="{ data, field }"
       >
         <div v-if="column.copyable">
@@ -45,6 +53,63 @@
           :link="column.associatedResourcesLink"
           :data="data"
         />
+        <template v-if="column.template">
+          <component
+            :is="column.template(data).component"
+            v-bind="column.template(data).props"
+          >
+            <template v-if="column.template(data).trigger">
+              <component
+                :is="column.template(data).trigger?.component"
+                v-bind="column.template(data).trigger?.props"
+              />
+            </template>
+            <template v-if="column.template(data).content">
+              <template
+                v-if="typeof column.template(data).content === 'string'"
+              >
+                {{ column.template(data).content }}
+              </template>
+              <template
+                v-else-if="Array.isArray(column.template(data).content)"
+              >
+                <template
+                  v-for="(item, index) in column.template(data).content"
+                  :key="index"
+                >
+                  <component
+                    :is="item.component"
+                    v-if="typeof item === 'object' && item.component"
+                    v-bind="item.props || {}"
+                  >
+                    {{ item.content }}
+                  </component>
+                </template>
+              </template>
+            </template>
+          </component>
+
+          <!-- Render extra content outside the main component -->
+          <template
+            v-if="
+              column.template(data).extraContent &&
+              Array.isArray(column.template(data).extraContent)
+            "
+          >
+            <template
+              v-for="(item, index) in column.template(data).extraContent"
+              :key="`extra-${index}`"
+            >
+              <component
+                :is="item.component"
+                v-if="typeof item === 'object' && item.component"
+                v-bind="item.props || {}"
+              >
+                {{ item.content }}
+              </component>
+            </template>
+          </template>
+        </template>
       </template>
       <template v-if="column.filter" #filter="{ filterModel, filterCallback }">
         <InputText
@@ -130,7 +195,30 @@ interface Column {
   sortable?: boolean;
   copyable?: boolean;
   link?: ResourceLink;
-  associatedResourcesLink: AssociatedResourcesLink;
+  associatedResourcesLink?: AssociatedResourcesLink;
+  template?: (data: Record<string, unknown>) => {
+    component: string;
+    props: Record<string, unknown>;
+    trigger?: {
+      component: string;
+      props: Record<string, unknown>;
+    };
+    content?:
+      | string
+      | Array<{
+          component: string;
+          props: Record<string, unknown>;
+          content?: string;
+        }>;
+    extraContent?: Array<{
+      component: string;
+      props: Record<string, unknown>;
+      content?: string;
+    }>;
+  };
+  bodyClass?: string;
+  bodyStyle?: string;
+  headerStyle?: string;
 }
 
 interface PageEvent {
@@ -293,10 +381,9 @@ watch(
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
-  hook: (id: number) =>
-    (resources.value = resources.value.filter(
-      (item: { id: number }) => item.id !== id,
-    )),
+  hook: () => {
+    fetchData();
+  },
 });
 
 const copyField = (field: string) => {
