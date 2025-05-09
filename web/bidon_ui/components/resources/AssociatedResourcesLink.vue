@@ -54,12 +54,14 @@ interface MenuInstance extends ComponentPublicInstance {
 
 const menu = ref<MenuInstance | null>(null);
 
+const router = useRouter();
+
 const dropdownItems =
   hasDropdown && dropdown
     ? dropdown.map((item: DropdownItem) => ({
         label: item.label,
         command: () => {
-          window.location.href = item.path;
+          router.push(item.path);
         },
       }))
     : [];
