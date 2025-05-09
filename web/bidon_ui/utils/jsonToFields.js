@@ -5,7 +5,7 @@
  */
 export const formatLabel = (key) => {
   return key
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/([A-Z])/g, " $1") // Add space before capital letters
     .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
 };
 
@@ -16,19 +16,19 @@ export const formatLabel = (key) => {
  * @param {string} type - The type of field to create (default: 'static')
  * @returns {Array} - Array of field objects
  */
-export const jsonToFields = (jsonData, prefix = '', type = '') => {
-  if (!jsonData || typeof jsonData !== 'object') {
+export const jsonToFields = (jsonData, prefix = "", type = "") => {
+  if (!jsonData || typeof jsonData !== "object") {
     return [];
   }
 
-  return Object.keys(jsonData).map(key => {
+  return Object.keys(jsonData).map((key) => {
     const fieldKey = prefix ? `${prefix}.${key}` : key;
-    
+
     return {
       label: formatLabel(key),
       key: fieldKey,
       value: jsonData[key],
-      type: type || undefined
+      type: type || undefined,
     };
   });
 };
