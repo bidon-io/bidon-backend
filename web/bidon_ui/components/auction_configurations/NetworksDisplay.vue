@@ -20,23 +20,22 @@
     <!-- CPM Networks Section -->
     <div v-if="cpmNetworks && cpmNetworks.length > 0" class="mt-8 mb-6">
       <h2 class="text-xl font-semibold mb-4">CPM Networks</h2>
-      <div>
+      <div class="flex flex-col gap-2">
         <div
           v-for="(network, index) in cpmNetworks"
           :key="network.id"
-          class="p-4 bg-gray-100 rounded-md mb-2 flex items-center border border-gray-200"
+          class="p-4 bg-gray-100 rounded-md flex items-center"
+          :class="{
+            'mb-2': index !== cpmNetworks.length - 1,
+            'border border-gray-200': true,
+          }"
         >
-          <div class="w-[30px] mr-4 font-semibold">{{ index + 1 }}.</div>
           <div class="flex items-center justify-center w-[30px] mr-3">
             <i :class="getNetworkIcon(network.isBidding)" class="text-xl"></i>
           </div>
           <div class="flex-grow">
-            {{ formatNetworkName(network.name) }} - ${{ network.bidFloor }}
-            <span
-              v-if="network.isBidding"
-              class="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
-              >Bidding</span
-            >
+            {{ formatNetworkName(network.name) }} -
+            <span class="font-medium">${{ network.bidFloor }}</span>
           </div>
         </div>
       </div>
