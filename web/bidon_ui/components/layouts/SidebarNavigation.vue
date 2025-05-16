@@ -33,18 +33,36 @@
 
 <script setup lang="ts">
 import { pluralize, titleize } from "inflection";
-import { computed } from "vue";
+
+interface User {
+  isAdmin?: boolean;
+}
 
 const resources = useResources();
 const route = useRoute();
+const authStore = useAuthStore();
+const currentUser = computed<User | null>(() => authStore.currentUser);
 
-// Filter out the 'country' resource from the sidebar
+// Filter resources based on permissions
 const filteredResources = computed(() => {
   if (!resources.state) return [];
 
-  return Object.values(resources.state).filter(
-    (resource) => resource.key !== "country",
-  );
+  return Object.values(resources.state).filter((resource) => {
+    // Always hide country resource
+    if (resource.key === "country") {
+      return false;
+    }
+
+    // Only show demand_source to admin users
+    if (
+      resource.key === "demand_source" &&
+      (!currentUser.value || currentUser.value?.isAdmin !== true)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 });
 
 function title(key: string) {
