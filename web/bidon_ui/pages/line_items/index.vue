@@ -15,8 +15,7 @@ const columns = [
   ResourceTableFields.HumanName,
   ResourceTableFields.App,
   ResourceTableFields.BidFloor,
-  ResourceTableFields.AdType,
-  { field: "format", header: "Format" },
+  ResourceTableFields.AdTypeWithFormat,
   ResourceTableFields.DemandSourceAccount,
 ];
 const resourcesPath = "/line_items";

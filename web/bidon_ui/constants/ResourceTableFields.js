@@ -1,6 +1,31 @@
 import { FilterMatchMode } from "primevue/api";
 import { AdTypeEnum } from "~/types";
 
+/**
+ * Utility function to get a formatted label for ad type and format combinations
+ * @param {Object} option - Object containing adType and format
+ * @returns {string} - Formatted label
+ */
+const getAdTypeFormatLabel = (option) => {
+  const { adType, format } = option;
+
+  if (adType === "banner" && format) {
+    return format === "MREC"
+      ? "MREC"
+      : format === "LEADERBOARD"
+        ? "Leaderboard"
+        : format === "ADAPTIVE"
+          ? "Adaptive Banner"
+          : "Banner";
+  } else if (adType === "interstitial") {
+    return "Interstitial";
+  } else if (adType === "rewarded") {
+    return "Rewarded";
+  }
+
+  return adType; // Fallback
+};
+
 export const ResourceTableFields = {
   Id: { field: "id", header: "Id", sortable: true },
   PublicUid: { field: "publicUid", header: "Public UID" },
@@ -95,6 +120,58 @@ export const ResourceTableFields = {
       ],
     },
   },
+  AdTypeWithFormat: {
+    field: "adType",
+    header: "Ad Format",
+    customBody: (rowData) => {
+      return getAdTypeFormatLabel({
+        adType: rowData.adType,
+        format: rowData.format || "",
+      });
+    },
+    filter: {
+      field: "adTypeWithFormat",
+      type: "select",
+      matchMode: FilterMatchMode.EQUALS,
+      placeholder: "Ad Format",
+      loadOptions: async () => {
+        // Define the standard options
+        const adTypeOptions = [
+          { adType: "banner", format: "ADAPTIVE" },
+          { adType: "banner", format: "BANNER" },
+          { adType: "banner", format: "LEADERBOARD" },
+          { adType: "banner", format: "MREC" },
+          { adType: "interstitial", format: "" },
+          { adType: "rewarded", format: "" },
+        ];
+
+        // Map them to the required format using the shared function
+        return adTypeOptions.map((option) => ({
+          label: getAdTypeFormatLabel(option),
+          value: option,
+        }));
+      },
+      extractOptions: (records) => [
+        ...new Map(
+          records.map((record) => {
+            const key = `${record.adType}-${record.format || ""}`;
+            const option = {
+              adType: record.adType,
+              format: record.format || "",
+            };
+
+            return [
+              key,
+              {
+                label: getAdTypeFormatLabel(option),
+                value: option,
+              },
+            ];
+          }),
+        ).values(),
+      ],
+    },
+  },
   BidFloor: { field: "bidFloor", header: "Bid Floor" },
   DemandSource: {
     field: "demandSourceId",
@@ -177,7 +254,7 @@ export const ResourceTableFields = {
       field: "humanName",
       type: "input",
       matchMode: FilterMatchMode.CONTAINS,
-      placeholder: "Human Name",
+      placeholder: "Name",
     },
   },
   Name: {
