@@ -12,14 +12,12 @@ import { ResourceTableFields } from "@/constants";
 import LazyResourcesTable from "~/components/resources/LazyResourcesTable.vue";
 
 const columns = [
-  ResourceTableFields.PublicUid,
   ResourceTableFields.HumanName,
   ResourceTableFields.App,
   ResourceTableFields.BidFloor,
   ResourceTableFields.AdType,
   { field: "format", header: "Format" },
   ResourceTableFields.DemandSourceAccount,
-  ResourceTableFields.AccountType,
 ];
 const resourcesPath = "/line_items";
 const collectionPath = "/line_items_collection";
