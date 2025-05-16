@@ -31,7 +31,7 @@ export const ResourceCardFields = {
     },
   },
   DemandSourceAccount: {
-    label: "Account",
+    label: "Network Account",
     key: "accountId",
     type: "link",
     link: {

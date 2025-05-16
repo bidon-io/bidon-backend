@@ -14,7 +14,7 @@ import LazyResourcesTable from "~/components/resources/LazyResourcesTable.vue";
 const columns = [
   ResourceTableFields.HumanName,
   ResourceTableFields.App,
-  ResourceTableFields.BidFloor,
+  ResourceTableFields.BidType,
   ResourceTableFields.AdTypeWithFormat,
   ResourceTableFields.DemandSourceAccount,
 ];

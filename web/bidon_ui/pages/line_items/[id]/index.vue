@@ -37,7 +37,6 @@ const fields = [
   ResourceCardFields.AdType,
   ...(resource.format ? [{ key: "format", label: "Format" }] : []),
   ResourceCardFields.DemandSourceAccount,
-  ResourceCardFields.AccountType,
   { key: "isBidding", label: "Bidding" },
   ...jsonFields,
 ];

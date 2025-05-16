@@ -173,6 +173,29 @@ export const ResourceTableFields = {
     },
   },
   BidFloor: { field: "bidFloor", header: "Bid Floor" },
+  BidType: {
+    field: "isBidding",
+    header: "Bid Type",
+    customBody: (rowData) => {
+      return rowData.isBidding
+        ? "Bidding"
+        : `Waterfall (${parseFloat(rowData.bidFloor).toFixed(2)} $)`;
+    },
+    filter: {
+      field: "isBidding",
+      type: "select",
+      matchMode: FilterMatchMode.EQUALS,
+      placeholder: "Bid Type",
+      loadOptions: async () => [
+        { label: "Bidding", value: "true" },
+        { label: "Waterfall", value: "false" },
+      ],
+      extractOptions: () => [
+        { label: "Bidding", value: "true" },
+        { label: "Waterfall", value: "false" },
+      ],
+    },
+  },
   DemandSource: {
     field: "demandSourceId",
     header: "Demand Source",
@@ -211,7 +234,7 @@ export const ResourceTableFields = {
   },
   DemandSourceAccount: {
     field: "accountId",
-    header: "Account",
+    header: "Network Account",
     link: {
       basePath: "/demand_source_accounts",
       extractLinkData: ({ account }) => ({
