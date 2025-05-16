@@ -1,7 +1,7 @@
 <template>
   <nav class="mt-6">
     <NuxtLink
-      v-for="resource in resources.state"
+      v-for="resource in filteredResources"
       :key="resource.key"
       :to="resourcePath(resource.key)"
       :class="[
@@ -33,9 +33,19 @@
 
 <script setup lang="ts">
 import { pluralize, titleize } from "inflection";
+import { computed } from "vue";
 
 const resources = useResources();
 const route = useRoute();
+
+// Filter out the 'country' resource from the sidebar
+const filteredResources = computed(() => {
+  if (!resources.state) return [];
+
+  return Object.values(resources.state).filter(
+    (resource) => resource.key !== "country",
+  );
+});
 
 function title(key: string) {
   if (key === "auction_configuration_v2") {
