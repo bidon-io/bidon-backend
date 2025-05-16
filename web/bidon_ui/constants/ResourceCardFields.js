@@ -43,7 +43,7 @@ export const ResourceCardFields = {
       }),
     },
   },
-  HumanName: { label: "Human Name", key: "humanName" },
+  HumanName: { label: "Name", key: "humanName" },
   Segment: {
     label: "Segment",
     key: "segmentId",

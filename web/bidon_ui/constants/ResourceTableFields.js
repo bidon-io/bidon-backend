@@ -172,7 +172,7 @@ export const ResourceTableFields = {
   },
   HumanName: {
     field: "humanName",
-    header: "Human Name",
+    header: "Name",
     filter: {
       field: "humanName",
       type: "input",
