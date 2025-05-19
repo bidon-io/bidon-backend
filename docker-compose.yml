@@ -169,12 +169,17 @@ services:
 
   kafka-connect-setup:
     image: curlimages/curl:latest
+    user: root
     depends_on:
       kafka-connect:
         condition: service_healthy
     volumes:
-      - ./docker/kafka-connect:/scripts:ro
-    entrypoint: ["/bin/sh", "/scripts/create-connector.sh"]
+      - ./docker/kafka-connect:/tmp
+    env_file:
+      - .env
+    entrypoint: >
+      sh -c "apk add --no-cache gettext &&
+             sh /tmp/create-connector.sh"
     network_mode: "service:kafka-connect"
 
   schema-registry:
