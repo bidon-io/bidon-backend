@@ -52,7 +52,7 @@ func prepareShowEvent(ctx context.Context, req *request[schema.ShowRequest, *sch
 	if err != nil {
 		auctionConfigurationUID = 0
 	}
-	
+
 	adUnitInternalID, err := adUnitLookup.GetInternalIDByUIDCached(ctx, bid.AdUnitUID)
 	if err != nil {
 		adUnitInternalID = 0

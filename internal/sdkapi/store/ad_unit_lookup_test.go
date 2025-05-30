@@ -16,7 +16,6 @@ func TestAdUnitLookup_GetInternalIDByUID(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
-	// Create test line items
 	lineItem1 := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.PublicUID.Int64 = 12345
 		item.PublicUID.Valid = true
@@ -81,7 +80,6 @@ func TestAdUnitLookup_GetInternalIDByUIDCached(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
 
-	// Create test line items
 	lineItem1 := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.PublicUID.Int64 = 12345
 		item.PublicUID.Valid = true
@@ -124,7 +122,6 @@ func TestAdUnitLookup_GetInternalIDByUIDCached(t *testing.T) {
 		},
 	}
 
-	// Use real memory cache for cached method testing
 	cache := config.NewMemoryCacheOf[int64](time.Minute)
 	lookup := &AdUnitLookup{
 		DB:    tx,

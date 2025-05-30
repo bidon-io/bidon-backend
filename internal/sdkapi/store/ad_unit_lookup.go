@@ -42,7 +42,7 @@ func (a *AdUnitLookup) GetInternalIDByUID(ctx context.Context, uid string) (int6
 		First(&lineItem).Error
 
 	if err != nil {
-		return 0, nil // Not found or error, return 0
+		return 0, nil
 	}
 
 	return lineItem.ID, nil
