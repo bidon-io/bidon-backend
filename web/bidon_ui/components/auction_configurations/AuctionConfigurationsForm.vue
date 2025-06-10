@@ -1,7 +1,6 @@
 <template>
   <form @submit="onSubmit">
     <FormCard title="Auction Configuration">
-      <!-- Clone Settings Section - Moved to top with improved styling -->
       <div
         v-if="showCopySettings"
         class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
