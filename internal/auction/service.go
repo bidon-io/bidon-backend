@@ -77,7 +77,14 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	req := params.Req
 
 	var auctionConfig *Config
+	var auctionResult *Result
+	var adUnitsMap *AdUnitsMap
 	var err error
+
+	// Ensure events are always logged, even on errors
+	defer func() {
+		s.logEventsWithError(req, params, auctionConfig, auctionResult, adUnitsMap, err)
+	}()
 
 	segmentParams := &segment.Params{
 		Country: params.Country,
@@ -104,18 +111,21 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	if req.AdObject.AuctionKey != "" {
 		publicUID, success := new(big.Int).SetString(req.AdObject.AuctionKey, 32)
 		if !success {
-			return nil, sdkapi.ErrInvalidAuctionKey
+			err = sdkapi.ErrInvalidAuctionKey
+			return nil, err
 		}
 
 		auctionConfig = s.ConfigFetcher.FetchByUIDCached(ctx, params.AppID, "0", publicUID.String())
 		if auctionConfig == nil {
-			return nil, sdkapi.ErrInvalidAuctionKey
+			err = sdkapi.ErrInvalidAuctionKey
+			return nil, err
 		}
 	} else {
 		auctionConfig, err = s.ConfigFetcher.Match(ctx, params.AppID, req.AdType, sgmnt.ID, "v2")
 	}
 	if err != nil {
-		return nil, sdkapi.ErrNoAdsFound
+		err = sdkapi.ErrNoAdsFound
+		return nil, err
 	}
 	req.AdObject.AuctionConfigurationID = auctionConfig.ID
 	req.AdObject.AuctionConfigurationUID = auctionConfig.UID
@@ -135,19 +145,16 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 		AuctionConfiguration: auctionConfig,
 	}
 
-	auctionResult, err := s.AuctionBuilder.Build(ctx, bp)
+	auctionResult, err = s.AuctionBuilder.Build(ctx, bp)
 	if err != nil {
 		if errors.Is(err, ErrNoAdsFound) {
 			err = sdkapi.ErrNoAdsFound
 		}
-
 		return nil, err
 	}
 	params.Log(fmt.Sprintf("[AUCTION V2] auction: (%+v), err: (%s), took (%dms)", auctionResult, err, auctionResult.GetDuration()))
 
-	adUnitsMap := BuildAdUnitsMap(auctionResult.AdUnits)
-
-	s.logEvents(req, params, auctionResult, adUnitsMap)
+	adUnitsMap = buildAdUnitsMap(auctionResult.AdUnits)
 
 	return s.buildResponse(req, auctionResult, adUnitsMap)
 }
@@ -249,9 +256,66 @@ func (s *Service) logEvents(
 	}
 
 	events := prepareBiddingEvents(req, params, auctionResult.BiddingAuctionResult, adUnitsMap)
-	aucRequestEvent := prepareAuctionRequestEvent(req, params, auc, auctionConfigurationUID)
+	aucRequestEvent := prepareAuctionRequestEvent(req, params, auc, auctionConfigurationUID, nil)
 
 	events = append(events, aucRequestEvent)
+	for _, ev := range events {
+		s.EventLogger.Log(ev, func(err error) {
+			params.LogErr(fmt.Errorf("log %v event: %v", ev.EventType, err))
+		})
+	}
+}
+
+func (s *Service) logEventsWithError(
+	req *schema.AuctionRequest,
+	params *ExecutionParams,
+	auctionConfig *Config,
+	auctionResult *Result,
+	adUnitsMap *AdUnitsMap,
+	auctionErr error,
+) {
+	// If no error occurred and we have a complete auction result, use the existing logic
+	if auctionErr == nil && auctionResult != nil && adUnitsMap != nil {
+		s.logEvents(req, params, auctionResult, adUnitsMap)
+		return
+	}
+
+	// Handle error scenarios - create events with error information
+	var events []*event.AdEvent
+
+	// If we have bidding results, include them even in error scenarios
+	if auctionResult != nil && auctionResult.BiddingAuctionResult != nil && adUnitsMap != nil {
+		events = prepareBiddingEvents(req, params, auctionResult.BiddingAuctionResult, adUnitsMap)
+	}
+
+	// Create auction request event with error information
+	var auc *Auction
+	var auctionConfigurationUID int
+
+	if auctionConfig != nil {
+		auc = &Auction{
+			ConfigID:  auctionConfig.ID,
+			ConfigUID: auctionConfig.UID,
+		}
+		uid, err := strconv.Atoi(auc.ConfigUID)
+		if err != nil {
+			auctionConfigurationUID = 0
+		} else {
+			auctionConfigurationUID = uid
+		}
+	} else {
+		// Create minimal auction info for early errors
+		auc = &Auction{
+			ConfigID:  0,
+			ConfigUID: "0",
+		}
+		auctionConfigurationUID = 0
+	}
+
+	aucRequestEvent := prepareAuctionRequestEvent(req, params, auc, auctionConfigurationUID, auctionErr)
+	events = append(events, aucRequestEvent)
+
+	// Log all events
 	for _, ev := range events {
 		s.EventLogger.Log(ev, func(err error) {
 			params.LogErr(fmt.Errorf("log %v event: %v", ev.EventType, err))
@@ -294,7 +358,16 @@ func prepareAuctionRequestEvent(
 	params *ExecutionParams,
 	auc *Auction,
 	auctionConfigurationUID int,
+	auctionErr error,
 ) *event.AdEvent {
+	status := event.SuccessAdRequestStatus
+	errorMsg := ""
+
+	if auctionErr != nil {
+		status = event.ErrorAdRequestStatus
+		errorMsg = auctionErr.Error()
+	}
+
 	adRequestParams := event.AdRequestParams{
 		EventType:               "auction_request",
 		AdType:                  string(req.AdType),
@@ -302,13 +375,14 @@ func prepareAuctionRequestEvent(
 		AuctionID:               req.AdObject.AuctionID,
 		AuctionConfigurationID:  auc.ConfigID,
 		AuctionConfigurationUID: int64(auctionConfigurationUID),
-		Status:                  "",
+		Status:                  status,
 		ImpID:                   "",
 		DemandID:                "",
 		AdUnitUID:               0,
 		AdUnitLabel:             "",
 		ECPM:                    0,
 		PriceFloor:              req.AdObject.PriceFloor,
+		Error:                   errorMsg,
 	}
 
 	return event.NewAdEvent(&req.BaseRequest, adRequestParams, params.GeoData)
