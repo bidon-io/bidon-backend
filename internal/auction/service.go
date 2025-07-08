@@ -83,7 +83,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 
 	// Ensure events are always logged, even on errors
 	defer func() {
-		s.logEventsWithError(req, params, auctionConfig, auctionResult, adUnitsMap, err)
+		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
 	}()
 
 	segmentParams := &segment.Params{
@@ -243,65 +243,26 @@ func (s *Service) buildResponse(
 func (s *Service) logEvents(
 	req *schema.AuctionRequest,
 	params *ExecutionParams,
-	auctionResult *Result,
-	adUnitsMap *AdUnitsMap,
-) {
-	auc := &Auction{
-		ConfigID:  auctionResult.AuctionConfiguration.ID,
-		ConfigUID: auctionResult.AuctionConfiguration.UID,
-	}
-	auctionConfigurationUID, err := strconv.Atoi(auc.ConfigUID)
-	if err != nil {
-		auctionConfigurationUID = 0
-	}
-
-	events := prepareBiddingEvents(req, params, auctionResult.BiddingAuctionResult, adUnitsMap)
-	aucRequestEvent := prepareAuctionRequestEvent(req, params, auc, auctionConfigurationUID, nil)
-
-	events = append(events, aucRequestEvent)
-	for _, ev := range events {
-		s.EventLogger.Log(ev, func(err error) {
-			params.LogErr(fmt.Errorf("log %v event: %v", ev.EventType, err))
-		})
-	}
-}
-
-func (s *Service) logEventsWithError(
-	req *schema.AuctionRequest,
-	params *ExecutionParams,
 	auctionConfig *Config,
 	auctionResult *Result,
 	adUnitsMap *AdUnitsMap,
 	auctionErr error,
 ) {
-	// If no error occurred and we have a complete auction result, use the existing logic
-	if auctionErr == nil && auctionResult != nil && adUnitsMap != nil {
-		s.logEvents(req, params, auctionResult, adUnitsMap)
-		return
-	}
-
-	// Handle error scenarios - create events with error information
-	var events []*event.AdEvent
-
-	// If we have bidding results, include them even in error scenarios
-	if auctionResult != nil && auctionResult.BiddingAuctionResult != nil && adUnitsMap != nil {
-		events = prepareBiddingEvents(req, params, auctionResult.BiddingAuctionResult, adUnitsMap)
-	}
-
-	// Create auction request event with error information
+	// Prepare auction info from available data
 	var auc *Auction
 	var auctionConfigurationUID int
 
-	if auctionConfig != nil {
+	if auctionResult != nil && auctionResult.AuctionConfiguration != nil {
+		// Use auction result configuration (success case)
+		auc = &Auction{
+			ConfigID:  auctionResult.AuctionConfiguration.ID,
+			ConfigUID: auctionResult.AuctionConfiguration.UID,
+		}
+	} else if auctionConfig != nil {
+		// Use provided configuration (error case with config available)
 		auc = &Auction{
 			ConfigID:  auctionConfig.ID,
 			ConfigUID: auctionConfig.UID,
-		}
-		uid, err := strconv.Atoi(auc.ConfigUID)
-		if err != nil {
-			auctionConfigurationUID = 0
-		} else {
-			auctionConfigurationUID = uid
 		}
 	} else {
 		// Create minimal auction info for early errors
@@ -309,9 +270,24 @@ func (s *Service) logEventsWithError(
 			ConfigID:  0,
 			ConfigUID: "0",
 		}
-		auctionConfigurationUID = 0
 	}
 
+	uid, err := strconv.Atoi(auc.ConfigUID)
+	if err != nil {
+		auctionConfigurationUID = 0
+	} else {
+		auctionConfigurationUID = uid
+	}
+
+	// Prepare events
+	var events []*event.AdEvent
+
+	// Add bidding events if available
+	if auctionResult != nil && auctionResult.BiddingAuctionResult != nil && adUnitsMap != nil {
+		events = prepareBiddingEvents(req, params, auctionResult.BiddingAuctionResult, adUnitsMap)
+	}
+
+	// Add auction request event
 	aucRequestEvent := prepareAuctionRequestEvent(req, params, auc, auctionConfigurationUID, auctionErr)
 	events = append(events, aucRequestEvent)
 

@@ -220,7 +220,7 @@ func TestService_Run(t *testing.T) {
 		}
 
 		// Verify error status and message
-		if auctionEvent.Status != "ERROR" {
+		if auctionEvent.Status != event.ErrorAdRequestStatus {
 			t.Errorf("Expected Status to be 'ERROR', got '%s'", auctionEvent.Status)
 		}
 		if auctionEvent.Error == "" {
@@ -278,7 +278,7 @@ func TestService_Run(t *testing.T) {
 		}
 
 		// Verify error status and message
-		if auctionEvent.Status != "ERROR" {
+		if auctionEvent.Status != event.ErrorAdRequestStatus {
 			t.Errorf("Expected Status to be 'ERROR', got '%s'", auctionEvent.Status)
 		}
 		if auctionEvent.Error == "" {
@@ -333,7 +333,7 @@ func TestService_Run(t *testing.T) {
 		}
 
 		// Verify error status and message
-		if auctionEvent.Status != "ERROR" {
+		if auctionEvent.Status != event.ErrorAdRequestStatus {
 			t.Errorf("Expected Status to be 'ERROR', got '%s'", auctionEvent.Status)
 		}
 		if auctionEvent.Error == "" {
@@ -393,7 +393,7 @@ func TestService_Run(t *testing.T) {
 		}
 
 		// Verify error status and message
-		if auctionEvent.Status != "ERROR" {
+		if auctionEvent.Status != event.ErrorAdRequestStatus {
 			t.Errorf("Expected Status to be 'ERROR', got '%s'", auctionEvent.Status)
 		}
 		if auctionEvent.Error == "" {
