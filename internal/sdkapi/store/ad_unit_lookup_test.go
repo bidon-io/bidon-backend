@@ -32,25 +32,28 @@ func TestAdUnitLookup_GetByUID(t *testing.T) {
 	lookup := &AdUnitLookup{DB: tx}
 
 	tests := []struct {
-		name          string
-		uid           string
-		expectedID    int64
-		expectedExtra map[string]any
-		expectNil     bool
+		name           string
+		uid            string
+		expectedAdUnit *db.LineItem
+		expectNil      bool
 	}{
 		{
-			name:          "valid UID returns correct LineItem",
-			uid:           "12345",
-			expectedID:    lineItem1.ID,
-			expectedExtra: map[string]any{"test_key": "test_value"},
-			expectNil:     false,
+			name: "valid UID returns correct LineItem",
+			uid:  "12345",
+			expectedAdUnit: &db.LineItem{
+				ID:    lineItem1.ID,
+				Extra: lineItem1.Extra,
+			},
+			expectNil: false,
 		},
 		{
-			name:          "different UID returns different LineItem",
-			uid:           "67890",
-			expectedID:    lineItem2.ID,
-			expectedExtra: map[string]any{"another_key": "another_value"},
-			expectNil:     false,
+			name: "different UID returns different LineItem",
+			uid:  "67890",
+			expectedAdUnit: &db.LineItem{
+				ID:    lineItem2.ID,
+				Extra: lineItem2.Extra,
+			},
+			expectNil: false,
 		},
 		{
 			name:      "invalid UID returns nil",
@@ -81,18 +84,15 @@ func TestAdUnitLookup_GetByUID(t *testing.T) {
 				if result != nil {
 					t.Errorf("GetByUID() expected nil, got %v", result)
 				}
-			} else {
-				if result == nil {
-					t.Fatalf("GetByUID() expected non-nil result")
-				}
+				return
+			}
 
-				if diff := cmp.Diff(tt.expectedID, result.ID); diff != "" {
-					t.Errorf("GetByUID() ID mismatch (-want +got):\n%s", diff)
-				}
+			if result == nil {
+				t.Fatalf("GetByUID() expected non-nil result")
+			}
 
-				if diff := cmp.Diff(tt.expectedExtra, result.Extra); diff != "" {
-					t.Errorf("GetByUID() Extra mismatch (-want +got):\n%s", diff)
-				}
+			if diff := cmp.Diff(tt.expectedAdUnit, result); diff != "" {
+				t.Errorf("GetByUID() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -115,25 +115,28 @@ func TestAdUnitLookup_GetByUIDCached(t *testing.T) {
 	})
 
 	tests := []struct {
-		name          string
-		uid           string
-		expectedID    int64
-		expectedExtra map[string]any
-		expectNil     bool
+		name           string
+		uid            string
+		expectedAdUnit *db.LineItem
+		expectNil      bool
 	}{
 		{
-			name:          "valid UID returns correct LineItem",
-			uid:           "12345",
-			expectedID:    lineItem1.ID,
-			expectedExtra: map[string]any{"test_key": "test_value"},
-			expectNil:     false,
+			name: "valid UID returns correct LineItem",
+			uid:  "12345",
+			expectedAdUnit: &db.LineItem{
+				ID:    lineItem1.ID,
+				Extra: lineItem1.Extra,
+			},
+			expectNil: false,
 		},
 		{
-			name:          "different UID returns different LineItem",
-			uid:           "67890",
-			expectedID:    lineItem2.ID,
-			expectedExtra: map[string]any{"another_key": "another_value"},
-			expectNil:     false,
+			name: "different UID returns different LineItem",
+			uid:  "67890",
+			expectedAdUnit: &db.LineItem{
+				ID:    lineItem2.ID,
+				Extra: lineItem2.Extra,
+			},
+			expectNil: false,
 		},
 		{
 			name:      "invalid UID returns nil",
@@ -170,18 +173,15 @@ func TestAdUnitLookup_GetByUIDCached(t *testing.T) {
 				if result != nil {
 					t.Errorf("GetByUIDCached() expected nil, got %v", result)
 				}
-			} else {
-				if result == nil {
-					t.Fatalf("GetByUIDCached() expected non-nil result")
-				}
+				return
+			}
 
-				if diff := cmp.Diff(tt.expectedID, result.ID); diff != "" {
-					t.Errorf("GetByUIDCached() ID mismatch (-want +got):\n%s", diff)
-				}
+			if result == nil {
+				t.Fatalf("GetByUIDCached() expected non-nil result")
+			}
 
-				if diff := cmp.Diff(tt.expectedExtra, result.Extra); diff != "" {
-					t.Errorf("GetByUIDCached() Extra mismatch (-want +got):\n%s", diff)
-				}
+			if diff := cmp.Diff(tt.expectedAdUnit, result); diff != "" {
+				t.Errorf("GetByUIDCached() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
