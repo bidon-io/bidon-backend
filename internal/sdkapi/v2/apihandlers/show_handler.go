@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -26,7 +27,7 @@ type ShowNotificationHandler interface {
 }
 
 type AdUnitLookup interface {
-	GetInternalIDByUIDCached(context.Context, string) (int64, error)
+	GetByUIDCached(context.Context, string) (*db.LineItem, error)
 }
 
 func (h *ShowHandler) Handle(c echo.Context) error {
@@ -53,9 +54,13 @@ func prepareShowEvent(ctx context.Context, req *request[schema.ShowRequest, *sch
 		auctionConfigurationUID = 0
 	}
 
-	adUnitInternalID, err := adUnitLookup.GetInternalIDByUIDCached(ctx, bid.AdUnitUID)
-	if err != nil {
-		adUnitInternalID = 0
+	var adUnitInternalID int64
+	var adUnitCredentials map[string]any
+
+	adUnit, err := adUnitLookup.GetByUIDCached(ctx, bid.AdUnitUID)
+	if err == nil && adUnit != nil {
+		adUnitInternalID = adUnit.ID
+		adUnitCredentials = adUnit.Extra
 	}
 
 	adRequestParams := event.AdRequestParams{
@@ -73,6 +78,7 @@ func prepareShowEvent(ctx context.Context, req *request[schema.ShowRequest, *sch
 		AdUnitUID:               int64(bid.GetAdUnitUID()),
 		AdUnitInternalID:        adUnitInternalID,
 		AdUnitLabel:             bid.AdUnitLabel,
+		AdUnitCredentials:       adUnitCredentials,
 		ECPM:                    bid.GetPrice(),
 		PriceFloor:              bid.AuctionPriceFloor,
 		Bidding:                 bid.IsBidding(),

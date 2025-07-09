@@ -33,6 +33,7 @@ func NewAdEvent(request *schema.BaseRequest, adRequestParams AdRequestParams, ge
 	requestEvent.AdUnitUID = adRequestParams.AdUnitUID
 	requestEvent.AdUnitInternalID = adRequestParams.AdUnitInternalID
 	requestEvent.AdUnitLabel = adRequestParams.AdUnitLabel
+	requestEvent.AdUnitCredentials = adRequestParams.AdUnitCredentials
 	requestEvent.ECPM = adRequestParams.ECPM
 	requestEvent.PriceFloor = adRequestParams.PriceFloor
 	requestEvent.RawRequest = adRequestParams.RawRequest
@@ -130,6 +131,7 @@ type AdRequestParams struct {
 	AdUnitUID               int64
 	AdUnitInternalID        int64
 	AdUnitLabel             string
+	AdUnitCredentials       map[string]any
 	ECPM                    float64
 	PriceFloor              float64
 	RawRequest              string
@@ -146,30 +148,31 @@ const (
 )
 
 type AdEvent struct {
-	Timestamp                   float64   `json:"timestamp"`
-	EventType                   string    `json:"event_type"`
-	AdType                      string    `json:"ad_type"`
-	AdFormat                    string    `json:"ad_format"`
-	AuctionID                   string    `json:"auction_id"`
-	AuctionConfigurationID      int64     `json:"auction_configuration_id"`
-	AuctionConfigurationUID     int64     `json:"auction_configuration_uid"`
-	Status                      string    `json:"status"`
-	RoundID                     string    `json:"round_id"`
-	RoundNumber                 int       `json:"round_number"`
-	ImpID                       string    `json:"impid"`
-	DemandID                    string    `json:"demand_id"`
-	Bidding                     bool      `json:"bidding"`
-	AdUnitUID                   int64     `json:"ad_unit_uid"`
-	AdUnitInternalID            int64     `json:"ad_unit_internal_id"`
-	AdUnitLabel                 string    `json:"ad_unit_label"`
-	ECPM                        float64   `json:"ecpm"`
-	PriceFloor                  float64   `json:"price_floor"`
-	RawRequest                  string    `json:"raw_request"`
-	RawResponse                 string    `json:"raw_response"`
-	Error                       string    `json:"error"`
-	TimingMap                   TimingMap `json:"timing_map"`
-	ExternalWinnerDemandID      string    `json:"external_winner_demand_id"`
-	ExternalWinnerEcpm          float64   `json:"external_winner_ecpm"`
+	Timestamp                   float64        `json:"timestamp"`
+	EventType                   string         `json:"event_type"`
+	AdType                      string         `json:"ad_type"`
+	AdFormat                    string         `json:"ad_format"`
+	AuctionID                   string         `json:"auction_id"`
+	AuctionConfigurationID      int64          `json:"auction_configuration_id"`
+	AuctionConfigurationUID     int64          `json:"auction_configuration_uid"`
+	Status                      string         `json:"status"`
+	RoundID                     string         `json:"round_id"`
+	RoundNumber                 int            `json:"round_number"`
+	ImpID                       string         `json:"impid"`
+	DemandID                    string         `json:"demand_id"`
+	Bidding                     bool           `json:"bidding"`
+	AdUnitUID                   int64          `json:"ad_unit_uid"`
+	AdUnitInternalID            int64          `json:"ad_unit_internal_id"`
+	AdUnitLabel                 string         `json:"ad_unit_label"`
+	AdUnitCredentials           map[string]any `json:"ad_unit_credentials"`
+	ECPM                        float64        `json:"ecpm"`
+	PriceFloor                  float64        `json:"price_floor"`
+	RawRequest                  string         `json:"raw_request"`
+	RawResponse                 string         `json:"raw_response"`
+	Error                       string         `json:"error"`
+	TimingMap                   TimingMap      `json:"timing_map"`
+	ExternalWinnerDemandID      string         `json:"external_winner_demand_id"`
+	ExternalWinnerEcpm          float64        `json:"external_winner_ecpm"`
 	Manufacturer                string    `json:"manufacturer"`
 	Model                       string    `json:"model"`
 	Os                          string    `json:"os"`
