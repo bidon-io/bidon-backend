@@ -12,6 +12,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/util"
 )
 
 type ShowHandler struct {
@@ -55,12 +56,12 @@ func prepareShowEvent(ctx context.Context, req *request[schema.ShowRequest, *sch
 	}
 
 	var adUnitInternalID int64
-	adUnitCredentials := map[string]any{}
+	var adUnitCredentials map[string]string
 
 	adUnit, err := adUnitLookup.GetByUIDCached(ctx, bid.AdUnitUID)
 	if err == nil && adUnit != nil {
 		adUnitInternalID = adUnit.ID
-		adUnitCredentials = adUnit.Extra
+		adUnitCredentials = util.ConvertToStringMap(adUnit.Extra)
 	}
 
 	adRequestParams := event.AdRequestParams{

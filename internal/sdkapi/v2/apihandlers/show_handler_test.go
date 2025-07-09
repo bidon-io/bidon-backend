@@ -23,8 +23,13 @@ func SetupShowHandler() apihandlers.ShowHandler {
 		// Return a test LineItem based on the UID
 		if uid == "test_uid_123" {
 			return &db.LineItem{
-				ID:    456,
-				Extra: map[string]any{"test_key": "test_value"},
+				ID: 456,
+				Extra: map[string]any{
+					"api_key":   "sk_test_123",
+					"placement": "banner_main",
+					"timeout":   30,
+					"enabled":   true,
+				},
 			}, nil
 		}
 		return nil, nil

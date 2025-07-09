@@ -12,8 +12,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/db/dbtest"
 )
 
-
-
 func TestAdUnitLookup_GetByUID(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
@@ -34,11 +32,11 @@ func TestAdUnitLookup_GetByUID(t *testing.T) {
 	lookup := &AdUnitLookup{DB: tx}
 
 	tests := []struct {
-		name           string
-		uid            string
-		expectedID     int64
-		expectedExtra  map[string]any
-		expectNil      bool
+		name          string
+		uid           string
+		expectedID    int64
+		expectedExtra map[string]any
+		expectNil     bool
 	}{
 		{
 			name:          "valid UID returns correct LineItem",
@@ -117,11 +115,11 @@ func TestAdUnitLookup_GetByUIDCached(t *testing.T) {
 	})
 
 	tests := []struct {
-		name           string
-		uid            string
-		expectedID     int64
-		expectedExtra  map[string]any
-		expectNil      bool
+		name          string
+		uid           string
+		expectedID    int64
+		expectedExtra map[string]any
+		expectNil     bool
 	}{
 		{
 			name:          "valid UID returns correct LineItem",
