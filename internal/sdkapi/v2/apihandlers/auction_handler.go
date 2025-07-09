@@ -2,10 +2,8 @@ package apihandlers
 
 import (
 	"context"
-	"net/http"
-	"strings"
-
 	"github.com/labstack/echo/v4"
+	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
@@ -72,12 +70,12 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 // - SDK version is 0.7.x or 0.8.1
 func (h *AuctionHandler) shouldReturnEmptyResponse(req *schema.AuctionRequest) bool {
 	// Check OS is iOS
-	if strings.ToLower(req.Device.OS) != "iOS" {
+	if req.Device.OS != "iOS" {
 		return false
 	}
 
 	// Check mediator is MAX
-	if strings.ToLower(req.GetMediator()) != "max" {
+	if req.GetMediator() != "max" {
 		return false
 	}
 
