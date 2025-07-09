@@ -55,7 +55,7 @@ func prepareShowEvent(ctx context.Context, req *request[schema.ShowRequest, *sch
 	}
 
 	var adUnitInternalID int64
-	var adUnitCredentials map[string]any
+	adUnitCredentials := map[string]any{}
 
 	adUnit, err := adUnitLookup.GetByUIDCached(ctx, bid.AdUnitUID)
 	if err == nil && adUnit != nil {
