@@ -363,16 +363,13 @@ func TestAuctionHandler_EmptyResponseForIOSMaxSDKVersions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Read request body from file
 			reqBody, err := os.ReadFile(tt.requestFile)
 			if err != nil {
 				t.Fatalf("Error reading request file: %v", err)
 			}
 
-			// Create handler
 			handler := testHelperAuctionHandler()
 
-			// Execute request
 			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/v2/auction/interstitial", string(reqBody), &RequestOptions{
 				Headers: map[string]string{
 					"X-Bidon-Version": tt.sdkVersion,
@@ -382,7 +379,6 @@ func TestAuctionHandler_EmptyResponseForIOSMaxSDKVersions(t *testing.T) {
 				t.Fatalf("ExecuteRequest failed: %v", err)
 			}
 
-			// Verify response status
 			if rec.Code != http.StatusOK {
 				t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
 			}
@@ -404,7 +400,6 @@ func TestAuctionHandler_EmptyResponseForIOSMaxSDKVersions(t *testing.T) {
 					t.Errorf("%s: Expected token '{}', got '%s'", tt.description, response.Token)
 				}
 			} else {
-				// For non-empty cases, we expect some ads to be returned
 				if len(response.AdUnits) == 0 {
 					t.Errorf("%s: Expected non-empty AdUnits, got empty", tt.description)
 				}
