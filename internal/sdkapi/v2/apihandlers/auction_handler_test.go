@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -295,69 +296,86 @@ func TestAuctionHandler_Handle(t *testing.T) {
 	}
 }
 
-func TestAuctionHandler_EmptyResponseForIOSMaxSDKVersions(t *testing.T) {
+func TestAuctionHandler_EmptyResponseForNonAndroidMaxSDKVersions(t *testing.T) {
 	tests := []struct {
 		name          string
 		requestFile   string
+		endpoint      string
 		sdkVersion    string
 		shouldBeEmpty bool
 		description   string
 	}{
 		{
-			name:          "iOS_MAX_0.7.0_should_return_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.7.0_should_return_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.7.0",
 			shouldBeEmpty: true,
-			description:   "iOS with MAX mediator and SDK version 0.7.0 should return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.7.0 should return empty ads",
 		},
 		{
-			name:          "iOS_MAX_0.7.5_should_return_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.7.5_should_return_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.7.5",
 			shouldBeEmpty: true,
-			description:   "iOS with MAX mediator and SDK version 0.7.5 should return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.7.5 should return empty ads",
 		},
 		{
-			name:          "iOS_MAX_0.8.1_should_return_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.8.1_should_return_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.8.1",
 			shouldBeEmpty: true,
-			description:   "iOS with MAX mediator and SDK version 0.8.1 should return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.8.1 should return empty ads",
 		},
 		{
-			name:          "iOS_MAX_0.6.0_should_not_be_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.6.0_should_not_be_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.6.0",
 			shouldBeEmpty: false,
-			description:   "iOS with MAX mediator and SDK version 0.6.0 should NOT return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.6.0 should NOT return empty ads",
 		},
 		{
-			name:          "iOS_MAX_0.8.0_should_not_be_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.8.0_should_not_be_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.8.0",
 			shouldBeEmpty: false,
-			description:   "iOS with MAX mediator and SDK version 0.8.0 should NOT return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.8.0 should NOT return empty ads",
 		},
 		{
-			name:          "iOS_MAX_0.8.2_should_not_be_empty",
-			requestFile:   "testdata/auction/ios_max_mediator_request.json",
+			name:          "iOS_MAX_rewarded_0.8.2_should_not_be_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.8.2",
 			shouldBeEmpty: false,
-			description:   "iOS with MAX mediator and SDK version 0.8.2 should NOT return empty ads",
+			description:   "iOS with MAX mediator, rewarded ad type and SDK version 0.8.2 should NOT return empty ads",
 		},
 		{
-			name:          "Android_MAX_0.7.0_should_not_be_empty",
-			requestFile:   "testdata/auction/valid_request.json", // This is Android
+			name:          "iOS_MAX_interstitial_0.7.0_should_not_be_empty",
+			requestFile:   "testdata/auction/ios_max_mediator_interstitial_request.json",
+			endpoint:      "/v2/auction/interstitial",
 			sdkVersion:    "0.7.0",
 			shouldBeEmpty: false,
-			description:   "Android with MAX mediator and SDK version 0.7.0 should NOT return empty ads",
+			description:   "iOS with MAX mediator, interstitial ad type and SDK version 0.7.0 should NOT return empty ads",
 		},
 		{
-			name:          "iOS_other_mediator_0.7.0_should_not_be_empty",
-			requestFile:   "testdata/auction/ios_other_mediator_request.json",
+			name:          "Android_MAX_rewarded_0.7.0_should_not_be_empty",
+			requestFile:   "testdata/auction/android_max_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
 			sdkVersion:    "0.7.0",
 			shouldBeEmpty: false,
-			description:   "iOS with other mediator and SDK version 0.7.0 should NOT return empty ads",
+			description:   "Android with MAX mediator, rewarded ad type and SDK version 0.7.0 should NOT return empty ads",
+		},
+		{
+			name:          "iOS_other_mediator_rewarded_0.7.0_should_not_be_empty",
+			requestFile:   "testdata/auction/ios_other_mediator_rewarded_request.json",
+			endpoint:      "/v2/auction/rewarded",
+			sdkVersion:    "0.7.0",
+			shouldBeEmpty: false,
+			description:   "iOS with other mediator, rewarded ad type and SDK version 0.7.0 should NOT return empty ads",
 		},
 	}
 
@@ -370,9 +388,22 @@ func TestAuctionHandler_EmptyResponseForIOSMaxSDKVersions(t *testing.T) {
 
 			handler := testHelperAuctionHandler()
 
-			rec, err := ExecuteRequest(t, handler, http.MethodPost, "/v2/auction/interstitial", string(reqBody), &RequestOptions{
+			// Extract ad_type from endpoint path
+			adType := ""
+			if strings.Contains(tt.endpoint, "/rewarded") {
+				adType = "rewarded"
+			} else if strings.Contains(tt.endpoint, "/interstitial") {
+				adType = "interstitial"
+			} else if strings.Contains(tt.endpoint, "/banner") {
+				adType = "banner"
+			}
+
+			rec, err := ExecuteRequest(t, handler, http.MethodPost, tt.endpoint, string(reqBody), &RequestOptions{
 				Headers: map[string]string{
 					"X-Bidon-Version": tt.sdkVersion,
+				},
+				Params: map[string]string{
+					"ad_type": adType,
 				},
 			})
 			if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/ad"
 )
 
 type AuctionHandler struct {
@@ -64,15 +65,20 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 }
 
 // shouldReturnEmptyResponse checks if the request matches conditions for returning empty ads array:
-// - OS is iOS
+// - OS is NOT android
 // - Mediator is max (BCAMAX case)
 // - SDK version is 0.7.x or 0.8.1
+// - ad_type = rewarded_video
 func (h *AuctionHandler) shouldReturnEmptyResponse(req *schema.AuctionRequest) bool {
-	if req.Device.OS != "iOS" {
+	if req.Device.OS == "android" {
 		return false
 	}
 
 	if req.GetMediator() != "max" {
+		return false
+	}
+
+	if req.AdType != ad.RewardedType {
 		return false
 	}
 

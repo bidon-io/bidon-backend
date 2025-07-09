@@ -68,7 +68,7 @@
     "idfa": "0d95325a-71b7-4334-8816-9e2935ec0eef",
     "tracking_authorization_status": "AUTHORIZED"
   },
-  "ext": "{\"mediator\":\"level_play\"}",
+  "ext": "{\"mediator\":\"applovin\"}",
   "regs": {
     "coppa": false,
     "gdpr": false,
@@ -97,7 +97,7 @@
       }
     },
     "id": "f2d0dc19-b43f-43c1-8ca0-ae895ec76970",
-    "interstitial": {},
+    "rewarded": {},
     "orientation": "PORTRAIT"
   }
 }
