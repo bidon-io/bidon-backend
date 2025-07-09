@@ -17,7 +17,7 @@ func (a *AdUnitLookup) GetByUIDCached(ctx context.Context, uid string) (*db.Line
 		return nil, nil
 	}
 
-	cacheKey := []byte(AdUnitCachePrefix + uid)
+	cacheKey := []byte("ad_unit_lookup:" + uid)
 
 	return a.Cache.Get(ctx, cacheKey, func(ctx context.Context) (*db.LineItem, error) {
 		return a.GetByUID(ctx, uid)
@@ -47,5 +47,3 @@ func (a *AdUnitLookup) GetByUID(ctx context.Context, uid string) (*db.LineItem, 
 
 	return &lineItem, nil
 }
-
-
