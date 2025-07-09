@@ -2,7 +2,7 @@ package util
 
 import "fmt"
 
-// ConvertToStringMap converts map[string]any to map[string]string for ClickHouse compatibility.
+// ConvertToStringMap converts map[string]any to map[string]string
 func ConvertToStringMap(input map[string]any) map[string]string {
 	if input == nil {
 		return nil
