@@ -39,9 +39,8 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	if h.shouldReturnEmptyResponse(&req.raw) {
-		emptyResponse := h.buildEmptyResponse(&req.raw, req.auctionConfig)
-		return c.JSON(http.StatusOK, emptyResponse)
+	if h.shouldReturnErrNoAdsFound(&req.raw) {
+		return sdkapi.ErrNoAdsFound
 	}
 
 	params := &auction.ExecutionParams{
@@ -64,12 +63,12 @@ func (h *AuctionHandler) Handle(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-// shouldReturnEmptyResponse checks if the request matches conditions for returning empty ads array:
+// shouldReturnEmptyResponse checks if the request matches conditions for returning ErrNoAdsFound:
 // - OS is NOT android
 // - Mediator is max (BCAMAX case)
 // - SDK version is 0.7.x or 0.8.1
 // - ad_type = rewarded_video
-func (h *AuctionHandler) shouldReturnEmptyResponse(req *schema.AuctionRequest) bool {
+func (h *AuctionHandler) shouldReturnErrNoAdsFound(req *schema.AuctionRequest) bool {
 	if req.Device.OS == "android" {
 		return false
 	}
@@ -88,27 +87,4 @@ func (h *AuctionHandler) shouldReturnEmptyResponse(req *schema.AuctionRequest) b
 	}
 
 	return sdkapi.Version07xConstraint.Check(sdkVersion) || sdkapi.Version081Constraint.Check(sdkVersion)
-}
-
-func (h *AuctionHandler) buildEmptyResponse(req *schema.AuctionRequest, auctionConfig *auction.Config) *auction.Response {
-	response := &auction.Response{
-		AdUnits: make([]auction.AdUnit, 0),
-		NoBids:  make([]auction.AdUnit, 0),
-		Segment: auction.Segment{
-			ID:  req.Segment.ID,
-			UID: req.Segment.UID,
-		},
-		Token:             "{}",
-		AuctionID:         req.AdObject.AuctionID,
-		AuctionPriceFloor: req.AdObject.PriceFloor,
-	}
-
-	if auctionConfig != nil {
-		response.ConfigID = auctionConfig.ID
-		response.ConfigUID = auctionConfig.UID
-		response.ExternalWinNotifications = auctionConfig.ExternalWinNotifications
-		response.AuctionTimeout = auctionConfig.Timeout
-	}
-
-	return response
 }

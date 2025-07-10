@@ -25,6 +25,7 @@ import (
 	handlersmocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers/mocks"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
+	"github.com/labstack/echo/v4"
 )
 
 func testHelperAuctionHandler() *apihandlers.AuctionHandler {
@@ -406,31 +407,37 @@ func TestAuctionHandler_EmptyResponseForNonAndroidMaxSDKVersions(t *testing.T) {
 					"ad_type": adType,
 				},
 			})
-			if err != nil {
-				t.Fatalf("ExecuteRequest failed: %v", err)
-			}
-
-			if rec.Code != http.StatusOK {
-				t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
-			}
-
-			var response auction.Response
-			err = json.Unmarshal(rec.Body.Bytes(), &response)
-			if err != nil {
-				t.Fatalf("Failed to unmarshal response: %v", err)
-			}
-
 			if tt.shouldBeEmpty {
-				if len(response.AdUnits) != 0 {
-					t.Errorf("%s: Expected empty AdUnits, got %d ads", tt.description, len(response.AdUnits))
+				if err == nil {
+					t.Fatalf("%s: Expected error to be returned, got nil", tt.description)
 				}
-				if len(response.NoBids) != 0 {
-					t.Errorf("%s: Expected empty NoBids, got %d no-bids", tt.description, len(response.NoBids))
-				}
-				if response.Token != "{}" {
-					t.Errorf("%s: Expected token '{}', got '%s'", tt.description, response.Token)
+				if echoErr, ok := err.(*echo.HTTPError); ok {
+					if echoErr.Code != http.StatusUnprocessableEntity {
+						t.Errorf("%s: Expected error code 422, got %d", tt.description, echoErr.Code)
+					}
+					if echoErr.Message != "No ads found" {
+						t.Errorf("%s: Expected error message 'No ads found', got '%v'", tt.description, echoErr.Message)
+					}
+				} else {
+					t.Errorf("%s: Expected echo.HTTPError, got %T: %v", tt.description, err, err)
 				}
 			} else {
+				if err != nil {
+					t.Fatalf("ExecuteRequest failed: %v", err)
+				}
+			}
+
+			if !tt.shouldBeEmpty {
+				if rec.Code != http.StatusOK {
+					t.Errorf("%s: Expected status %d, got %d", tt.description, http.StatusOK, rec.Code)
+				}
+
+				var response auction.Response
+				err = json.Unmarshal(rec.Body.Bytes(), &response)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal response: %v", err)
+				}
+
 				if len(response.AdUnits) == 0 {
 					t.Errorf("%s: Expected non-empty AdUnits, got empty", tt.description)
 				}
