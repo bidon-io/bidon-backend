@@ -165,8 +165,43 @@ const timeout = useFieldModel("timeout");
 
 const demands = ref(resource.value.demands || []);
 const bidding = ref(resource.value.bidding || []);
-const demandAdUnitIds = ref(resource.value.adUnitIds || []);
-const biddingAdUnitIds = ref(resource.value.adUnitIds || []);
+const demandAdUnitIds = ref([]);
+const biddingAdUnitIds = ref([]);
+
+// Initialize ad unit IDs properly when app and ad type are available
+const initializeAdUnitIds = async () => {
+  if (!appId.value || !adType.value || !resource.value.adUnitIds?.length) {
+    return;
+  }
+
+  try {
+    // Fetch line items to determine which ad units belong to which network type
+    const [demandResponse, biddingResponse] = await Promise.all([
+      axios.get(
+        `/line_items?app_id=${appId.value}&ad_type=${adType.value}&is_bidding=false`,
+      ),
+      axios.get(
+        `/line_items?app_id=${appId.value}&ad_type=${adType.value}&is_bidding=true`,
+      ),
+    ]);
+
+    const demandLineItems = demandResponse.data.map((item) => item.id);
+    const biddingLineItems = biddingResponse.data.map((item) => item.id);
+
+    // Separate existing ad unit IDs based on their network type
+    demandAdUnitIds.value = resource.value.adUnitIds.filter((id) =>
+      demandLineItems.includes(id),
+    );
+    biddingAdUnitIds.value = resource.value.adUnitIds.filter((id) =>
+      biddingLineItems.includes(id),
+    );
+  } catch (error) {
+    console.error("Failed to initialize ad unit IDs:", error);
+    // Fallback: keep empty arrays
+    demandAdUnitIds.value = [];
+    biddingAdUnitIds.value = [];
+  }
+};
 
 const showNetworks = computed(() => appId.value && adType.value);
 const adUnitIds = computed(() => [
@@ -195,6 +230,15 @@ watch(appId, () => {
   clearAllWarnings();
 });
 
+// Initialize ad unit IDs when app or ad type changes
+watch(
+  [appId, adType],
+  () => {
+    initializeAdUnitIds();
+  },
+  { immediate: true },
+);
+
 const toast = useToast();
 const copyAuctionKey = ref("");
 const copyLoading = ref(false);
@@ -221,7 +265,7 @@ const validateSourceConfig = (sourceConfig) => {
   }
 };
 
-const updateFormFields = (sourceConfig) => {
+const updateFormFields = async (sourceConfig) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { name, isDefault, ...settings } = sourceConfig;
 
@@ -232,8 +276,37 @@ const updateFormFields = (sourceConfig) => {
 
   demands.value = settings.demands || [];
   bidding.value = settings.bidding || [];
-  demandAdUnitIds.value = settings.adUnitIds || [];
-  biddingAdUnitIds.value = settings.adUnitIds || [];
+
+  // Properly separate ad unit IDs based on network type
+  if (settings.adUnitIds?.length && appId.value && adType.value) {
+    try {
+      const [demandResponse, biddingResponse] = await Promise.all([
+        axios.get(
+          `/line_items?app_id=${appId.value}&ad_type=${adType.value}&is_bidding=false`,
+        ),
+        axios.get(
+          `/line_items?app_id=${appId.value}&ad_type=${adType.value}&is_bidding=true`,
+        ),
+      ]);
+
+      const demandLineItems = demandResponse.data.map((item) => item.id);
+      const biddingLineItems = biddingResponse.data.map((item) => item.id);
+
+      demandAdUnitIds.value = settings.adUnitIds.filter((id) =>
+        demandLineItems.includes(id),
+      );
+      biddingAdUnitIds.value = settings.adUnitIds.filter((id) =>
+        biddingLineItems.includes(id),
+      );
+    } catch (error) {
+      console.error("Failed to separate ad unit IDs during clone:", error);
+      demandAdUnitIds.value = [];
+      biddingAdUnitIds.value = [];
+    }
+  } else {
+    demandAdUnitIds.value = [];
+    biddingAdUnitIds.value = [];
+  }
 };
 
 const copySettings = async () => {
@@ -245,7 +318,7 @@ const copySettings = async () => {
   try {
     const sourceConfig = await fetchSourceConfig(copyAuctionKey.value);
     validateSourceConfig(sourceConfig);
-    updateFormFields(sourceConfig);
+    await updateFormFields(sourceConfig);
 
     copyAuctionKey.value = "";
     toast.add({
