@@ -86,10 +86,11 @@ func (a *ApplovinInitConfig) SetDefaultOrder() {
 }
 
 type BidmachineInitConfig struct {
-	SellerID        string   `json:"seller_id,omitempty"`
-	Endpoint        string   `json:"endpoint,omitempty"`
-	MediationConfig []string `json:"mediation_config,omitempty"`
-	Order           int      `json:"order"`
+	SellerID        string            `json:"seller_id,omitempty"`
+	Endpoint        string            `json:"endpoint,omitempty"`
+	MediationConfig []string          `json:"mediation_config,omitempty"`
+	Placements      map[string]string `json:"placements,omitempty"`
+	Order           int               `json:"order"`
 }
 
 func (a *BidmachineInitConfig) Key() adapter.Key {
