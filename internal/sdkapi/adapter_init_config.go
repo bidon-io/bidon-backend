@@ -19,7 +19,9 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 	case adapter.ApplovinKey:
 		config = new(ApplovinInitConfig)
 	case adapter.BidmachineKey:
-		config = new(BidmachineInitConfig)
+		config = &BidmachineInitConfig{
+			Placements: make(map[string]string),
+		}
 	case adapter.BigoAdsKey:
 		config = new(BigoAdsInitConfig)
 	case adapter.ChartboostKey:
