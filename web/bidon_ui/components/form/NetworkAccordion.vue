@@ -362,7 +362,8 @@ const updateNetworks = () => {
       .filter((adUnit) => adUnit.networkKey === network.key)
       .sort((a, b) => a.pricefloor - b.pricefloor);
     // Use initialAdUnitIds for first load, then use adUnitIds for updates
-    const idsToUse = props.adUnitIds.length > 0 ? props.adUnitIds : props.initialAdUnitIds;
+    const idsToUse =
+      props.adUnitIds.length > 0 ? props.adUnitIds : props.initialAdUnitIds;
 
     return {
       ...network,
@@ -378,7 +379,12 @@ const updateNetworks = () => {
 };
 
 watch(
-  [adUnitsData, () => props.networkKeys, () => props.adUnitIds, () => props.initialAdUnitIds],
+  [
+    adUnitsData,
+    () => props.networkKeys,
+    () => props.adUnitIds,
+    () => props.initialAdUnitIds,
+  ],
   () => {
     if (adUnitsData.value) {
       updateNetworks();
