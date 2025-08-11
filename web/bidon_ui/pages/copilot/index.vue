@@ -2,8 +2,7 @@
   <PageContainer>
     <Card>
       <template #header>
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">AI Copilot</h2>
+        <div class="flex items-center justify-between px-3 sm:px-4 py-3">
           <div class="flex items-center gap-2">
             <Button label="New Chat" icon="pi pi-plus" text @click="onNewChat" />
           </div>
@@ -11,7 +10,7 @@
       </template>
 
       <template #content>
-        <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2" data-testid="copilot-messages">
+        <div class="px-3 sm:px-4 space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto" data-testid="copilot-messages">
           <div v-if="historyLoading" class="text-sm text-gray-400">Loading conversation…</div>
           <div
             v-for="(msg, idx) in messages"
@@ -23,7 +22,7 @@
           >
             <div
               :class="[
-                'px-3 py-2 rounded-lg max-w-[80%] whitespace-pre-wrap',
+                'px-3 py-2 sm:px-4 sm:py-3 rounded-lg max-w-[85%] sm:max-w-[80%] whitespace-pre-wrap',
                 msg.role === 'user'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-800',
@@ -38,12 +37,12 @@
       </template>
 
       <template #footer>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 px-3 sm:px-4 py-3 pt-0">
           <InputText
             v-model="input"
             data-testid="copilot-input"
             placeholder="Type a message..."
-            class="flex-1"
+            class="flex-1 min-w-0"
             @keydown.enter.prevent="onSend"
           />
           <Button
@@ -51,6 +50,7 @@
             data-testid="copilot-send"
             label="Send"
             icon="pi pi-send"
+            class="shrink-0"
             @click="onSend"
           />
         </div>
