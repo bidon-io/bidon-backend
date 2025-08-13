@@ -4,14 +4,24 @@
       <template #header>
         <div class="flex items-center justify-between px-3 sm:px-4 py-3">
           <div class="flex items-center gap-2">
-            <Button label="New Chat" icon="pi pi-plus" text @click="onNewChat" />
+            <Button
+              label="New Chat"
+              icon="pi pi-plus"
+              text
+              @click="onNewChat"
+            />
           </div>
         </div>
       </template>
 
       <template #content>
-        <div class="px-3 sm:px-4 space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto" data-testid="copilot-messages">
-          <div v-if="historyLoading" class="text-sm text-gray-400">Loading conversation…</div>
+        <div
+          class="px-3 sm:px-4 space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto"
+          data-testid="copilot-messages"
+        >
+          <div v-if="historyLoading" class="text-sm text-gray-400">
+            Loading conversation…
+          </div>
           <div
             v-for="(msg, idx) in messages"
             :key="idx"
@@ -27,7 +37,9 @@
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-800',
               ]"
-              :data-testid="msg.role === 'user' ? 'user-message' : 'assistant-message'"
+              :data-testid="
+                msg.role === 'user' ? 'user-message' : 'assistant-message'
+              "
             >
               {{ msg.content }}
             </div>
@@ -60,180 +72,191 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { Client } from '@langgraph-js/sdk'
-import { useToast } from 'primevue/usetoast'
+import { onMounted } from "vue";
+import { Client } from "@langgraph-js/sdk";
+import { useToast } from "primevue/usetoast";
 
 interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
+  role: "user" | "assistant";
+  content: string;
 }
 
-const config = useRuntimeConfig()
-const copilotBase = config.public.copilotBase || '/api/copilot'
+const config = useRuntimeConfig();
+const copilotBase = config.public.copilotBase || "/api/copilot";
 
-const messages = ref<ChatMessage[]>([])
-const input = ref('')
-const loading = ref(false)
-const historyLoading = ref(false)
-const assistantId = ref<string | null>(null)
-const copilotStore = useCopilotStore()
-const threadId = computed(() => copilotStore.threadId as string | null)
-const toast = useToast()
+const messages = ref<ChatMessage[]>([]);
+const input = ref("");
+const loading = ref(false);
+const historyLoading = ref(false);
+const assistantId = ref<string | null>(null);
+const copilotStore = useCopilotStore();
+const threadId = computed(() => copilotStore.threadId as string | null);
+const toast = useToast();
 
-let client: Client
+let client: Client;
 
 onMounted(async () => {
-  const apiUrl = new URL(copilotBase, window.location.origin).toString()
+  const apiUrl = new URL(copilotBase, window.location.origin).toString();
   client = new Client({
     apiUrl,
     defaultHeaders: {
-      'X-Bidon-App': 'web',
+      "X-Bidon-App": "web",
     },
-  })
+  });
   // Use the conventional default assistant id; avoids extra calls and works for most setups
-  assistantId.value = 'agent'
+  assistantId.value = "agent";
 
   // Restore persisted thread or create a new one
   if (threadId.value) {
-    console.debug('[Copilot] restored thread', threadId.value)
-    // Fetch thread history
     try {
-      historyLoading.value = true
+      historyLoading.value = true;
       // Use getState to fetch the latest state values for the thread
-      const state = await client.threads.getState<{ messages?: any[] }>(threadId.value)
-      const raw = state?.values?.messages || []
-      const normalized = (raw as any[]).map((m: any) => {
-        const role = (m.role || m.type || '').toLowerCase()
+      const state = await client.threads.getState<{ messages?: any[] }>(
+        threadId.value,
+      );
+      const raw = state?.values?.messages || [];
+
+      const filtered = raw.filter((m) => m.type !== "tool");
+      const normalized = (filtered as any[]).map((m: any) => {
+        const role = (m.role || m.type || "").toLowerCase();
         // Coerce role names to our UI roles
-        const uiRole: 'user' | 'assistant' = role.includes('human') || role === 'user' ? 'user' : 'assistant'
-        let content = ''
-        const c = m.content
-        if (typeof c === 'string') content = c
+        const uiRole: "user" | "assistant" | "tool" =
+          role.includes("human") || role === "user" ? "user" : "assistant";
+        let content = "";
+        const c = m.content;
+        if (typeof c === "string") content = c;
         else if (Array.isArray(c)) {
           for (const part of c) {
-            if (typeof part === 'string') content += part
-            else if (part && typeof part.text === 'string') content += part.text
+            if (typeof part === "string") content += part;
+            else if (part && typeof part.text === "string")
+              content += part.text;
           }
         }
-        return { role: uiRole, content }
-      })
-      messages.value = normalized
+        return { role: uiRole, content };
+      });
+      messages.value = normalized;
     } catch (e: any) {
-      console.error('[Copilot] failed to load history', e)
-      toast.add({ severity: 'warn', summary: 'History unavailable', detail: e?.message || 'Could not fetch previous messages', life: 2500 })
+      console.error("[Copilot] failed to load history", e);
+      toast.add({
+        severity: "warn",
+        summary: "History unavailable",
+        detail: e?.message || "Could not fetch previous messages",
+        life: 2500,
+      });
     } finally {
-      historyLoading.value = false
+      historyLoading.value = false;
     }
   } else {
     try {
-      const thread = await client.threads.create()
-      const id = (thread as any)?.thread_id || (thread as any)?.threadId || null
-      copilotStore.setThreadId(id)
-      console.debug('[Copilot] created thread', id)
+      const thread = await client.threads.create();
+      const id =
+        (thread as any)?.thread_id || (thread as any)?.threadId || null;
+      copilotStore.setThreadId(id);
     } catch (e) {
-      console.error('[Copilot] failed to create thread', e)
+      console.error("[Copilot] failed to create thread", e);
     }
   }
-})
+});
 
-const canSend = computed(() => !!input.value.trim() && !!assistantId.value && !loading.value)
+const canSend = computed(
+  () => !!input.value.trim() && !!assistantId.value && !loading.value,
+);
 
 async function onNewChat() {
   try {
     // Clear UI
-    messages.value = []
-    input.value = ''
+    messages.value = [];
+    input.value = "";
 
     // Create new thread
-    const thread = await client.threads.create()
-    const id = (thread as any)?.thread_id || (thread as any)?.threadId || null
-    copilotStore.setThreadId(id)
+    const thread = await client.threads.create();
+    const id = (thread as any)?.thread_id || (thread as any)?.threadId || null;
+    copilotStore.setThreadId(id);
 
     // Visual feedback
-    toast.add({ severity: 'success', summary: 'New chat', detail: 'Started a new conversation', life: 2000 })
-
-    console.debug('[Copilot] started new chat with thread', id)
+    toast.add({
+      severity: "success",
+      summary: "New chat",
+      detail: "Started a new conversation",
+      life: 2000,
+    });
   } catch (e: any) {
-    console.error('[Copilot] failed to start new chat', e)
-    toast.add({ severity: 'error', summary: 'New chat failed', detail: e?.message || 'Could not create a new thread', life: 3000 })
+    console.error("[Copilot] failed to start new chat", e);
+    toast.add({
+      severity: "error",
+      summary: "New chat failed",
+      detail: e?.message || "Could not create a new thread",
+      life: 3000,
+    });
   }
 }
 
 async function onSend() {
-  if (!canSend.value || !assistantId.value) return
-  const text = input.value.trim()
-  input.value = ''
+  if (!canSend.value || !assistantId.value) return;
+  const text = input.value.trim();
+  input.value = "";
 
-  messages.value.push({ role: 'user', content: text })
-  const assistantIndex = messages.value.push({ role: 'assistant', content: '' }) - 1
-  loading.value = true
+  messages.value.push({ role: "user", content: text });
+  const assistantIndex =
+    messages.value.push({ role: "assistant", content: "" }) - 1;
+  loading.value = true;
 
   try {
     // Threadless streaming run for a simple chat
     const payload = {
-      input: { messages: [{ role: 'user', content: text }] },
+      input: { messages: [{ role: "user", content: text }] },
       // messages-tuple returns [messageChunk, metadata]
-      streamMode: 'messages-tuple' as const,
-    }
+      streamMode: "messages-tuple" as const,
+    };
 
-    let stream
+    let stream;
     if (threadId.value) {
-      console.debug('[Copilot] streaming with thread', threadId.value)
-      stream = client.runs.stream(threadId.value, assistantId.value, payload)
+      stream = client.runs.stream(threadId.value, assistantId.value, payload);
     } else {
-      console.debug('[Copilot] streaming stateless (no thread)')
-      stream = client.runs.stream(null, assistantId.value, payload)
+      stream = client.runs.stream(null, assistantId.value, payload);
     }
 
     for await (const chunk of stream as any) {
-      if (!chunk) continue
-      if (chunk.event !== 'messages') {
-        // Helpful for debugging other events (values, custom, updates, etc.)
-        console.debug('[Copilot stream non-message event]', chunk.event, chunk)
-        continue
+      if (!chunk) continue;
+      if (chunk.event !== "messages") {
+        continue;
       }
 
-      const data = chunk.data
-      console.debug('[Copilot stream messages event]', data)
+      const data = chunk.data;
 
       // messages-tuple -> [messageChunk, metadata]; plain 'messages' -> messageChunk
-      const messageChunk = Array.isArray(data) ? data[0] : data
-      if (!messageChunk) continue
+      const messageChunk = Array.isArray(data) ? data[0] : data;
+      if (!messageChunk) continue;
+      if (messageChunk.type !== "AIMessageChunk") continue;
 
-      let delta = ''
-      const content = messageChunk.content
+      let delta = "";
+      const content = messageChunk.content;
 
       // Content can be a string or array of parts like [{ type: 'text', text: '...' }]
-      if (typeof content === 'string') {
-        delta = content
+      if (typeof content === "string") {
+        delta = content;
       } else if (Array.isArray(content)) {
         for (const part of content) {
-          if (typeof part === 'string') {
-            delta += part
-          } else if (part && typeof part.text === 'string') {
-            delta += part.text
+          if (typeof part === "string") {
+            delta += part;
+          } else if (part && typeof part.text === "string") {
+            delta += part.text;
           }
         }
       }
 
       if (delta) {
-        messages.value[assistantIndex].content += delta
+        messages.value[assistantIndex].content += delta;
         // Optional: keep view pinned to latest token without layout shifts
         // nextTick(() => el.scrollTop = el.scrollHeight)
       }
     }
   } catch (err: any) {
-    console.error('[Copilot stream error]', err)
-    const detail = err?.message || 'Failed to send message'
-    messages.value[assistantIndex].content = `Error: ${detail}`
+    console.error("[Copilot stream error]", err);
+    const detail = err?.message || "Failed to send message";
+    messages.value[assistantIndex].content = `Error: ${detail}`;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
-
-<style scoped>
-/***** Minimal styles only; rely on Tailwind + PrimeVue *****/
-</style>
-

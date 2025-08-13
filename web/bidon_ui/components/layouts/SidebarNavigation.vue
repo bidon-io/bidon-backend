@@ -18,7 +18,9 @@
       to="/copilot"
       :class="[
         'flex items-center mt-4 px-6 py-2 text-gray-600 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100',
-        route.path === '/copilot' ? 'bg-gray-700 bg-opacity-25 text-blue-100' : '',
+        route.path === '/copilot'
+          ? 'bg-gray-700 bg-opacity-25 text-blue-100'
+          : '',
       ]"
     >
       <span>AI Copilot</span>
