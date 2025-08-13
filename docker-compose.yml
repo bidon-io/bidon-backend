@@ -157,7 +157,7 @@ services:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: postgres
     volumes:
-        - copilot-data:/var/lib/postgresql/data
+        - copilot-pgdata:/var/lib/postgresql/data
     healthcheck:
         test: pg_isready -U postgres
         interval: 5s
@@ -207,7 +207,7 @@ volumes:
   cargo-cache:
   target-cache:
   redis-data:
-  copilot-data:
+  copilot-pgdata:
 
 networks:
   precommit-network:

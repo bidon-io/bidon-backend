@@ -29,3 +29,9 @@ LANGSMITH_API_KEY=lsv2...
 ```shell
 uv run langgraph dev
 ```
+
+## Build own LangGraph Docker image
+
+```shell
+uv run langgraph build -t copilot
+```

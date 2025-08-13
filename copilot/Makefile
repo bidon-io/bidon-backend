@@ -4,25 +4,25 @@
 all: help
 
 install:
-	uv sync
+	uv sync --dev
 
 # Define a variable for the test file path.
 TEST_FILE ?= tests/unit_tests/
 
 test:
-	python -m pytest $(TEST_FILE)
+	uv run python -m pytest $(TEST_FILE)
 
 integration_tests:
-	python -m pytest tests/integration_tests 
+	uv run python -m pytest tests/integration_tests 
 
 test_watch:
-	python -m ptw --snapshot-update --now . -- -vv tests/unit_tests
+	uv run python -m ptw --snapshot-update --now . -- -vv tests/unit_tests
 
 test_profile:
-	python -m pytest -vv tests/unit_tests/ --profile-svg
+	uv run python -m pytest -vv tests/unit_tests/ --profile-svg
 
 extended_tests:
-	python -m pytest --only-extended $(TEST_FILE)
+	uv run python -m pytest --only-extended $(TEST_FILE)
 
 
 ######################
@@ -39,7 +39,7 @@ lint_tests: PYTHON_FILES=tests
 lint_tests: MYPY_CACHE=.mypy_cache_test
 
 lint lint_diff lint_package lint_tests:
-	python -m ruff check .
+	uv run python -m ruff check .
 	[ "$(PYTHON_FILES)" = "" ] || python -m ruff format $(PYTHON_FILES) --diff
 	[ "$(PYTHON_FILES)" = "" ] || python -m ruff check --select I $(PYTHON_FILES)
 	[ "$(PYTHON_FILES)" = "" ] || python -m mypy --strict $(PYTHON_FILES)
