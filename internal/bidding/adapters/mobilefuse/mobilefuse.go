@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/gofrs/uuid/v5"
@@ -28,6 +29,7 @@ var (
 	ErrUnsupportedRegion = errors.New("unsupported device")
 )
 
+// supportedCountries defines the ISO-3166-1-alpha-3 country codes supported by MobileFuse
 var supportedCountries = []string{"USA", "CAN"}
 
 // newUnsupportedRegionError creates an enhanced error message with contextual information
@@ -97,15 +99,7 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 		country = request.Device.Geo.Country
 	}
 
-	supported := false
-	for _, supportedCountry := range supportedCountries {
-		if country == supportedCountry {
-			supported = true
-			break
-		}
-	_, supported := supportedCountriesSet[country]
-
-	if !supported {
+	if !slices.Contains(supportedCountries, country) {
 		return request, newUnsupportedRegionError(country)
 	}
 
