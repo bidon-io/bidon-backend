@@ -103,7 +103,7 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 			supported = true
 			break
 		}
-	}
+	_, supported := supportedCountriesSet[country]
 
 	if !supported {
 		return request, newUnsupportedRegionError(country)
