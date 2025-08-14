@@ -155,7 +155,6 @@ func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 		RequestID: request.ID,
 		TagID:     a.TagID,
 	}
-
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		dr.Error = err
