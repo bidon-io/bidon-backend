@@ -147,6 +147,13 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 			if adUnit != nil {
 				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
 			}
+		case adapter.MolocoKey:
+			adaptersMap[key]["api_key"] = b.DemandConfig.MolocoAPIKey
+
+			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
+			if adUnit != nil {
+				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
+			}
 		default:
 			adaptersMap[key] = extra
 		}

@@ -26,6 +26,7 @@ type MolocoAdapter struct { //nolint:revive
 	TagID    string
 	AppID    string
 	Endpoint string
+	APIKey   string
 }
 
 // bannerFormats defines the supported banner formats and their dimensions
@@ -163,6 +164,12 @@ func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
+	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
+
+	// Add Authorization header with API key if configured
+	if a.APIKey != "" {
+		httpReq.Header.Add("Authorization", "Bearer "+a.APIKey)
+	}
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
@@ -263,10 +270,16 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 		endpoint = ""
 	}
 
+	apiKey, ok := molocoCfg["api_key"].(string)
+	if !ok {
+		apiKey = ""
+	}
+
 	adpt := &MolocoAdapter{
 		TagID:    tagID,
 		AppID:    appID,
 		Endpoint: endpoint,
+		APIKey:   apiKey,
 	}
 
 	bidder := &adapters.Bidder{
