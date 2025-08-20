@@ -23,7 +23,9 @@ import (
 
 // MolocoAdapter represents the Moloco bidding adapter
 type MolocoAdapter struct { //nolint:revive
-	TagID string
+	TagID    string
+	AppID    string
+	Endpoint string
 }
 
 // bannerFormats defines the supported banner formats and their dimensions
@@ -106,6 +108,11 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
 
+	// Set app ID if configured
+	if a.AppID != "" && request.App != nil {
+		request.App.ID = a.AppID
+	}
+
 	// Add user data if token is available
 	if token, exists := auctionRequest.AdObject.Demands[adapter.MolocoKey]["token"]; exists {
 		request.User = &openrtb.User{
@@ -139,8 +146,11 @@ func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	}
 	dr.RawRequest = string(requestBody)
 
-	// TODO: Replace with actual Moloco endpoint URL
-	url := "https://api.moloco.com/openrtb/bid"
+	// Use configured endpoint or default URL
+	url := a.Endpoint
+	if url == "" {
+		url = "https://api.moloco.com/openrtb/bid"
+	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
@@ -237,8 +247,20 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 		tagID = ""
 	}
 
+	appID, ok := molocoCfg["app_id"].(string)
+	if !ok {
+		appID = ""
+	}
+
+	endpoint, ok := molocoCfg["endpoint"].(string)
+	if !ok {
+		endpoint = ""
+	}
+
 	adpt := &MolocoAdapter{
-		TagID: tagID,
+		TagID:    tagID,
+		AppID:    appID,
+		Endpoint: endpoint,
 	}
 
 	bidder := &adapters.Bidder{
