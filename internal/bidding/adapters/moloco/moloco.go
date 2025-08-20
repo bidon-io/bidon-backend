@@ -79,10 +79,6 @@ func (a *MolocoAdapter) rewarded() *openrtb2.Imp {
 
 // CreateRequest implements the BidderInterface.CreateRequest method
 func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
-	}
-
 	secure := int8(1)
 
 	var imp *openrtb2.Imp
@@ -99,12 +95,18 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 
 	impID, _ := uuid.NewV4()
 	imp.ID = impID.String()
+
+	if a.TagID == "" {
+		return request, errors.New("TagID is empty")
+	}
 	imp.TagID = a.TagID
 
 	imp.DisplayManager = string(adapter.MolocoKey)
 	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MolocoKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
+	imp.BidFloorCur = "USD"
+
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
 
@@ -114,17 +116,21 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	}
 
 	// Add user data if token is available
-	if token, exists := auctionRequest.AdObject.Demands[adapter.MolocoKey]["token"]; exists {
-		request.User = &openrtb.User{
-			Data: []openrtb.Data{
-				{
-					Segment: []openrtb.Segment{
+	if demands, exists := auctionRequest.AdObject.Demands[adapter.MolocoKey]; exists {
+		if token, tokenExists := demands["token"]; tokenExists {
+			if tokenStr, ok := token.(string); ok && tokenStr != "" {
+				request.User = &openrtb.User{
+					Data: []openrtb.Data{
 						{
-							Signal: token.(string),
+							Segment: []openrtb.Segment{
+								{
+									Signal: tokenStr,
+								},
+							},
 						},
 					},
-				},
-			},
+				}
+			}
 		}
 	}
 
