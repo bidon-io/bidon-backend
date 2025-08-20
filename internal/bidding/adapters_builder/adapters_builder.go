@@ -14,6 +14,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/meta"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mobilefuse"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/moloco"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vkads"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vungle"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -25,6 +26,7 @@ var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.MetaKey:       meta.Builder,
 	adapter.MintegralKey:  mintegral.Builder,
 	adapter.MobileFuseKey: mobilefuse.Builder,
+	adapter.MolocoKey:     moloco.Builder,
 	adapter.VKAdsKey:      vkads.Builder,
 	adapter.VungleKey:     vungle.Builder,
 	// adapter.AdmobKey: admob.Builder,
