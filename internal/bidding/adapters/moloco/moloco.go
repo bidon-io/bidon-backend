@@ -23,10 +23,9 @@ import (
 
 // MolocoAdapter represents the Moloco bidding adapter
 type MolocoAdapter struct { //nolint:revive
-	TagID    string
-	AppID    string
-	Endpoint string
-	APIKey   string
+	TagID  string
+	AppID  string
+	APIKey string
 }
 
 // bannerFormats defines the supported banner formats and their dimensions
@@ -98,7 +97,7 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	imp.ID = impID.String()
 
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return request, errors.New("moloco AdUnitID is empty")
 	}
 	imp.TagID = a.TagID
 
@@ -117,22 +116,8 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	}
 
 	// Add user data if token is available
-	if demands, exists := auctionRequest.AdObject.Demands[adapter.MolocoKey]; exists {
-		if token, tokenExists := demands["token"]; tokenExists {
-			if tokenStr, ok := token.(string); ok && tokenStr != "" {
-				request.User = &openrtb.User{
-					Data: []openrtb.Data{
-						{
-							Segment: []openrtb.Segment{
-								{
-									Signal: tokenStr,
-								},
-							},
-						},
-					},
-				}
-			}
-		}
+	request.User = &openrtb.User{
+		BuyerUID: auctionRequest.AdObject.Demands[adapter.MolocoKey]["token"].(string),
 	}
 
 	return request, nil
@@ -153,10 +138,17 @@ func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	}
 	dr.RawRequest = string(requestBody)
 
-	// Use configured endpoint or default URL
-	url := a.Endpoint
+	// Get country code for geographic routing
+	alpha3 := ""
+	if request.Device != nil && request.Device.Geo != nil {
+		alpha3 = request.Device.Geo.Country
+	}
+
+	// Use geographic endpoint selection or configured endpoint
+	url := getEndpoint(alpha3)
 	if url == "" {
-		url = "https://api.moloco.com/openrtb/bid"
+		dr.Error = errors.New("moloco endpoint is empty")
+		return dr
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
@@ -164,11 +156,12 @@ func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
+	httpReq.Header.Add("Accept-Encoding", "gzip")
+	httpReq.Header.Add("X-OpenRTB-Version", "2.6")
 
 	// Add Authorization header with API key if configured
 	if a.APIKey != "" {
-		httpReq.Header.Add("Authorization", "Bearer "+a.APIKey)
+		httpReq.Header.Add("Authorization", a.APIKey)
 	}
 
 	httpResp, err := client.Do(httpReq)
@@ -265,21 +258,15 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 		appID = ""
 	}
 
-	endpoint, ok := molocoCfg["endpoint"].(string)
-	if !ok {
-		endpoint = ""
-	}
-
 	apiKey, ok := molocoCfg["api_key"].(string)
 	if !ok {
 		apiKey = ""
 	}
 
 	adpt := &MolocoAdapter{
-		TagID:    tagID,
-		AppID:    appID,
-		Endpoint: endpoint,
-		APIKey:   apiKey,
+		TagID:  tagID,
+		AppID:  appID,
+		APIKey: apiKey,
 	}
 
 	bidder := &adapters.Bidder{
@@ -288,4 +275,60 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 	}
 
 	return bidder, nil
+}
+
+// alpha3ToRegionMapping maps country codes to Moloco regions based on country_mapping.json
+var alpha3ToRegionMapping = map[string]string{
+	// US region countries
+	"ABW": "us", "AIA": "us", "ARG": "us", "ATG": "us", "BES": "us", "BHS": "us", "BLM": "us", "BLZ": "us",
+	"BOL": "us", "BRA": "us", "BRB": "us", "CAN": "us", "CHL": "us", "COL": "us", "CRI": "us", "CUB": "us",
+	"CUW": "us", "CYM": "us", "DMA": "us", "DOM": "us", "ECU": "us", "GLP": "us", "GRD": "us", "GRL": "us",
+	"GTM": "us", "GUF": "us", "GUY": "us", "HND": "us", "HTI": "us", "JAM": "us", "KNA": "us", "LCA": "us",
+	"MAF": "us", "MEX": "us", "MSR": "us", "MTQ": "us", "NIC": "us", "PAN": "us", "PER": "us", "PRI": "us",
+	"PRY": "us", "SLV": "us", "SUR": "us", "SXM": "us", "TCA": "us", "TST": "us", "TTO": "us", "UMI": "us",
+	"URY": "us", "USA": "us", "VCT": "us", "VEN": "us", "VGB": "us", "VIR": "us",
+
+	// Asia region countries
+	"AFG": "asia", "ARE": "asia", "ARM": "asia", "ASM": "asia", "ATA": "asia", "ATF": "asia", "AUS": "asia",
+	"BGD": "asia", "BHR": "asia", "BRN": "asia", "BTN": "asia", "CCK": "asia", "CHN": "asia", "COK": "asia",
+	"COM": "asia", "CXR": "asia", "FJI": "asia", "FSM": "asia", "GUM": "asia", "HKG": "asia", "HMD": "asia",
+	"IDN": "asia", "IND": "asia", "IOT": "asia", "IRN": "asia", "IRQ": "asia", "ISR": "asia", "JPN": "asia",
+	"KAZ": "asia", "KHM": "asia", "KIR": "asia", "KOR": "asia", "KWT": "asia", "LAO": "asia", "LBN": "asia",
+	"LKA": "asia", "MAC": "asia", "MDV": "asia", "MHL": "asia", "MMR": "asia", "MNG": "asia", "MNP": "asia",
+	"MYS": "asia", "MYT": "asia", "NCL": "asia", "NFK": "asia", "NIU": "asia", "NPL": "asia", "NRU": "asia",
+	"NZL": "asia", "OMN": "asia", "PAK": "asia", "PCN": "asia", "PHL": "asia", "PLW": "asia", "PNG": "asia",
+	"PRK": "asia", "PYF": "asia", "QAT": "asia", "SAU": "asia", "SGP": "asia", "SLB": "asia", "SSG": "asia",
+	"SYC": "asia", "THA": "asia", "TJK": "asia", "TKL": "asia", "TKM": "asia", "TLS": "asia", "TON": "asia",
+	"TUV": "asia", "TWN": "asia", "UZB": "asia", "VNM": "asia", "VUT": "asia", "WLF": "asia", "WSM": "asia",
+	"YEM": "asia",
+
+	// EU region countries
+	"AGO": "eu", "ALA": "eu", "ALB": "eu", "AND": "eu", "AUT": "eu", "AZE": "eu", "BDI": "eu", "BEL": "eu",
+	"BEN": "eu", "BFA": "eu", "BGR": "eu", "BIH": "eu", "BLR": "eu", "BMU": "eu", "BVT": "eu", "BWA": "eu",
+	"CAF": "eu", "CHE": "eu", "CIV": "eu", "CMR": "eu", "COD": "eu", "COG": "eu", "CPV": "eu", "CYP": "eu",
+	"CZE": "eu", "DEU": "eu", "DJI": "eu", "DNK": "eu", "DZA": "eu", "EGY": "eu", "ERI": "eu", "ESH": "eu",
+	"ESP": "eu", "EST": "eu", "ETH": "eu", "FIN": "eu", "FRA": "eu", "FRO": "eu", "GAB": "eu", "GBR": "eu",
+	"GEO": "eu", "GGY": "eu", "GHA": "eu", "GIB": "eu", "GIN": "eu", "GMB": "eu", "GNB": "eu", "GNQ": "eu",
+	"GRC": "eu", "HRV": "eu", "HUN": "eu", "IMN": "eu", "IRL": "eu", "ISL": "eu", "ITA": "eu", "JEY": "eu",
+	"JOR": "eu", "KEN": "eu", "KGZ": "eu", "LBR": "eu", "LBY": "eu", "LIE": "eu", "LSO": "eu", "LTU": "eu",
+	"LUX": "eu", "LVA": "eu", "MAR": "eu", "MCO": "eu", "MDA": "eu", "MDG": "eu", "MKD": "eu", "MLI": "eu",
+	"MLT": "eu", "MNE": "eu", "MOZ": "eu", "MRT": "eu", "MUS": "eu", "MWI": "eu", "NAM": "eu", "NER": "eu",
+	"NGA": "eu", "NLD": "eu", "NOR": "eu", "POL": "eu", "PRT": "eu", "PSE": "eu", "REU": "eu", "ROU": "eu",
+	"RUS": "eu", "RWA": "eu", "SDN": "eu", "SEN": "eu", "SGS": "eu", "SHN": "eu", "SJM": "eu", "SLE": "eu",
+	"SMR": "eu", "SOM": "eu", "SRB": "eu", "SSD": "eu", "STP": "eu", "SVK": "eu", "SVN": "eu", "SWE": "eu",
+	"SWZ": "eu", "SYR": "eu", "TCD": "eu", "TGO": "eu", "TUN": "eu", "TUR": "eu", "TZA": "eu", "UGA": "eu",
+	"UKR": "eu", "VAT": "eu", "ZAF": "eu", "ZMB": "eu", "ZWE": "eu",
+}
+
+const defaultRegion = "us"
+
+// getEndpoint returns the appropriate Moloco endpoint based on country code and fallback endpoint
+func getEndpoint(alpha3 string) string {
+	// Determine region based on country code
+	region := defaultRegion
+	if mappedRegion, ok := alpha3ToRegionMapping[alpha3]; ok {
+		region = mappedRegion
+	}
+
+	return "https://sdkfnt-" + region + ".dsp-api.moloco.com/mediations/inhouse/v1"
 }

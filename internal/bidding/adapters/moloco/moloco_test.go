@@ -51,10 +51,9 @@ func NewTestClient(tr TestTransport) *http.Client {
 
 func buildAdapter() moloco.MolocoAdapter {
 	return moloco.MolocoAdapter{
-		TagID:    "test-tag-id",
-		AppID:    "test-app-id",
-		Endpoint: "https://test.moloco.com/bid",
-		APIKey:   "test-api-key",
+		TagID:  "test-tag-id",
+		AppID:  "test-app-id",
+		APIKey: "test-api-key",
 	}
 }
 
@@ -222,11 +221,11 @@ func TestMoloco_ExecuteRequest_Success(t *testing.T) {
 		if req.Header.Get("Content-Type") != "application/json" {
 			t.Errorf("Expected Content-Type 'application/json', got '%s'", req.Header.Get("Content-Type"))
 		}
-		if req.Header.Get("X-OpenRTB-Version") != "2.5" {
-			t.Errorf("Expected X-OpenRTB-Version '2.5', got '%s'", req.Header.Get("X-OpenRTB-Version"))
+		if req.Header.Get("X-OpenRTB-Version") != "2.6" {
+			t.Errorf("Expected X-OpenRTB-Version '2.6', got '%s'", req.Header.Get("X-OpenRTB-Version"))
 		}
-		if req.Header.Get("Authorization") != "Bearer test-api-key" {
-			t.Errorf("Expected Authorization 'Bearer test-api-key', got '%s'", req.Header.Get("Authorization"))
+		if req.Header.Get("Authorization") != "test-api-key" {
+			t.Errorf("Expected Authorization 'test-api-key', got '%s'", req.Header.Get("Authorization"))
 		}
 
 		return &http.Response{
@@ -254,12 +253,12 @@ func TestMoloco_ExecuteRequest_DefaultEndpoint(t *testing.T) {
 	adapter := moloco.MolocoAdapter{
 		TagID:  "test-tag-id",
 		APIKey: "test-api-key",
-		// Endpoint is empty, should use default
+		// Endpoint is empty, should use geographic routing with default US
 	}
 	baseBidRequest := buildBaseBidRequest()
 
 	client := NewTestClient(func(req *http.Request) *http.Response {
-		expectedURL := "https://api.moloco.com/openrtb/bid"
+		expectedURL := "https://sdkfnt-us.dsp-api.moloco.com/mediations/inhouse/v1"
 		if req.URL.String() != expectedURL {
 			t.Errorf("Expected URL '%s', got '%s'", expectedURL, req.URL.String())
 		}
@@ -271,6 +270,67 @@ func TestMoloco_ExecuteRequest_DefaultEndpoint(t *testing.T) {
 	})
 
 	adapter.ExecuteRequest(context.Background(), client, baseBidRequest)
+}
+
+func TestMoloco_ExecuteRequest_GeographicRouting(t *testing.T) {
+	tests := []struct {
+		name        string
+		countryCode string
+		expectedURL string
+	}{
+		{
+			name:        "US region - USA",
+			countryCode: "USA",
+			expectedURL: "https://sdkfnt-us.dsp-api.moloco.com/mediations/inhouse/v1",
+		},
+		{
+			name:        "Asia region - Japan",
+			countryCode: "JPN",
+			expectedURL: "https://sdkfnt-asia.dsp-api.moloco.com/mediations/inhouse/v1",
+		},
+		{
+			name:        "EU region - Germany",
+			countryCode: "DEU",
+			expectedURL: "https://sdkfnt-eu.dsp-api.moloco.com/mediations/inhouse/v1",
+		},
+		{
+			name:        "Unknown country - defaults to US",
+			countryCode: "XXX",
+			expectedURL: "https://sdkfnt-us.dsp-api.moloco.com/mediations/inhouse/v1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			adapter := moloco.MolocoAdapter{
+				TagID:  "test-tag-id",
+				APIKey: "test-api-key",
+			}
+
+			baseBidRequest := buildBaseBidRequest()
+			// Set the country code in the request
+			if baseBidRequest.Device == nil {
+				baseBidRequest.Device = &openrtb2.Device{}
+			}
+			if baseBidRequest.Device.Geo == nil {
+				baseBidRequest.Device.Geo = &openrtb2.Geo{}
+			}
+			baseBidRequest.Device.Geo.Country = tt.countryCode
+
+			client := NewTestClient(func(req *http.Request) *http.Response {
+				if req.URL.String() != tt.expectedURL {
+					t.Errorf("Expected URL '%s', got '%s'", tt.expectedURL, req.URL.String())
+				}
+
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewBufferString(`{}`)),
+				}
+			})
+
+			adapter.ExecuteRequest(context.Background(), client, baseBidRequest)
+		})
+	}
 }
 
 func TestMoloco_ParseBids_Success(t *testing.T) {
@@ -359,7 +419,6 @@ func TestMoloco_Builder(t *testing.T) {
 	wantAdapter := moloco.MolocoAdapter{
 		TagID:    "test-tag-id",
 		AppID:    "test-app-id",
-		Endpoint: "https://test.moloco.com/bid",
 		APIKey:   "test-api-key",
 	}
 	wantBidder := &adapters.Bidder{
