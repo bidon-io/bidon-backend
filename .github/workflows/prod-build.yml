@@ -65,11 +65,11 @@ jobs:
           submodules: recursive
 
       - name: Install uv
-        if: ${{ matrix.component != 'bidon-copilot' }}
+        if: ${{ matrix.component == 'bidon-copilot' }}
         run: pip install uv
 
       - name: Build and push image
-        if: ${{ matrix.component != 'bidon-copilot' }}
+        if: ${{ matrix.component == 'bidon-copilot' }}
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 12
