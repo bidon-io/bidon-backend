@@ -21,7 +21,6 @@ Settings.llm = None
 
 load_dotenv()
 
-
 @tool
 def search_documentation(query: str) -> str:
     """Search documentation for information.

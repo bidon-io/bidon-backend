@@ -95,6 +95,7 @@ services:
       - '7001-7003:7001-7003'
     environment:
       - REDIS_CLUSTER_START_PORT=7001
+      - REDIS_CLUSTER_ANNOUNCE_HOSTNAME=host.docker.internal
     volumes:
       - redis-data:/data
 
@@ -162,13 +163,6 @@ services:
         test: pg_isready -U postgres
         interval: 5s
   
-  copilot-redis:
-    image: redis:7.4
-    profiles: ['copilot']
-    healthcheck:
-        test: redis-cli ping
-        interval: 5s     
-
   copilot-api:
     image: copilot
     profiles: ['copilot']
@@ -177,12 +171,14 @@ services:
     depends_on:
       copilot-postgres:
           condition: service_healthy
-      copilot-redis:
+      redis:
         condition: service_started
     env_file:
-      - ./copilot/.env    
+      - ./copilot/.env
     environment:
-      REDIS_URI: redis://copilot-redis:6379
+      REDIS_URI: redis://redis:7001
+      REDIS_CLUSTER: True
+      REDIS_KEY_PREFIX: "copilot:"
       DATABASE_URI: postgres://postgres:postgres@copilot-postgres:5432/postgres?sslmode=disable
 
   rust-test:
