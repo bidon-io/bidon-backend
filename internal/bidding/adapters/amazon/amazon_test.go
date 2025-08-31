@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
@@ -37,11 +38,11 @@ func TestAdapter_FetchBids(t *testing.T) {
 			fields: fields{
 				PricePointsMap: PricePointsMap{
 					"price_point_1": {
-						Price:      1.0,
+						Price:      decimal.NewFromFloat(1.0),
 						PricePoint: "price_point_1",
 					},
 					"price_point_2": {
-						Price:      2.0,
+						Price:      decimal.NewFromFloat(2.0),
 						PricePoint: "price_point_2",
 					},
 				},
@@ -76,7 +77,7 @@ func TestAdapter_FetchBids(t *testing.T) {
 					SlotUUID: "slot_uuid_1",
 					Bid: &adapters.BidDemandResponse{
 						DemandID: adapter.AmazonKey,
-						Price:    1.0,
+						Price:    decimal.NewFromFloat(1.0),
 					},
 				},
 				{
@@ -84,7 +85,7 @@ func TestAdapter_FetchBids(t *testing.T) {
 					SlotUUID: "slot_uuid_2",
 					Bid: &adapters.BidDemandResponse{
 						DemandID: adapter.AmazonKey,
-						Price:    2.0,
+						Price:    decimal.NewFromFloat(2.0),
 					},
 				},
 				{
@@ -133,12 +134,12 @@ func TestBuilder(t *testing.T) {
 					"price_points_map": map[string]interface{}{
 						"00n9g200_zzz": map[string]interface{}{
 							"name":        "Interstitial",
-							"price":       0.5,
+							"price":       decimal.RequireFromString("0.5"),
 							"price_point": "00n9g200_zzz",
 						},
 						"02bz0000_xxx": map[string]interface{}{
 							"name":        "banner",
-							"price":       0.7,
+							"price":       decimal.RequireFromString("0.7"),
 							"price_point": "02bz0000_xxx",
 						},
 					},
@@ -147,11 +148,11 @@ func TestBuilder(t *testing.T) {
 			expected: &Adapter{
 				PricePointsMap: PricePointsMap{
 					"00n9g200_zzz": {
-						Price:      0.5,
+						Price:      decimal.RequireFromString("0.5"),
 						PricePoint: "00n9g200_zzz",
 					},
 					"02bz0000_xxx": {
-						Price:      0.7,
+						Price:      decimal.RequireFromString("0.7"),
 						PricePoint: "02bz0000_xxx",
 					},
 				},

@@ -3,6 +3,8 @@ package notification
 import (
 	"encoding/json"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 )
 
@@ -14,7 +16,7 @@ type AuctionResult struct {
 type Bid struct {
 	ID        string      `json:"id"`
 	ImpID     string      `json:"impid"`
-	Price     float64     `json:"price"`
+	Price     decimal.Decimal     `json:"price"`
 	DemandID  adapter.Key `json:"demand_id"`
 	AdID      string      `json:"adid"`
 	SeatID    string      `json:"seatid"`

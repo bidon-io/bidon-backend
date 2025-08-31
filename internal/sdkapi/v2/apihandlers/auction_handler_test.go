@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -25,7 +28,6 @@ import (
 	handlersmocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers/mocks"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
-	"github.com/labstack/echo/v4"
 )
 
 func testHelperAuctionHandler() *apihandlers.AuctionHandler {
@@ -45,8 +47,8 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 		AdUnitIDs: []int64{1, 2, 3},
 		Timeout:   30000,
 	}
-	pf := 0.1
-	applovinPf := 0.8
+	pf := decimal.RequireFromString("0.1")
+	applovinPf := decimal.RequireFromString("0.8")
 	adUnits := []auction.AdUnit{
 		{
 			DemandID:   "amazon",
@@ -169,7 +171,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 						DemandID: "amazon",
 						SlotUUID: "uuid1",
 						Bid: &adapters.BidDemandResponse{
-							Price:    0.5,
+							Price:    decimal.RequireFromString("0.5"),
 							ID:       "111",
 							ImpID:    "222",
 							DemandID: adapter.MetaKey,
@@ -179,7 +181,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 						DemandID: "meta",
 						Bid: &adapters.BidDemandResponse{
 							Payload:  "payload",
-							Price:    0.6,
+							Price:    decimal.RequireFromString("0.6"),
 							ID:       "123",
 							ImpID:    "456",
 							DemandID: adapter.MetaKey,
@@ -188,7 +190,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 					{
 						DemandID: "mobilefuse",
 						Bid: &adapters.BidDemandResponse{
-							Price:      0.7,
+							Price:      decimal.RequireFromString("0.7"),
 							ID:         "333",
 							ImpID:      "444",
 							DemandID:   adapter.MobileFuseKey,
@@ -198,7 +200,6 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 					{
 						DemandID: "vungle",
 					},
-
 				},
 			}, nil
 		},

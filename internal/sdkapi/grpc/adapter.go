@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -239,7 +240,7 @@ func parseAdObject(r *v3.Request) (schema.AdObject, ad.Type, error) {
 		AuctionID:               i.GetId(),
 		AuctionConfigurationUID: mi.GetAuctionConfigurationUid(),
 		Orientation:             orientation,
-		PriceFloor:              float64(i.GetFlr()),
+		PriceFloor:              decimal.NewFromFloat32(i.GetFlr()),
 		AuctionKey:              mi.GetAuctionKey(),
 		Demands:                 demands,
 		Banner:                  banner,
@@ -406,7 +407,8 @@ func parseRegs(c *pbctx.Context) (*schema.Regulations, error) {
 func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 	var price float32
 	if a.PriceFloor != nil {
-		price = float32(*a.PriceFloor)
+		x, _ := (*a.PriceFloor).Float64()
+		price = float32(x)
 	}
 	bid := &v3.Bid{
 		Item:  proto.String(a.UID),

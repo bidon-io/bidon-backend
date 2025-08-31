@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/go-cmp/cmp"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/notification/store"
@@ -15,16 +16,16 @@ import (
 
 func TestAuctionResultRepo_CreateOrUpdate(t *testing.T) {
 	ctx := context.Background()
-	bidFloor := 0.5
+	bidFloor := decimal.RequireFromString("0.5")
 	imp := &schema.AdObject{
 		AuctionID:  "auction-1",
 		PriceFloor: bidFloor,
 	}
 	bids := []notification.Bid{
-		{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
-		{ID: "bid-2", ImpID: "imp-1", Price: 4.56},
-		{ID: "bid-3", ImpID: "imp-2", Price: 7.89},
-		{ID: "bid-4", ImpID: "imp-1", Price: 0.12},
+		{ID: "bid-1", ImpID: "imp-1", Price: decimal.RequireFromString("1.23")},
+		{ID: "bid-2", ImpID: "imp-1", Price: decimal.RequireFromString("4.56")},
+		{ID: "bid-3", ImpID: "imp-2", Price: decimal.RequireFromString("7.89")},
+		{ID: "bid-4", ImpID: "imp-1", Price: decimal.RequireFromString("0.12")},
 	}
 	expectedAuctionResultV2 := &notification.AuctionResult{
 		AuctionID: "auction-1",

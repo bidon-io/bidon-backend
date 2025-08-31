@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"slices"
-	"sort"
 	"strconv"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -32,16 +32,16 @@ type Service struct {
 }
 
 type Response struct {
-	ConfigID                 int64    `json:"auction_configuration_id"`
-	ConfigUID                string   `json:"auction_configuration_uid"`
-	ExternalWinNotifications bool     `json:"external_win_notifications"`
-	AdUnits                  []AdUnit `json:"ad_units"`
-	NoBids                   []AdUnit `json:"no_bids"`
-	Segment                  Segment  `json:"segment"`
-	Token                    string   `json:"token"`
-	AuctionPriceFloor        float64  `json:"auction_pricefloor"`
-	AuctionTimeout           int      `json:"auction_timeout"`
-	AuctionID                string   `json:"auction_id"`
+	ConfigID                 int64           `json:"auction_configuration_id"`
+	ConfigUID                string          `json:"auction_configuration_uid"`
+	ExternalWinNotifications bool            `json:"external_win_notifications"`
+	AdUnits                  []AdUnit        `json:"ad_units"`
+	NoBids                   []AdUnit        `json:"no_bids"`
+	Segment                  Segment         `json:"segment"`
+	Token                    string          `json:"token"`
+	AuctionPriceFloor        decimal.Decimal `json:"auction_pricefloor"`
+	AuctionTimeout           int             `json:"auction_timeout"`
+	AuctionID                string          `json:"auction_id"`
 }
 
 type ExecutionParams struct {
@@ -175,25 +175,29 @@ var disabledFloorAuctionKeys = [...]string{
 	"1LQP7A4UG0400", // Rewarded
 }
 
-func priceFloor(req *schema.AuctionRequest, auctionConfig *Config) float64 {
+func priceFloor(req *schema.AuctionRequest, auctionConfig *Config) decimal.Decimal {
 	// Check if price floor should be disabled for this auction key with custom adapter
 	isCustomAdapter := slices.Contains(adapter.CustomAdapters[:], req.GetMediator())
 	if isCustomAdapter && slices.Contains(disabledFloorAuctionKeys[:], req.AdObject.AuctionKey) {
-		return 0 // Disable price floor for specified auction keys with custom adapters
+		return decimal.Zero // Disable price floor for specified auction keys with custom adapters
 	}
 
 	// Default floor logic
 	priceFloor := req.AdObject.PriceFloor
 	for _, cacheObject := range req.AdCache {
-		priceFloor = math.Max(priceFloor, cacheObject.Price)
+		if cacheObject.Price.GreaterThan(priceFloor) {
+			priceFloor = cacheObject.Price
+		}
 	}
-	priceFloor = math.Max(auctionConfig.PriceFloor, priceFloor)
+	if auctionConfig.PriceFloor.GreaterThan(priceFloor) {
+		priceFloor = auctionConfig.PriceFloor
+	}
 
 	// Custom Adapter floor logic
 	// Check if previous auction price is higher than the current price floor
 	prevFloor := req.GetPrevAuctionPrice()
-	if prevFloor != nil && isCustomAdapter {
-		priceFloor = math.Max(*prevFloor, priceFloor)
+	if isCustomAdapter && prevFloor != nil && prevFloor.GreaterThan(priceFloor) {
+		priceFloor = *prevFloor
 	}
 
 	return priceFloor
@@ -242,7 +246,7 @@ func (s *Service) buildResponse(
 			continue
 		}
 
-		if bidResponse.IsBid() && bidResponse.Price() > adObject.PriceFloor {
+		if bidResponse.IsBid() && bidResponse.Price().GreaterThan(adObject.PriceFloor) {
 			response.AdUnits = append(response.AdUnits, *adUnit)
 		} else {
 			response.NoBids = append(response.NoBids, *adUnit)
@@ -250,8 +254,8 @@ func (s *Service) buildResponse(
 	}
 
 	// Sort AdUnits by price
-	sort.Slice(response.AdUnits, func(i, j int) bool {
-		return response.AdUnits[i].GetPriceFloor() > response.AdUnits[j].GetPriceFloor()
+	slices.SortFunc(response.AdUnits, func(i, j AdUnit) int {
+		return j.GetPriceFloor().Cmp(i.GetPriceFloor())
 	})
 
 	return &response, nil
@@ -373,7 +377,7 @@ func prepareAuctionRequestEvent(
 		DemandID:                "",
 		AdUnitUID:               0,
 		AdUnitLabel:             "",
-		ECPM:                    0,
+		ECPM:                    decimal.Zero,
 		PriceFloor:              req.AdObject.PriceFloor,
 		Error:                   errorMsg,
 	}

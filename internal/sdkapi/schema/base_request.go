@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/shopspring/decimal"
 )
 
 type BaseRequest struct {
@@ -105,10 +106,15 @@ func (r *BaseRequest) GetMediator() string {
 	return ""
 }
 
-func (r *BaseRequest) GetPrevAuctionPrice() *float64 {
+func (r *BaseRequest) GetPrevAuctionPrice() *decimal.Decimal {
 	ext := r.GetExtData()
-	if pricefloor, ok := ext["previous_auction_price"].(float64); ok {
-		return &pricefloor
+	if pricefloor, ok := ext["previous_auction_price"].(json.Number); ok {
+		floor, err := decimal.NewFromString(pricefloor.String())
+		if err != nil {
+			return nil
+		}
+
+		return &floor
 	}
 
 	return nil
@@ -118,5 +124,9 @@ func (r *BaseRequest) parseExt() {
 	if r.Ext == "" {
 		return
 	}
-	_ = json.Unmarshal([]byte(r.Ext), &r.extData)
+
+	decoder := json.NewDecoder(strings.NewReader(r.Ext))
+	decoder.UseNumber()
+
+	_ = decoder.Decode(&r.extData)
 }

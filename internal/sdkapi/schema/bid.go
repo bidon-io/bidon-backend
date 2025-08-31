@@ -3,6 +3,8 @@ package schema
 import (
 	"strconv"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 )
 
@@ -16,9 +18,9 @@ type Bid struct {
 	RoundIndex              int                   `json:"round_idx"`
 	AdUnitUID               string                `json:"ad_unit_uid"`
 	AdUnitLabel             string                `json:"ad_unit_label"`
-	Price                   float64               `json:"price"`
+	Price                   decimal.Decimal       `json:"price"`
 	BidType                 BidType               `json:"bid_type" validate:"omitempty,oneof=RTB CPM"`
-	AuctionPriceFloor       float64               `json:"auction_pricefloor"`
+	AuctionPriceFloor       decimal.Decimal       `json:"auction_pricefloor"`
 	Banner                  *BannerAdObject       `json:"banner"`
 	Interstitial            *InterstitialAdObject `json:"interstitial"`
 	Rewarded                *RewardedAdObject     `json:"rewarded"`
@@ -36,7 +38,7 @@ func (b *Bid) GetAdUnitUID() int {
 	return adUnitUID
 }
 
-func (b *Bid) GetPrice() float64 {
+func (b *Bid) GetPrice() decimal.Decimal {
 	return b.Price
 }
 

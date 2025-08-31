@@ -112,14 +112,14 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	ext, _ := json.Marshal(x)
 	request.Ext = ext
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
-		imp = a.banner(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.banner(auctionRequest)}
 	case ad.InterstitialType:
-		imp = a.interstitial(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.interstitial(auctionRequest)}
 	case ad.RewardedType:
-		imp = a.rewarded(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.rewarded(auctionRequest)}
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -142,7 +142,7 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 
 	imp.Ext = raw
 
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 
 	return request, nil
@@ -209,7 +209,7 @@ func (a *BidmachineAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.De
 		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
 	}
 
-	var bidResponse openrtb2.BidResponse
+	var bidResponse openrtb.BidResponse
 	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
 	if err != nil {
 		return dr, err

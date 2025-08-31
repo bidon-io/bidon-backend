@@ -89,14 +89,14 @@ func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest 
 		return request, errors.New("token is empty")
 	}
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
-		imp = a.banner(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.banner(auctionRequest)}
 	case ad.InterstitialType:
-		imp = a.interstitial()
+		imp = &openrtb.Imp{Imp: *a.interstitial()}
 	case ad.RewardedType:
-		imp = a.rewarded()
+		imp = &openrtb.Imp{Imp: *a.rewarded()}
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -107,7 +107,7 @@ func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest 
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 	imp.BidFloorCur = "USD"
 
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 
 	request.User = &openrtb.User{

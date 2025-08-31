@@ -491,7 +491,6 @@ func TestConfigFetcher_FetchBidMachinePlacements(t *testing.T) {
 			Demands:    pq.StringArray{"bidmachine"},
 			AdUnitIds:  pq.Int64Array{lineItem3.ID},
 		},
-
 	}
 
 	if err := tx.Create(&configs).Error; err != nil {
@@ -766,11 +765,11 @@ func TestConfigFetcher_FetchBidMachinePlacements_NoBidMachineConfigs(t *testing.
 	// Create auction configurations without BidMachine
 	configs := []db.AuctionConfiguration{
 		{
-			AppID:      app.ID,
-			PublicUID:  sql.NullInt64{Int64: 1, Valid: true},
-			AdType:     db.BannerAdType,
-			Demands:    pq.StringArray{"gam", "dtexchange"},
-			AdUnitIds:  pq.Int64Array{lineItem1.ID},
+			AppID:     app.ID,
+			PublicUID: sql.NullInt64{Int64: 1, Valid: true},
+			AdType:    db.BannerAdType,
+			Demands:   pq.StringArray{"gam", "dtexchange"},
+			AdUnitIds: pq.Int64Array{lineItem1.ID},
 		},
 		{
 			AppID:     app.ID,
@@ -845,35 +844,35 @@ func TestConfigFetcher_FetchBidMachinePlacements_MissingPlacement(t *testing.T) 
 	configs := []db.AuctionConfiguration{
 		// Config with line item that has placement
 		{
-			AppID:      app.ID,
-			PublicUID:  sql.NullInt64{Int64: 1, Valid: true},
-			AdType:     db.BannerAdType,
-			Demands:    pq.StringArray{"bidmachine"},
-			AdUnitIds:  pq.Int64Array{lineItemWithPlacement.ID},
+			AppID:     app.ID,
+			PublicUID: sql.NullInt64{Int64: 1, Valid: true},
+			AdType:    db.BannerAdType,
+			Demands:   pq.StringArray{"bidmachine"},
+			AdUnitIds: pq.Int64Array{lineItemWithPlacement.ID},
 		},
 		// Config with line item that doesn't have placement (should be ignored)
 		{
-			AppID:      app.ID,
-			PublicUID:  sql.NullInt64{Int64: 2, Valid: true},
-			AdType:     db.InterstitialAdType,
-			Demands:    pq.StringArray{"bidmachine"},
-			AdUnitIds:  pq.Int64Array{lineItemWithoutPlacement.ID},
+			AppID:     app.ID,
+			PublicUID: sql.NullInt64{Int64: 2, Valid: true},
+			AdType:    db.InterstitialAdType,
+			Demands:   pq.StringArray{"bidmachine"},
+			AdUnitIds: pq.Int64Array{lineItemWithoutPlacement.ID},
 		},
 		// Config with line item that has empty extra (should be ignored)
 		{
-			AppID:      app.ID,
-			PublicUID:  sql.NullInt64{Int64: 3, Valid: true},
-			AdType:     db.RewardedAdType,
-			Demands:    pq.StringArray{"bidmachine"},
-			AdUnitIds:  pq.Int64Array{lineItemWithEmptyExtra.ID},
+			AppID:     app.ID,
+			PublicUID: sql.NullInt64{Int64: 3, Valid: true},
+			AdType:    db.RewardedAdType,
+			Demands:   pq.StringArray{"bidmachine"},
+			AdUnitIds: pq.Int64Array{lineItemWithEmptyExtra.ID},
 		},
 		// Config with multiple line items (mixed placement availability)
 		{
-			AppID:      app.ID,
-			PublicUID:  sql.NullInt64{Int64: 4, Valid: true},
-			AdType:     db.BannerAdType,
-			Bidding:    pq.StringArray{"bidmachine"},
-			AdUnitIds:  pq.Int64Array{lineItemWithPlacement.ID, lineItemWithoutPlacement.ID, lineItemWithEmptyExtra.ID},
+			AppID:     app.ID,
+			PublicUID: sql.NullInt64{Int64: 4, Valid: true},
+			AdType:    db.BannerAdType,
+			Bidding:   pq.StringArray{"bidmachine"},
+			AdUnitIds: pq.Int64Array{lineItemWithPlacement.ID, lineItemWithoutPlacement.ID, lineItemWithEmptyExtra.ID},
 		},
 	}
 

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/shopspring/decimal"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.uber.org/zap"
 )
@@ -18,7 +20,7 @@ func Echo() *echo.Echo {
 	e := echo.New()
 	e.Debug = Debug()
 	e.HTTPErrorHandler = HTTPErrorHandler
-	e.Validator = &echoValidator{validate: validator.New()}
+	e.Validator = newEchoValidator()
 
 	return e
 }
@@ -121,6 +123,21 @@ func UseHealthCheckHandler(e *echo.Echo, services HealthCheckParams) {
 
 type echoValidator struct {
 	validate *validator.Validate
+}
+
+func newEchoValidator() *echoValidator {
+	validate := validator.New()
+	validate.RegisterCustomTypeFunc(validateDecimal, decimal.Decimal{})
+	return &echoValidator{validate: validate}
+}
+
+func validateDecimal(field reflect.Value) interface{} {
+	n, ok := field.Interface().(decimal.Decimal)
+	if !ok {
+		return nil
+	}
+
+	return n.String()
 }
 
 func (v *echoValidator) Validate(i any) error {

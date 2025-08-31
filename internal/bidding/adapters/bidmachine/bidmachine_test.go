@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -129,15 +130,17 @@ func buildWantRequest(imp openrtb2.Imp) openrtb.BidRequest {
 		User: nil,
 		Cur:  []string{"USD"},
 		Ext:  json.RawMessage(`{"bidon_sdk_version":"1.0.0","mediation_mode":"bidon"}`),
-		Imp: []openrtb2.Imp{
+		Imp: []openrtb.Imp{
 			{
-				ID:                "1",
-				DisplayManager:    "bidmachine",
-				DisplayManagerVer: "1.0.0",
-				TagID:             "",
-				Secure:            ptr(int8(1)),
-				Ext:               json.RawMessage(`{"bid_token":"token"}`),
-				BidFloor:          schema.MinBidFloor,
+				Imp: openrtb2.Imp{
+					ID:                "1",
+					DisplayManager:    "bidmachine",
+					DisplayManagerVer: "1.0.0",
+					TagID:             "",
+					Secure:            ptr(int8(1)),
+					Ext:               json.RawMessage(`{"bid_token":"token"}`),
+				},
+				BidFloor: schema.MinBidFloor,
 			},
 		},
 	}
@@ -436,7 +439,7 @@ func TestBidmachine_ParseBids(t *testing.T) {
 					Bid: &adapters.BidDemandResponse{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
-						Price:    1.5,
+						Price:    decimal.NewFromFloat(1.5),
 						Payload:  "0692d0a0efdbd5bd470dafea742cef6a1f6b840c5c83240e165bc33a038b3d5487e25a52",
 						DemandID: "bidmachine",
 						AdID:     "bmad5e0471131b8a4e3c",
@@ -578,7 +581,7 @@ func TestBidmachine_ExtraParams(t *testing.T) {
 				"bidon_sdk_version": "2.0.0",
 				"mediation_mode":    "bidon",
 				"custom_param":      "value",
-				"another_param":     float64(123), // JSON unmarshals numbers as float64
+				"another_param":     json.Number("123"), // JSON unmarshals numbers as float64
 			},
 		},
 		{

@@ -46,7 +46,9 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 	configs := adapter.RawConfigsMap{}
 	for _, dbProfile := range dbProfiles {
 		var extra map[string]any
-		err = json.Unmarshal(dbProfile.Account.Extra, &extra)
+		decoder := json.NewDecoder(strings.NewReader(dbProfile.Account.Extra.String()))
+		decoder.UseNumber()
+		err = decoder.Decode(&extra)
 		if err != nil {
 			return nil, fmt.Errorf("cannot unmarshal account extra: %v", err)
 		}

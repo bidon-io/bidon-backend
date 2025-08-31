@@ -91,14 +91,14 @@ func (a *MintegralAdapter) rewarded(auctionRequest *schema.AuctionRequest) *open
 func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
 	secure := int8(1)
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
-		imp = a.banner(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.banner(auctionRequest)}
 	case ad.InterstitialType:
-		imp = a.interstitial(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.interstitial(auctionRequest)}
 	case ad.RewardedType:
-		imp = a.rewarded(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.rewarded(auctionRequest)}
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -117,7 +117,7 @@ func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequ
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 	imp.BidFloorCur = "USD"
 
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 	request.User = &openrtb.User{
 		BuyerUID: auctionRequest.AdObject.Demands[adapter.MintegralKey]["token"].(string),
@@ -197,7 +197,7 @@ func (a *MintegralAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dem
 		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
 	}
 
-	var bidResponse openrtb2.BidResponse
+	var bidResponse openrtb.BidResponse
 	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
 	if err != nil {
 		return dr, err

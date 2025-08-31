@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
@@ -59,7 +60,7 @@ type CachedBid struct {
 	ImpID       string
 	AdID        string
 	SeatID      string
-	Price       float64
+	Price       decimal.Decimal
 	LURL        string
 	NURL        string
 	BURL        string
@@ -157,7 +158,7 @@ func (b *BidCache) ApplyBidCache(ctx context.Context, auctionRequest *schema.Auc
 	for _, bid := range toCache {
 		cacheEntry := CacheEntry{Bid: cachedBidFromDemandResponse(bid), CreatedAt: now, AuctionID: auctionRequest.Session.ID}
 		if existing, ok := inCache.Bids[bid.DemandID]; ok {
-			if bid.Price() > existing.Bid.Price {
+			if bid.Price().GreaterThan(existing.Bid.Price) {
 				inCache.Bids[bid.DemandID] = cacheEntry
 				// TODO: Send LURL notification here for the existing bid
 			}
@@ -202,7 +203,7 @@ func getMax(m *map[adapter.Key]CacheEntry) (adapter.Key, CacheEntry) {
 	first := true
 
 	for demand, entry := range *m {
-		if first || entry.Bid.Price > maxValue.Bid.Price {
+		if first || entry.Bid.Price.GreaterThan(maxValue.Bid.Price) {
 			maxDemand = demand
 			maxValue = entry
 			first = false

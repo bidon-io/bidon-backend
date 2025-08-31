@@ -9,6 +9,7 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
@@ -50,23 +51,23 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 		{
 			name: "no cache, has bids",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: 2.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: decimal.RequireFromString("1.0")}},
+				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("3.0")}},
 			},
 			cacheGet: bidding.Cache{},
 			cacheSet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.ApplovinKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: 2.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: decimal.RequireFromString("1.0")}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("3.0")}},
 			},
 		},
 		{
@@ -75,12 +76,12 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.ApplovinKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: 2.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
@@ -89,14 +90,14 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheSet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: 2.0}},
+				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")}},
 			},
 		},
 		{
@@ -105,12 +106,12 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.ApplovinKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: 2.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")},
 						CreatedAt: mockTime.Now().Add(-6 * time.Minute), // Highest bid, but expired
 						AuctionID: "session1",
 					},
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
@@ -118,7 +119,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			},
 			cacheSet: bidding.Cache{},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VKAdsKey, Price: 1.0}},
+				{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")}},
 			},
 		},
 		{
@@ -129,17 +130,17 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.ApplovinKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: 2.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.ApplovinKey, Price: decimal.RequireFromString("2.0")},
 						CreatedAt: mockTime.Now().Add(-6 * time.Minute), // Highest bid, but expired
 						AuctionID: "session1",
 					},
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 					adapter.MetaKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.MetaKey, Price: 1.5},
+						Bid:       bidding.CachedBid{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("1.5")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
@@ -148,7 +149,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheSet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
@@ -156,25 +157,25 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			},
 			want: []adapters.DemandResponse{
 				{DemandID: adapter.BigoAdsKey, Bid: nil, Error: errors.New("some error")},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 1.5}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("1.5")}},
 			},
 		},
 		{
 			name: "has bids, has cache",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 2.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 2.5}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: decimal.RequireFromString("1.0")}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("2.0")}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("2.5")}},
 			},
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.VungleKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VungleKey, Price: 3.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("3.0")},
 						CreatedAt: mockTime.Now().Add(-1 * time.Minute),
 						AuctionID: "session1",
 					},
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now().Add(-3 * time.Minute),
 						AuctionID: "session1",
 					},
@@ -183,31 +184,31 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			cacheSet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.VKAdsKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: 1.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VKAdsKey, Price: decimal.RequireFromString("1.0")},
 						CreatedAt: mockTime.Now().Add(-3 * time.Minute),
 						AuctionID: "session1",
 					},
 					adapter.MetaKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.MetaKey, Price: 2.5},
+						Bid:       bidding.CachedBid{DemandID: adapter.MetaKey, Price: decimal.RequireFromString("2.5")},
 						CreatedAt: mockTime.Now(),
 						AuctionID: "session1",
 					},
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: decimal.RequireFromString("1.0")}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("3.0")}},
 			},
 		},
 		{
 			name: "has bids, has cheap cache",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("3.0")}},
 			},
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
 					adapter.VungleKey: {
-						Bid:       bidding.CachedBid{DemandID: adapter.VungleKey, Price: 2.0},
+						Bid:       bidding.CachedBid{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("2.0")},
 						CreatedAt: mockTime.Now().Add(-1 * time.Minute),
 						AuctionID: "session1",
 					},
@@ -217,7 +218,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				Bids: map[adapter.Key]bidding.CacheEntry{},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: decimal.RequireFromString("3.0")}},
 			},
 		},
 	}

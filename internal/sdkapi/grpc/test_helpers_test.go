@@ -1,6 +1,7 @@
 package grpcserver
 
 import (
+	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -250,7 +251,7 @@ func DefaultAdUnits() []auction.AdUnit {
 		{
 			DemandID:   "meta",
 			Label:      "meta",
-			PriceFloor: ptr(0.8),
+			PriceFloor: ptr(decimal.RequireFromString("0.8")),
 			UID:        "123_meta",
 			BidType:    schema.RTBBidType,
 			Timeout:    store.AdUnitTimeout,

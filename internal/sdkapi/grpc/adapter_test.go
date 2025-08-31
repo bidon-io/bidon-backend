@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 
@@ -230,7 +231,7 @@ func TestAuctionAdapter_OpenRTBToAuctionRequest(t *testing.T) {
 					AuctionKey:              "auction_key_789",
 					AuctionConfigurationID:  0,
 					AuctionConfigurationUID: "config_uid_456",
-					PriceFloor:              0.5,
+					PriceFloor:              decimal.RequireFromString("0.5"),
 					Orientation:             "PORTRAIT",
 					Demands: map[adapter.Key]map[string]any{
 						"demand_key": {
@@ -327,7 +328,7 @@ func TestAuctionAdapter_AuctionResponseToOpenRTB(t *testing.T) {
 					AdUnits: []auction.AdUnit{
 						{
 							UID:        "ad_unit_1",
-							PriceFloor: ptr(0.5),
+							PriceFloor: ptr(decimal.RequireFromString("0.5")),
 							DemandID:   "demand_1",
 							Label:      "label_1",
 							BidType:    schema.RTBBidType,
@@ -565,7 +566,7 @@ func TestParseAdObject(t *testing.T) {
 				AuctionID:               "auction-123",
 				AuctionConfigurationUID: "config-123",
 				AuctionKey:              "auction-key",
-				PriceFloor:              float64(2.34),
+				PriceFloor:              decimal.RequireFromString("2.34"),
 				Demands: map[adapter.Key]map[string]any{
 					"demand1": {
 						"token":           "token1",

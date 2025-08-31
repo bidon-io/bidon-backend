@@ -3,6 +3,8 @@ package auction
 import (
 	"errors"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
@@ -18,11 +20,11 @@ type Config struct {
 	ID                       int64
 	UID                      string
 	ExternalWinNotifications bool
-	Bidding                  []adapter.Key `json:"bidding"`
-	Demands                  []adapter.Key `json:"demands"`
-	AdUnitIDs                []int64       `json:"ad_unit_ids"`
-	Timeout                  int           `json:"timeout"`
-	PriceFloor               float64       `json:"pricefloor"`
+	Bidding                  []adapter.Key   `json:"bidding"`
+	Demands                  []adapter.Key   `json:"demands"`
+	AdUnitIDs                []int64         `json:"ad_unit_ids"`
+	Timeout                  int             `json:"timeout"`
+	PriceFloor               decimal.Decimal `json:"pricefloor"`
 }
 
 type LineItem struct {
@@ -38,18 +40,18 @@ type LineItem struct {
 }
 
 type AdUnit struct {
-	DemandID   string         `json:"demand_id"`
-	UID        string         `json:"uid"`
-	Label      string         `json:"label"`
-	PriceFloor *float64       `json:"pricefloor,omitempty"`
-	BidType    schema.BidType `json:"bid_type"`
-	Timeout    int32          `json:"timeout"`
-	Extra      map[string]any `json:"ext"`
+	DemandID   string           `json:"demand_id"`
+	UID        string           `json:"uid"`
+	Label      string           `json:"label"`
+	PriceFloor *decimal.Decimal `json:"pricefloor,omitempty"`
+	BidType    schema.BidType   `json:"bid_type"`
+	Timeout    int32            `json:"timeout"`
+	Extra      map[string]any   `json:"ext"`
 }
 
-func (a *AdUnit) GetPriceFloor() float64 {
+func (a *AdUnit) GetPriceFloor() decimal.Decimal {
 	if a.PriceFloor == nil {
-		return 0
+		return decimal.Zero
 	}
 	return *a.PriceFloor
 }
