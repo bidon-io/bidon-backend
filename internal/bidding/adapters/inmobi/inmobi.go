@@ -34,11 +34,6 @@ var bannerFormats = map[ad.Format][2]int64{
 	ad.EmptyFormat:       {320, 50}, // Default
 }
 
-var fullscreenFormats = map[string][2]int64{
-	"PHONE":  {320, 480},
-	"TABLET": {320, 480},
-}
-
 func (a *InMobiAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
 	size := bannerFormats[auctionRequest.AdObject.Format()]
 
@@ -60,7 +55,7 @@ func (a *InMobiAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.
 }
 
 func (a *InMobiAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := fullscreenFormats[string(auctionRequest.Device.Type)]
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
 	w, h := size[0], size[1]
 	if !auctionRequest.AdObject.IsPortrait() {
 		w, h = h, w
@@ -77,7 +72,7 @@ func (a *InMobiAdapter) interstitial(auctionRequest *schema.AuctionRequest) *ope
 }
 
 func (a *InMobiAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := fullscreenFormats[string(auctionRequest.Device.Type)]
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
 	w, h := size[0], size[1]
 	if !auctionRequest.AdObject.IsPortrait() {
 		w, h = h, w

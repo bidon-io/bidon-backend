@@ -114,7 +114,7 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
 			}
 		case adapter.InmobiKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
+			adaptersMap[key]["app_id"] = appData["app_key"]
 
 			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
 			if adUnit != nil {
