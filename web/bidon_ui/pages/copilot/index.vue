@@ -81,6 +81,33 @@ interface ChatMessage {
   content: string;
 }
 
+// Types to represent remote/copilot state and streaming payloads without using 'any'
+type RemoteMessagePart = string | { text?: string };
+interface RemoteMessage {
+  type?: string;
+  role?: string;
+  content?: string | RemoteMessagePart[];
+}
+type CopilotValues = { messages?: RemoteMessage[] };
+
+function getThreadId(t: unknown): string | null {
+  if (t && typeof t === "object") {
+    const obj = t as Record<string, unknown>;
+    const raw = (obj["thread_id"] ?? obj["threadId"]) as unknown;
+    return typeof raw === "string" ? raw : null;
+  }
+  return null;
+}
+
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object" && "message" in e) {
+    const m = (e as { message?: unknown }).message;
+    return typeof m === "string" ? m : "";
+  }
+  return typeof e === "string" ? e : "";
+}
+
 const config = useRuntimeConfig();
 const copilotBase = config.public.copilotBase || "/api/copilot";
 
@@ -111,16 +138,17 @@ onMounted(async () => {
     try {
       historyLoading.value = true;
       // Use getState to fetch the latest state values for the thread
-      const state = await client.threads.getState<{ messages?: any[] }>(
+      const state = await client.threads.getState<CopilotValues>(
         threadId.value,
       );
-      const raw = state?.values?.messages || [];
+      const raw: RemoteMessage[] =
+        state?.values?.messages ?? ([] as RemoteMessage[]);
 
-      const filtered = raw.filter((m) => m.type !== "tool");
-      const normalized = (filtered as any[]).map((m: any) => {
+      const filtered = raw.filter((m: RemoteMessage) => m.type !== "tool");
+      const normalized = filtered.map((m: RemoteMessage): ChatMessage => {
         const role = (m.role || m.type || "").toLowerCase();
         // Coerce role names to our UI roles
-        const uiRole: "user" | "assistant" | "tool" =
+        const uiRole: "user" | "assistant" =
           role.includes("human") || role === "user" ? "user" : "assistant";
         let content = "";
         const c = m.content;
@@ -128,19 +156,23 @@ onMounted(async () => {
         else if (Array.isArray(c)) {
           for (const part of c) {
             if (typeof part === "string") content += part;
-            else if (part && typeof part.text === "string")
+            else if (
+              typeof part !== "string" &&
+              part &&
+              typeof part.text === "string"
+            )
               content += part.text;
           }
         }
         return { role: uiRole, content };
       });
       messages.value = normalized;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("[Copilot] failed to load history", e);
       toast.add({
         severity: "warn",
         summary: "History unavailable",
-        detail: e?.message || "Could not fetch previous messages",
+        detail: getErrorMessage(e) || "Could not fetch previous messages",
         life: 2500,
       });
     } finally {
@@ -149,8 +181,7 @@ onMounted(async () => {
   } else {
     try {
       const thread = await client.threads.create();
-      const id =
-        (thread as any)?.thread_id || (thread as any)?.threadId || null;
+      const id = getThreadId(thread);
       copilotStore.setThreadId(id);
     } catch (e) {
       console.error("[Copilot] failed to create thread", e);
@@ -170,7 +201,7 @@ async function onNewChat() {
 
     // Create new thread
     const thread = await client.threads.create();
-    const id = (thread as any)?.thread_id || (thread as any)?.threadId || null;
+    const id = getThreadId(thread);
     copilotStore.setThreadId(id);
 
     // Visual feedback
@@ -180,12 +211,12 @@ async function onNewChat() {
       detail: "Started a new conversation",
       life: 2000,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("[Copilot] failed to start new chat", e);
     toast.add({
       severity: "error",
       summary: "New chat failed",
-      detail: e?.message || "Could not create a new thread",
+      detail: getErrorMessage(e) || "Could not create a new thread",
       life: 3000,
     });
   }
@@ -216,21 +247,24 @@ async function onSend() {
       stream = client.runs.stream(null, assistantId.value, payload);
     }
 
-    for await (const chunk of stream as any) {
-      if (!chunk) continue;
-      if (chunk.event !== "messages") {
-        continue;
-      }
+    for await (const chunk of stream as AsyncIterable<{
+      event: string;
+      data: unknown;
+    }>) {
+      if (!chunk || chunk.event !== "messages") continue;
 
-      const data = chunk.data;
+      const data = chunk.data as unknown;
 
       // messages-tuple -> [messageChunk, metadata]; plain 'messages' -> messageChunk
-      const messageChunk = Array.isArray(data) ? data[0] : data;
-      if (!messageChunk) continue;
-      if (messageChunk.type !== "AIMessageChunk") continue;
+      const tuple = Array.isArray(data) ? data : null;
+      const messageChunk = (tuple ? tuple[0] : data) as {
+        type?: string;
+        content?: unknown;
+      };
+      if (!messageChunk || messageChunk.type !== "AIMessageChunk") continue;
 
       let delta = "";
-      const content = messageChunk.content;
+      const content = messageChunk.content as unknown;
 
       // Content can be a string or array of parts like [{ type: 'text', text: '...' }]
       if (typeof content === "string") {
@@ -247,13 +281,11 @@ async function onSend() {
 
       if (delta) {
         messages.value[assistantIndex].content += delta;
-        // Optional: keep view pinned to latest token without layout shifts
-        // nextTick(() => el.scrollTop = el.scrollHeight)
       }
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[Copilot stream error]", err);
-    const detail = err?.message || "Failed to send message";
+    const detail = getErrorMessage(err) || "Failed to send message";
     messages.value[assistantIndex].content = `Error: ${detail}`;
   } finally {
     loading.value = false;
