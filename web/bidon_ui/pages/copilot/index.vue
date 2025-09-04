@@ -76,6 +76,10 @@ import { onMounted } from "vue";
 import { Client } from "@langgraph-js/sdk";
 import { useToast } from "primevue/usetoast";
 
+definePageMeta({
+  middleware: ["admin-only"],
+});
+
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
