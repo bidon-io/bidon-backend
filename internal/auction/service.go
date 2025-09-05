@@ -53,7 +53,7 @@ type ExecutionParams struct {
 	LogErr  func(err error)
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/service_mocks.go -pkg mocks . ConfigFetcher AuctionBuilder AdapterKeysFetcher
+//go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/service_mocks.go -pkg mocks . ConfigFetcher AuctionBuilder AdapterKeysFetcher
 
 type ConfigFetcher interface {
 	Match(ctx context.Context, appID int64, adType ad.Type, segmentID int64, version string) (*Config, error)

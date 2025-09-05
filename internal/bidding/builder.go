@@ -32,7 +32,7 @@ type Builder struct {
 
 var ErrNoAdaptersMatched = errors.New("no adapters matched")
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AdaptersBuilder NotificationHandler BidCacher
+//go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/mocks.go -pkg mocks . AdaptersBuilder NotificationHandler BidCacher
 
 type AdaptersBuilder interface {
 	Build(adapterKey adapter.Key, cfg adapter.ProcessedConfigsMap) (*adapters.Bidder, error)

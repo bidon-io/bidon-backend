@@ -25,7 +25,7 @@ type Builder struct {
 	BiddingAdaptersConfigBuilder BiddingAdaptersConfigBuilder
 }
 
-//go:generate go run -mod=mod github.com/matryer/moq@latest -out mocks/mocks.go -pkg mocks . AdUnitsMatcher BiddingBuilder BiddingAdaptersConfigBuilder
+//go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/mocks.go -pkg mocks . AdUnitsMatcher BiddingBuilder BiddingAdaptersConfigBuilder
 type AdUnitsMatcher interface {
 	MatchCached(ctx context.Context, params *BuildParams) ([]AdUnit, error)
 }
