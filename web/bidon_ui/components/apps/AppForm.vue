@@ -45,10 +45,10 @@
         </small>
       </FormField>
       <FormField label="Categories" :error="errors.categories">
-        <Chips
-          v-model="categories"
-          placeholder="Add IAB categories (e.g., IAB1, IAB9-30)"
-          separator=","
+        <InputText
+          v-model="categoriesText"
+          type="text"
+          placeholder="IAB1, IAB9-30, IAB14 (comma-separated)"
         />
         <small class="p-text-secondary">
           IAB content categories for better ad targeting (comma-separated)
@@ -61,6 +61,7 @@
 
 <script setup>
 import * as yup from "yup";
+import { computed } from "vue";
 
 const props = defineProps({
   value: {
@@ -81,7 +82,7 @@ let validationFields = {
   humanName: yup.string().required().label("Owner Name"),
   packageName: yup.string().required().label("Package Name"),
   storeId: yup.string().label("Store ID"),
-  storeUrl: yup.string().url("Must be a valid URL").label("Store URL"),
+  storeUrl: yup.string().label("Store URL"),
   categories: yup.array().of(yup.string()).label("Categories"),
 };
 
@@ -111,6 +112,21 @@ const userId = useFieldModel("userId");
 const storeId = useFieldModel("storeId");
 const storeUrl = useFieldModel("storeUrl");
 const categories = useFieldModel("categories");
+
+// Convert categories array to/from comma-separated string
+const categoriesText = computed({
+  get: () => {
+    return Array.isArray(categories.value) ? categories.value.join(", ") : "";
+  },
+  set: (value) => {
+    categories.value = value
+      ? value
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s)
+      : [];
+  },
+});
 
 // push submit error to error messages
 const errorMsgs = ref([]);
