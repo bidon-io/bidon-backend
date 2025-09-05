@@ -69,7 +69,7 @@ func (s *Server) Bid(ctx context.Context, o *v3.Openrtb) (*v3.Openrtb, error) {
 	logger := ctxzap.Extract(ctx)
 	params := &auction.ExecutionParams{
 		Req:     ar,
-		AppID:   app.ID,
+		App:     &app,
 		Country: geo.CountryCode,
 		GeoData: geo,
 		Log: func(s string) {

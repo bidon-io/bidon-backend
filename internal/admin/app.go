@@ -26,6 +26,9 @@ type AppAttrs struct {
 	PackageName string     `json:"package_name"`
 	UserID      int64      `json:"user_id"`
 	AppKey      string     `json:"app_key"`
+	StoreID     string     `json:"store_id"`
+	StoreURL    string     `json:"store_url"`
+	Categories  []string   `json:"categories"`
 }
 
 type PlatformID string
