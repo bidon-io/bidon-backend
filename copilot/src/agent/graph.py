@@ -46,7 +46,6 @@ def reduce_spec(filtered: dict) -> dict:
     return reduce_openapi_spec(filtered)
 
 
-# write top message description of thee tool purpose
 @tool
 def query_admin_api(task: str, config: RunnableConfig | None = None) -> str:
     """Query the Admin API via OpenAPI planner (GET-only).
