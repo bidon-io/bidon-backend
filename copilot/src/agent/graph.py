@@ -27,8 +27,6 @@ Settings.llm = None
 load_dotenv()
 BASE_URL = os.environ.get("API_BASE_URL", "https://app.bidon.com").rstrip("/")
 SPEC_URL = f"{BASE_URL}/api/openapi.json"
-API_BASE = f"{BASE_URL}/api"
-
 
 def fetch_spec() -> dict:
     r = requests.get(SPEC_URL, timeout=5)
@@ -55,85 +53,6 @@ def query_admin_api(task: str, config: RunnableConfig | None = None) -> str:
     Fetch Inventory data from the Admin API.
     Task is a natural language instruction to fetch data from the Admin API.
     Internal planner will convert it into a structured request.
-    <adminApiContext>
-        <hints>
-            <hint>Prefer /api/*_collection endpoints for filtered/paginated lists over simple plural nouns.</hint>
-            <hint>Always use AuctionConfiguration V2 (/api/v2/auction_configurations*); V1 is deprecated.</hint>
-        </hints>
-
-        <entities>
-            <entity name="User" desc="Account identity.">
-            <fields>id, email</fields>
-            <relationships>hasMany: App, DemandSourceAccount, ApiKey;</relationships>
-            </entity>
-
-            <entity name="ApiKey" desc="Access key for API.">
-            <fields>id(uuid), value(only on create), last_accessed_at</fields>
-            <relationships>belongsTo: User (implicit ownership)</relationships>
-            </entity>
-
-            <entity name="App" desc="Mobile app under monetization.">
-            <fields>id, platform_id(ios|android), human_name, package_name, user_id, app_key, categories[], store_id, store_url, public_uid</fields>
-            <relationships>belongsTo: User; hasMany: LineItem, Segment, AuctionConfigurationV2, AppDemandProfile</relationships>
-            </entity>
-
-            <entity name="DemandSource" desc="Ad network integration.">
-            <fields>id, human_name, api_key, public_uid</fields>
-            <relationships>hasMany: DemandSourceAccount, AppDemandProfile</relationships>
-            </entity>
-
-            <entity name="DemandSourceAccount" desc="Network account credentials/settings.">
-            <fields>id, user_id, demand_source_id, type, is_bidding, extra{}, public_uid</fields>
-            <relationships>belongsTo: User, DemandSource; hasMany: LineItem, AppDemandProfile</relationships>
-            </entity>
-
-            <entity name="AppDemandProfile" desc="App <-> DemandSourceAccount binding & data.">
-            <fields>id, app_id, demand_source_id, account_id, account_type, data{}, public_uid</fields>
-            <relationships>belongsTo: App, DemandSource, DemandSourceAccount</relationships>
-            </entity>
-
-            <entity name="LineItem" desc="Buy rule / placement per network.">
-            <fields>id, human_name, app_id, ad_type, format, bid_floor(decimal-string), account_id, account_type, code, extra(net-specific), public_uid</fields>
-            <relationships>belongsTo: App, DemandSourceAccount</relationships>
-            </entity>
-
-            <entity name="Segment" desc="Audience filter for targeting.">
-            <fields>id, app_id, name, description, enabled, filters[{type,name,operator,values[]}], public_uid</fields>
-            <relationships>belongsTo: App; hasMany: AuctionConfigurationV2</relationships>
-            </entity>
-
-            <entity name="AuctionConfigurationV2" desc="Auction setup for ad serving (current).">
-            <fields>id, name, ad_type, pricefloor(>0), app_id?, ad_unit_ids[]?, segment_id?, bidding[AdapterKey]?, demands[AdapterKey]?, settings{}, timeout_ms?, is_default?, external_win_notifications?, public_uid</fields>
-            <relationships>belongsTo: App?, Segment?; references: AdapterKey enums</relationships>
-            </entity>
-
-            <entity name="Country" desc="ISO country reference.">
-            <fields>id, human_name, alpha_2_code, alpha_3_code</fields>
-            <relationships>n/a</relationships>
-            </entity>
-
-            <entity name="ResourcesPermissions" desc="RBAC capabilities per resource and instance.">
-            <fields>resource: {read, create}; instance: {_permissions.update, _permissions.delete}</fields>
-            <relationships>appliesTo: all entities</relationships>
-            </entity>
-        </entities>
-
-        <types>
-            <enum name="AdType" values="banner|interstitial|rewarded"/>
-            <enum name="BannerFormat" values="BANNER|LEADERBOARD|MREC|ADAPTIVE"/>
-            <enum name="PlatformId" values="ios|android"/>
-            <enum name="AdapterKey" values="admob, amazon, applovin, bidmachine, bigoads, chartboost, dtexchange, gam, inmobi, ironsource, meta, mintegral, mobilefuse, moloco, unityads, vkads, vungle, yandex"/>
-            <shared name="IDs" values="id(int>0), primary_id(readonly int>0), public_uid(uuid), uuid"/>
-            <collectionMeta name="CollectionMeta" values="total_count"/>
-        </types>
-
-        <endpointHints>
-            <collection preferred="true" for="AppDemandProfile">/api/app_demand_profiles_collection</collection>
-            <collection preferred="true" for="LineItem">/api/line_items_collection</collection>
-            <collection preferred="true" for="AuctionConfigurationV2">/api/v2/auction_configurations_collection</collection>
-            <note>Plural list endpoints (/api/apps, /api/segments, …) return arrays; *collection variants* add filters & meta.</note>
-        </endpointHints>
-    </adminApiContext>
     """
     spec = fetch_spec()
     spec.setdefault("servers", [{"url": BASE_URL}])
@@ -152,21 +71,22 @@ def query_admin_api(task: str, config: RunnableConfig | None = None) -> str:
     requests_wrapper = RequestsWrapper(headers=headers)
 
     llm = ChatAnthropic(
-        model="claude-3-7-sonnet-latest",
+        model="claude-3-5-haiku-latest",
         api_key=os.getenv("ANTHROPIC_API_KEY"),
         temperature=0,
     )
 
-    api_agent = planner.create_openapi_agent(spec, requests_wrapper, llm, allowed_operations=("GET",), allow_dangerous_requests=True,
-                                                 agent_executor_kwargs={
-        "max_iterations": 3,              # stop re-planning ad infinitum
-        "early_stopping_method": "generate",
-        "handle_parsing_errors": True,
-        "return_intermediate_steps": True # handy for debugging
+    api_agent = planner.create_openapi_agent(
+        spec, requests_wrapper, llm, allowed_operations=("GET",),
+        allow_dangerous_requests=True,
+        agent_executor_kwargs={
+            "max_iterations": 2,
+            "early_stopping_method": "generate",
+            "handle_parsing_errors": True,
+            "return_intermediate_steps": True
         },
         verbose=True,
     )
-    # invocation_config: Dict[str, Any] = {"recursion_limit": 2, "configurable": conf}
     result = api_agent.invoke({"input": task})
     return result if isinstance(result, str) else str(result)
 
@@ -266,6 +186,7 @@ Provide your final answer addressing the user's question directly, using the inf
         model=model,
         tools=tools,
         prompt=prompt,
+        max_tool_calls=3,
     )
 
     return agent
