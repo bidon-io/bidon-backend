@@ -1,8 +1,11 @@
 package taurusx
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/prebid/openrtb/v19/openrtb2"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -36,6 +39,7 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 
 	baseRequest := openrtb.BidRequest{
 		ID: "test-request-id",
+		App: &openrtb2.App{},
 	}
 
 	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
@@ -59,6 +63,22 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 
 	if len(request.Cur) != 1 || request.Cur[0] != "USD" {
 		t.Errorf("Expected currency 'USD', got %v", request.Cur)
+	}
+
+	// Verify token is in request extension
+	var reqExt map[string]interface{}
+	if err := json.Unmarshal(request.Ext, &reqExt); err != nil {
+		t.Errorf("Failed to unmarshal request extension: %v", err)
+		return
+	}
+
+	if token, ok := reqExt["token"].(string); !ok || token != "test-bidding-token" {
+		t.Errorf("Expected token 'test-bidding-token' in request extension, got '%v'", reqExt["token"])
+	}
+
+	// Verify app ID is set correctly
+	if request.App == nil || request.App.ID != "test-app-id" {
+		t.Errorf("Expected app.id 'test-app-id', got '%v'", request.App.ID)
 	}
 }
 
@@ -212,6 +232,7 @@ func TestTaurusXAdapter_CreateRequest_Interstitial(t *testing.T) {
 
 	baseRequest := openrtb.BidRequest{
 		ID: "test-request-id",
+		App: &openrtb2.App{},
 	}
 
 	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
@@ -253,6 +274,7 @@ func TestTaurusXAdapter_CreateRequest_Rewarded(t *testing.T) {
 
 	baseRequest := openrtb.BidRequest{
 		ID: "test-request-id",
+		App: &openrtb2.App{},
 	}
 
 	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
@@ -298,6 +320,7 @@ func TestTaurusXAdapter_CreateRequest_WithoutToken(t *testing.T) {
 
 	baseRequest := openrtb.BidRequest{
 		ID: "test-request-id",
+		App: &openrtb2.App{},
 	}
 
 	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
@@ -309,6 +332,22 @@ func TestTaurusXAdapter_CreateRequest_WithoutToken(t *testing.T) {
 	// Should still work without token
 	if len(request.Imp) != 1 {
 		t.Errorf("Expected 1 impression, got %d", len(request.Imp))
+	}
+
+	// Verify request extension has no token when not provided
+	var reqExt map[string]interface{}
+	if err := json.Unmarshal(request.Ext, &reqExt); err != nil {
+		t.Errorf("Failed to unmarshal request extension: %v", err)
+		return
+	}
+
+	if _, hasToken := reqExt["token"]; hasToken {
+		t.Error("Expected no token in request extension when token is not provided")
+	}
+
+	// Verify app ID is still set correctly
+	if request.App == nil || request.App.ID != "test-app-id" {
+		t.Errorf("Expected app.id 'test-app-id', got '%v'", request.App.ID)
 	}
 }
 

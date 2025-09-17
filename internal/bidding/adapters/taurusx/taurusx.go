@@ -115,38 +115,27 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 	imp.BidFloorCur = "USD"
 
-	// Add TaurusX-specific extension with bidding token
-	taurusxData := make(map[string]interface{})
-	if demandData, ok := auctionRequest.AdObject.Demands[adapter.TaurusXKey]; ok {
-		if token, ok := demandData["token"].(string); ok && token != "" {
-			taurusxData["bid_token"] = token
-		}
-	}
-
-	if len(taurusxData) > 0 {
-		extStructure := &map[string]interface{}{}
-		if imp.Ext != nil {
-			_ = json.Unmarshal(imp.Ext, extStructure)
-		}
-		(*extStructure)["taurusx"] = taurusxData
-		raw, _ := json.Marshal(extStructure)
-		imp.Ext = raw
-	}
-
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
 
-	// Set app publisher ID
-	if request.App != nil && request.App.Publisher != nil {
-		request.App.Publisher.ID = a.AppID
+	// Set app ID
+	if request.App != nil {
+		request.App.ID = a.AppID
 	}
 
-	// Add request-level extension with API key
+	// Add request-level extension with token
 	reqExt := make(map[string]interface{})
 	if request.Ext != nil {
 		_ = json.Unmarshal(request.Ext, &reqExt)
 	}
-	reqExt["api_key"] = a.AppID
+
+	// Add token to request extension
+	if demandData, ok := auctionRequest.AdObject.Demands[adapter.TaurusXKey]; ok {
+		if token, ok := demandData["token"].(string); ok && token != "" {
+			reqExt["token"] = token
+		}
+	}
+
 	extBytes, _ := json.Marshal(reqExt)
 	request.Ext = extBytes
 
@@ -184,7 +173,7 @@ func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.6")
+	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
