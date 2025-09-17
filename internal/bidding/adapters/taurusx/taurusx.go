@@ -166,8 +166,18 @@ func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 	}
 	dr.RawRequest = string(requestBody)
 
-	// TaurusX RTB endpoint - replace with actual endpoint
-	url := "https://rtb.taurusx.com/bid"
+	// Get country code for geographic routing
+	alpha3 := ""
+	if request.Device != nil && request.Device.Geo != nil {
+		alpha3 = request.Device.Geo.Country
+	}
+
+	// Use geographic endpoint selection
+	url := getEndpoint(alpha3)
+	if url == "" {
+		dr.Error = errors.New("taurusx endpoint is empty")
+		return dr
+	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
@@ -270,4 +280,70 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 	}
 
 	return &bidder, nil
+}
+
+// alpha3ToRegionMapping maps country codes to TaurusX regions
+var alpha3ToRegionMapping = map[string]string{
+	// US region countries (Americas)
+	"ABW": "us", "AIA": "us", "ARG": "us", "ATG": "us", "BES": "us", "BHS": "us", "BLM": "us", "BLZ": "us",
+	"BOL": "us", "BRA": "us", "BRB": "us", "CAN": "us", "CHL": "us", "COL": "us", "CRI": "us", "CUB": "us",
+	"CUW": "us", "CYM": "us", "DMA": "us", "DOM": "us", "ECU": "us", "GLP": "us", "GRD": "us", "GRL": "us",
+	"GTM": "us", "GUF": "us", "GUY": "us", "HND": "us", "HTI": "us", "JAM": "us", "KNA": "us", "LCA": "us",
+	"MAF": "us", "MEX": "us", "MSR": "us", "MTQ": "us", "NIC": "us", "PAN": "us", "PER": "us", "PRI": "us",
+	"PRY": "us", "SLV": "us", "SUR": "us", "SXM": "us", "TCA": "us", "TST": "us", "TTO": "us", "UMI": "us",
+	"URY": "us", "USA": "us", "VCT": "us", "VEN": "us", "VGB": "us", "VIR": "us",
+
+	// Asia region countries
+	"AFG": "sg", "ARE": "sg", "ARM": "sg", "ASM": "sg", "ATA": "sg", "ATF": "sg", "AUS": "sg",
+	"BGD": "sg", "BHR": "sg", "BRN": "sg", "BTN": "sg", "CCK": "sg", "CHN": "sg", "COK": "sg",
+	"COM": "sg", "CXR": "sg", "FJI": "sg", "FSM": "sg", "GUM": "sg", "HKG": "sg", "HMD": "sg",
+	"IDN": "sg", "IND": "sg", "IOT": "sg", "IRN": "sg", "IRQ": "sg", "ISR": "sg", "JPN": "sg",
+	"KAZ": "sg", "KHM": "sg", "KIR": "sg", "KOR": "sg", "KWT": "sg", "LAO": "sg", "LBN": "sg",
+	"LKA": "sg", "MAC": "sg", "MDV": "sg", "MHL": "sg", "MMR": "sg", "MNG": "sg", "MNP": "sg",
+	"MYS": "sg", "MYT": "sg", "NCL": "sg", "NFK": "sg", "NIU": "sg", "NPL": "sg", "NRU": "sg",
+	"NZL": "sg", "OMN": "sg", "PAK": "sg", "PCN": "sg", "PHL": "sg", "PLW": "sg", "PNG": "sg",
+	"PRK": "sg", "PYF": "sg", "QAT": "sg", "SAU": "sg", "SGP": "sg", "SLB": "sg", "SSG": "sg",
+	"SYC": "sg", "THA": "sg", "TJK": "sg", "TKL": "sg", "TKM": "sg", "TLS": "sg", "TON": "sg",
+	"TUV": "sg", "TWN": "sg", "UZB": "sg", "VNM": "sg", "VUT": "sg", "WLF": "sg", "WSM": "sg",
+	"YEM": "sg",
+
+	// EU region countries (Europe, Africa, Middle East)
+	"AGO": "eu", "ALA": "eu", "ALB": "eu", "AND": "eu", "AUT": "eu", "AZE": "eu", "BDI": "eu", "BEL": "eu",
+	"BEN": "eu", "BFA": "eu", "BGR": "eu", "BIH": "eu", "BLR": "eu", "BMU": "eu", "BVT": "eu", "BWA": "eu",
+	"CAF": "eu", "CHE": "eu", "CIV": "eu", "CMR": "eu", "COD": "eu", "COG": "eu", "CPV": "eu", "CYP": "eu",
+	"CZE": "eu", "DEU": "eu", "DJI": "eu", "DNK": "eu", "DZA": "eu", "EGY": "eu", "ERI": "eu", "ESH": "eu",
+	"ESP": "eu", "EST": "eu", "ETH": "eu", "FIN": "eu", "FRA": "eu", "FRO": "eu", "GAB": "eu", "GBR": "eu",
+	"GEO": "eu", "GGY": "eu", "GHA": "eu", "GIB": "eu", "GIN": "eu", "GMB": "eu", "GNB": "eu", "GNQ": "eu",
+	"GRC": "eu", "HRV": "eu", "HUN": "eu", "IMN": "eu", "IRL": "eu", "ISL": "eu", "ITA": "eu", "JEY": "eu",
+	"JOR": "eu", "KEN": "eu", "KGZ": "eu", "LBR": "eu", "LBY": "eu", "LIE": "eu", "LSO": "eu", "LTU": "eu",
+	"LUX": "eu", "LVA": "eu", "MAR": "eu", "MCO": "eu", "MDA": "eu", "MDG": "eu", "MKD": "eu", "MLI": "eu",
+	"MLT": "eu", "MNE": "eu", "MOZ": "eu", "MRT": "eu", "MUS": "eu", "MWI": "eu", "NAM": "eu", "NER": "eu",
+	"NGA": "eu", "NLD": "eu", "NOR": "eu", "POL": "eu", "PRT": "eu", "PSE": "eu", "REU": "eu", "ROU": "eu",
+	"RUS": "eu", "RWA": "eu", "SDN": "eu", "SEN": "eu", "SGS": "eu", "SHN": "eu", "SJM": "eu", "SLE": "eu",
+	"SMR": "eu", "SOM": "eu", "SRB": "eu", "SSD": "eu", "STP": "eu", "SVK": "eu", "SVN": "eu", "SWE": "eu",
+	"SWZ": "eu", "SYR": "eu", "TCD": "eu", "TGO": "eu", "TUN": "eu", "TUR": "eu", "TZA": "eu", "UGA": "eu",
+	"UKR": "eu", "VAT": "eu", "ZAF": "eu", "ZMB": "eu", "ZWE": "eu",
+}
+
+const defaultRegion = "us"
+
+// getEndpoint returns the appropriate TaurusX endpoint based on country code
+func getEndpoint(alpha3 string) string {
+	// Determine region based on country code
+	region := defaultRegion
+	if mappedRegion, ok := alpha3ToRegionMapping[alpha3]; ok {
+		region = mappedRegion
+	}
+
+	// Return the appropriate regional endpoint
+	switch region {
+	case "eu":
+		return "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+	case "sg":
+		return "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+	case "us":
+		fallthrough
+	default:
+		return "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+	}
 }

@@ -312,6 +312,64 @@ func TestTaurusXAdapter_CreateRequest_WithoutToken(t *testing.T) {
 	}
 }
 
+func TestGetEndpoint(t *testing.T) {
+	tests := []struct {
+		name     string
+		alpha3   string
+		expected string
+	}{
+		{
+			name:     "US region - USA",
+			alpha3:   "USA",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "US region - Canada",
+			alpha3:   "CAN",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "EU region - Germany",
+			alpha3:   "DEU",
+			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "EU region - United Kingdom",
+			alpha3:   "GBR",
+			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "Asia region - Singapore",
+			alpha3:   "SGP",
+			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "Asia region - Japan",
+			alpha3:   "JPN",
+			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "Unknown country - defaults to US",
+			alpha3:   "XXX",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+		{
+			name:     "Empty country - defaults to US",
+			alpha3:   "",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getEndpoint(tt.alpha3)
+			if result != tt.expected {
+				t.Errorf("getEndpoint(%s) = %s, expected %s", tt.alpha3, result, tt.expected)
+			}
+		})
+	}
+}
+
 func buildAdapter() *TaurusXAdapter {
 	return &TaurusXAdapter{
 		AppID: "test-app-id",
