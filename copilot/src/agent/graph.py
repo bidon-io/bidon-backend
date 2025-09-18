@@ -181,12 +181,14 @@ If you need documentation, you might say:
 
 Provide your final answer addressing the user's question directly, using the information gathered from the tools.
     """
+    max_tool_calls = 3
+    recursion_limit = 2 * max_tool_calls + 1 
+
     agent = create_react_agent(
         model=model,
         tools=tools,
         prompt=prompt,
-        max_tool_calls=3,
-    )
+    ).with_config(recursion_limit=recursion_limit)
 
     return agent
 
