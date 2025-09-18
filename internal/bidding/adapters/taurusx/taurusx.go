@@ -56,9 +56,9 @@ func (a *TaurusXAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2
 	}
 }
 
-func (a *TaurusXAdapter) interstitial() *openrtb2.Imp {
-	w := adapters.FullscreenFormats["PHONE"][0]
-	h := adapters.FullscreenFormats["PHONE"][1]
+func (a *TaurusXAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	w, h := size[0], size[1]
 	return &openrtb2.Imp{
 		Instl: 1,
 		Banner: &openrtb2.Banner{
@@ -69,19 +69,17 @@ func (a *TaurusXAdapter) interstitial() *openrtb2.Imp {
 	}
 }
 
-func (a *TaurusXAdapter) rewarded() *openrtb2.Imp {
-	w := adapters.FullscreenFormats["PHONE"][0]
-	h := adapters.FullscreenFormats["PHONE"][1]
+func (a *TaurusXAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	w, h := size[0], size[1]
 	return &openrtb2.Imp{
 		Instl: 1,
 		Video: &openrtb2.Video{
-			W:           w,
-			H:           h,
-			Pos:         adcom1.PositionFullScreen.Ptr(),
-			MIMEs:       []string{"video/mp4"},
-			MinDuration: 15,
-			MaxDuration: 30,
-			Protocols:   []adcom1.MediaCreativeSubtype{adcom1.CreativeVAST20, adcom1.CreativeVAST30},
+			W:         w,
+			H:         h,
+			Pos:       adcom1.PositionFullScreen.Ptr(),
+			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
+			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
 		},
 	}
 }
@@ -98,9 +96,9 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	case ad.BannerType:
 		imp = a.banner(auctionRequest)
 	case ad.InterstitialType:
-		imp = a.interstitial()
+		imp = a.interstitial(auctionRequest)
 	case ad.RewardedType:
-		imp = a.rewarded()
+		imp = a.rewarded(auctionRequest)
 	default:
 		return request, errors.New("unknown impression type")
 	}
