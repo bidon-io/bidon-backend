@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 	"golang.org/x/exp/maps"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -60,10 +60,12 @@ type AuctionResult struct {
 	RoundNumber int
 }
 
-func (a AuctionResult) GetMaxBidPrice() float64 {
-	maxPrice := 0.0
+func (a AuctionResult) GetMaxBidPrice() decimal.Decimal {
+	maxPrice := decimal.Zero
 	for _, bid := range a.Bids {
-		maxPrice = math.Max(maxPrice, bid.Price())
+		if bid.Price().GreaterThan(maxPrice) {
+			maxPrice = bid.Price()
+		}
 	}
 
 	return maxPrice
@@ -96,7 +98,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		TMax: 2000,
 		App: b.buildApp(auctionRequest.App, params),
 		Device: b.BuildDevice(auctionRequest.Device, auctionRequest.User, params.GeoData),
-		Imp: []openrtb2.Imp{
+		Imp: []openrtb.Imp{
 			{
 				BidFloor: auctionRequest.AdObject.GetBidFloorForBidding(),
 			},

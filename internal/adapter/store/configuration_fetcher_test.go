@@ -102,7 +102,7 @@ func TestAppDemandProfileFetcher_FetchCached(t *testing.T) {
 				},
 				adapter.AmazonKey: {
 					AccountExtra: map[string]any{"amazon": "amazon", "price_points": []any{
-						map[string]any{"name": "name", "price_point": "price_point", "price": 1.0},
+						map[string]any{"name": "name", "price_point": "price_point", "price": "1.0"},
 					}},
 					AppData: map[string]any{},
 				},

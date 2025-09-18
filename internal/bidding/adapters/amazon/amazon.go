@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
@@ -19,8 +20,8 @@ type Slot struct {
 type PricePointsMap map[string]PricePoint
 
 type PricePoint struct {
-	Price      float64 `json:"price"`
-	PricePoint string  `json:"price_point"`
+	Price      decimal.Decimal `json:"price"`
+	PricePoint string          `json:"price_point"`
 }
 
 type Adapter struct {
@@ -79,9 +80,17 @@ func Builder(cfg adapter.ProcessedConfigsMap) (*Adapter, error) {
 	for key, value := range pricePointsMapRaw {
 		var point PricePoint
 		if v, ok := value.(map[string]any); ok {
-			if price, ok := v["price"].(float64); ok {
+			switch price := v["price"].(type) {
+			case json.Number:
+				point.Price, _ = decimal.NewFromString(price.String())
+			case decimal.Decimal:
 				point.Price = price
+			case float64:
+				point.Price = decimal.NewFromFloat(price)
+			default:
+				return nil, fmt.Errorf("invalid price type for price_point: %s", key)
 			}
+
 			if pricePoint, ok := v["price_point"].(string); ok {
 				point.PricePoint = pricePoint
 			}

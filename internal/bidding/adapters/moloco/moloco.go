@@ -116,14 +116,14 @@ func (a *MolocoAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
 	secure := int8(1)
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
-		imp = a.banner(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.banner(auctionRequest)}
 	case ad.InterstitialType:
-		imp = a.interstitial(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.interstitial(auctionRequest)}
 	case ad.RewardedType:
-		imp = a.rewarded(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.rewarded(auctionRequest)}
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -142,7 +142,7 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 	imp.BidFloorCur = "USD"
 
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 
 	// Set app ID if configured
@@ -238,7 +238,7 @@ func (a *MolocoAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Demand
 		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
 	}
 
-	var bidResponse openrtb2.BidResponse
+	var bidResponse openrtb.BidResponse
 	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
 	if err != nil {
 		return dr, err

@@ -78,7 +78,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 
 	secure := int8(1)
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	var impAdType int
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -86,13 +86,13 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		if err != nil {
 			return request, err
 		}
-		imp = bannerImp
+		imp = &openrtb.Imp{Imp: *bannerImp}
 		impAdType = 2
 	case ad.InterstitialType:
-		imp = a.interstitial()
+		imp = &openrtb.Imp{Imp: *a.interstitial()}
 		impAdType = 3
 	case ad.RewardedType:
-		imp = a.rewarded()
+		imp = &openrtb.Imp{Imp: *a.rewarded()}
 		impAdType = 4
 	default:
 		return request, errors.New("unknown impression type")
@@ -119,7 +119,8 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.BigoAdsKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	request.Imp = []openrtb2.Imp{*imp}
+
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 	request.User = &openrtb.User{
 		BuyerUID: auctionRequest.AdObject.Demands[adapter.BigoAdsKey]["token"].(string),
@@ -189,7 +190,7 @@ func (a *BigoAdsAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Deman
 		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
 	}
 
-	var bidResponse openrtb2.BidResponse
+	var bidResponse openrtb.BidResponse
 	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
 	if err != nil {
 		return dr, err

@@ -3,8 +3,9 @@ package auction
 import (
 	"context"
 	"errors"
-	"math"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -45,7 +46,7 @@ type BuildParams struct {
 	DeviceType           device.Type
 	Adapters             []adapter.Key
 	Segment              segment.Segment
-	PriceFloor           float64
+	PriceFloor           decimal.Decimal
 	AuctionRequest       *schema.AuctionRequest
 	GeoData              geocoder.GeoData
 	AuctionKey           string
@@ -75,7 +76,7 @@ type Stat struct {
 	DurationTS int64
 }
 
-const cent = 0.01
+var cent = decimal.RequireFromString("0.01")
 
 func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Result, error) {
 	start := time.Now()
@@ -123,8 +124,10 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Result, erro
 		return nil, err
 	}
 
-	maxPrice := biddingAuctionResult.GetMaxBidPrice() + cent // Try to get 1 cent more than the max bid price
-	maxPrice = math.Max(maxPrice, params.PriceFloor)
+	maxPrice := biddingAuctionResult.GetMaxBidPrice().Add(cent) // Try to get 1 cent more than the max bid price
+	if params.PriceFloor.GreaterThan(maxPrice) {
+		maxPrice = params.PriceFloor
+	}
 	var cpmAdUnits []AdUnit
 	for _, adUnit := range adUnits {
 		if !adUnit.IsCPM() {
@@ -135,7 +138,7 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Result, erro
 			adUnit.PriceFloor = &maxPrice
 		}
 
-		if adUnit.GetPriceFloor() >= params.PriceFloor {
+		if adUnit.GetPriceFloor().GreaterThanOrEqual(params.PriceFloor) {
 			cpmAdUnits = append(cpmAdUnits, adUnit)
 		}
 	}

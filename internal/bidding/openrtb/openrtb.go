@@ -5,6 +5,7 @@ import (
 
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 )
 
 // All these code was created to Patch the Segment struct to allow Signal attribute
@@ -13,7 +14,7 @@ type BidRequest struct {
 	User *User `json:"user,omitempty"`
 
 	ID      string                  `json:"id"`
-	Imp     []openrtb2.Imp          `json:"imp"`
+	Imp     []Imp                   `json:"imp"`
 	Site    *openrtb2.Site          `json:"site,omitempty"`
 	App     *openrtb2.App           `json:"app,omitempty"`
 	DOOH    *openrtb2.DOOH          `json:"dooh,omitempty"`
@@ -69,9 +70,15 @@ type Segment struct {
 	Ext   json.RawMessage `json:"ext,omitempty"`
 }
 
+type Imp struct {
+	openrtb2.Imp
+	BidFloor decimal.Decimal `json:"bidfloor"`
+}
+
 type Bid struct {
 	openrtb2.Bid
 	Bundle json.RawMessage `json:"bundle"`
+	Price  decimal.Decimal `json:"price"`
 }
 
 type SeatBid struct {

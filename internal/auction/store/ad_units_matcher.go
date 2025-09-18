@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -49,7 +50,7 @@ func (m *AdUnitsMatcher) Match(ctx context.Context, params *auction.BuildParams)
 		InnerJoins("Account", m.DB.Select("id")).
 		InnerJoins("Account.DemandSource", m.DB.Select("api_key").Where(map[string]any{"api_key": params.Adapters}))
 
-	if params.PriceFloor >= 0 {
+	if params.PriceFloor.GreaterThanOrEqual(decimal.Zero) {
 		query = query.Where("(bid_floor >= ? OR line_items.bidding)", params.PriceFloor)
 	}
 
@@ -87,7 +88,7 @@ func (m *AdUnitsMatcher) find(query *gorm.DB) ([]auction.AdUnit, error) {
 			adUnits[i].BidType = schema.CPMBidType
 		}
 		if dbLineItem.BidFloor.Valid && !isRTB {
-			pf := dbLineItem.BidFloor.Decimal.InexactFloat64()
+			pf := dbLineItem.BidFloor.Decimal
 			adUnits[i].PriceFloor = &pf
 		}
 		adUnits[i].Extra = dbLineItem.Extra

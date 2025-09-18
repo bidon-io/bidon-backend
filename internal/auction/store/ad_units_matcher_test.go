@@ -180,7 +180,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 		DB:    tx,
 		Cache: config.NewRedisCacheOf[[]auction.AdUnit](rdb, time.Minute, "ad units"),
 	}
-	pf := 0.15
+	pf := decimal.RequireFromString("0.15")
 
 	testCases := []struct {
 		params *auction.BuildParams
@@ -208,7 +208,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547776",
-					PriceFloor: ptr(0.1),
+					PriceFloor: ptr(decimal.RequireFromString("0.1")),
 					Label:      "applovin-banner-banner",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -219,7 +219,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -241,7 +241,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -252,7 +252,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547778",
-					PriceFloor: ptr(0.3),
+					PriceFloor: ptr(decimal.RequireFromString("0.3")),
 					Label:      "applovin-banner-leaderboard",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -274,7 +274,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -296,7 +296,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547776",
-					PriceFloor: ptr(0.1),
+					PriceFloor: ptr(decimal.RequireFromString("0.1")),
 					Label:      "applovin-banner-banner",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -307,7 +307,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -329,7 +329,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547778",
-					PriceFloor: ptr(0.3),
+					PriceFloor: ptr(decimal.RequireFromString("0.3")),
 					Label:      "applovin-banner-leaderboard",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -340,7 +340,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -357,13 +357,13 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				AdFormat:   ad.EmptyFormat,
 				DeviceType: device.PhoneType,
 				Adapters:   []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
-				PriceFloor: 0.2,
+				PriceFloor: decimal.RequireFromString("0.2"),
 			},
 			want: []auction.AdUnit{
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547779",
-					PriceFloor: ptr(0.3),
+					PriceFloor: ptr(decimal.RequireFromString("0.3")),
 					Label:      "applovin-interstitial",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -394,7 +394,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547781",
-					PriceFloor: ptr(0.4),
+					PriceFloor: ptr(decimal.RequireFromString("0.4")),
 					Label:      "app2-applovin-banner-mrec",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -417,7 +417,7 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547777",
-					PriceFloor: ptr(0.2),
+					PriceFloor: ptr(decimal.RequireFromString("0.2")),
 					Label:      "applovin-banner-adaptive",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -434,14 +434,14 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				AdFormat:   ad.EmptyFormat,
 				DeviceType: device.PhoneType,
 				Adapters:   []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
-				PriceFloor: 0.2,
+				PriceFloor: decimal.RequireFromString("0.2"),
 				AdUnitIDs:  []int64{applovinInterstitialAdUnitID},
 			},
 			want: []auction.AdUnit{
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547779",
-					PriceFloor: ptr(0.3),
+					PriceFloor: ptr(decimal.RequireFromString("0.3")),
 					Label:      "applovin-interstitial",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,
@@ -458,14 +458,14 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 				AdFormat:   ad.EmptyFormat,
 				DeviceType: device.PhoneType,
 				Adapters:   []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
-				PriceFloor: 0.2,
+				PriceFloor: decimal.RequireFromString("0.2"),
 				AdUnitIDs:  []int64{},
 			},
 			want: []auction.AdUnit{
 				{
 					DemandID:   "applovin",
 					UID:        "1701972528521547779",
-					PriceFloor: ptr(0.3),
+					PriceFloor: ptr(decimal.RequireFromString("0.3")),
 					Label:      "applovin-interstitial",
 					BidType:    schema.CPMBidType,
 					Timeout:    store.AdUnitTimeout,

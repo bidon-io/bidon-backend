@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 )
 
@@ -31,7 +33,7 @@ func (r *StatsRequest) SetAuctionConfigurationParams(id int64, uid string) {
 
 type Stats struct {
 	AuctionID               string                `json:"auction_id" validate:"required"`
-	AuctionPricefloor       float64               `json:"auction_pricefloor"`
+	AuctionPricefloor       decimal.Decimal       `json:"auction_pricefloor"`
 	AuctionConfigurationID  int64                 `json:"auction_configuration_id" validate:"required_without=AuctionConfigurationUID"`
 	AuctionConfigurationUID string                `json:"auction_configuration_uid" validate:"required_without=AuctionConfigurationID"`
 	Result                  AuctionResult         `json:"result" validate:"required"`
@@ -43,7 +45,7 @@ type AuctionResult struct {
 	WinnerDemandID    string                `json:"winner_demand_id"`
 	WinnerAdUnitUID   string                `json:"winner_ad_unit_uid"`
 	WinnerAdUnitLabel string                `json:"winner_ad_unit_label"`
-	Price             float64               `json:"price"`
+	Price             decimal.Decimal       `json:"price"`
 	BidType           BidType               `json:"bid_type" validate:"omitempty,oneof=RTB CPM"`
 	AuctionStartTS    int64                 `json:"auction_start_ts"`
 	AuctionFinishTS   int64                 `json:"auction_finish_ts"`
@@ -56,7 +58,7 @@ func (s *AuctionResult) GetWinnerDemandID() string {
 	return s.WinnerDemandID
 }
 
-func (s *AuctionResult) GetWinnerPrice() float64 {
+func (s *AuctionResult) GetWinnerPrice() decimal.Decimal {
 	return s.Price
 }
 
@@ -85,7 +87,7 @@ func (s *AuctionResult) Format() ad.Format {
 }
 
 type AuctionAdUnitResult struct {
-	Price         float64 `json:"price"`
+	Price         decimal.Decimal `json:"price"`
 	TokenStartTS  int64   `json:"token_start_ts"`
 	TokenFinishTS int64   `json:"token_finish_ts"`
 	FillStartTS   int64   `json:"fill_start_ts"`
@@ -102,7 +104,7 @@ func (r AuctionAdUnitResult) GetDemandID() string {
 	return r.DemandID
 }
 
-func (r AuctionAdUnitResult) GetPrice() float64 {
+func (r AuctionAdUnitResult) GetPrice() decimal.Decimal {
 	return r.Price
 }
 

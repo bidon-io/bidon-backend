@@ -2,6 +2,8 @@ package schema
 
 import (
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestBaseRequest_GetMediationMode(t *testing.T) {
@@ -124,7 +126,7 @@ func TestBaseRequest_GetPrevAuctionPrice(t *testing.T) {
 	tests := []struct {
 		name     string
 		ext      string
-		expected *float64
+		expected *decimal.Decimal
 	}{
 		{
 			name:     "Empty ext",
@@ -139,22 +141,22 @@ func TestBaseRequest_GetPrevAuctionPrice(t *testing.T) {
 		{
 			name:     "With previous_auction_price",
 			ext:      `{"previous_auction_price":0.25}`,
-			expected: ptrFloat64(0.25),
+			expected: ptrDecimal("0.25"),
 		},
 		{
 			name:     "With previous_auction_price zero",
 			ext:      `{"previous_auction_price":0.0}`,
-			expected: ptrFloat64(0.0),
+			expected: ptrDecimal("0.0"),
 		},
 		{
 			name:     "With previous_auction_price negative",
 			ext:      `{"previous_auction_price":-0.1}`,
-			expected: ptrFloat64(-0.1),
+			expected: ptrDecimal("-0.1"),
 		},
 		{
 			name:     "With other fields",
 			ext:      `{"previous_auction_price":0.5,"other_field":"value"}`,
-			expected: ptrFloat64(0.5),
+			expected: ptrDecimal("0.5"),
 		},
 		{
 			name:     "With previous_auction_price as non-number",
@@ -164,7 +166,7 @@ func TestBaseRequest_GetPrevAuctionPrice(t *testing.T) {
 		{
 			name:     "With both mediation_mode and previous_auction_price",
 			ext:      `{"mediation_mode":"max","previous_auction_price":0.75}`,
-			expected: ptrFloat64(0.75),
+			expected: ptrDecimal("0.75"),
 		},
 	}
 
@@ -180,7 +182,7 @@ func TestBaseRequest_GetPrevAuctionPrice(t *testing.T) {
 			// Compare the results
 			if (result == nil && tt.expected != nil) || (result != nil && tt.expected == nil) {
 				t.Errorf("GetPrevAuctionPrice() = %v, want %v", result, tt.expected)
-			} else if result != nil && tt.expected != nil && *result != *tt.expected {
+			} else if result != nil && tt.expected != nil && !(*result).Equal(*tt.expected) {
 				t.Errorf("GetPrevAuctionPrice() = %v, want %v", *result, *tt.expected)
 			}
 		})
@@ -188,6 +190,7 @@ func TestBaseRequest_GetPrevAuctionPrice(t *testing.T) {
 }
 
 // Helper function to create a pointer to a float64
-func ptrFloat64(v float64) *float64 {
-	return &v
+func ptrDecimal(v string) *decimal.Decimal {
+	dec := decimal.RequireFromString(v)
+	return &dec
 }

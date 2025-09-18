@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -64,8 +66,8 @@ func (dr *DemandResponse) ErrorMessage() string {
 	return errMsg
 }
 
-func (dr *DemandResponse) Price() float64 {
-	price := float64(0)
+func (dr *DemandResponse) Price() decimal.Decimal {
+	price := decimal.Zero
 	if dr.IsBid() {
 		price = dr.Bid.Price
 	}
@@ -93,7 +95,7 @@ type BidDemandResponse struct {
 	AdID       string
 	SeatID     string
 	DemandID   adapter.Key
-	Price      float64
+	Price      decimal.Decimal
 	LURL       string
 	NURL       string
 	BURL       string

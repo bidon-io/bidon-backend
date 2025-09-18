@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -135,14 +137,14 @@ type AdRequestParams struct {
 	AdUnitInternalID        int64
 	AdUnitLabel             string
 	AdUnitCredentials       map[string]string
-	ECPM                    float64
-	PriceFloor              float64
+	ECPM                    decimal.Decimal
+	PriceFloor              decimal.Decimal
 	RawRequest              string
 	RawResponse             string
 	Error                   string
 	TimingMap               TimingMap
 	ExternalWinnerDemandID  string
-	ExternalWinnerEcpm      float64
+	ExternalWinnerEcpm      decimal.Decimal
 }
 
 const (
@@ -168,14 +170,14 @@ type AdEvent struct {
 	AdUnitInternalID            int64             `json:"ad_unit_internal_id"`
 	AdUnitLabel                 string            `json:"ad_unit_label"`
 	AdUnitCredentials           map[string]string `json:"ad_unit_credentials"`
-	ECPM                        float64           `json:"ecpm"`
-	PriceFloor                  float64           `json:"price_floor"`
+	ECPM                        decimal.Decimal   `json:"ecpm"`
+	PriceFloor                  decimal.Decimal   `json:"price_floor"`
 	RawRequest                  string            `json:"raw_request"`
 	RawResponse                 string            `json:"raw_response"`
 	Error                       string            `json:"error"`
 	TimingMap                   TimingMap         `json:"timing_map"`
 	ExternalWinnerDemandID      string            `json:"external_winner_demand_id"`
-	ExternalWinnerEcpm          float64           `json:"external_winner_ecpm"`
+	ExternalWinnerEcpm          decimal.Decimal   `json:"external_winner_ecpm"`
 	Manufacturer                string            `json:"manufacturer"`
 	Model                       string            `json:"model"`
 	Os                          string            `json:"os"`
@@ -269,29 +271,29 @@ type NotificationParams struct {
 	AuctionID   string
 	DemandID    string
 	LossReason  int64
-	Price       float64
-	FirstPrice  float64
-	SecondPrice float64
+	Price       decimal.Decimal
+	FirstPrice  decimal.Decimal
+	SecondPrice decimal.Decimal
 	URL         string
 	TemplateURL string
 	Error       error
 }
 
 type NotificationEvent struct {
-	Timestamp   float64 `json:"timestamp"`
-	EventType   string  `json:"event_type"`
-	Bundle      string  `json:"bundle"`
-	AdType      string  `json:"ad_type"`
-	DemandID    string  `json:"demand_id"`
-	AuctionID   string  `json:"auction_id"`
-	ImpID       string  `json:"imp_id"`
-	LossReason  int64   `json:"loss_reason"`
-	Price       float64 `json:"ecpm"`
-	FirstPrice  float64 `json:"first_price"`
-	SecondPrice float64 `json:"second_price"`
-	URL         string  `json:"url"`
-	TemplateURL string  `json:"template_url"`
-	Error       string  `json:"error"`
+	Timestamp   float64         `json:"timestamp"`
+	EventType   string          `json:"event_type"`
+	Bundle      string          `json:"bundle"`
+	AdType      string          `json:"ad_type"`
+	DemandID    string          `json:"demand_id"`
+	AuctionID   string          `json:"auction_id"`
+	ImpID       string          `json:"imp_id"`
+	LossReason  int64           `json:"loss_reason"`
+	Price       decimal.Decimal `json:"ecpm"`
+	FirstPrice  decimal.Decimal `json:"first_price"`
+	SecondPrice decimal.Decimal `json:"second_price"`
+	URL         string          `json:"url"`
+	TemplateURL string          `json:"template_url"`
+	Error       string          `json:"error"`
 }
 
 func (e *NotificationEvent) Topic() config.Topic {

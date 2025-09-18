@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/notification/mocks"
@@ -17,20 +19,20 @@ func TestHandler_HandleStats_WinBid(t *testing.T) {
 	ctx := context.Background()
 	imp := schema.Stats{
 		AuctionID:               "f26af577-869e-41cb-909e-4d3eba57a28b",
-		AuctionPricefloor:       7.0,
+		AuctionPricefloor:       decimal.RequireFromString("7.0"),
 		AuctionConfigurationID:  10,
 		AuctionConfigurationUID: "1701972528521547776",
 		Result: schema.AuctionResult{
 			Status:            "SUCCESS",
 			BidType:           schema.RTBBidType,
-			Price:             7.89,
+			Price:             decimal.RequireFromString("7.89"),
 			WinnerDemandID:    "vungle",
 			WinnerAdUnitUID:   "1633824270331281408",
 			WinnerAdUnitLabel: "vungle_inter_mergeblock_ios_3",
 		},
 		AdUnits: []schema.AuctionAdUnitResult{
 			{
-				Price:       7.30,
+				Price:       decimal.RequireFromString("7.30"),
 				DemandID:    "applovin",
 				BidType:     schema.CPMBidType,
 				AdUnitUID:   "1633833116256829440",
@@ -38,7 +40,7 @@ func TestHandler_HandleStats_WinBid(t *testing.T) {
 				Status:      "WIN",
 			},
 			{
-				Price:       1.23,
+				Price:       decimal.RequireFromString("1.23"),
 				DemandID:    "bigoads",
 				BidType:     schema.RTBBidType,
 				AdUnitUID:   "1633833116256829140",
@@ -51,7 +53,7 @@ func TestHandler_HandleStats_WinBid(t *testing.T) {
 				Status:   "NO_BID",
 			},
 			{
-				Price:       7.89,
+				Price:       decimal.RequireFromString("7.89"),
 				DemandID:    "vungle",
 				BidType:     schema.RTBBidType,
 				AdUnitUID:   "1633824270331281408",
@@ -62,10 +64,10 @@ func TestHandler_HandleStats_WinBid(t *testing.T) {
 	}
 	result := notification.AuctionResult{
 		Bids: []notification.Bid{
-			{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
-			{ID: "bid-2", ImpID: "imp-1", Price: 4.56},
-			{ID: "bid-3", ImpID: "imp-2", Price: 7.89},
-			{ID: "bid-4", ImpID: "imp-1", Price: 0.12},
+			{ID: "bid-1", ImpID: "imp-1", Price: decimal.RequireFromString("1.23")},
+			{ID: "bid-2", ImpID: "imp-1", Price: decimal.RequireFromString("4.56")},
+			{ID: "bid-3", ImpID: "imp-2", Price: decimal.RequireFromString("7.89")},
+			{ID: "bid-4", ImpID: "imp-1", Price: decimal.RequireFromString("0.12")},
 		},
 	}
 	config := auction.Config{ExternalWinNotifications: false}
@@ -79,12 +81,15 @@ func TestHandler_HandleStats_WinBid(t *testing.T) {
 	sender := &mocks.SenderMock{SendEventFunc: func(_ context.Context, p notification.Params) {
 		defer wg.Done()
 
-		if p.FirstPrice != 7.89 {
-			t.Errorf("expected first price 7.89, got %f", p.FirstPrice)
+		expectedFirstPrice := decimal.RequireFromString("7.89")
+		expectedSecondPrice := decimal.RequireFromString("7.30")
+
+		if !p.FirstPrice.Equal(expectedFirstPrice) {
+			t.Errorf("expected first price %s, got %s", expectedFirstPrice.String(), p.FirstPrice.String())
 		}
 
-		if p.SecondPrice != 7.30 {
-			t.Errorf("expected second price 7.30, got %f", p.SecondPrice)
+		if !p.SecondPrice.Equal(expectedSecondPrice) {
+			t.Errorf("expected second price %s, got %s", expectedSecondPrice.String(), p.SecondPrice.String())
 		}
 	}}
 
@@ -102,20 +107,20 @@ func TestHandler_HandleStats_Loss(t *testing.T) {
 
 	imp := schema.Stats{
 		AuctionID:               "f26af577-869e-41cb-909e-4d3eba57a28b",
-		AuctionPricefloor:       7.0,
+		AuctionPricefloor:       decimal.RequireFromString("7.0"),
 		AuctionConfigurationID:  10,
 		AuctionConfigurationUID: "1701972528521547776",
 		Result: schema.AuctionResult{
 			Status:            "SUCCESS",
 			BidType:           schema.CPMBidType,
-			Price:             7.89,
+			Price:             decimal.RequireFromString("7.89"),
 			WinnerDemandID:    "vungle",
 			WinnerAdUnitUID:   "1633824270331281408",
 			WinnerAdUnitLabel: "vungle_inter_mergeblock_ios_3",
 		},
 		AdUnits: []schema.AuctionAdUnitResult{
 			{
-				Price:       7.89,
+				Price:       decimal.RequireFromString("7.89"),
 				DemandID:    "dtexchange",
 				BidType:     schema.CPMBidType,
 				AdUnitUID:   "1633833116256829440",
@@ -123,7 +128,7 @@ func TestHandler_HandleStats_Loss(t *testing.T) {
 				Status:      "WIN",
 			},
 			{
-				Price:       7.6,
+				Price:       decimal.RequireFromString("7.6"),
 				DemandID:    "vungle",
 				BidType:     schema.RTBBidType,
 				AdUnitUID:   "1633824270331281408",
@@ -140,7 +145,7 @@ func TestHandler_HandleStats_Loss(t *testing.T) {
 				Bids: []notification.Bid{{
 					ID:    "bid-2",
 					ImpID: "imp-1",
-					Price: 7.6,
+					Price: decimal.RequireFromString("7.6"),
 				}},
 			}, nil
 		},
@@ -173,8 +178,8 @@ func TestHandler_HandleWin_ExternalNotificationsEnabled(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
-		AuctionPriceFloor:       1.0,
+		Price:                   decimal.RequireFromString("5.0"),
+		AuctionPriceFloor:       decimal.RequireFromString("1.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -183,9 +188,9 @@ func TestHandler_HandleWin_ExternalNotificationsEnabled(t *testing.T) {
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
 		Bids: []notification.Bid{
-			{ID: "bid-1", Price: 5.0, NURL: "http://win-url-1", LURL: "http://loss-url-1"},
-			{ID: "bid-2", Price: 3.0, NURL: "http://win-url-2", LURL: "http://loss-url-2"},
-			{ID: "bid-3", Price: 2.0, NURL: "http://win-url-3", LURL: "http://loss-url-3"},
+			{ID: "bid-1", Price: decimal.RequireFromString("5.0"), NURL: "http://win-url-1", LURL: "http://loss-url-1"},
+			{ID: "bid-2", Price: decimal.RequireFromString("3.0"), NURL: "http://win-url-2", LURL: "http://loss-url-2"},
+			{ID: "bid-3", Price: decimal.RequireFromString("2.0"), NURL: "http://win-url-3", LURL: "http://loss-url-3"},
 		},
 	}
 
@@ -256,7 +261,7 @@ func TestHandler_HandleWin_ExternalNotificationsDisabled(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
+		Price:                   decimal.RequireFromString("5.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -291,8 +296,8 @@ func TestHandler_HandleWin_NonRTBBid(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
-		AuctionPriceFloor:       1.0,
+		Price:                   decimal.RequireFromString("5.0"),
+		AuctionPriceFloor:       decimal.RequireFromString("1.0"),
 		BidType:                 schema.CPMBidType, // Non-RTB bid
 	}
 
@@ -301,8 +306,8 @@ func TestHandler_HandleWin_NonRTBBid(t *testing.T) {
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
 		Bids: []notification.Bid{
-			{ID: "bid-1", Price: 5.0, NURL: "http://win-url-1", LURL: "http://loss-url-1"},
-			{ID: "bid-2", Price: 3.0, NURL: "http://win-url-2", LURL: "http://loss-url-2"},
+			{ID: "bid-1", Price: decimal.RequireFromString("5.0"), NURL: "http://win-url-1", LURL: "http://loss-url-1"},
+			{ID: "bid-2", Price: decimal.RequireFromString("3.0"), NURL: "http://win-url-2", LURL: "http://loss-url-2"},
 		},
 	}
 
@@ -370,14 +375,15 @@ func TestHandler_HandleLoss_ExternalNotificationsEnabled(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
-		AuctionPriceFloor:       1.0,
+		Price:                   decimal.RequireFromString("3.0"),
+		AuctionPriceFloor:       decimal.RequireFromString("1.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	config := &auction.Config{ExternalWinNotifications: true}
@@ -385,8 +391,8 @@ func TestHandler_HandleLoss_ExternalNotificationsEnabled(t *testing.T) {
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
 		Bids: []notification.Bid{
-			{ID: "bid-1", Price: 3.0, LURL: "http://loss-url-1"},
-			{ID: "bid-2", Price: 2.0, LURL: "http://loss-url-2"},
+			{ID: "bid-1", Price: decimal.RequireFromString("3.0"), LURL: "http://loss-url-1"},
+			{ID: "bid-2", Price: decimal.RequireFromString("2.0"), LURL: "http://loss-url-2"},
 		},
 	}
 
@@ -411,8 +417,9 @@ func TestHandler_HandleLoss_ExternalNotificationsEnabled(t *testing.T) {
 			}
 
 			// Verify first price includes external winner
-			if p.FirstPrice != 5.0 {
-				t.Errorf("expected first price 5.0, got %f", p.FirstPrice)
+			expectedFirstPrice := decimal.RequireFromString("5.0")
+			if !p.FirstPrice.Equal(expectedFirstPrice) {
+				t.Errorf("expected first price %s, got %s", expectedFirstPrice.String(), p.FirstPrice.String())
 			}
 		},
 	}
@@ -444,13 +451,14 @@ func TestHandler_HandleLoss_ExternalNotificationsDisabled(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
+		Price:                   decimal.RequireFromString("3.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	config := &auction.Config{ExternalWinNotifications: false}
@@ -484,14 +492,15 @@ func TestHandler_HandleLoss_NonRTBBid(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
-		AuctionPriceFloor:       1.0,
+		Price:                   decimal.RequireFromString("3.0"),
+		AuctionPriceFloor:       decimal.RequireFromString("1.0"),
 		BidType:                 schema.CPMBidType, // Non-RTB bid
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	config := &auction.Config{ExternalWinNotifications: true}
@@ -499,8 +508,8 @@ func TestHandler_HandleLoss_NonRTBBid(t *testing.T) {
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
 		Bids: []notification.Bid{
-			{ID: "bid-1", Price: 3.0, LURL: "http://loss-url-1"},
-			{ID: "bid-2", Price: 2.0, LURL: "http://loss-url-2"},
+			{ID: "bid-1", Price: decimal.RequireFromString("3.0"), LURL: "http://loss-url-1"},
+			{ID: "bid-2", Price: decimal.RequireFromString("2.0"), LURL: "http://loss-url-2"},
 		},
 	}
 
@@ -525,8 +534,9 @@ func TestHandler_HandleLoss_NonRTBBid(t *testing.T) {
 			}
 
 			// Verify first price includes external winner
-			if p.FirstPrice != 5.0 {
-				t.Errorf("expected first price 5.0, got %f", p.FirstPrice)
+			expectedFirstPrice := decimal.RequireFromString("5.0")
+			if !p.FirstPrice.Equal(expectedFirstPrice) {
+				t.Errorf("expected first price %s, got %s", expectedFirstPrice.String(), p.FirstPrice.String())
 			}
 		},
 	}
@@ -558,7 +568,7 @@ func TestHandler_HandleWin_NilConfig(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
+		Price:                   decimal.RequireFromString("5.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -588,7 +598,7 @@ func TestHandler_HandleWin_AuctionResultNotFound(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
+		Price:                   decimal.RequireFromString("5.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -625,13 +635,14 @@ func TestHandler_HandleLoss_NilConfig(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
+		Price:                   decimal.RequireFromString("3.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	mockRepo := &mocks.AuctionResultRepoMock{}
@@ -660,13 +671,14 @@ func TestHandler_HandleLoss_AuctionResultNotFound(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
+		Price:                   decimal.RequireFromString("3.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	config := &auction.Config{ExternalWinNotifications: true}
@@ -699,15 +711,15 @@ func TestHandler_HandleStats_ExternalNotificationsEnabled(t *testing.T) {
 
 	stats := schema.Stats{
 		AuctionID:               "test-auction-id",
-		AuctionPricefloor:       1.0,
+		AuctionPricefloor:       decimal.RequireFromString("1.0"),
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		Result: schema.AuctionResult{
 			Status: "SUCCESS",
-			Price:  5.0,
+			Price:  decimal.RequireFromString("5.0"),
 		},
 		AdUnits: []schema.AuctionAdUnitResult{
-			{Price: 5.0, Status: "WIN"},
+			{Price: decimal.RequireFromString("5.0"), Status: "WIN"},
 		},
 	}
 
@@ -746,7 +758,7 @@ func TestHandler_HandleWin_RepoError(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   5.0,
+		Price:                   decimal.RequireFromString("5.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -783,13 +795,14 @@ func TestHandler_HandleLoss_RepoError(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
+		Price:                   decimal.RequireFromString("3.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
+	externalWinnerPrice := decimal.RequireFromString("5.0")
 	externalWinner := &schema.ExternalWinner{
 		DemandID: "external-demand",
-		Price:    &[]float64{5.0}[0],
+		Price:    &externalWinnerPrice,
 	}
 
 	config := &auction.Config{ExternalWinNotifications: true}
@@ -825,8 +838,8 @@ func TestHandler_HandleWin_EmptyPrices(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   0.0, // Zero price
-		AuctionPriceFloor:       0.0, // Zero floor
+		Price:                   decimal.RequireFromString("0.0"), // Zero price
+		AuctionPriceFloor:       decimal.RequireFromString("0.0"), // Zero floor
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -868,8 +881,8 @@ func TestHandler_HandleLoss_NilExternalWinner(t *testing.T) {
 		AuctionConfigurationID:  123,
 		AuctionConfigurationUID: "test-config-uid",
 		DemandID:                "test-demand",
-		Price:                   3.0,
-		AuctionPriceFloor:       1.0,
+		Price:                   decimal.RequireFromString("3.0"),
+		AuctionPriceFloor:       decimal.RequireFromString("1.0"),
 		BidType:                 schema.RTBBidType,
 	}
 
@@ -878,7 +891,7 @@ func TestHandler_HandleLoss_NilExternalWinner(t *testing.T) {
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
 		Bids: []notification.Bid{
-			{ID: "bid-1", Price: 3.0, LURL: "http://loss-url-1"},
+			{ID: "bid-1", Price: decimal.RequireFromString("3.0"), LURL: "http://loss-url-1"},
 		},
 	}
 

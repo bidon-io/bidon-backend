@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/prebid/openrtb/v19/openrtb3"
+	"github.com/shopspring/decimal"
 	"golang.org/x/exp/slices"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -70,7 +71,7 @@ func (h Handler) HandleBiddingRound(ctx context.Context, adObject *schema.AdObje
 				RequestID: resp.RequestID,
 			}
 
-			if bid.Price >= bidFloor { // Valid Bid, use for further processing
+			if bid.Price.GreaterThanOrEqual(bidFloor) { // Valid Bid, use for further processing
 				bids = append(bids, bid)
 			} else { // Send Loss notification straight away
 				go h.Sender.SendEvent(ctx, Params{
@@ -123,7 +124,7 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 	}
 
 	var notifications []Params
-	var prices []float64
+	var prices []decimal.Decimal
 
 	prices = append(prices, stats.AuctionPricefloor)
 
@@ -133,8 +134,10 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 		}
 	}
 
-	slices.Sort(prices)
-	var firstPrice, secondPrice float64
+	slices.SortFunc(prices, func(a, b decimal.Decimal) int {
+		return a.Cmp(b)
+	})
+	var firstPrice, secondPrice decimal.Decimal
 
 	if len(prices) == 0 {
 		log.Printf("HandleStats: no valid prices: %s", stats.AuctionID)
@@ -150,7 +153,7 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 	switch stats.Result.Status {
 	case "SUCCESS": // We have winner
 		for _, bid := range auctionResult.Bids {
-			if bid.Price == firstPrice {
+			if bid.Price.Equal(firstPrice) {
 				notifications = append(notifications, Params{
 					Bundle:           bundle,
 					AdType:           adType,
@@ -241,7 +244,7 @@ func (h Handler) HandleShow(ctx context.Context, impression *schema.Bid, bundle,
 				Bid:              bid,
 				Reason:           openrtb3.LossWon,
 				FirstPrice:       impression.GetPrice(),
-				SecondPrice:      0,
+				SecondPrice:      decimal.Zero,
 			})
 
 			break
@@ -277,7 +280,7 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 
 	// Find the winning bid and send notifications
 	winningPrice := bid.GetPrice()
-	var prices []float64
+	var prices []decimal.Decimal
 	prices = append(prices, winningPrice)
 
 	// Collect all bid prices to determine second price
@@ -285,8 +288,10 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 		prices = append(prices, auctionBid.Price)
 	}
 
-	slices.Sort(prices)
-	var firstPrice, secondPrice float64
+	slices.SortFunc(prices, func(a, b decimal.Decimal) int {
+		return a.Cmp(b)
+	})
+	var firstPrice, secondPrice decimal.Decimal
 
 	if len(prices) == 0 {
 		log.Printf("HandleWin: no valid prices: %s", bid.AuctionID)
@@ -301,7 +306,7 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 
 	// Send notifications for all bids stored in auctionResult, regardless of incoming bid type
 	for _, auctionBid := range auctionResult.Bids {
-		if auctionBid.Price == winningPrice {
+		if auctionBid.Price.Equal(winningPrice) {
 			// Send win notification
 			go h.Sender.SendEvent(ctx, Params{
 				Bundle:           bundle,
@@ -360,13 +365,13 @@ func (h Handler) HandleLoss(ctx context.Context, bid *schema.Bid, externalWinner
 	}
 
 	// Calculate prices including external winner
-	var prices []float64
+	var prices []decimal.Decimal
 	prices = append(prices, bid.GetPrice())
 
 	// Add external winner price if available
 	if externalWinner != nil {
 		externalPrice := externalWinner.GetPrice()
-		if externalPrice > 0 {
+		if externalPrice.GreaterThan(decimal.Zero) {
 			prices = append(prices, externalPrice)
 		}
 	}
@@ -376,8 +381,10 @@ func (h Handler) HandleLoss(ctx context.Context, bid *schema.Bid, externalWinner
 		prices = append(prices, auctionBid.Price)
 	}
 
-	slices.Sort(prices)
-	var firstPrice, secondPrice float64
+	slices.SortFunc(prices, func(a, b decimal.Decimal) int {
+		return a.Cmp(b)
+	})
+	var firstPrice, secondPrice decimal.Decimal
 
 	if len(prices) == 0 {
 		log.Printf("HandleLoss: no valid prices: %s", bid.AuctionID)

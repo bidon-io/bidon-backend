@@ -1,13 +1,15 @@
 package adapters
 
 import (
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
-func CalculatePriceFloor(rtbRequest *openrtb.BidRequest, incomingRequest *schema.AuctionRequest) float64 {
+func CalculatePriceFloor(rtbRequest *openrtb.BidRequest, incomingRequest *schema.AuctionRequest) decimal.Decimal {
 	if rtbRequest == nil || incomingRequest == nil {
-		return 0
+		return decimal.Zero
 	}
 
 	if len(rtbRequest.Imp) == 1 {

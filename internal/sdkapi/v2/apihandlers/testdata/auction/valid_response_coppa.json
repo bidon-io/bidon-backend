@@ -7,7 +7,7 @@
       "bid_type": "RTB",
       "demand_id": "mobilefuse",
       "label": "mobilefuse",
-      "pricefloor": 0.7,
+      "pricefloor": "0.7",
       "uid": "123_mobilefuse",
       "timeout": 6000,
       "ext": {
@@ -19,7 +19,7 @@
       "demand_id": "meta",
       "uid": "123_meta",
       "label": "meta",
-      "pricefloor": 0.6,
+      "pricefloor": "0.6",
       "bid_type": "RTB",
       "timeout": 6000,
       "ext": {
@@ -31,7 +31,7 @@
       "bid_type": "RTB",
       "demand_id": "amazon",
       "label": "amazon",
-      "pricefloor": 0.5,
+      "pricefloor": "0.5",
       "uid": "123_amazon",
       "timeout": 6000,
       "ext": {
@@ -44,7 +44,7 @@
       "bid_type": "RTB",
       "demand_id": "vungle",
       "label": "vungle",
-      "pricefloor": 0,
+      "pricefloor": "0",
       "uid": "123_vungle",
       "timeout": 6000,
       "ext": {
@@ -57,7 +57,7 @@
     "uid": "1701972528521547776"
   },
   "token": "{}",
-  "auction_pricefloor": 0.001,
+  "auction_pricefloor": "0.001",
   "auction_timeout": 30000,
   "auction_id": "1d7fa438-cd08-4849-80ed-e20d5657a5ea"
 }

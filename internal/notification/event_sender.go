@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/prebid/openrtb/v19/openrtb3"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 )
@@ -22,8 +22,8 @@ type Params struct {
 	URL              string
 	Bid              Bid
 	Reason           openrtb3.LossReason
-	FirstPrice       float64
-	SecondPrice      float64
+	FirstPrice       decimal.Decimal
+	SecondPrice      decimal.Decimal
 }
 
 type EventSender struct {
@@ -84,17 +84,17 @@ func (es EventSender) SendEvent(ctx context.Context, p Params) {
 	}
 }
 
-func macrosesMap(bid Bid, lossReason openrtb3.LossReason, firstPrice, secondPrice float64) map[string]string {
+func macrosesMap(bid Bid, lossReason openrtb3.LossReason, firstPrice, secondPrice decimal.Decimal) map[string]string {
 	return map[string]string{
-		"${AUCTION_MIN_TO_WIN}":         strconv.FormatFloat(secondPrice, 'f', -1, 64),
-		"${AUCTION_MINIMUM_BID_TO_WIN}": strconv.FormatFloat(secondPrice, 'f', -1, 64),
-		"${MIN_BID_TO_WIN}":             strconv.FormatFloat(secondPrice, 'f', -1, 64),
+		"${AUCTION_MIN_TO_WIN}":         secondPrice.String(),
+		"${AUCTION_MINIMUM_BID_TO_WIN}": secondPrice.String(),
+		"${MIN_BID_TO_WIN}":             secondPrice.String(),
 		"${AUCTION_ID}":                 bid.RequestID,
 		"${AUCTION_BID_ID}":             bid.ID,
 		"${AUCTION_IMP_ID}":             bid.ImpID,
 		"${AUCTION_SEAT_ID}":            bid.SeatID,
 		"${AUCTION_AD_ID}":              bid.AdID,
-		"${AUCTION_PRICE}":              strconv.FormatFloat(firstPrice, 'f', -1, 64),
+		"${AUCTION_PRICE}":              firstPrice.String(),
 		"${AUCTION_LOSS}":               fmt.Sprintf("%d", lossReason),
 		"${AUCTION_CURRENCY}":           "USD",
 	}

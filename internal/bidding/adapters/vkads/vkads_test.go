@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -92,7 +93,7 @@ func buildTestParams(adObject schema.AdObject) createRequestTestParams {
 				},
 			},
 			Orientation: "PORTRAIT",
-			PriceFloor:  1.0,
+			PriceFloor:  decimal.RequireFromString("1.0"),
 		},
 	}
 
@@ -112,12 +113,15 @@ func buildTestParams(adObject schema.AdObject) createRequestTestParams {
 	}
 }
 
-func buildWantRequest(imp openrtb2.Imp) openrtb.BidRequest {
+func buildWantRequest(imp openrtb.Imp) openrtb.BidRequest {
+	//// Set BidFloorCur on the inner imp since openrtb.Imp doesn't override this field
+	//imp.BidFloorCur = "USD"
+
 	request := openrtb.BidRequest{
 		App:  &openrtb2.App{ID: "10182906", Publisher: &openrtb2.Publisher{}},
 		User: &openrtb.User{Ext: json.RawMessage(`{"buyeruid": "token"}`)},
 		Cur:  []string{"USD"},
-		Imp:  []openrtb2.Imp{imp},
+		Imp:  []openrtb.Imp{imp},
 		Ext:  json.RawMessage(`{"pid":111}`),
 	}
 
@@ -143,15 +147,17 @@ func TestVKAds_CreateRequest(t *testing.T) {
 				},
 			),
 			want: createRequestTestOutput{
-				Request: buildWantRequest(openrtb2.Imp{
-					Instl: 0,
-					Banner: &openrtb2.Banner{
-						W:   ptr(int64(320)),
-						H:   ptr(int64(50)),
-						Pos: adcom1.PositionAboveFold.Ptr(),
+				Request: buildWantRequest(openrtb.Imp{
+					Imp: openrtb2.Imp{
+						Instl: 0,
+						Banner: &openrtb2.Banner{
+							W:   ptr(int64(320)),
+							H:   ptr(int64(50)),
+							Pos: adcom1.PositionAboveFold.Ptr(),
+						},
+						BidFloorCur: "USD",
 					},
-					BidFloor:    1.000001,
-					BidFloorCur: "USD",
+					BidFloor: decimal.RequireFromString("1.000001"),
 				}),
 				Err: nil,
 			},
@@ -166,15 +172,17 @@ func TestVKAds_CreateRequest(t *testing.T) {
 				},
 			),
 			want: createRequestTestOutput{
-				Request: buildWantRequest(openrtb2.Imp{
-					Instl: 0,
-					Banner: &openrtb2.Banner{
-						W:   ptr(int64(300)),
-						H:   ptr(int64(250)),
-						Pos: adcom1.PositionAboveFold.Ptr(),
+				Request: buildWantRequest(openrtb.Imp{
+					Imp: openrtb2.Imp{
+						Instl: 0,
+						Banner: &openrtb2.Banner{
+							W:   ptr(int64(300)),
+							H:   ptr(int64(250)),
+							Pos: adcom1.PositionAboveFold.Ptr(),
+						},
+						BidFloorCur: "USD",
 					},
-					BidFloor:    1.000001,
-					BidFloorCur: "USD",
+					BidFloor: decimal.RequireFromString("1.000001"),
 				}),
 				Err: nil,
 			},
@@ -189,15 +197,17 @@ func TestVKAds_CreateRequest(t *testing.T) {
 				},
 			),
 			want: createRequestTestOutput{
-				Request: buildWantRequest(openrtb2.Imp{
-					Instl: 0,
-					Banner: &openrtb2.Banner{
-						W:   ptr(int64(728)),
-						H:   ptr(int64(90)),
-						Pos: adcom1.PositionAboveFold.Ptr(),
+				Request: buildWantRequest(openrtb.Imp{
+					Imp: openrtb2.Imp{
+						Instl: 0,
+						Banner: &openrtb2.Banner{
+							W:   ptr(int64(728)),
+							H:   ptr(int64(90)),
+							Pos: adcom1.PositionAboveFold.Ptr(),
+						},
+						BidFloorCur: "USD",
 					},
-					BidFloor:    1.000001,
-					BidFloorCur: "USD",
+					BidFloor: decimal.RequireFromString("1.000001"),
 				}),
 				Err: nil,
 			},
@@ -210,13 +220,15 @@ func TestVKAds_CreateRequest(t *testing.T) {
 				},
 			),
 			want: createRequestTestOutput{
-				Request: buildWantRequest(openrtb2.Imp{
-					Instl: 1,
-					Banner: &openrtb2.Banner{
-						Pos: adcom1.PositionFullScreen.Ptr(),
+				Request: buildWantRequest(openrtb.Imp{
+					Imp: openrtb2.Imp{
+						Instl: 1,
+						Banner: &openrtb2.Banner{
+							Pos: adcom1.PositionFullScreen.Ptr(),
+						},
+						BidFloorCur: "USD",
 					},
-					BidFloor:    1.000001,
-					BidFloorCur: "USD",
+					BidFloor: decimal.RequireFromString("1.000001"),
 				}),
 				Err: nil,
 			},
@@ -229,13 +241,15 @@ func TestVKAds_CreateRequest(t *testing.T) {
 				},
 			),
 			want: createRequestTestOutput{
-				Request: buildWantRequest(openrtb2.Imp{
-					Banner: &openrtb2.Banner{
-						W: ptr(int64(1920)),
-						H: ptr(int64(1080)),
+				Request: buildWantRequest(openrtb.Imp{
+					Imp: openrtb2.Imp{
+						Banner: &openrtb2.Banner{
+							W: ptr(int64(1920)),
+							H: ptr(int64(1080)),
+						},
+						BidFloorCur: "USD",
 					},
-					BidFloor:    1.000001,
-					BidFloorCur: "USD",
+					BidFloor: decimal.RequireFromString("1.000001"),
 				}),
 				Err: nil,
 			},
@@ -377,7 +391,7 @@ func TestVKAds_ParseBids(t *testing.T) {
 					Bid: &adapters.BidDemandResponse{
 						ID:       "2:1::669e29a737559894",
 						ImpID:    "7703af66-0ec1-475f-b5a8-eda9d65c44e6",
-						Price:    1.5,
+						Price:    decimal.RequireFromString("1.5"),
 						DemandID: "vkads",
 						AdID:     "162456424",
 						LURL:     "https://rs.mail.ru",

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -76,7 +77,7 @@ func buildBaseBidRequest() openrtb.BidRequest {
 func buildAuctionRequest(adType ad.Type, format ad.Format) *schema.AuctionRequest {
 	adObject := schema.AdObject{
 		AuctionID:  "test-auction-id",
-		PriceFloor: 0.1,
+		PriceFloor: decimal.RequireFromString("0.1"),
 		Demands: map[adapter.Key]map[string]any{
 			adapter.MolocoKey: {
 				"token": "test-token",
@@ -349,8 +350,8 @@ func TestMoloco_ParseBids_Success(t *testing.T) {
 		if result.Bid.ID != "test-bid" {
 			t.Errorf("Expected bid ID 'test-bid', got '%s'", result.Bid.ID)
 		}
-		if result.Bid.Price != 1.5 {
-			t.Errorf("Expected bid price 1.5, got %f", result.Bid.Price)
+		if !result.Bid.Price.Equal(decimal.RequireFromString("1.5")) {
+			t.Errorf("Expected bid price 1.5, got %s", result.Bid.Price.String())
 		}
 		if result.Bid.Payload != "<html>test ad</html>" {
 			t.Errorf("Expected payload '<html>test ad</html>', got '%s'", result.Bid.Payload)

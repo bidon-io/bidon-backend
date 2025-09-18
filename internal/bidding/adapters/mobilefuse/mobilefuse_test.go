@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -134,14 +135,16 @@ func buildWantRequest(imp openrtb2.Imp) openrtb.BidRequest {
 			},
 		},
 		Cur: []string{"USD"},
-		Imp: []openrtb2.Imp{
+		Imp: []openrtb.Imp{
 			{
-				ID:                "1",
-				DisplayManager:    "mobilefuse",
-				DisplayManagerVer: "1.0.0",
-				TagID:             "10182906-10192212",
-				Secure:            ptr(int8(1)),
-				BidFloor:          schema.MinBidFloor,
+				Imp: openrtb2.Imp{
+					ID:                "1",
+					DisplayManager:    "mobilefuse",
+					DisplayManagerVer: "1.0.0",
+					TagID:             "10182906-10192212",
+					Secure:            ptr(int8(1)),
+				},
+				BidFloor: schema.MinBidFloor,
 			},
 		},
 	}
@@ -446,7 +449,7 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 					Bid: &adapters.BidDemandResponse{
 						ID:         "9f21299b7b7b6ad7fe30226748c57abf_banner",
 						ImpID:      "1",
-						Price:      1.904,
+						Price:      decimal.NewFromFloat(1.904),
 						Payload:    "",
 						Signaldata: "H4sIAAAAAAAAA41Qy27CMBD8lcqqOBESm0dwBFQV6gGpKhW0t0iRYzbCkMSW16FUiH/v0l565LaPmZ3ZuTCzYxkbigkXIhWVUDxVMp1KBSCFVFKJpJQj1mfaNSzjA5mMqPa/rAAYigMWpg3gMZhgVE3I8O2AtqVqW/DUqx0x2QyJ5cIDej3P2T4Eh1ke53FTnaMOI1AYIj5obGlqqDqEgbZNHh8w+vLKOfBPZj5JqulYas5hJNNKqqoc82malqClHkquiyRni1ke/yktSBrOznhAlg0nSdJntUUsOl+TnXsN1AS/S7p3Oz5/vDx/Lj9W67fidb3dXnvOGw3/pu+b1fLlSs6aLgBlyCnM2uhjUcJenYz1t+Bs2BOirC3N8WhcgaBtu6M3xn12Ypm4/gBBRP5ctwEAAA==",
 						DemandID:   "mobilefuse",

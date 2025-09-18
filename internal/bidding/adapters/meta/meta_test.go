@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -128,15 +129,17 @@ func buildWantRequest(imp openrtb2.Imp) openrtb.BidRequest {
 		},
 		User: &openrtb.User{BuyerUID: "token"},
 		Cur:  []string{"USD"},
-		Imp: []openrtb2.Imp{
+		Imp: []openrtb.Imp{
 			{
-				ID:                "1",
-				DisplayManager:    "meta",
-				DisplayManagerVer: "1.0.0",
-				TagID:             "10182906",
-				BidFloorCur:       "USD",
-				Secure:            ptr(int8(1)),
-				BidFloor:          schema.MinBidFloor,
+				Imp: openrtb2.Imp{
+					ID:                "1",
+					DisplayManager:    "meta",
+					DisplayManagerVer: "1.0.0",
+					TagID:             "10182906",
+					BidFloorCur:       "USD",
+					Secure:            ptr(int8(1)),
+				},
+				BidFloor: schema.MinBidFloor,
 			},
 		},
 		Ext: json.RawMessage(`{"authentication_id":"b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad","platformid":"687579938617452"}`),
@@ -363,7 +366,7 @@ func TestMeta_ParseBids(t *testing.T) {
 					Bid: &adapters.BidDemandResponse{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
-						Price:    1.5,
+						Price:    decimal.RequireFromString("1.5"),
 						Payload:  "0692d0a0efdbd5bd470dafea742cef6a1f6b840c5c83240e165bc33a038b3d5487e25a52",
 						DemandID: "meta",
 						AdID:     "Metaad5e0471131b8a4e3c",

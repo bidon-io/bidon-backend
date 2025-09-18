@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/openrtb3"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
@@ -39,7 +40,7 @@ func TestHandler_SendEvent(t *testing.T) {
 	bid := notification.Bid{
 		RequestID: "request-1",
 		ImpID:     "imp-1",
-		Price:     1.23,
+		Price:     decimal.RequireFromString("1.23"),
 		LURL:      fmt.Sprintf("%s/lurl?auction_price=${AUCTION_PRICE}&id=${AUCTION_ID}", server.URL),
 	}
 
@@ -54,8 +55,8 @@ func TestHandler_SendEvent(t *testing.T) {
 		URL:              bid.LURL,
 		Bid:              bid,
 		Reason:           openrtb3.LossBelowAuctionFloor,
-		FirstPrice:       4.56,
-		SecondPrice:      3.00,
+		FirstPrice:       decimal.RequireFromString("4.56"),
+		SecondPrice:      decimal.RequireFromString("3.00"),
 	}
 
 	// Call the SendNotificationEvent method with the test context and input data

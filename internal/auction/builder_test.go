@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -45,7 +46,7 @@ func testHelperDefaultAuctionBuilderMocks() *BuilderMocks {
 		{
 			DemandID:   "gam",
 			Label:      "gam",
-			PriceFloor: ptr(0.1),
+			PriceFloor: ptr(decimal.RequireFromString("0.1")),
 			UID:        "123_gam",
 			BidType:    schema.CPMBidType,
 			Extra: map[string]any{
@@ -55,7 +56,7 @@ func testHelperDefaultAuctionBuilderMocks() *BuilderMocks {
 		{
 			DemandID:   "dtexchange",
 			Label:      "dtexchange",
-			PriceFloor: ptr(0.01),
+			PriceFloor: ptr(decimal.RequireFromString("0.01")),
 			UID:        "123_dtexchange",
 			BidType:    schema.CPMBidType,
 			Extra: map[string]any{
@@ -140,7 +141,7 @@ func TestBuilder_Build(t *testing.T) {
 				App: testApp(1),
 				Adapters:             []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest:       request,
-				PriceFloor:           0.02,
+				PriceFloor:           decimal.RequireFromString("0.02"),
 				AuctionConfiguration: auctionConfig,
 			},
 			want: &auction.Result{
@@ -150,14 +151,14 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
 					{
 						DemandID:   "dtexchange",
 						Label:      "dtexchange",
-						PriceFloor: ptr(0.01),
+						PriceFloor: ptr(decimal.RequireFromString("0.01")),
 						UID:        "123_dtexchange",
 						BidType:    schema.CPMBidType,
 						Extra: map[string]any{
@@ -171,7 +172,7 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
@@ -193,7 +194,7 @@ func TestBuilder_Build(t *testing.T) {
 								{
 									DemandID:   "bidmachine",
 									Label:      "BM",
-									PriceFloor: ptr(0.1),
+									PriceFloor: ptr(decimal.RequireFromString("0.1")),
 									UID:        "123_bidmachine",
 									BidType:    schema.CPMBidType,
 								},
@@ -206,7 +207,7 @@ func TestBuilder_Build(t *testing.T) {
 						HoldAuctionFunc: func(_ context.Context, _ *bidding.BuildParams) (bidding.AuctionResult, error) {
 							return bidding.AuctionResult{
 								Bids: []adapters.DemandResponse{
-									{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: 0.5}},
+									{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: decimal.RequireFromString("0.5")}},
 								},
 							}, nil
 						},
@@ -217,7 +218,7 @@ func TestBuilder_Build(t *testing.T) {
 				App: testApp(1),
 				Adapters:             []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest:       request,
-				PriceFloor:           0.02,
+				PriceFloor:           decimal.RequireFromString("0.02"),
 				AuctionConfiguration: auctionConfig,
 			},
 			want: &auction.Result{
@@ -226,7 +227,7 @@ func TestBuilder_Build(t *testing.T) {
 					{
 						DemandID:   "bidmachine",
 						Label:      "BM",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						UID:        "123_bidmachine",
 						BidType:    schema.CPMBidType,
 					},
@@ -236,14 +237,14 @@ func TestBuilder_Build(t *testing.T) {
 					{
 						DemandID:   "bidmachine",
 						Label:      "BM",
-						PriceFloor: ptr(0.51),
+						PriceFloor: ptr(decimal.RequireFromString("0.51")),
 						UID:        "123_bidmachine",
 						BidType:    schema.CPMBidType,
 					},
 				},
 				BiddingAuctionResult: &bidding.AuctionResult{
 					Bids: []adapters.DemandResponse{
-						{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: 0.5}},
+						{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: decimal.RequireFromString("0.5")}},
 					},
 				},
 			},
@@ -259,7 +260,7 @@ func TestBuilder_Build(t *testing.T) {
 				App: testApp(1),
 				Adapters:             []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest:       request,
-				PriceFloor:           0.02,
+				PriceFloor:           decimal.RequireFromString("0.02"),
 				AuctionConfiguration: auctionConfig,
 			},
 			want: &auction.Result{
@@ -269,14 +270,14 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
 					{
 						DemandID:   "dtexchange",
 						Label:      "dtexchange",
-						PriceFloor: ptr(0.01),
+						PriceFloor: ptr(decimal.RequireFromString("0.01")),
 						UID:        "123_dtexchange",
 						BidType:    schema.CPMBidType,
 						Extra: map[string]any{
@@ -289,7 +290,7 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
@@ -315,7 +316,7 @@ func TestBuilder_Build(t *testing.T) {
 				App: testApp(1),
 				Adapters:             []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest:       request,
-				PriceFloor:           0.01,
+				PriceFloor:           decimal.RequireFromString("0.01"),
 				AuctionConfiguration: auctionConfig,
 			},
 			wantErr: true,
@@ -339,7 +340,7 @@ func TestBuilder_Build(t *testing.T) {
 				App: testApp(1),
 				Adapters:       []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest: request,
-				PriceFloor:     0.01,
+				PriceFloor:     decimal.RequireFromString("0.01"),
 				AuctionConfiguration: &auction.Config{
 					ID:        1,
 					Demands:   []adapter.Key{adapter.GAMKey, adapter.DTExchangeKey},
@@ -368,7 +369,7 @@ func TestBuilder_Build(t *testing.T) {
 				AuctionKey:           "1ERNSV33K4000",
 				Adapters:             []adapter.Key{adapter.GAMKey, adapter.BidmachineKey},
 				AuctionRequest:       request,
-				PriceFloor:           0.01,
+				PriceFloor:           decimal.RequireFromString("0.01"),
 				AuctionConfiguration: auctionConfig,
 			},
 			want: &auction.Result{
@@ -378,14 +379,14 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
 					{
 						DemandID:   "dtexchange",
 						Label:      "dtexchange",
-						PriceFloor: ptr(0.01),
+						PriceFloor: ptr(decimal.RequireFromString("0.01")),
 						UID:        "123_dtexchange",
 						BidType:    schema.CPMBidType,
 						Extra: map[string]any{
@@ -398,14 +399,14 @@ func TestBuilder_Build(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
 					{
 						DemandID:   "dtexchange",
 						Label:      "dtexchange",
-						PriceFloor: ptr(0.01),
+						PriceFloor: ptr(decimal.RequireFromString("0.01")),
 						UID:        "123_dtexchange",
 						BidType:    schema.CPMBidType,
 						Extra: map[string]any{
@@ -479,40 +480,40 @@ func TestAuctionResult_GetMaxBidPrice(t *testing.T) {
 	tests := []struct {
 		name     string
 		bids     []adapters.DemandResponse
-		expected float64
+		expected decimal.Decimal
 	}{
 		{
 			name:     "no bids",
 			bids:     []adapters.DemandResponse{},
-			expected: 0.0,
+			expected: decimal.Zero,
 		},
 		{
 			name: "single bid",
 			bids: []adapters.DemandResponse{
 				{
 					Bid: &adapters.BidDemandResponse{
-						Price: 1.5,
+						Price: decimal.RequireFromString("1.5"),
 					},
 				},
 			},
-			expected: 1.5,
+			expected: decimal.RequireFromString("1.5"),
 		},
 		{
 			name: "multiple bids",
 			bids: []adapters.DemandResponse{
 				{
 					Bid: &adapters.BidDemandResponse{
-						Price: 1.5,
+						Price: decimal.RequireFromString("1.5"),
 					},
 				},
 				{},
 				{
 					Bid: &adapters.BidDemandResponse{
-						Price: 1,
+						Price: decimal.RequireFromString("1"),
 					},
 				},
 			},
-			expected: 1.5,
+			expected: decimal.RequireFromString("1.5"),
 		},
 	}
 
@@ -520,7 +521,7 @@ func TestAuctionResult_GetMaxBidPrice(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := bidding.AuctionResult{Bids: tt.bids}
 			maxPrice := result.GetMaxBidPrice()
-			if maxPrice != tt.expected {
+			if !maxPrice.Equal(tt.expected) {
 				t.Errorf("expected %v, got %v", tt.expected, maxPrice)
 			}
 		})

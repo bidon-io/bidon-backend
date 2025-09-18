@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -44,14 +46,14 @@ func TestService_Run(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -61,7 +63,7 @@ func TestService_Run(t *testing.T) {
 		},
 		AdType: ad.BannerType,
 		AdCache: []schema.AdCacheObject{
-			{Price: 0.02},
+			{Price: decimal.RequireFromString("0.02")},
 		},
 	}
 	sgmnt := segment.Segment{
@@ -101,7 +103,7 @@ func TestService_Run(t *testing.T) {
 						DemandID:   "gam",
 						UID:        "123_gam",
 						Label:      "gam",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement_id": "123"},
 					},
@@ -422,7 +424,7 @@ func TestService_Run(t *testing.T) {
 					DemandID:   "gam",
 					UID:        "123_gam",
 					Label:      "gam",
-					PriceFloor: ptr(0.1),
+					PriceFloor: ptr(decimal.RequireFromString("0.1")),
 					BidType:    "CPM",
 					Extra:      map[string]any{"placement_id": "123"},
 				},
@@ -494,14 +496,14 @@ func TestService_Run_BidmachineWithMediator(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -550,7 +552,7 @@ func TestService_Run_BidmachineWithMediator(t *testing.T) {
 						DemandID:   string(adapter.BidmachineKey),
 						UID:        "123_bidmachine",
 						Label:      "bidmachine",
-						PriceFloor: ptr(0.1),
+						PriceFloor: ptr(decimal.RequireFromString("0.1")),
 						BidType:    "CPM",
 						Extra:      map[string]any{"placement": "123"},
 					},
@@ -608,14 +610,14 @@ func TestService_Run_BiddingWithDemandExt(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -679,7 +681,7 @@ func TestService_Run_BiddingWithDemandExt(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:      "bid123",
 								ImpID:   "imp123",
-								Price:   0.15,
+								Price:   decimal.RequireFromString("0.15"),
 								Payload: "test_payload",
 							},
 						},
@@ -724,14 +726,14 @@ func TestService_Run_BidmachineWithMediatorInBidding(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -795,7 +797,7 @@ func TestService_Run_BidmachineWithMediatorInBidding(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:      "bid123",
 								ImpID:   "imp123",
-								Price:   0.15,
+								Price:   decimal.RequireFromString("0.15"),
 								Payload: "test_payload_bidmachine",
 							},
 						},
@@ -865,14 +867,14 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -961,7 +963,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:      "amazon_bid",
 								ImpID:   "amazon_imp",
-								Price:   0.12,
+								Price:   decimal.RequireFromString("0.12"),
 								Payload: "amazon_payload",
 							},
 						},
@@ -970,7 +972,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:         "mobilefuse_bid",
 								ImpID:      "mobilefuse_imp",
-								Price:      0.13,
+								Price:      decimal.RequireFromString("0.13"),
 								Payload:    "mobilefuse_payload",
 								Signaldata: "mobilefuse_signal",
 							},
@@ -980,7 +982,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:      "vkads_bid_123",
 								ImpID:   "vkads_imp",
-								Price:   0.14,
+								Price:   decimal.RequireFromString("0.14"),
 								Payload: "vkads_payload",
 							},
 						},
@@ -989,7 +991,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 							Bid: &adapters.BidDemandResponse{
 								ID:      "unknown_bid",
 								ImpID:   "unknown_imp",
-								Price:   0.11,
+								Price:   decimal.RequireFromString("0.11"),
 								Payload: "unknown_payload",
 							},
 						},
@@ -1069,14 +1071,14 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 	auctionConfig := &auction.Config{
 		ID:         1,
 		UID:        "config_uid",
-		PriceFloor: 0.05,
+		PriceFloor: decimal.RequireFromString("0.05"),
 		Timeout:    15000,
 	}
 	geoData := geocoder.GeoData{}
 	request := &schema.AuctionRequest{
 		AdObject: schema.AdObject{
 			AuctionKey: "1ERNSV33K4000",
-			PriceFloor: 0.01,
+			PriceFloor: decimal.RequireFromString("0.01"),
 		},
 		BaseRequest: schema.BaseRequest{
 			Device: schema.Device{
@@ -1113,7 +1115,7 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 	}
 
 	placementID := "test_placement_123"
-	priceFloor := 0.1
+	priceFloor := decimal.RequireFromString("0.1")
 	auctionBuilder := &mocks.AuctionBuilderMock{
 		BuildFunc: func(_ context.Context, _ *auction.BuildParams) (*auction.Result, error) {
 			return &auction.Result{
@@ -1135,7 +1137,7 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 					Bids: []adapters.DemandResponse{
 						{
 							DemandID: adapter.BidmachineKey,
-							Bid:      &adapters.BidDemandResponse{Payload: "test_payload", Price: 0.15}, // Higher than price floor
+							Bid:      &adapters.BidDemandResponse{Payload: "test_payload", Price: decimal.RequireFromString("0.15")}, // Higher than price floor
 						},
 					},
 				},

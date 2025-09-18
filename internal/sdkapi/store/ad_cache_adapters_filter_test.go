@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/shopspring/decimal"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -35,8 +36,8 @@ func TestFilterCached(t *testing.T) {
 			adType:   ad.RewardedType,
 			adapters: []adapter.Key{adapter.AdmobKey, adapter.ApplovinKey, adapter.UnityAdsKey},
 			adCache: []schema.AdCacheObject{
-				{DemandID: string(adapter.AdmobKey), Price: 3.37},
-				{DemandID: string(adapter.UnityAdsKey), Price: 4.3},
+				{DemandID: string(adapter.AdmobKey), Price: decimal.RequireFromString("3.37")},
+				{DemandID: string(adapter.UnityAdsKey), Price: decimal.RequireFromString("4.3")},
 			},
 			expected: []adapter.Key{adapter.ApplovinKey},
 		},
@@ -54,7 +55,7 @@ func TestFilterCached(t *testing.T) {
 			adType:   ad.RewardedType,
 			adapters: []adapter.Key{adapter.MintegralKey},
 			adCache: []schema.AdCacheObject{
-				{DemandID: string(adapter.MintegralKey), Price: 3.37},
+				{DemandID: string(adapter.MintegralKey), Price: decimal.RequireFromString("3.37")},
 			},
 			expected: []adapter.Key{},
 		},
@@ -64,7 +65,7 @@ func TestFilterCached(t *testing.T) {
 			adType:   ad.BannerType,
 			adapters: []adapter.Key{adapter.IronSourceKey, adapter.AdmobKey},
 			adCache: []schema.AdCacheObject{
-				{DemandID: string(adapter.IronSourceKey), Price: 3.37},
+				{DemandID: string(adapter.IronSourceKey), Price: decimal.RequireFromString("3.37")},
 			},
 			expected: []adapter.Key{adapter.AdmobKey},
 		},

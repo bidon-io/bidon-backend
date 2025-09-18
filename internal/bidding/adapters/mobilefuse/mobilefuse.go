@@ -105,14 +105,14 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 
 	secure := int8(1)
 
-	var imp *openrtb2.Imp
+	var imp *openrtb.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
-		imp = a.banner(auctionRequest)
+		imp = &openrtb.Imp{Imp: *a.banner(auctionRequest)}
 	case ad.InterstitialType:
-		imp = a.interstitial()
+		imp = &openrtb.Imp{Imp: *a.interstitial()}
 	case ad.RewardedType:
-		imp = a.rewarded()
+		imp = &openrtb.Imp{Imp: *a.rewarded()}
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -125,7 +125,7 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MobileFuseKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb.Imp{*imp}
 	request.Cur = []string{"USD"}
 
 	request.User = &openrtb.User{
@@ -201,7 +201,7 @@ func (a *MobileFuseAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.De
 		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
 	}
 
-	var bidResponse openrtb2.BidResponse
+	var bidResponse openrtb.BidResponse
 	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
 	if err != nil {
 		return dr, err
