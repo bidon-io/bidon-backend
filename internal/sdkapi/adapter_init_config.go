@@ -49,7 +49,9 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 	case adapter.IronSourceKey:
 		config = new(IronSourceInitConfig)
 	case adapter.TaurusXKey:
-		config = new(TaurusXInitConfig)
+		config = &TaurusXInitConfig{
+			Placements: make([]string, 0),
+		}
 	case adapter.AmazonKey:
 		config = new(AmazonInitConfig)
 	case adapter.YandexKey:
@@ -315,8 +317,9 @@ func (a *IronSourceInitConfig) SetDefaultOrder() {
 }
 
 type TaurusXInitConfig struct {
-	AppID string `json:"app_id,omitempty"`
-	Order int    `json:"order"`
+	AppID      string   `json:"app_id,omitempty"`
+	Placements []string `json:"placements,omitempty"`
+	Order      int      `json:"order"`
 }
 
 func (a *TaurusXInitConfig) Key() adapter.Key {
