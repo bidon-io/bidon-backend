@@ -325,12 +325,12 @@ func getEndpoint(alpha3 string) string {
 	// Return the appropriate regional endpoint
 	switch region {
 	case "eu":
-		return "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+		return "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/bidon"
 	case "sg":
-		return "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+		return "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/bidon"
 	case "us":
 		fallthrough
 	default:
-		return "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal"
+		return "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/bidon"
 	}
 }

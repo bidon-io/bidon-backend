@@ -38,7 +38,7 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 	}
 
 	baseRequest := openrtb.BidRequest{
-		ID: "test-request-id",
+		ID:  "test-request-id",
 		App: &openrtb2.App{},
 	}
 
@@ -231,7 +231,7 @@ func TestTaurusXAdapter_CreateRequest_Interstitial(t *testing.T) {
 	}
 
 	baseRequest := openrtb.BidRequest{
-		ID: "test-request-id",
+		ID:  "test-request-id",
 		App: &openrtb2.App{},
 	}
 
@@ -273,7 +273,7 @@ func TestTaurusXAdapter_CreateRequest_Rewarded(t *testing.T) {
 	}
 
 	baseRequest := openrtb.BidRequest{
-		ID: "test-request-id",
+		ID:  "test-request-id",
 		App: &openrtb2.App{},
 	}
 
@@ -319,7 +319,7 @@ func TestTaurusXAdapter_CreateRequest_WithoutToken(t *testing.T) {
 	}
 
 	baseRequest := openrtb.BidRequest{
-		ID: "test-request-id",
+		ID:  "test-request-id",
 		App: &openrtb2.App{},
 	}
 
@@ -360,42 +360,42 @@ func TestGetEndpoint(t *testing.T) {
 		{
 			name:     "US region - USA",
 			alpha3:   "USA",
-			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "US region - Canada",
 			alpha3:   "CAN",
-			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "EU region - Germany",
 			alpha3:   "DEU",
-			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "EU region - United Kingdom",
 			alpha3:   "GBR",
-			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkeu.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "Asia region - Singapore",
 			alpha3:   "SGP",
-			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "Asia region - Japan",
 			alpha3:   "JPN",
-			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdksg.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "Unknown country - defaults to US",
 			alpha3:   "XXX",
-			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 		{
 			name:     "Empty country - defaults to US",
 			alpha3:   "",
-			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/appodeal",
+			expected: "https://sdkus.ssp.taxssp.com/ssp/v1/bidding_ad/bidon",
 		},
 	}
 
