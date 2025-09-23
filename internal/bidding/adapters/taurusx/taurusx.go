@@ -121,16 +121,18 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		request.App.ID = a.AppID
 	}
 
-	// Add request-level extension with token
 	reqExt := make(map[string]interface{})
 	if request.Ext != nil {
 		_ = json.Unmarshal(request.Ext, &reqExt)
 	}
 
-	// Add token to request extension
 	if demandData, ok := auctionRequest.AdObject.Demands[adapter.TaurusXKey]; ok {
-		if token, ok := demandData["token"].(string); ok && token != "" {
-			reqExt["token"] = token
+		if tokenData, ok := demandData["token"].(string); ok && tokenData != "" {
+			// Parse the token JSON to extract placement-specific token
+			placementToken, err := a.extractPlacementToken(tokenData, a.TagID)
+			if err == nil && placementToken != "" {
+				reqExt["token"] = placementToken
+			}
 		}
 	}
 
@@ -138,6 +140,24 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	request.Ext = extBytes
 
 	return request, nil
+}
+
+func (a *TaurusXAdapter) extractPlacementToken(tokenData, placementID string) (string, error) {
+	if tokenData == "" || placementID == "" {
+		return "", errors.New("empty token data or placement ID")
+	}
+
+	var tokenMap map[string]string
+	err := json.Unmarshal([]byte(tokenData), &tokenMap)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse token JSON: %v", err)
+	}
+
+	if placementToken, exists := tokenMap[placementID]; exists {
+		return placementToken, nil
+	}
+
+	return "", fmt.Errorf("no token found for placement ID: %s", placementID)
 }
 
 func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

@@ -25,7 +25,7 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 			},
 			Demands: map[adapter.Key]map[string]any{
 				adapter.TaurusXKey: {
-					"token": "test-bidding-token",
+					"token": `{"test-tag-id":"test-placement-specific-token"}`,
 				},
 			},
 		},
@@ -72,8 +72,8 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 		return
 	}
 
-	if token, ok := reqExt["token"].(string); !ok || token != "test-bidding-token" {
-		t.Errorf("Expected token 'test-bidding-token' in request extension, got '%v'", reqExt["token"])
+	if token, ok := reqExt["token"].(string); !ok || token != "test-placement-specific-token" {
+		t.Errorf("Expected token 'test-placement-specific-token' in request extension, got '%v'", reqExt["token"])
 	}
 
 	// Verify app ID is set correctly
@@ -218,7 +218,7 @@ func TestTaurusXAdapter_CreateRequest_Interstitial(t *testing.T) {
 			Interstitial: &schema.InterstitialAdObject{},
 			Demands: map[adapter.Key]map[string]any{
 				adapter.TaurusXKey: {
-					"token": "test-bidding-token",
+					"token": `{"test-tag-id":"test-placement-specific-token"}`,
 				},
 			},
 		},
@@ -260,7 +260,7 @@ func TestTaurusXAdapter_CreateRequest_Rewarded(t *testing.T) {
 			Rewarded:  &schema.RewardedAdObject{},
 			Demands: map[adapter.Key]map[string]any{
 				adapter.TaurusXKey: {
-					"token": "test-bidding-token",
+					"token": `{"test-tag-id":"test-placement-specific-token"}`,
 				},
 			},
 		},
@@ -406,6 +406,124 @@ func TestGetEndpoint(t *testing.T) {
 				t.Errorf("getEndpoint(%s) = %s, expected %s", tt.alpha3, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestTaurusXAdapter_ExtractPlacementToken(t *testing.T) {
+	adapter := buildAdapter()
+
+	tests := []struct {
+		name          string
+		tokenData     string
+		placementID   string
+		expectedToken string
+		expectError   bool
+	}{
+		{
+			name:          "Valid placement token extraction",
+			tokenData:     `{"60001958":"rkeOZxFu2Qs4W+NrBPzPtJ0k6VePE6hXMdGSFje14LvSxAgcKdx5x9HpiWvI4h1L","12345":"another-token"}`,
+			placementID:   "60001958",
+			expectedToken: "rkeOZxFu2Qs4W+NrBPzPtJ0k6VePE6hXMdGSFje14LvSxAgcKdx5x9HpiWvI4h1L",
+			expectError:   false,
+		},
+		{
+			name:          "Placement ID not found",
+			tokenData:     `{"60001958":"token1","12345":"token2"}`,
+			placementID:   "99999",
+			expectedToken: "",
+			expectError:   true,
+		},
+		{
+			name:          "Invalid JSON",
+			tokenData:     `{"invalid":json}`,
+			placementID:   "60001958",
+			expectedToken: "",
+			expectError:   true,
+		},
+		{
+			name:          "Empty token data",
+			tokenData:     "",
+			placementID:   "60001958",
+			expectedToken: "",
+			expectError:   true,
+		},
+		{
+			name:          "Empty placement ID",
+			tokenData:     `{"60001958":"token"}`,
+			placementID:   "",
+			expectedToken: "",
+			expectError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token, err := adapter.extractPlacementToken(tt.tokenData, tt.placementID)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if token != tt.expectedToken {
+					t.Errorf("Expected token '%s', got '%s'", tt.expectedToken, token)
+				}
+			}
+		})
+	}
+}
+
+func TestTaurusXAdapter_CreateRequest_WithPlacementTokenNotFound(t *testing.T) {
+	taurusxAdapter := buildAdapter()
+
+	auctionRequest := &schema.AuctionRequest{
+		AdObject: schema.AdObject{
+			AuctionID: "test-auction-id",
+			Banner: &schema.BannerAdObject{
+				Format: ad.BannerFormat,
+			},
+			Demands: map[adapter.Key]map[string]any{
+				adapter.TaurusXKey: {
+					"token": `{"different-placement-id":"some-token"}`, // Token for different placement
+				},
+			},
+		},
+		Adapters: schema.Adapters{
+			adapter.TaurusXKey: schema.Adapter{
+				Version:    "1.0.0",
+				SDKVersion: "1.0.0",
+			},
+		},
+	}
+
+	baseRequest := openrtb.BidRequest{
+		ID:  "test-request-id",
+		App: &openrtb2.App{},
+	}
+
+	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	if err != nil {
+		t.Errorf("CreateRequest() error = %v", err)
+		return
+	}
+
+	// Should still work without token for this placement
+	if len(request.Imp) != 1 {
+		t.Errorf("Expected 1 impression, got %d", len(request.Imp))
+	}
+
+	// Verify request extension has no token when placement token is not found
+	var reqExt map[string]interface{}
+	if err := json.Unmarshal(request.Ext, &reqExt); err != nil {
+		t.Errorf("Failed to unmarshal request extension: %v", err)
+		return
+	}
+
+	if _, hasToken := reqExt["token"]; hasToken {
+		t.Error("Expected no token in request extension when placement token is not found")
 	}
 }
 
