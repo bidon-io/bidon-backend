@@ -259,7 +259,7 @@ func (f *AdapterInitConfigsFetcher) fetchLineItems(ctx context.Context, appID in
 
 	err := f.DB.
 		WithContext(ctx).
-		Select("line_items.id, line_items.public_uid, line_items.extra, line_items.bid_floor").
+		Select("line_items.id, line_items.public_uid, line_items.extra, line_items.bid_floor, line_items.ad_type, line_items.format").
 		Where("app_id", appID).
 		InnerJoins("Account", f.DB.Select("id")).
 		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapterKey)).

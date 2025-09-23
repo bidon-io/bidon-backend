@@ -221,7 +221,8 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AppKey: fmt.Sprintf("moloco_app_%d", apps[1].ID),
 				},
 				&sdkapi.TaurusXInitConfig{
-					AppID: fmt.Sprintf("taurusx_app_%d", apps[1].ID),
+					AppID:   fmt.Sprintf("taurusx_app_%d", apps[1].ID),
+					Channel: "bidon",
 				},
 				&sdkapi.UnityAdsInitConfig{
 					GameID: fmt.Sprintf("unityads_game_%d", apps[1].ID),
@@ -276,8 +277,9 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					Order:  0,
 				},
 				&sdkapi.TaurusXInitConfig{
-					AppID: fmt.Sprintf("taurusx_app_%d", apps[1].ID),
-					Order: 0,
+					AppID:   fmt.Sprintf("taurusx_app_%d", apps[1].ID),
+					Channel: "bidon",
+					Order:   0,
 				},
 				&sdkapi.UnityAdsInitConfig{
 					GameID: fmt.Sprintf("unityads_game_%d", apps[1].ID),

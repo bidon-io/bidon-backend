@@ -88,7 +88,8 @@ func SetupConfigHandler() apihandlers.ConfigHandler {
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
 				},
 				&sdkapi.TaurusXInitConfig{
-					AppID: fmt.Sprintf("taurusx_app_%d", app.ID),
+					AppID:   fmt.Sprintf("taurusx_app_%d", app.ID),
+					Channel: "bidon",
 					PlacementIDs: []sdkapi.TaurusXPlacement{
 						{PlacementID: "placement1", Format: "INTERSTITIAL"},
 						{PlacementID: "placement2", Format: "REWARDED"},
