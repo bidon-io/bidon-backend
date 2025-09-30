@@ -31,6 +31,7 @@ func newTestClient(tr transportFunc) *http.Client {
 
 func buildAdapter() startio.Adapter {
 	return startio.Adapter{
+		TagID:   "test-tag-id",
 		AppID:   "test-app-id",
 		Account: "trp",
 	}
@@ -38,10 +39,10 @@ func buildAdapter() startio.Adapter {
 
 func buildBidRequest() openrtb.BidRequest {
 	return openrtb.BidRequest{
-		ID:  "test-request-id",
+		ID: "test-request-id",
 		App: &openrtb2.App{ID: ""},
 		Device: &openrtb2.Device{
-			UA:  "test-user-agent",
+			UA: "test-user-agent",
 			Geo: &openrtb2.Geo{Country: "USA"},
 		},
 	}
@@ -106,6 +107,9 @@ func TestAdapter_CreateRequest_Banner(t *testing.T) {
 	}
 
 	imp := request.Imp[0]
+	if imp.TagID != "test-tag-id" {
+		t.Fatalf("expected TagID 'test-tag-id', got %s", imp.TagID)
+	}
 
 	if imp.DisplayManager != string(adapter.StartIOKey) {
 		t.Fatalf("unexpected DisplayManager: %s", imp.DisplayManager)
@@ -121,8 +125,9 @@ func TestAdapter_CreateRequest_Errors(t *testing.T) {
 		adapter startio.Adapter
 		wantErr string
 	}{
-		{name: "missing account", adapter: startio.Adapter{AppID: "app"}, wantErr: "account"},
-		{name: "missing app", adapter: startio.Adapter{Account: "acc"}, wantErr: "app ID"},
+		{name: "missing tag", adapter: startio.Adapter{AppID: "app", Account: "acc"}, wantErr: "tag ID"},
+		{name: "missing account", adapter: startio.Adapter{TagID: "tag", AppID: "app"}, wantErr: "account"},
+		{name: "missing app", adapter: startio.Adapter{TagID: "tag", Account: "acc"}, wantErr: "app ID"},
 	}
 
 	for _, tc := range cases {
@@ -188,8 +193,8 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 func TestAdapter_ParseBids(t *testing.T) {
 	adapterInstance := buildAdapter()
 	resp := adapters.DemandResponse{
-		DemandID:    adapter.StartIOKey,
-		Status:      http.StatusOK,
+		DemandID: adapter.StartIOKey,
+		Status:   http.StatusOK,
 		RawResponse: `{"id":"response","seatbid":[{"seat":"startio","bid":[{"id":"bid-1","impid":"imp-1","price":1.23,"adm":"<html></html>","adid":"creative","nurl":"http://nurl","lurl":"http://lurl","burl":"http://burl"}]}]}`,
 	}
 
@@ -210,6 +215,7 @@ func TestAdapter_ParseBids(t *testing.T) {
 func TestBuilder(t *testing.T) {
 	cfg := adapter.ProcessedConfigsMap{
 		adapter.StartIOKey: {
+			"tag_id":  "tag",
 			"app_id":  "app",
 			"account": "acc",
 		},
@@ -229,7 +235,7 @@ func TestBuilder(t *testing.T) {
 		t.Fatalf("unexpected adapter type %T", bidder.Adapter)
 	}
 
-	want := startio.Adapter{AppID: "app", Account: "acc"}
+	want := startio.Adapter{TagID: "tag", AppID: "app", Account: "acc"}
 	if diff := cmp.Diff(want, *adpt); diff != "" {
 		t.Fatalf("builder mismatch (-want +got):\n%s", diff)
 	}

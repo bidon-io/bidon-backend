@@ -25,6 +25,7 @@ import (
 
 // Adapter represents the Start.io bidding adapter.
 type Adapter struct {
+	TagID   string
 	AppID   string
 	Account string
 }
@@ -186,6 +187,7 @@ func (a *Adapter) ExecuteRequest(ctx context.Context, client *http.Client, reque
 	dr := &adapters.DemandResponse{
 		DemandID:  adapter.StartIOKey,
 		RequestID: request.ID,
+		TagID:     a.TagID,
 	}
 
 	requestBody, err := json.Marshal(request)
@@ -298,10 +300,12 @@ func (a *Adapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandRespon
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
 	startioCfg := cfg[adapter.StartIOKey]
 
+	tagID, _ := startioCfg["tag_id"].(string)
 	appID, _ := startioCfg["app_id"].(string)
 	account, _ := startioCfg["account"].(string)
 
 	adpt := &Adapter{
+		TagID:   tagID,
 		AppID:   appID,
 		Account: account,
 	}
