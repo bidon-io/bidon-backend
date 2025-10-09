@@ -119,6 +119,10 @@ func (a *Adapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp 
 
 // CreateRequest implements the BidderInterface.CreateRequest method.
 func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+	if a.TagID == "" {
+		return request, errors.New("startio tag ID is empty")
+	}
+
 	if a.Account == "" {
 		return request, errors.New("startio account is empty")
 	}
@@ -143,8 +147,7 @@ func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *sche
 
 	impID, _ := uuid.NewV4()
 	imp.ID = impID.String()
-	tagID, _ := uuid.NewV4()
-	imp.TagID = tagID.String()
+	imp.TagID = a.TagID
 	imp.DisplayManager = string(adapter.StartIOKey)
 	if info, ok := auctionRequest.Adapters[adapter.StartIOKey]; ok {
 		imp.DisplayManagerVer = info.SDKVersion

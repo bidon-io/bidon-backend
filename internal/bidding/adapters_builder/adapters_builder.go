@@ -173,6 +173,11 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.StartIOKey:
 			adaptersMap[key]["app_id"] = appData["app_id"]
 			adaptersMap[key]["account"] = extra["account"]
+
+			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
+			if adUnit != nil {
+				adaptersMap[key]["tag_id"] = adUnit.Extra["tag_id"]
+			}
 		case adapter.TaurusXKey:
 			adaptersMap[key]["app_id"] = appData["app_id"]
 
