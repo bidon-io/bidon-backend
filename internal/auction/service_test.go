@@ -1212,9 +1212,6 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 	want := map[string]any{
 		"placement": placementID,
 		"payload":   "test_payload",
-		"badv":      "advertiser1.com, advertiser2.com",
-		"bcat":      "IAB25-1, IAB26-2",
-		"bapp":      "com.blocked.app1, com.blocked.app2",
 	}
 
 	if diff := cmp.Diff(want, bidmachineAdUnit.Extra); diff != "" {

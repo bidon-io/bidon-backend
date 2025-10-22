@@ -231,7 +231,7 @@ func (s *Service) buildResponse(
 		}
 		if adUnit.DemandID == string(adapter.BidmachineKey) {
 			adUnit.Extra["custom_parameters"] = bidmachine.ExtraParams(req)
-			addRTBBlockingFields(adUnit.Extra, app)
+			addBlockingFields(adUnit.Extra, app)
 		}
 
 		response.AdUnits = append(response.AdUnits, adUnit)
@@ -239,7 +239,7 @@ func (s *Service) buildResponse(
 
 	// Store Bids AS RTB AdUnits from BiddingAuctionResult
 	for _, bidResponse := range auctionResult.BiddingAuctionResult.Bids {
-		adUnit := convertBidToAdUnit(req, bidResponse, adUnitsMap, app)
+		adUnit := convertBidToAdUnit(req, bidResponse, adUnitsMap)
 		if adUnit == nil {
 			continue
 		}
@@ -318,7 +318,7 @@ func (s *Service) logEvents(
 	}
 }
 
-func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap, app *sdkapi.App) *AdUnit {
+func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap) *AdUnit {
 	storeAdUnit, err := selectAdUnit(demandResponse, adUnitsMap)
 	if err != nil {
 		return nil
@@ -330,7 +330,7 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 	priceFloor := demandResponse.Price()
 	ext := map[string]any{}
 	if demandResponse.IsBid() {
-		ext = buildDemandExt(req, demandResponse, app)
+		ext = buildDemandExt(req, demandResponse)
 	}
 
 	for key, value := range storeAdUnit.Extra {
@@ -483,7 +483,7 @@ func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap
 	return nil, fmt.Errorf("ad unit not found for demand %s", demandResponse.DemandID)
 }
 
-func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandResponse, app *sdkapi.App) map[string]any {
+func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandResponse) map[string]any {
 	switch demandResponse.DemandID {
 	case adapter.AmazonKey:
 		return map[string]any{}
@@ -508,7 +508,6 @@ func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandRe
 				"mediator": req.GetMediator(),
 			}
 		}
-		addRTBBlockingFields(extra, app)
 		return extra
 	default:
 		return map[string]any{
@@ -517,7 +516,7 @@ func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandRe
 	}
 }
 
-func addRTBBlockingFields(ext map[string]any, app *sdkapi.App) {
+func addBlockingFields(ext map[string]any, app *sdkapi.App) {
 	if app.Badv != "" {
 		ext["badv"] = app.Badv
 	}
