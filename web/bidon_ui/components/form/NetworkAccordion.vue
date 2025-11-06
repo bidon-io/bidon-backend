@@ -97,7 +97,7 @@ type AdUnit = {
 
 // Helper function to convert extra JSON fields to formatted fields
 const getExtraFields = (extra: Record<string, string | number | boolean>) => {
-  if (!extra || typeof extra !== "object") {
+  if (!extra) {
     return [];
   }
 
