@@ -55,10 +55,8 @@ func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAtt
 		dbItems[i] = r.mapper.dbModel(&items[i], 0)
 	}
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if userID, ok := audit.UserIDFromContext(ctx); ok && userID != 0 {
-			if err := tx.Exec("SELECT set_config('audit.user_id', ?, true)", strconv.FormatInt(userID, 10)).Error; err != nil {
-				return err
-			}
+		if err := audit.SetUserID(tx, ctx); err != nil {
+			return err
 		}
 		return tx.Create(&dbItems).Error
 	})

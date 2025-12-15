@@ -1,6 +1,11 @@
 package audit
 
-import "context"
+import (
+	"context"
+	"strconv"
+
+	"gorm.io/gorm"
+)
 
 type ctxKey string
 
@@ -17,3 +22,10 @@ func UserIDFromContext(ctx context.Context) (int64, bool) {
 	return userID, ok
 }
 
+// SetUserID sets the audit.user_id session variable in the transaction
+func SetUserID(tx *gorm.DB, ctx context.Context) error {
+	if userID, ok := UserIDFromContext(ctx); ok && userID != 0 {
+		return tx.Exec("SELECT set_config('audit.user_id', ?, true)", strconv.FormatInt(userID, 10)).Error
+	}
+	return nil
+}

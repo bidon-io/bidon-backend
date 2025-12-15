@@ -3,7 +3,6 @@ package adminstore
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -94,10 +93,8 @@ func (r *APIKeyRepo) Create(ctx context.Context, userID int64) (*admin.APIKeyFul
 	}
 
 	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if auditUserID, ok := audit.UserIDFromContext(ctx); ok && auditUserID != 0 {
-			if err := tx.Exec("SELECT set_config('audit.user_id', ?, true)", strconv.FormatInt(auditUserID, 10)).Error; err != nil {
-				return err
-			}
+		if err := audit.SetUserID(tx, ctx); err != nil {
+			return err
 		}
 		return tx.Create(dbKey).Error
 	})
@@ -121,10 +118,8 @@ func (r *APIKeyRepo) Delete(ctx context.Context, idStr string) error {
 	}
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if userID, ok := audit.UserIDFromContext(ctx); ok && userID != 0 {
-			if err := tx.Exec("SELECT set_config('audit.user_id', ?, true)", strconv.FormatInt(userID, 10)).Error; err != nil {
-				return err
-			}
+		if err := audit.SetUserID(tx, ctx); err != nil {
+			return err
 		}
 		return tx.Delete(&dbKey, id).Error
 	})

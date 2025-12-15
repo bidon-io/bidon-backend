@@ -69,6 +69,8 @@ CREATE TRIGGER audit_trigger AFTER INSERT OR UPDATE OR DELETE ON segments
     FOR EACH ROW EXECUTE FUNCTION audit_log_changes();
 CREATE TRIGGER audit_trigger AFTER INSERT OR UPDATE OR DELETE ON demand_source_accounts
     FOR EACH ROW EXECUTE FUNCTION audit_log_changes();
+CREATE TRIGGER audit_trigger AFTER INSERT OR UPDATE OR DELETE ON api_keys
+    FOR EACH ROW EXECUTE FUNCTION audit_log_changes();
 
 -- +goose StatementEnd
 
@@ -82,6 +84,7 @@ DROP TRIGGER IF EXISTS audit_trigger ON auction_configurations;
 DROP TRIGGER IF EXISTS audit_trigger ON line_items;
 DROP TRIGGER IF EXISTS audit_trigger ON segments;
 DROP TRIGGER IF EXISTS audit_trigger ON demand_source_accounts;
+DROP TRIGGER IF EXISTS audit_trigger ON api_keys;
 
 -- Drop function and table
 DROP FUNCTION IF EXISTS audit_log_changes();
