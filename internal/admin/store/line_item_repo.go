@@ -11,6 +11,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
+	"github.com/bidon-io/bidon-backend/internal/audit"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
@@ -53,7 +54,14 @@ func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAtt
 	for i := range items {
 		dbItems[i] = r.mapper.dbModel(&items[i], 0)
 	}
-	return r.db.WithContext(ctx).Create(&dbItems).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if userID, ok := audit.UserIDFromContext(ctx); ok && userID != 0 {
+			if err := tx.Exec("SELECT set_config('audit.user_id', ?, true)", strconv.FormatInt(userID, 10)).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Create(&dbItems).Error
+	})
 }
 
 type lineItemMapper struct {

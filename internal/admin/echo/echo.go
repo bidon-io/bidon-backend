@@ -19,6 +19,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
+	"github.com/bidon-io/bidon-backend/internal/audit"
 )
 
 func UseAuthorization(g *echo.Group, authService *auth.Service) {
@@ -88,6 +89,17 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 				c.Set("authCtx", authCtx)
 			}
 
+			return next(c)
+		}
+	})
+
+	// Inject user ID into request context for audit logging
+	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if authCtx, ok := c.Get("authCtx").(admin.AuthContext); ok {
+				ctx := audit.WithUserID(c.Request().Context(), authCtx.UserID())
+				c.SetRequest(c.Request().WithContext(ctx))
+			}
 			return next(c)
 		}
 	})
