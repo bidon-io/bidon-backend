@@ -93,7 +93,7 @@ func (r *APIKeyRepo) Create(ctx context.Context, userID int64) (*admin.APIKeyFul
 	}
 
 	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetUserID(tx, ctx); err != nil {
+		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
 		return tx.Create(dbKey).Error
@@ -118,7 +118,7 @@ func (r *APIKeyRepo) Delete(ctx context.Context, idStr string) error {
 	}
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetUserID(tx, ctx); err != nil {
+		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
 		return tx.Delete(&dbKey, id).Error

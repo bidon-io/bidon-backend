@@ -42,6 +42,10 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 			}
 
 			c.Set("authCtx", authCtx)
+			c.Set("authMethod", audit.AuthAPIKey)
+			if apiKeyCtx, ok := authCtx.(*auth.APIKey); ok {
+				c.Set("apiKeyID", apiKeyCtx.ID.String())
+			}
 
 			return next(c)
 		}
@@ -51,6 +55,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		Validator: func(username, password string, c echo.Context) (bool, error) {
 			if authService.IsSuperUser(username, password) {
 				c.Set("authCtx", stubAuthContext{})
+				c.Set("authMethod", audit.AuthBasic)
 
 				return true, nil
 			}
@@ -65,6 +70,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 			claims := token.Claims.(*auth.JWTClaims)
 
 			c.Set("authCtx", claims)
+			c.Set("authMethod", audit.AuthSession)
 		},
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(auth.JWTClaims)
@@ -87,19 +93,27 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 			authCtx := authService.NewSessionAuthContext(c.Request().Context())
 			if authCtx != nil {
 				c.Set("authCtx", authCtx)
+				c.Set("authMethod", audit.AuthSession)
 			}
 
 			return next(c)
 		}
 	})
 
-	// Inject user ID into request context for audit logging
+	// Inject audit context into request context
 	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			ctx := c.Request().Context()
 			if authCtx, ok := c.Get("authCtx").(admin.AuthContext); ok {
-				ctx := audit.WithUserID(c.Request().Context(), authCtx.UserID())
-				c.SetRequest(c.Request().WithContext(ctx))
+				ctx = audit.WithUserID(ctx, authCtx.UserID())
 			}
+			if authMethod, ok := c.Get("authMethod").(string); ok {
+				ctx = audit.WithAuthMethod(ctx, authMethod)
+			}
+			if apiKeyID, ok := c.Get("apiKeyID").(string); ok {
+				ctx = audit.WithAPIKeyID(ctx, apiKeyID)
+			}
+			c.SetRequest(c.Request().WithContext(ctx))
 			return next(c)
 		}
 	})

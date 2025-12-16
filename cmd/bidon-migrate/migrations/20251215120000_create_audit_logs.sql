@@ -10,6 +10,7 @@ CREATE TABLE audit_logs (
     user_id     BIGINT,
     old_data    JSONB,
     new_data    JSONB,
+    meta        JSONB DEFAULT '{}',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -17,21 +18,32 @@ CREATE TABLE audit_logs (
 CREATE INDEX idx_audit_logs_table_record ON audit_logs (table_name, record_id);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs USING BRIN (created_at);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs (user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX idx_audit_logs_meta_auth_method ON audit_logs ((meta->>'auth_method'));
 
--- Trigger function: reads session variable and logs changes
+-- Trigger function: reads session variables and logs changes
 CREATE OR REPLACE FUNCTION audit_log_changes() RETURNS TRIGGER AS $$
 DECLARE
-    v_user_id   BIGINT;
-    v_old_data  JSONB;
-    v_new_data  JSONB;
-    v_record_id BIGINT;
+    v_user_id     BIGINT;
+    v_auth_method TEXT;
+    v_api_key_id  TEXT;
+    v_meta        JSONB;
+    v_old_data    JSONB;
+    v_new_data    JSONB;
+    v_record_id   BIGINT;
 BEGIN
-    -- Read user_id from session variable (NULL if not set)
-    BEGIN
-        v_user_id := NULLIF(current_setting('audit.user_id', true), '')::BIGINT;
-    EXCEPTION WHEN OTHERS THEN
-        v_user_id := NULL;
-    END;
+    -- Read audit context from session variables
+    v_user_id := NULLIF(current_setting('audit.user_id', true), '')::BIGINT;
+    v_auth_method := NULLIF(current_setting('audit.auth_method', true), '');
+    v_api_key_id := NULLIF(current_setting('audit.api_key_id', true), '');
+
+    -- Build meta JSON
+    v_meta := '{}'::JSONB;
+    IF v_auth_method IS NOT NULL THEN
+        v_meta := v_meta || jsonb_build_object('auth_method', v_auth_method);
+    END IF;
+    IF v_api_key_id IS NOT NULL THEN
+        v_meta := v_meta || jsonb_build_object('api_key_id', v_api_key_id);
+    END IF;
 
     -- Build audit record based on operation
     IF TG_OP = 'DELETE' THEN
@@ -49,8 +61,8 @@ BEGIN
     END IF;
 
     -- Insert audit log entry
-    INSERT INTO audit_logs (table_name, record_id, operation, user_id, old_data, new_data)
-    VALUES (TG_TABLE_NAME, v_record_id, TG_OP, v_user_id, v_old_data, v_new_data);
+    INSERT INTO audit_logs (table_name, record_id, operation, user_id, old_data, new_data, meta)
+    VALUES (TG_TABLE_NAME, v_record_id, TG_OP, v_user_id, v_old_data, v_new_data, v_meta);
 
     RETURN COALESCE(NEW, OLD);
 END;
@@ -91,4 +103,3 @@ DROP FUNCTION IF EXISTS audit_log_changes();
 DROP TABLE IF EXISTS audit_logs;
 
 -- +goose StatementEnd
-

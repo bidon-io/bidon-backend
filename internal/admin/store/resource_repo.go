@@ -98,7 +98,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Cont
 	dbModel := r.mapper.dbModel(attrs, 0)
 
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetUserID(tx, ctx); err != nil {
+		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
 		return tx.Create(dbModel).Error
@@ -116,7 +116,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Update(ctx context.Cont
 	dbModel := r.mapper.dbModel(attrs, id)
 
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetUserID(tx, ctx); err != nil {
+		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
 		return tx.Model(dbModel).Where("id = ?", id).Clauses(clause.Returning{}).Updates(&dbModel).Error
@@ -134,7 +134,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Delete(ctx context.Cont
 	var dbModel DBModel
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetUserID(tx, ctx); err != nil {
+		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
 		return tx.Delete(&dbModel, id).Error
