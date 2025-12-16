@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"gorm.io/gorm"
 
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
+	"github.com/bidon-io/bidon-backend/internal/audit"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
@@ -90,7 +92,13 @@ func (r *APIKeyRepo) Create(ctx context.Context, userID int64) (*admin.APIKeyFul
 		UserID: userID,
 	}
 
-	if err := r.db.WithContext(ctx).Create(dbKey).Error; err != nil {
+	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+		return tx.Create(dbKey).Error
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -109,7 +117,12 @@ func (r *APIKeyRepo) Delete(ctx context.Context, idStr string) error {
 		return fmt.Errorf("failed to parse API key ID: %v", err)
 	}
 
-	return r.db.WithContext(ctx).Delete(&dbKey, id).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+		return tx.Delete(&dbKey, id).Error
+	})
 }
 
 func (r *APIKeyRepo) Access(ctx context.Context, id uuid.UUID) (auth.APIKey, error) {

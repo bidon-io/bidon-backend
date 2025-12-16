@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
+	"github.com/bidon-io/bidon-backend/internal/audit"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
@@ -96,7 +97,14 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) find(ctx context.Contex
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Context, attrs *ResourceAttrs) (*Resource, error) {
 	dbModel := r.mapper.dbModel(attrs, 0)
 
-	if err := r.db.WithContext(ctx).Create(dbModel).Error; err != nil {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+		return tx.Create(dbModel).Error
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -107,7 +115,14 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Cont
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
 	dbModel := r.mapper.dbModel(attrs, id)
 
-	if err := r.db.WithContext(ctx).Model(dbModel).Where("id = ?", id).Clauses(clause.Returning{}).Updates(&dbModel).Error; err != nil {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+		return tx.Model(dbModel).Where("id = ?", id).Clauses(clause.Returning{}).Updates(&dbModel).Error
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -118,5 +133,10 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Update(ctx context.Cont
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Delete(ctx context.Context, id int64) error {
 	var dbModel DBModel
 
-	return r.db.WithContext(ctx).Delete(&dbModel, id).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+		return tx.Delete(&dbModel, id).Error
+	})
 }
