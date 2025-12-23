@@ -46,7 +46,7 @@ const isValid = computed(() =>
     interstitialPricePoints.value.length,
     videoPricePoints.value.length,
     rewardedPricePoints.value.length,
-  ].every((length) => length > 0),
+  ].some((length) => length > 0),
 );
 
 // reset pricePoints for new uploads (to make submit btn disabled), or restore persisted value
