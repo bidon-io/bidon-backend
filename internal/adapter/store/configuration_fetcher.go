@@ -36,7 +36,7 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 		Select("app_demand_profiles.id, app_demand_profiles.data").
 		Where("app_id = ? AND app_demand_profiles.enabled = ?", appID, true).
 		InnerJoins("Account", f.DB.Select("id", "extra")).
-		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where(map[string]any{"api_key": adapterKeys})).
+		InnerJoins("DemandSource", f.DB.Select("api_key").Where(map[string]any{"api_key": adapterKeys})).
 		Find(&dbProfiles).
 		Error
 	if err != nil {
@@ -57,7 +57,7 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 			return nil, fmt.Errorf("cannot unmarshal profile data: %v", err)
 		}
 
-		key := adapter.Key(dbProfile.Account.DemandSource.APIKey)
+		key := adapter.Key(dbProfile.DemandSource.APIKey)
 		configs[key] = adapter.Config{
 			AccountExtra: extra,
 			AppData:      data,
