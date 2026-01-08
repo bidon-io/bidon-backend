@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+func (ac AuctionConfiguration) GetID() int64 {
+	return ac.ID
+}
+
 func (ac *AuctionConfiguration) BeforeSave(tx *gorm.DB) (err error) {
 	// Exit check if configuration w/o segment and not default
 	isNotDefault := ac.IsDefault == nil || !*ac.IsDefault
