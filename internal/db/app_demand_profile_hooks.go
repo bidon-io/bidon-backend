@@ -7,6 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
+func (p AppDemandProfile) GetID() int64 {
+	return p.ID
+}
+
 func (p *AppDemandProfile) BeforeCreate(tx *gorm.DB) error {
 	if p.PublicUID == (sql.NullInt64{}) {
 		snowflakeID, err := generateSnowflakeID(tx)

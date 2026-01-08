@@ -7,6 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
+func (u User) GetID() int64 {
+	return u.ID
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) error {
 	if u.PublicUID == (sql.NullInt64{}) {
 		snowflakeID, err := generateSnowflakeID(tx)

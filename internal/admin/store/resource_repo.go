@@ -11,9 +11,14 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
 
+// Identifiable is implemented by DB models that have an ID field.
+type Identifiable interface {
+	GetID() int64
+}
+
 // A resourceRepo is a generic basic repository for API resources that map directly to database models.
 // It implements [admin.ResourceRepo]
-type resourceRepo[Resource, ResourceAttrs, DBModel any] struct {
+type resourceRepo[Resource, ResourceAttrs any, DBModel Identifiable] struct {
 	db           *db.DB
 	mapper       resourceMapper[Resource, ResourceAttrs, DBModel]
 	associations []string
@@ -108,8 +113,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Create(ctx context.Cont
 		return nil, err
 	}
 
-	resource := r.mapper.resource(dbModel)
-	return &resource, nil
+	return r.Find(ctx, (*dbModel).GetID())
 }
 
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Update(ctx context.Context, id int64, attrs *ResourceAttrs) (*Resource, error) {
@@ -126,8 +130,7 @@ func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Update(ctx context.Cont
 		return nil, err
 	}
 
-	resource := r.mapper.resource(dbModel)
-	return &resource, nil
+	return r.Find(ctx, id)
 }
 
 func (r *resourceRepo[Resource, ResourceAttrs, DBModel]) Delete(ctx context.Context, id int64) error {
