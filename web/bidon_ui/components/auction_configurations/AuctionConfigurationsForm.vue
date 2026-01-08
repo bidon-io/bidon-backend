@@ -86,24 +86,20 @@
 
       <FormField v-if="showNetworks" label="CPM Networks">
         <NetworkAccordion
-          v-model:network-keys="demands"
-          v-model:ad-unit-ids="demandAdUnitIds"
-          :ad-type="adType"
-          :app-id="appId"
-          :is-bidding="false"
-          :initial-ad-unit-ids="resource.adUnitIds || []"
+          v-model:enabled-network-keys="demands"
+          v-model="selectedAdUnitIds"
+          :networks="demandNetworks"
+          :loading="demandLoading"
           @network-enabled="onNetworkEnabled"
           @network-disabled="onNetworkDisabled"
         />
       </FormField>
       <FormField v-if="showNetworks" label="Bidding Networks">
         <NetworkAccordion
-          v-model:network-keys="bidding"
-          v-model:ad-unit-ids="biddingAdUnitIds"
-          :ad-type="adType"
-          :app-id="appId"
-          :is-bidding="true"
-          :initial-ad-unit-ids="resource.adUnitIds || []"
+          v-model:enabled-network-keys="bidding"
+          v-model="selectedAdUnitIds"
+          :networks="biddingNetworks"
+          :loading="biddingLoading"
           @network-enabled="onNetworkEnabled"
           @network-disabled="onNetworkDisabled"
         />
@@ -118,6 +114,38 @@ import * as yup from "yup";
 import { useToast } from "primevue/usetoast";
 import axios from "@/services/ApiService.js";
 import { useAppDemandProfileValidation } from "@/composables/useAppDemandProfileValidation.js";
+import { useAdUnits } from "@/composables/useAdUnits.js";
+
+const NETWORKS_CONFIG = [
+  // Waterfall networks
+  { label: "Admob", key: "admob", isBidding: false },
+  { label: "Applovin", key: "applovin", isBidding: false },
+  { label: "BidMachine", key: "bidmachine", isBidding: false },
+  { label: "Bigoads", key: "bigoads", isBidding: false },
+  { label: "Chartboost", key: "chartboost", isBidding: false },
+  { label: "DtExchange", key: "dtexchange", isBidding: false },
+  { label: "Google Ad Manager", key: "gam", isBidding: false },
+  { label: "Mintegral", key: "mintegral", isBidding: false },
+  { label: "UnityAds", key: "unityads", isBidding: false },
+  { label: "IronSource", key: "ironsource", isBidding: false },
+  { label: "VK Ads", key: "vkads", isBidding: false },
+  { label: "Vungle", key: "vungle", isBidding: false },
+  { label: "Yandex", key: "yandex", isBidding: false },
+  // Bidding networks
+  { label: "Amazon", key: "amazon", isBidding: true },
+  { label: "BidMachine", key: "bidmachine", isBidding: true },
+  { label: "Bigoads", key: "bigoads", isBidding: true },
+  { label: "InMobi", key: "inmobi", isBidding: true },
+  { label: "Meta", key: "meta", isBidding: true },
+  { label: "Mintegral", key: "mintegral", isBidding: true },
+  { label: "MobileFuse", key: "mobilefuse", isBidding: true },
+  { label: "Moloco", key: "moloco", isBidding: true },
+  { label: "Start.io", key: "startio", isBidding: true },
+  { label: "TaurusX", key: "taurusx", isBidding: true },
+  { label: "Vungle", key: "vungle", isBidding: true },
+  { label: "VK Ads", key: "vkads", isBidding: true },
+  { label: "Yandex", key: "yandex", isBidding: true },
+];
 
 const props = defineProps({
   value: {
@@ -167,10 +195,42 @@ const timeout = useFieldModel("timeout");
 
 const demands = ref(resource.value.demands || []);
 const bidding = ref(resource.value.bidding || []);
-const demandAdUnitIds = ref([]);
-const biddingAdUnitIds = ref([]);
+const selectedAdUnitIds = ref(resource.value.adUnitIds || []);
 
 const showNetworks = computed(() => appId.value && adType.value);
+
+// Fetch Ad Units
+const { data: demandAdUnitsData, status: demandStatus } = useAdUnits(
+  appId,
+  adType,
+  false,
+);
+const { data: biddingAdUnitsData, status: biddingStatus } = useAdUnits(
+  appId,
+  adType,
+  true,
+);
+
+const demandLoading = computed(() => demandStatus.value === "pending");
+const biddingLoading = computed(() => biddingStatus.value === "pending");
+
+const buildNetworks = (isBidding, adUnits) => {
+  if (!adUnits) return [];
+  const config = NETWORKS_CONFIG.filter((n) => n.isBidding === isBidding);
+  return config.map((net) => ({
+    ...net,
+    adUnits: adUnits
+      .filter((unit) => unit.networkKey === net.key)
+      .sort((a, b) => a.pricefloor - b.pricefloor),
+  }));
+};
+
+const demandNetworks = computed(() =>
+  buildNetworks(false, demandAdUnitsData.value),
+);
+const biddingNetworks = computed(() =>
+  buildNetworks(true, biddingAdUnitsData.value),
+);
 
 // App Demand Profile Validation
 const {
@@ -231,8 +291,7 @@ const updateFormFields = async (sourceConfig) => {
 
   demands.value = settings.demands || [];
   bidding.value = settings.bidding || [];
-  demandAdUnitIds.value = settings.adUnitIds || [];
-  biddingAdUnitIds.value = settings.adUnitIds || [];
+  selectedAdUnitIds.value = settings.adUnitIds || [];
 };
 
 const copySettings = async () => {
@@ -263,9 +322,7 @@ const copySettings = async () => {
 const onSubmit = handleSubmit((values) =>
   emit("submit", {
     ...values,
-    adUnitIds: [
-      ...new Set([...demandAdUnitIds.value, ...biddingAdUnitIds.value]),
-    ],
+    adUnitIds: selectedAdUnitIds.value,
     demands: demands.value,
     bidding: bidding.value,
   }),
