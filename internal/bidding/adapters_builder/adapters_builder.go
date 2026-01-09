@@ -3,6 +3,7 @@ package adapters_builder
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/config"
@@ -93,9 +94,19 @@ func NewAdapters(keys []adapter.Key) adapter.ProcessedConfigsMap {
 }
 
 func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, adUnitsMap *auction.AdUnitsMap) (adapter.ProcessedConfigsMap, error) {
+	if appID == 735528 {
+		log.Printf("[DEBUG_MIXUP] AdaptersConfigBuilder.Build input: AppID=%d, Keys=%v", appID, adapterKeys)
+	}
 	profiles, err := b.ConfigurationFetcher.FetchCached(ctx, appID, adapterKeys)
 	if err != nil {
 		return nil, err
+	}
+	if appID == 735528 {
+		log.Printf("[DEBUG_MIXUP] FetchCached returned %d profiles", len(profiles))
+		for k, v := range profiles {
+			appIDVal := v.AppData["app_id"]
+			log.Printf("[DEBUG_MIXUP] Config Key: %s, AppData['app_id']: %v", k, appIDVal)
+		}
 	}
 
 	adaptersMap := NewAdapters(adapterKeys)

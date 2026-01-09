@@ -5,8 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/db"
@@ -23,7 +27,13 @@ type cache interface {
 
 func (f *ConfigurationFetcher) FetchCached(ctx context.Context, appID int64, adapterKeys []adapter.Key) (adapter.RawConfigsMap, error) {
 	key := f.cacheKey(appID, adapterKeys)
+	if appID == 735528 {
+		log.Printf("[DEBUG_MIXUP] FetchCached called for AppID %d with keys: %v. CacheKey: %x", appID, adapterKeys, key)
+	}
 	return f.Cache.Get(ctx, key, func(ctx context.Context) (adapter.RawConfigsMap, error) {
+		if appID == 735528 {
+			log.Printf("[DEBUG_MIXUP] Cache MISS for AppID %d. Fetching from DB...", appID)
+		}
 		return f.Fetch(ctx, appID, adapterKeys)
 	})
 }
@@ -31,9 +41,14 @@ func (f *ConfigurationFetcher) FetchCached(ctx context.Context, appID int64, ada
 func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKeys []adapter.Key) (adapter.RawConfigsMap, error) {
 	var dbProfiles []db.AppDemandProfile
 
-	err := f.DB.
-		WithContext(ctx).
-		Select("app_demand_profiles.id, app_demand_profiles.data").
+	tx := f.DB.WithContext(ctx)
+	if appID == 735528 {
+		log.Printf("[DEBUG_MIXUP] Fetch (DB) started for AppID %d", appID)
+		tx = tx.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Info)})
+	}
+
+	err := tx.
+		Select("app_demand_profiles.id, app_demand_profiles.account_id, app_demand_profiles.demand_source_id, app_demand_profiles.data").
 		Where("app_id = ? AND app_demand_profiles.enabled = ?", appID, true).
 		InnerJoins("Account", f.DB.Select("id", "extra")).
 		InnerJoins("DemandSource", f.DB.Select("api_key").Where(map[string]any{"api_key": adapterKeys})).
@@ -45,6 +60,11 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 
 	configs := adapter.RawConfigsMap{}
 	for _, dbProfile := range dbProfiles {
+		if appID == 735528 {
+			log.Printf("[DEBUG_MIXUP] Row: ProfileID=%d, AccountID=%d, DS_ID=%d, Key=%s, Data=%s",
+				dbProfile.ID, dbProfile.AccountID, dbProfile.DemandSourceID, dbProfile.DemandSource.APIKey, string(dbProfile.Data))
+		}
+
 		var extra map[string]any
 		err = json.Unmarshal(dbProfile.Account.Extra, &extra)
 		if err != nil {
