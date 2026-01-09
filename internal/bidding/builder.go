@@ -85,6 +85,11 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	emptyResponse := AuctionResult{}
 	auctionRequest := params.AuctionRequest
 
+	bidID, err := uuid.NewV4()
+	if err != nil {
+		return emptyResponse, fmt.Errorf("cannot generate Bid UUID: %s", err)
+	}
+
 	var adapterKeys []adapter.Key
 	roundNumber := 0
 	filteredDemands := make(map[adapter.Key]map[string]any)
@@ -123,7 +128,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 
 	for _, adapterKey := range adapterKeys {
 		wg.Add(1)
-		go b.processAdapter(ctx, adapterKey, auctionRequest, params, bids, &wg, handleError)
+		go b.processAdapter(ctx, adapterKey, auctionRequest, bidID.String(), params, bids, &wg, handleError)
 	}
 
 	go func() {
@@ -143,14 +148,9 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	return auctionResult, nil
 }
 
-func (b *Builder) buildBaseRequest(auctionRequest schema.AuctionRequest, params *BuildParams) (openrtb.BidRequest, error) {
-	bidID, err := uuid.NewV4()
-	if err != nil {
-		return openrtb.BidRequest{}, fmt.Errorf("cannot generate Bid UUID: %s", err)
-	}
-
+func (b *Builder) buildBaseRequest(auctionRequest schema.AuctionRequest, bidID string, params *BuildParams) openrtb.BidRequest {
 	return openrtb.BidRequest{
-		ID:     bidID.String(),
+		ID:     bidID,
 		Test:   *bool2int(auctionRequest.Test),
 		AT:     1,
 		TMax:   2000,
@@ -168,13 +168,14 @@ func (b *Builder) buildBaseRequest(auctionRequest schema.AuctionRequest, params 
 		BAdv: sdkapi.GetBlockedAdvertisersList(params.App),
 		BCat: sdkapi.GetBlockedCategoriesList(params.App),
 		BApp: sdkapi.GetBlockedAppsList(params.App),
-	}, nil
+	}
 }
 
 func (b *Builder) processAdapter(
 	ctx context.Context,
 	adapterKey adapter.Key,
 	auctionRequest schema.AuctionRequest,
+	bidID string,
 	params *BuildParams,
 	bids chan adapters.DemandResponse,
 	wg *sync.WaitGroup,
@@ -204,11 +205,7 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	baseBidRequest, err := b.buildBaseRequest(auctionRequest, params)
-	if err != nil {
-		handleError(adapterKey, err)
-		return
-	}
+	baseBidRequest := b.buildBaseRequest(auctionRequest, bidID, params)
 
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
