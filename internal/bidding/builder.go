@@ -2,8 +2,10 @@ package bidding
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"sync"
@@ -12,6 +14,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -206,6 +209,14 @@ func (b *Builder) processAdapter(
 	// adapter build bid request from baseBidRequest
 	// adapter send bid request
 	// adapter parse bid response
+	// adapter parse bid response
+	if params.App.ID == 735528 {
+		cfg := params.AdapterConfigs[adapterKey]
+		cfgJSON, _ := json.Marshal(cfg)
+		span := trace.SpanFromContext(ctx)
+		log.Printf("[DEBUG_MIXUP] [TraceID: %s] Processing Adapter: %s. Config: %s", span.SpanContext().TraceID(), adapterKey, string(cfgJSON))
+	}
+
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
 		handleError(adapterKey, err)
