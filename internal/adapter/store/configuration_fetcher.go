@@ -8,13 +8,30 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"time"
 
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
+
+type tracingLogger struct {
+	logger.Interface
+}
+
+func (l *tracingLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	span := trace.SpanFromContext(ctx)
+	traceID := span.SpanContext().TraceID().String()
+
+	sql, rows := fc()
+	elapsed := time.Since(begin)
+
+	log.Printf("[DEBUG_MIXUP] [TraceID: %s] SQL: %s | Rows: %d | Duration: %v | Error: %v",
+		traceID, sql, rows, elapsed, err)
+}
 
 type ConfigurationFetcher struct {
 	DB    *db.DB
@@ -26,13 +43,16 @@ type cache interface {
 }
 
 func (f *ConfigurationFetcher) FetchCached(ctx context.Context, appID int64, adapterKeys []adapter.Key) (adapter.RawConfigsMap, error) {
+	// Sort adapter keys to get deterministic cache key
 	key := f.cacheKey(appID, adapterKeys)
 	if appID == 735528 {
-		log.Printf("[DEBUG_MIXUP] FetchCached called for AppID %d with keys: %v. CacheKey: %x", appID, adapterKeys, key)
+		span := trace.SpanFromContext(ctx)
+		log.Printf("[DEBUG_MIXUP] [TraceID: %s] FetchCached called for AppID %d with keys: %v. CacheKey: %x", span.SpanContext().TraceID(), appID, adapterKeys, key)
 	}
 	return f.Cache.Get(ctx, key, func(ctx context.Context) (adapter.RawConfigsMap, error) {
 		if appID == 735528 {
-			log.Printf("[DEBUG_MIXUP] Cache MISS for AppID %d. Fetching from DB...", appID)
+			span := trace.SpanFromContext(ctx)
+			log.Printf("[DEBUG_MIXUP] [TraceID: %s] Cache MISS for AppID %d. Fetching from DB...", span.SpanContext().TraceID(), appID)
 		}
 		return f.Fetch(ctx, appID, adapterKeys)
 	})
@@ -43,8 +63,10 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 
 	tx := f.DB.WithContext(ctx)
 	if appID == 735528 {
-		log.Printf("[DEBUG_MIXUP] Fetch (DB) started for AppID %d", appID)
-		tx = tx.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Info)})
+		span := trace.SpanFromContext(ctx)
+		log.Printf("[DEBUG_MIXUP] [TraceID: %s] Fetch (DB) started for AppID %d", span.SpanContext().TraceID(), appID)
+		// Use custom tracing logger to inject trace_id into SQL logs
+		tx = tx.Session(&gorm.Session{Logger: &tracingLogger{Interface: logger.Default.LogMode(logger.Info)}})
 	}
 
 	err := tx.
@@ -60,11 +82,6 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 
 	configs := adapter.RawConfigsMap{}
 	for _, dbProfile := range dbProfiles {
-		if appID == 735528 {
-			log.Printf("[DEBUG_MIXUP] Row: ProfileID=%d, AccountID=%d, DS_ID=%d, Key=%s, Data=%s",
-				dbProfile.ID, dbProfile.AccountID, dbProfile.DemandSourceID, dbProfile.DemandSource.APIKey, string(dbProfile.Data))
-		}
-
 		var extra map[string]any
 		err = json.Unmarshal(dbProfile.Account.Extra, &extra)
 		if err != nil {
@@ -82,6 +99,15 @@ func (f *ConfigurationFetcher) Fetch(ctx context.Context, appID int64, adapterKe
 			AccountExtra: extra,
 			AppData:      data,
 		}
+	}
+
+	if appID == 735528 {
+		span := trace.SpanFromContext(ctx)
+		dbProfilesJSON, _ := json.Marshal(dbProfiles)
+		log.Printf("[DEBUG_MIXUP] [TraceID: %s] DB Rows: %s", span.SpanContext().TraceID(), string(dbProfilesJSON))
+
+		configsJSON, _ := json.Marshal(configs)
+		log.Printf("[DEBUG_MIXUP] [TraceID: %s] Fetch returning configs: %s", span.SpanContext().TraceID(), string(configsJSON))
 	}
 
 	return configs, nil
