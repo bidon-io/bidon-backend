@@ -89,27 +89,6 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	if err != nil {
 		return emptyResponse, fmt.Errorf("cannot generate Bid UUID: %s", err)
 	}
-	baseBidRequest := openrtb.BidRequest{
-		ID:     bidID.String(),
-		Test:   *bool2int(auctionRequest.Test),
-		AT:     1,
-		TMax:   2000,
-		App:    b.buildApp(auctionRequest.App, params),
-		Device: b.BuildDevice(auctionRequest.Device, auctionRequest.User, params.GeoData),
-
-		Imp: []openrtb2.Imp{
-			{
-				BidFloor: auctionRequest.AdObject.GetBidFloorForBidding(),
-			},
-		},
-		Regs: &openrtb2.Regs{
-			COPPA: *bool2int(auctionRequest.GetRegulations().COPPA),
-			GDPR:  bool2int(auctionRequest.GetRegulations().GDPR),
-		},
-		BAdv: sdkapi.GetBlockedAdvertisersList(params.App),
-		BCat: sdkapi.GetBlockedCategoriesList(params.App),
-		BApp: sdkapi.GetBlockedAppsList(params.App),
-	}
 
 	var adapterKeys []adapter.Key
 	roundNumber := 0
@@ -149,7 +128,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 
 	for _, adapterKey := range adapterKeys {
 		wg.Add(1)
-		go b.processAdapter(ctx, adapterKey, auctionRequest, baseBidRequest, params, bids, &wg, handleError)
+		go b.processAdapter(ctx, adapterKey, auctionRequest, bidID.String(), params, bids, &wg, handleError)
 	}
 
 	go func() {
@@ -169,11 +148,34 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	return auctionResult, nil
 }
 
+func (b *Builder) buildBaseRequest(auctionRequest schema.AuctionRequest, bidID string, params *BuildParams) openrtb.BidRequest {
+	return openrtb.BidRequest{
+		ID:     bidID,
+		Test:   *bool2int(auctionRequest.Test),
+		AT:     1,
+		TMax:   2000,
+		App:    b.buildApp(auctionRequest.App, params),
+		Device: b.BuildDevice(auctionRequest.Device, auctionRequest.User, params.GeoData),
+		Imp: []openrtb2.Imp{
+			{
+				BidFloor: auctionRequest.AdObject.GetBidFloorForBidding(),
+			},
+		},
+		Regs: &openrtb2.Regs{
+			COPPA: *bool2int(auctionRequest.GetRegulations().COPPA),
+			GDPR:  bool2int(auctionRequest.GetRegulations().GDPR),
+		},
+		BAdv: sdkapi.GetBlockedAdvertisersList(params.App),
+		BCat: sdkapi.GetBlockedCategoriesList(params.App),
+		BApp: sdkapi.GetBlockedAppsList(params.App),
+	}
+}
+
 func (b *Builder) processAdapter(
 	ctx context.Context,
 	adapterKey adapter.Key,
 	auctionRequest schema.AuctionRequest,
-	baseBidRequest openrtb.BidRequest,
+	bidID string,
 	params *BuildParams,
 	bids chan adapters.DemandResponse,
 	wg *sync.WaitGroup,
@@ -203,9 +205,8 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	// adapter build bid request from baseBidRequest
-	// adapter send bid request
-	// adapter parse bid response
+	baseBidRequest := b.buildBaseRequest(auctionRequest, bidID, params)
+
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
 		handleError(adapterKey, err)
