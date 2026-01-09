@@ -2,12 +2,8 @@ package adapters_builder
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -97,18 +93,9 @@ func NewAdapters(keys []adapter.Key) adapter.ProcessedConfigsMap {
 }
 
 func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterKeys []adapter.Key, adUnitsMap *auction.AdUnitsMap) (adapter.ProcessedConfigsMap, error) {
-	if appID == 735528 {
-		span := trace.SpanFromContext(ctx)
-		log.Printf("[DEBUG_MIXUP] [TraceID: %s] AdaptersConfigBuilder.Build input: AppID=%d, Keys=%v", span.SpanContext().TraceID(), appID, adapterKeys)
-	}
 	profiles, err := b.ConfigurationFetcher.FetchCached(ctx, appID, adapterKeys)
 	if err != nil {
 		return nil, err
-	}
-	if appID == 735528 {
-		span := trace.SpanFromContext(ctx)
-		profilesJSON, _ := json.Marshal(profiles)
-		log.Printf("[DEBUG_MIXUP] [TraceID: %s] FetchCached returned %d profiles: %s", span.SpanContext().TraceID(), len(profiles), string(profilesJSON))
 	}
 
 	adaptersMap := NewAdapters(adapterKeys)
@@ -208,12 +195,6 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		default:
 			adaptersMap[key] = extra
 		}
-	}
-
-	if appID == 735528 {
-		span := trace.SpanFromContext(ctx)
-		adaptersMapJSON, _ := json.Marshal(adaptersMap)
-		log.Printf("[DEBUG_MIXUP] [TraceID: %s] Final adaptersMap: %s", span.SpanContext().TraceID(), string(adaptersMapJSON))
 	}
 
 	return adaptersMap, nil
