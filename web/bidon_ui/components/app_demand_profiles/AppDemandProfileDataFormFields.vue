@@ -5,6 +5,20 @@
   <template v-if="accountType == 'DemandSourceAccount::Amazon'">
     <VeeFormFieldWrapper field="data.appKey" label="App Key" required />
   </template>
+  <template v-if="accountType == 'DemandSourceAccount::Applovin'">
+    <FormField label="Ad Unit IDs">
+      <Textarea
+        v-model="adUnitIdsText"
+        rows="3"
+        placeholder="abc123def456, xyz789ghi012 (comma-separated)"
+      />
+    </FormField>
+    <VeeFormFieldWrapper
+      field="data.mediator"
+      label="Mediator"
+      placeholder="Bidon (default)"
+    />
+  </template>
   <template v-if="accountType == 'DemandSourceAccount::BigoAds'">
     <VeeFormFieldWrapper field="data.appId" label="App Id" required />
     <VeeFormFieldWrapper field="data.appChannel" label="App Channel" />
@@ -70,8 +84,31 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  data: {
+    type: Object,
+    required: true,
+  },
 });
-const emit = defineEmits(["update:schema"]);
+const emit = defineEmits(["update:schema", "update:data"]);
+
+// Ad Unit IDs field for Applovin - convert between array and comma-separated string
+const adUnitIdsText = computed({
+  get: () => {
+    const ids = props.data?.adUnitIds;
+    return Array.isArray(ids) ? ids.join(", ") : "";
+  },
+  set: (v) => {
+    emit("update:data", {
+      ...props.data,
+      adUnitIds: v
+        ? v
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s)
+        : [],
+    });
+  },
+});
 
 const dataSchemas = {
   "DemandSourceAccount::Admob": yup.object({
@@ -79,6 +116,10 @@ const dataSchemas = {
   }),
   "DemandSourceAccount::Amazon": yup.object({
     appKey: yup.string().required().label("App Key"),
+  }),
+  "DemandSourceAccount::Applovin": yup.object({
+    adUnitIds: yup.array().of(yup.string()).label("Ad Unit IDs"),
+    mediator: yup.string().label("Mediator"),
   }),
   "DemandSourceAccount::BigoAds": yup.object({
     appId: yup.number().required().label("App Id"),

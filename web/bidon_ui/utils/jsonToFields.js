@@ -1,12 +1,27 @@
 /**
- * Formats a camelCase key into a readable label with spaces and capitalization
- * @param {string} key - The camelCase key to format
+ * Formats a camelCase or snake_case key into a readable label with spaces and capitalization
+ * @param {string} key - The camelCase or snake_case key to format
  * @returns {string} - Formatted label with spaces and capitalization
  */
 export const formatLabel = (key) => {
   return key
+    .replace(/_/g, " ") // Replace underscores with spaces
     .replace(/([A-Z])/g, " $1") // Add space before capital letters
-    .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .replace(/\s+/g, " ") // Remove extra spaces
+    .trim();
+};
+
+/**
+ * Formats a value for display - arrays are joined with commas
+ * @param {any} value - The value to format
+ * @returns {any} - Formatted value
+ */
+const formatValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+  return value;
 };
 
 /**
@@ -33,7 +48,7 @@ export const jsonToFields = (
     return {
       label: formatLabel(key),
       key: fieldKey,
-      value: jsonData[key],
+      value: formatValue(jsonData[key]),
       type: type || undefined,
       copyable,
     };

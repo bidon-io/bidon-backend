@@ -170,8 +170,9 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					Slots:  []sdkapi.AmazonSlot{},
 				},
 				&sdkapi.ApplovinInitConfig{
-					SDKKey: "applovin",
-					AppKey: "applovin",
+					SDKKey:   "applovin",
+					AppKey:   "applovin",
+					Mediator: "Bidon",
 				},
 				&sdkapi.BidmachineInitConfig{
 					SellerID:        "1",
@@ -660,5 +661,53 @@ func TestAdapterInitConfigsFetcher_FetchTaurusXPlacements_MissingPlacementID(t *
 	expectedError := "placement_id is either missing or not a string"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestAdapterInitConfigsFetcher_FetchApplovinAdUnitIDs(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	rdb, _ := redismock.NewClusterMock()
+
+	// Create Applovin demand source and account
+	applovinDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+	})
+	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = applovinDemandSource
+		account.Extra = []byte(`{"sdk_key": "applovin_sdk_key"}`)
+	})
+
+	app := dbtest.CreateApp(t, tx)
+
+	// Create AppDemandProfile with ad_unit_ids and mediator
+	dbtest.CreateAppDemandProfile(t, tx, func(profile *db.AppDemandProfile) {
+		profile.App = app
+		profile.Account = applovinAccount
+		profile.Data = []byte(`{"ad_unit_ids": ["unit1", "unit2", "unit3"], "mediator": "Bidon"}`)
+	})
+
+	profilesCache := config.NewRedisCacheOf[[]db.AppDemandProfile](rdb, 10*time.Minute, "app_demand_profiles")
+	amazonSlotsCache := config.NewRedisCacheOf[[]sdkapi.AmazonSlot](rdb, 10*time.Minute, "amazon_slots")
+	lineItemsCache := config.NewRedisCacheOf[[]db.LineItem](rdb, 10*time.Minute, "line_items")
+	fetcher := &AdapterInitConfigsFetcher{DB: tx, ProfilesCache: profilesCache, AmazonSlotsCache: amazonSlotsCache, LineItemsCache: lineItemsCache}
+
+	got, err := fetcher.FetchAdapterInitConfigs(context.Background(), app.ID, []adapter.Key{adapter.ApplovinKey}, false, false)
+	if err != nil {
+		t.Fatalf("FetchAdapterInitConfigs() error = %v", err)
+	}
+
+	want := []sdkapi.AdapterInitConfig{
+		&sdkapi.ApplovinInitConfig{
+			SDKKey:    "applovin_sdk_key",
+			AppKey:    "applovin_sdk_key",
+			AdUnitIDs: []string{"unit1", "unit2", "unit3"},
+			Mediator:  "Bidon",
+		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("FetchAdapterInitConfigs() mismatch (-want +got):\n%s", diff)
 	}
 }
