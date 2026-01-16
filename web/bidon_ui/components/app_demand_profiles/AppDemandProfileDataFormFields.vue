@@ -13,7 +13,11 @@
         placeholder="abc123def456, xyz789ghi012 (comma-separated)"
       />
     </FormField>
-    <VeeFormFieldWrapper field="data.mediator" label="Mediator" placeholder="Bidon (default)" />
+    <VeeFormFieldWrapper
+      field="data.mediator"
+      label="Mediator"
+      placeholder="Bidon (default)"
+    />
   </template>
   <template v-if="accountType == 'DemandSourceAccount::BigoAds'">
     <VeeFormFieldWrapper field="data.appId" label="App Id" required />
@@ -96,7 +100,12 @@ const adUnitIdsText = computed({
   set: (v) => {
     emit("update:data", {
       ...props.data,
-      adUnitIds: v ? v.split(",").map((s) => s.trim()).filter((s) => s) : [],
+      adUnitIds: v
+        ? v
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s)
+        : [],
     });
   },
 });
