@@ -92,10 +92,14 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 		}
 
 		// Set AppKey to SDKKey for AppLovin (SDK API compatibility)
+		// Set default Mediator to "Bidon" if not specified
 		if adapterKey == adapter.ApplovinKey {
 			applovinConfig, ok := config.(*sdkapi.ApplovinInitConfig)
 			if ok {
 				applovinConfig.AppKey = applovinConfig.SDKKey
+				if applovinConfig.Mediator == "" {
+					applovinConfig.Mediator = "Bidon"
+				}
 			}
 		}
 

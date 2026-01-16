@@ -21,6 +21,7 @@
       />
       <AppDemandProfileDataFormFields
         v-model:schema="dataSchema"
+        v-model:data="data"
         :account-type="accountType"
       />
       <FormField label="Enabled" :error="errors.enabled">
@@ -72,6 +73,7 @@ const { errors, meta, useFieldModel, handleSubmit } = useForm({
 const appId = useFieldModel("appId");
 const demandSourceId = useFieldModel("demandSourceId");
 const accountId = useFieldModel("accountId");
+const data = useFieldModel("data");
 const enabled = useFieldModel("enabled");
 
 // filter demand source accounts by demand source id
