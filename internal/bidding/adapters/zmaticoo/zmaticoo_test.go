@@ -1,7 +1,10 @@
 package zmaticoo
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -213,6 +216,127 @@ func TestZmaticooAdapter_ParseBids_MissingBidResult(t *testing.T) {
 	}
 }
 
+func TestZmaticooAdapter_ExecuteRequest_Success(t *testing.T) {
+	zmaticooAdapter := buildAdapter()
+
+	var gotContentType bool
+	var gotOpenRTBVersion bool
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			gotContentType = req.Header.Get("Content-Type") == "application/json"
+			gotOpenRTBVersion = req.Header.Get("X-OpenRTB-Version") == "2.5"
+
+			body := `{"code":1,"msg":"bid success","bid_result":{"request_id":"resp-1","ecpm":1.5}}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+
+	request := openrtb.BidRequest{
+		ID:  "req-1",
+		Imp: []openrtb2.Imp{{ID: "imp-1"}},
+	}
+
+	dr := zmaticooAdapter.ExecuteRequest(context.Background(), client, request)
+	if dr.Error != nil {
+		t.Fatalf("ExecuteRequest() error = %v", dr.Error)
+	}
+
+	if dr.Status != http.StatusOK {
+		t.Fatalf("Expected status %d, got %d", http.StatusOK, dr.Status)
+	}
+
+	if dr.RawRequest == "" || dr.RawResponse == "" {
+		t.Fatalf("Expected RawRequest/RawResponse to be set")
+	}
+
+	if dr.Bid == nil {
+		t.Fatalf("Expected bid to be present")
+	}
+
+	if dr.Bid.ImpID != "imp-1" {
+		t.Fatalf("Expected ImpID 'imp-1', got '%s'", dr.Bid.ImpID)
+	}
+
+	if !gotContentType || !gotOpenRTBVersion {
+		t.Fatalf("Expected request headers to be set")
+	}
+}
+
+func TestZmaticooAdapter_ExecuteRequest_HTTPError(t *testing.T) {
+	zmaticooAdapter := buildAdapter()
+	client := &http.Client{
+		Transport: roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+			return nil, errors.New("network error")
+		}),
+	}
+
+	request := openrtb.BidRequest{
+		ID: "req-1",
+	}
+
+	dr := zmaticooAdapter.ExecuteRequest(context.Background(), client, request)
+	if dr.Error == nil {
+		t.Fatalf("Expected error on HTTP failure")
+	}
+}
+
+func TestZmaticooAdapter_Builder(t *testing.T) {
+	client := &http.Client{}
+
+	cfg := adapter.ProcessedConfigsMap{
+		adapter.ZmaticooKey: {
+			"app_id":       "app-id",
+			"placement_id": "placement-id",
+		},
+	}
+
+	bidder, err := Builder(cfg, client)
+	if err != nil {
+		t.Fatalf("Builder() error = %v", err)
+	}
+
+	zmaticooAdapter, ok := bidder.Adapter.(*ZmaticooAdapter)
+	if !ok {
+		t.Fatalf("Expected ZmaticooAdapter, got %T", bidder.Adapter)
+	}
+	if zmaticooAdapter.AppID != "app-id" || zmaticooAdapter.PlacementID != "placement-id" {
+		t.Fatalf("Unexpected adapter config: %+v", zmaticooAdapter)
+	}
+	if bidder.Client != client {
+		t.Fatalf("Expected client to be assigned")
+	}
+}
+
+func TestZmaticooAdapter_Builder_MissingAppID(t *testing.T) {
+	cfg := adapter.ProcessedConfigsMap{
+		adapter.ZmaticooKey: {
+			"placement_id": "placement-id",
+		},
+	}
+
+	_, err := Builder(cfg, &http.Client{})
+	if err == nil {
+		t.Fatalf("Expected error for missing app_id")
+	}
+}
+
+func TestZmaticooAdapter_Builder_MissingPlacementID(t *testing.T) {
+	cfg := adapter.ProcessedConfigsMap{
+		adapter.ZmaticooKey: {
+			"app_id": "app-id",
+		},
+	}
+
+	_, err := Builder(cfg, &http.Client{})
+	if err == nil {
+		t.Fatalf("Expected error for missing placement_id")
+	}
+}
+
 func TestZmaticooAdapter_ExtractTokenAndTimestamp_Errors(t *testing.T) {
 	zmaticooAdapter := buildAdapter()
 
@@ -297,4 +421,10 @@ func buildAdapter() *ZmaticooAdapter {
 		AppID:       "test-app-id",
 		PlacementID: "test-placement-id",
 	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (fn roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return fn(req)
 }
