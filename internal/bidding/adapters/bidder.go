@@ -35,6 +35,7 @@ type DemandResponse struct {
 	Status      int
 	Bid         *BidDemandResponse
 	Error       error
+	ImpID       string
 	TagID       string
 	PlacementID string
 	SlotUUID    string

@@ -230,6 +230,8 @@ func (v *demandSourceAccountValidator) extraRule(demandSource *DemandSource) v8n
 		// Authentication is via ssp-id in endpoint URL
 		// oauth_token field exists in UI but is optional (for reporting APIs)
 		rule = v8n.Map()
+	case adapter.ZmaticooKey:
+		rule = v8n.Map()
 	}
 
 	return rule.AllowExtraKeys()

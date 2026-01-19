@@ -87,6 +87,9 @@ func SetupConfigHandler() apihandlers.ConfigHandler {
 				&sdkapi.AmazonInitConfig{
 					AppKey: fmt.Sprintf("amazon_app_%d", app.ID),
 				},
+				&sdkapi.ZmaticooInitConfig{
+					AppKey: fmt.Sprintf("zmaticoo_app_%d", app.ID),
+				},
 				&sdkapi.TaurusXInitConfig{
 					AppID:   fmt.Sprintf("taurusx_app_%d", app.ID),
 					Channel: "bidon",

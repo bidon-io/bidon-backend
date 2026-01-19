@@ -212,6 +212,24 @@ func Test_lineItemAttrsValidator_ValidateWithContext(t *testing.T) {
 			false,
 		},
 		{
+			"valid Zmaticoo",
+			&LineItemAttrs{
+				AccountID: 1,
+				Extra: map[string]any{
+					"placement_id": "placement-123",
+					"foo":          "bar",
+				},
+			},
+			&DemandSourceAccount{
+				DemandSource: DemandSource{
+					DemandSourceAttrs: DemandSourceAttrs{
+						ApiKey: string(adapter.ZmaticooKey),
+					},
+				},
+			},
+			false,
+		},
+		{
 			"valid VK Ads",
 			&LineItemAttrs{
 				AccountID: 1,

@@ -91,18 +91,6 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 			return nil, fmt.Errorf("unmarshal profile data: %v", err)
 		}
 
-		// Set AppKey to SDKKey for AppLovin (SDK API compatibility)
-		// Set default Mediator to "Bidon" if not specified
-		if adapterKey == adapter.ApplovinKey {
-			applovinConfig, ok := config.(*sdkapi.ApplovinInitConfig)
-			if ok {
-				applovinConfig.AppKey = applovinConfig.SDKKey
-				if applovinConfig.Mediator == "" {
-					applovinConfig.Mediator = "Bidon"
-				}
-			}
-		}
-
 		if setAmazonSlots {
 			amazonConfig, ok := config.(*sdkapi.AmazonInitConfig)
 			if ok {
@@ -113,12 +101,31 @@ func (f *AdapterInitConfigsFetcher) FetchAdapterInitConfigs(ctx context.Context,
 			}
 		}
 
-		if adapterKey == adapter.TaurusXKey {
+		switch adapterKey {
+		case adapter.ApplovinKey:
+			// Set AppKey to SDKKey for AppLovin (SDK API compatibility)
+			// Set default Mediator to "Bidon" if not specified
+			applovinConfig, ok := config.(*sdkapi.ApplovinInitConfig)
+			if ok {
+				applovinConfig.AppKey = applovinConfig.SDKKey
+				if applovinConfig.Mediator == "" {
+					applovinConfig.Mediator = "Bidon"
+				}
+			}
+		case adapter.TaurusXKey:
 			taurusxConfig, ok := config.(*sdkapi.TaurusXInitConfig)
 			if ok {
 				taurusxConfig.PlacementIDs, err = f.fetchTaurusXPlacements(ctx, appID)
 				if err != nil {
 					return nil, fmt.Errorf("fetch taurusx placements: %v", err)
+				}
+			}
+		case adapter.ZmaticooKey:
+			zmaticooConfig, ok := config.(*sdkapi.ZmaticooInitConfig)
+			if ok {
+				zmaticooConfig.PlacementIDs, err = f.fetchBiddingZmaticooPlacements(ctx, appID)
+				if err != nil {
+					return nil, fmt.Errorf("fetch zmaticoo placements: %v", err)
 				}
 			}
 		}
@@ -244,6 +251,39 @@ func (f *AdapterInitConfigsFetcher) fetchTaurusXPlacements(ctx context.Context, 
 	return placements, nil
 }
 
+func (f *AdapterInitConfigsFetcher) fetchBiddingZmaticooPlacements(ctx context.Context, appID int64) ([]sdkapi.ZmaticooPlacement, error) {
+	lineItems, err := f.fetchLineItemsCached(ctx, appID, adapter.ZmaticooKey)
+
+	if err != nil {
+		return nil, fmt.Errorf("fetch line items: %v", err)
+	}
+
+	if len(lineItems) == 0 {
+		return nil, nil
+	}
+
+	placements := make([]sdkapi.ZmaticooPlacement, 0, len(lineItems))
+	for _, lineItem := range lineItems {
+		if !lineItem.IsBidding.Valid || !lineItem.IsBidding.Bool {
+			continue
+		}
+
+		placementID, ok := lineItem.Extra["placement_id"].(string)
+		if !ok {
+			return nil, fmt.Errorf("placement_id is either missing or not a string")
+		}
+
+		format := f.convertAdTypeToFormat(lineItem)
+
+		placements = append(placements, sdkapi.ZmaticooPlacement{
+			PlacementID: placementID,
+			Format:      format,
+		})
+	}
+
+	return placements, nil
+}
+
 func (f *AdapterInitConfigsFetcher) convertAdTypeToFormat(lineItem db.LineItem) string {
 	domainType := lineItem.AdType.Domain()
 	switch domainType {
@@ -274,7 +314,7 @@ func (f *AdapterInitConfigsFetcher) fetchLineItems(ctx context.Context, appID in
 
 	err := f.DB.
 		WithContext(ctx).
-		Select("line_items.id, line_items.public_uid, line_items.extra, line_items.bid_floor, line_items.ad_type, line_items.format").
+		Select("line_items.id, line_items.public_uid, line_items.extra, line_items.bid_floor, line_items.ad_type, line_items.format, line_items.bidding").
 		Where("app_id", appID).
 		InnerJoins("Account", f.DB.Select("id")).
 		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapterKey)).

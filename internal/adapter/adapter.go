@@ -34,6 +34,7 @@ const (
 	VKAdsKey      Key = "vkads"
 	VungleKey     Key = "vungle"
 	YandexKey     Key = "yandex"
+	ZmaticooKey   Key = "zmaticoo"
 )
 
 var Keys = []Key{
@@ -57,6 +58,7 @@ var Keys = []Key{
 	VKAdsKey,
 	VungleKey,
 	YandexKey,
+	ZmaticooKey,
 }
 
 var CustomAdapters = [...]string{"max", "level_play"}

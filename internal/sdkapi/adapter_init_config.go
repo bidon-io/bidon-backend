@@ -59,6 +59,10 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 		config = new(AmazonInitConfig)
 	case adapter.YandexKey:
 		config = new(YandexInitConfig)
+	case adapter.ZmaticooKey:
+		config = &ZmaticooInitConfig{
+			PlacementIDs: make([]ZmaticooPlacement, 0),
+		}
 	default:
 		return nil, fmt.Errorf("AdapterInitConfig for key %q not defined", key)
 	}
@@ -322,6 +326,27 @@ func (a *YandexInitConfig) SetDefaultOrder() {
 	a.Order = 2
 }
 
+type Placement struct {
+	PlacementID string `json:"placement_id"`
+	Format      string `json:"format"`
+}
+
+type ZmaticooPlacement Placement
+
+type ZmaticooInitConfig struct {
+	AppKey       string              `json:"app_key,omitempty"`
+	PlacementIDs []ZmaticooPlacement `json:"placement_ids,omitempty"`
+	Order        int                 `json:"order"`
+}
+
+func (a *ZmaticooInitConfig) Key() adapter.Key {
+	return adapter.ZmaticooKey
+}
+
+func (a *ZmaticooInitConfig) SetDefaultOrder() {
+	a.Order = 0
+}
+
 type IronSourceInitConfig struct {
 	AppKey string `json:"app_key,omitempty"`
 	Order  int    `json:"order"`
@@ -335,10 +360,7 @@ func (a *IronSourceInitConfig) SetDefaultOrder() {
 	a.Order = 2
 }
 
-type TaurusXPlacement struct {
-	PlacementID string `json:"placement_id"`
-	Format      string `json:"format"`
-}
+type TaurusXPlacement Placement
 
 type TaurusXInitConfig struct {
 	AppID        string             `json:"app_id,omitempty"`

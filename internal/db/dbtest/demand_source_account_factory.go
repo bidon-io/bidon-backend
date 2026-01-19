@@ -84,7 +84,7 @@ func ValidDemandSourceAccountExtra(t *testing.T, key adapter.Key) []byte {
 		return []byte(`{"seller_id": "1", "endpoint": "x.appbaqend.com", "mediation_config": ["one", "two"], "foo": "bar"}`)
 	case adapter.BigoAdsKey:
 		return []byte(`{"publisher_id": "1", "endpoint": "https://example.com", "foo": "bar"}`)
-	case adapter.ChartboostKey:
+	case adapter.ChartboostKey, adapter.ZmaticooKey:
 		return []byte(`{}`)
 	case adapter.DTExchangeKey:
 		return []byte(`{"foo": "bar"}`)
