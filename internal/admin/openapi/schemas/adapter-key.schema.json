@@ -23,7 +23,8 @@
     "unityads",
     "vkads",
     "vungle",
-    "yandex"
+    "yandex",
+    "zmaticoo"
   ],
   "description": "An enum representing adapter keys for various ad networks"
 }
