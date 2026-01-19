@@ -21,7 +21,8 @@ VALUES
 ('taurusx', 'TaurusX', NOW(), NOW()),
 ('vkads', 'VK Ads', NOW(), NOW()),
 ('vungle', 'Vungle', NOW(), NOW()),
-('yandex', 'Yandex', NOW(), NOW())
+('yandex', 'Yandex', NOW(), NOW()),
+('zmaticoo', 'Zmaticoo', NOW(), NOW())
 ON CONFLICT (api_key) DO NOTHING;
 -- +goose StatementEnd
 

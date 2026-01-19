@@ -145,6 +145,7 @@ const NETWORKS_CONFIG = [
   { label: "Vungle", key: "vungle", isBidding: true },
   { label: "VK Ads", key: "vkads", isBidding: true },
   { label: "Yandex", key: "yandex", isBidding: true },
+  { label: "Zmaticoo", key: "zmaticoo", isBidding: true },
 ];
 
 const props = defineProps({

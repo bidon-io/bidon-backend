@@ -21,6 +21,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vkads"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vungle"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/yandex"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/zmaticoo"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -37,6 +38,7 @@ var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.VKAdsKey:      vkads.Builder,
 	adapter.VungleKey:     vungle.Builder,
 	adapter.YandexKey:     yandex.Builder,
+	adapter.ZmaticooKey:   zmaticoo.Builder,
 	// adapter.AdmobKey: admob.Builder,
 	// adapter.ApplovinKey: applovin.Builder,
 	// adapter.DTExchangeKey: dtexchange.Builder,
@@ -191,6 +193,13 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
 			if adUnit != nil {
 				adaptersMap[key]["ad_unit_id"] = adUnit.Extra["ad_unit_id"]
+			}
+		case adapter.ZmaticooKey:
+			adaptersMap[key]["app_id"] = appData["app_key"]
+
+			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
+			if adUnit != nil {
+				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
 			}
 		default:
 			adaptersMap[key] = extra

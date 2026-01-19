@@ -19,4 +19,5 @@ export const DEMAND_SOURCE_OPTIONS = [
   { label: "Vungle", value: "DemandSourceAccount::Vungle" },
   { label: "VKAds", value: "DemandSourceAccount::VKAds" },
   { label: "Yandex", value: "DemandSourceAccount::Yandex" },
+  { label: "Zmaticoo", value: "DemandSourceAccount::Zmaticoo" },
 ];

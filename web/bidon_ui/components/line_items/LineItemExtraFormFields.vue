@@ -101,6 +101,13 @@
   <template v-if="apiKey === 'yandex'">
     <VeeFormFieldWrapper field="extra.adUnitId" label="Ad Unit Id" required />
   </template>
+  <template v-if="apiKey === 'zmaticoo'">
+    <VeeFormFieldWrapper
+      field="extra.placementId"
+      label="Placement Id"
+      required
+    />
+  </template>
 </template>
 
 <script setup>
@@ -190,6 +197,9 @@ const dataSchemas = {
   }),
   yandex: yup.object({
     adUnitId: yup.string().required().label("Ad Unit Id"),
+  }),
+  zmaticoo: yup.object({
+    placementId: yup.string().required().label("Placement Id"),
   }),
 };
 

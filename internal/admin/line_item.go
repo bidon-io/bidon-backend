@@ -466,6 +466,35 @@ func (csv yandexLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, at
 	return lineItemAttrs, nil
 }
 
+type zmaticooLineItemCSV struct {
+	AdFormat    string          `csv:"ad_format"`
+	BidFloor    decimal.Decimal `csv:"bid_floor"`
+	PlacementID string          `csv:"placement_id"`
+}
+
+func (csv zmaticooLineItemCSV) buildLineItemAttrs(account *DemandSourceAccount, attrs LineItemImportCSVAttrs) (LineItemAttrs, error) {
+	adType, format := parseCSVAdFormat(csv.AdFormat)
+	if adType == ad.UnknownType {
+		return LineItemAttrs{}, fmt.Errorf("unknown ad format %q", csv.AdFormat)
+	}
+
+	lineItemAttrs := LineItemAttrs{
+		HumanName:   strings.ToLower(fmt.Sprintf("%v_%v_%v", account.DemandSource.ApiKey, csv.AdFormat, csv.BidFloor)),
+		AppID:       attrs.AppID,
+		BidFloor:    &csv.BidFloor,
+		AdType:      adType,
+		Format:      format,
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		IsBidding:   &attrs.IsBidding,
+		Extra: map[string]any{
+			"placement_id": csv.PlacementID,
+		},
+	}
+
+	return lineItemAttrs, nil
+}
+
 type IronSourceLineItemCSV struct {
 	AdFormat   string          `csv:"ad_format"`
 	BidFloor   decimal.Decimal `csv:"bid_floor"`
@@ -671,6 +700,17 @@ func (s *LineItemService) ImportCSV(ctx context.Context, _ AuthContext, reader i
 		csvLineItems = make([]LineItemCSV, len(yandexLineItems))
 		for i, yandexLineItem := range yandexLineItems {
 			csvLineItems[i] = yandexLineItem
+		}
+	case adapter.ZmaticooKey:
+		var zmaticooLineItems []zmaticooLineItemCSV
+		err = csvutil.Unmarshal(csvInput, &zmaticooLineItems)
+		if err != nil {
+			return fmt.Errorf("unmarshal csv: %v", err)
+		}
+
+		csvLineItems = make([]LineItemCSV, len(zmaticooLineItems))
+		for i, zmaticooLineItem := range zmaticooLineItems {
+			csvLineItems[i] = zmaticooLineItem
 		}
 	case adapter.IronSourceKey:
 		var ironSourceLineItems []IronSourceLineItemCSV
@@ -887,6 +927,10 @@ func (v *lineItemAttrsValidator) extraRule(account *DemandSourceAccount) v8n.Rul
 	case adapter.YandexKey:
 		rule = v8n.Map(
 			v8n.Key("ad_unit_id", v8n.Required, isString),
+		)
+	case adapter.ZmaticooKey:
+		rule = v8n.Map(
+			v8n.Key("placement_id", v8n.Required, isString),
 		)
 	}
 

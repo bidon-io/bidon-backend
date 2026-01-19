@@ -242,6 +242,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 				&sdkapi.YandexInitConfig{
 					MetricaID: fmt.Sprintf("yandex_metrica_%d", apps[1].ID),
 				},
+				&sdkapi.ZmaticooInitConfig{
+					AppKey: fmt.Sprintf("zmaticoo_app_%d", apps[1].ID),
+					Order:  0,
+				},
 			},
 		},
 		{
@@ -305,6 +309,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 				&sdkapi.YandexInitConfig{
 					MetricaID: fmt.Sprintf("yandex_metrica_%d", apps[1].ID),
 					Order:     2,
+				},
+				&sdkapi.ZmaticooInitConfig{
+					AppKey: fmt.Sprintf("zmaticoo_app_%d", apps[1].ID),
+					Order:  0,
 				},
 			},
 		},
@@ -654,6 +662,131 @@ func TestAdapterInitConfigsFetcher_FetchTaurusXPlacements_MissingPlacementID(t *
 	}
 
 	_, err := fetcher.fetchTaurusXPlacements(context.Background(), app.ID)
+	if err == nil {
+		t.Fatal("Expected error when placement_id is missing, got nil")
+	}
+
+	expectedError := "placement_id is either missing or not a string"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestAdapterInitConfigsFetcher_FetchBiddingZmaticooPlacements(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	// Create app
+	app := dbtest.CreateApp(t, tx)
+
+	// Create Zmaticoo demand source and account
+	zmaticooDemandSource := dbtest.CreateDemandSource(t, tx, func(ds *db.DemandSource) {
+		ds.APIKey = "zmaticoo"
+	})
+	zmaticooAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = zmaticooDemandSource
+		account.DemandSourceID = zmaticooDemandSource.ID
+	})
+
+	// Create line items with placement_id and different ad types
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.AppID = app.ID
+		item.AccountID = zmaticooAccount.ID
+		item.AdType = db.InterstitialAdType
+		item.IsBidding = sql.NullBool{Bool: true, Valid: true}
+		item.Extra = map[string]any{
+			"placement_id": "placement1",
+		}
+	})
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.AppID = app.ID
+		item.AccountID = zmaticooAccount.ID
+		item.AdType = db.RewardedAdType
+		item.IsBidding = sql.NullBool{Bool: false, Valid: true}
+		item.Extra = map[string]any{
+			"placement_id": "placement2",
+		}
+	})
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.AppID = app.ID
+		item.AccountID = zmaticooAccount.ID
+		item.AdType = db.BannerAdType
+		item.Format = sql.NullString{String: "MREC", Valid: true}
+		item.IsBidding = sql.NullBool{Bool: true, Valid: true}
+		item.Extra = map[string]any{
+			"placement_id": "placement3",
+		}
+	})
+
+	// Test fetchBiddingZmaticooPlacements method
+	rdb, _ := redismock.NewClusterMock()
+	lineItemsCache := config.NewRedisCacheOf[[]db.LineItem](rdb, 10*time.Minute, "line_items")
+	fetcher := &AdapterInitConfigsFetcher{
+		DB:             tx,
+		LineItemsCache: lineItemsCache,
+	}
+
+	placements, err := fetcher.fetchBiddingZmaticooPlacements(context.Background(), app.ID)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Verify the placements
+	if len(placements) != 2 {
+		t.Fatalf("Expected 2 placements, got %d", len(placements))
+	}
+
+	expectedPlacements := []sdkapi.ZmaticooPlacement{
+		{PlacementID: "placement1", Format: "INTERSTITIAL"},
+		{PlacementID: "placement3", Format: "MREC"},
+	}
+
+	for i, expected := range expectedPlacements {
+		if placements[i].PlacementID != expected.PlacementID {
+			t.Errorf("Expected placement ID %s, got %s", expected.PlacementID, placements[i].PlacementID)
+		}
+		if placements[i].Format != expected.Format {
+			t.Errorf("Expected format %s, got %s", expected.Format, placements[i].Format)
+		}
+	}
+}
+
+func TestAdapterInitConfigsFetcher_FetchBiddingZmaticooPlacements_MissingPlacementID(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	// Create app
+	app := dbtest.CreateApp(t, tx)
+
+	// Create Zmaticoo demand source and account
+	zmaticooDemandSource := dbtest.CreateDemandSource(t, tx, func(ds *db.DemandSource) {
+		ds.APIKey = "zmaticoo"
+	})
+	zmaticooAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = zmaticooDemandSource
+		account.DemandSourceID = zmaticooDemandSource.ID
+	})
+
+	// Create line item WITHOUT placement_id and bidding enabled
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.AppID = app.ID
+		item.AccountID = zmaticooAccount.ID
+		item.AdType = db.InterstitialAdType
+		item.IsBidding = sql.NullBool{Bool: true, Valid: true}
+		item.Extra = map[string]any{
+			"other_field": "some_value",
+		}
+	})
+
+	// Test fetchBiddingZmaticooPlacements method should return error
+	rdb, _ := redismock.NewClusterMock()
+	lineItemsCache := config.NewRedisCacheOf[[]db.LineItem](rdb, 10*time.Minute, "line_items")
+	fetcher := &AdapterInitConfigsFetcher{
+		DB:             tx,
+		LineItemsCache: lineItemsCache,
+	}
+
+	_, err := fetcher.fetchBiddingZmaticooPlacements(context.Background(), app.ID)
 	if err == nil {
 		t.Fatal("Expected error when placement_id is missing, got nil")
 	}
