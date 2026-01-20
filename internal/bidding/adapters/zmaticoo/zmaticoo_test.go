@@ -131,8 +131,8 @@ func TestZmaticooAdapter_ParseBids_Success(t *testing.T) {
 		t.Errorf("Expected price 1.5, got %f", result.Bid.Price)
 	}
 
-	if result.Bid.Payload != "<vast/>" {
-		t.Errorf("Expected payload '<vast/>', got '%s'", result.Bid.Payload)
+	if result.Bid.Payload != "resp-1" {
+		t.Errorf("Expected payload 'resp-1', got '%s'", result.Bid.Payload)
 	}
 
 	if result.Bid.NURL != "http://win.url" {
