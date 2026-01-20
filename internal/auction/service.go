@@ -485,7 +485,7 @@ func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap
 
 func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandResponse) map[string]any {
 	switch demandResponse.DemandID {
-	case adapter.AmazonKey, adapter.ZmaticooKey:
+	case adapter.AmazonKey:
 		return map[string]any{}
 	case adapter.MobileFuseKey:
 		return map[string]any{

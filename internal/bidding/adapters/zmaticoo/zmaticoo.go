@@ -239,7 +239,7 @@ func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dema
 		ID:       br.RequestID,
 		ImpID:    impID, // Zmaticoo response is not OpenRTB, so we get it from request
 		Price:    br.ECPM,
-		Payload:  br.AdM, // Zmaticoo response is not OpenRTB, it will be empty
+		Payload:  br.RequestID, // Zmaticoo response is not OpenRTB, so we get br.RequestID
 		DemandID: adapter.ZmaticooKey,
 		AdID:     br.AdID, // Zmaticoo response is not OpenRTB, it will be empty
 		LURL:     br.LURL,
