@@ -52,7 +52,14 @@ type appDemandProfileMapper struct {
 
 //lint:ignore U1000 this method is used by generic struct
 func (m appDemandProfileMapper) dbModel(attrs *admin.AppDemandProfileAttrs, id int64) *db.AppDemandProfile {
-	data, _ := json.Marshal(attrs.Data)
+	// Remove nil values from data to avoid storing empty keys in JSONB
+	cleanedData := make(map[string]any)
+	for k, v := range attrs.Data {
+		if v != nil {
+			cleanedData[k] = v
+		}
+	}
+	data, _ := json.Marshal(cleanedData)
 
 	return &db.AppDemandProfile{
 		ID:             id,
