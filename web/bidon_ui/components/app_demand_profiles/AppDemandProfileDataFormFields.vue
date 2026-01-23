@@ -73,6 +73,13 @@
   <template v-if="accountType == 'DemandSourceAccount::Zmaticoo'">
     <VeeFormFieldWrapper field="data.appKey" label="App Key" required />
   </template>
+  <VeeFormFieldWrapper
+    v-if="accountType"
+    field="data.order"
+    label="Order"
+    type="number"
+    placeholder="Leave empty for default"
+  />
 </template>
 
 <script setup>

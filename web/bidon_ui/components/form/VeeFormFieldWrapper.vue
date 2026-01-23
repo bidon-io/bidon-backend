@@ -6,6 +6,12 @@
       :type="type"
       :placeholder="placeholder || label"
     />
+    <InputNumber
+      v-if="type === 'number'"
+      v-model="value"
+      :placeholder="placeholder || label"
+      :use-grouping="false"
+    />
     <Checkbox
       v-if="type === 'bool'"
       v-model="value"
@@ -38,7 +44,7 @@ const props = defineProps({
   },
   type: {
     type: String,
-    validator: (value) => ["text", "bool", "array"].includes(value),
+    validator: (value) => ["text", "number", "bool", "array"].includes(value),
     default: "text",
   },
   placeholder: {
