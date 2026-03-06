@@ -20,7 +20,7 @@ const handleSubmit = useCreateResource({
   path: resourcesPath,
   message: (response) =>
     response.status === 200
-      ? "A line item with these attributes already exists!"
+      ? "Line item with these attributes already exists!"
       : "Line Item created!",
   onError: async (e) => (error.value = e),
 });
