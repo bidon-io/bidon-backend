@@ -18,11 +18,13 @@ export default function ({
       const response = await axios[method](path, event);
 
       const id = response.data.id;
-      await onSuccess(id);
+      await onSuccess(id, response);
+      const detail =
+        typeof message === "function" ? message(response) : message;
       toast.add({
         severity: "success",
         summary: "Success",
-        detail: message,
+        detail,
         life: 3000,
       });
     } catch (error) {

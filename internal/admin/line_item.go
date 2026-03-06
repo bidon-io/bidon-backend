@@ -23,8 +23,9 @@ type LineItemResource struct {
 }
 
 type LineItem struct {
-	ID        int64  `json:"id"`
-	PublicUID string `json:"public_uid"`
+	ID            int64  `json:"id"`
+	PublicUID     string `json:"public_uid"`
+	AlreadyExists bool   `json:"-"`
 	LineItemAttrs
 	App     App                 `json:"app"`
 	Account DemandSourceAccount `json:"account"`

@@ -54,33 +54,51 @@ func (r *LineItemRepo) FindOwnedByUser(ctx context.Context, userID int64, id int
 func (r *LineItemRepo) Create(ctx context.Context, attrs *admin.LineItemAttrs) (*admin.LineItem, error) {
 	dbItem := r.mapper.dbModel(attrs, 0)
 
-	var id int64
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := audit.SetContext(tx, ctx); err != nil {
-			return err
-		}
-
-		existingID, err := r.findExistingID(tx, dbItem)
-		if err != nil {
-			return err
-		}
-		if existingID != 0 {
-			id = existingID
-			return nil
-		}
-
-		if err := tx.Create(dbItem).Error; err != nil {
-			return err
-		}
-
-		id = dbItem.ID
-		return nil
-	})
+	id, alreadyExists, err := r.firstOrCreate(ctx, dbItem)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.Find(ctx, id)
+	item, err := r.Find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	item.AlreadyExists = alreadyExists
+
+	return item, nil
+}
+
+func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id int64, exists bool, err error) {
+	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+
+		existingID, err := r.findExistingID(tx, item)
+		if err != nil {
+			return err
+		}
+
+		if existingID != 0 {
+			id = existingID
+			exists = true
+		} else {
+			if err := tx.Create(item).Error; err != nil {
+				return err
+			}
+			id = item.ID
+			exists = false
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, false, err
+	}
+
+	return id, exists, nil
 }
 
 func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAttrs) error {

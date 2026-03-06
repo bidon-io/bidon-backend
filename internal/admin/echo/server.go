@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	v8n "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	session "github.com/spazzymoto/echo-scs-session"
@@ -326,7 +327,31 @@ func (s *Server) GetLineItemsCollection(c echo.Context, _ api.GetLineItemsCollec
 }
 
 func (s *Server) CreateLineItem(c echo.Context) error {
-	return s.LineItemHandler.create(c)
+	authCtx, err := getAuthContext(c)
+	if err != nil {
+		return err
+	}
+
+	attrs := new(admin.LineItemAttrs)
+	if err := c.Bind(attrs); err != nil {
+		return err
+	}
+
+	resource, err := s.LineItemService.Create(c.Request().Context(), authCtx, attrs)
+	if err != nil {
+		var validationError v8n.Errors
+		if errors.As(err, &validationError) {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, validationError.Error())
+		}
+
+		return err
+	}
+
+	if resource.AlreadyExists {
+		return c.JSON(http.StatusOK, resource)
+	}
+
+	return c.JSON(http.StatusCreated, resource)
 }
 
 func (s *Server) GetLineItem(c echo.Context, _ api.IdParam) error {

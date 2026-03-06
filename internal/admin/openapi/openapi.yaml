@@ -699,6 +699,12 @@ paths:
             schema:
               $ref: './schemas/line-item.schema.json'
       responses:
+        '200':
+          description: Existing line item
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/line-item.schema.json'
         '201':
           description: A line item
           content:
