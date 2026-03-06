@@ -306,6 +306,60 @@ func TestLineItemRepo_Find(t *testing.T) {
 	}
 }
 
+func TestLineItemRepo_Create_ReturnsExistingWhenAttrsMatch(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewLineItemRepo(tx)
+
+	app := dbtest.CreateApp(t, tx)
+	applovinDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+		source.HumanName = source.APIKey
+	})
+	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = applovinDemandSource
+	})
+
+	attrs := &admin.LineItemAttrs{
+		HumanName:   "banner",
+		AppID:       app.ID,
+		BidFloor:    ptr(decimal.NewFromInt(1)),
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		AccountID:   applovinAccount.ID,
+		AccountType: applovinAccount.Type,
+		IsBidding:   ptr(true),
+		Extra: map[string]any{
+			"placement_id": "abc",
+			"mediation":    "max",
+		},
+	}
+
+	first, err := repo.Create(context.Background(), attrs)
+	if err != nil {
+		t.Fatalf("first repo.Create(ctx, %+v) = %v, %q", attrs, first, err)
+	}
+
+	second, err := repo.Create(context.Background(), attrs)
+	if err != nil {
+		t.Fatalf("second repo.Create(ctx, %+v) = %v, %q", attrs, second, err)
+	}
+
+	if first.ID != second.ID {
+		t.Fatalf("repo.Create(ctx, %+v) created duplicate records: first id %d, second id %d", attrs, first.ID, second.ID)
+	}
+
+	got, err := repo.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("repo.List(ctx) = %v, %q", got, err)
+	}
+
+	if got.Meta.TotalCount != 1 {
+		t.Fatalf("repo.List(ctx) total count = %d, want 1", got.Meta.TotalCount)
+	}
+}
+
 func TestLineItemRepo_Update(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
