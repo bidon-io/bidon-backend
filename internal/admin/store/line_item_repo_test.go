@@ -306,6 +306,60 @@ func TestLineItemRepo_Find(t *testing.T) {
 	}
 }
 
+func TestLineItemRepo_Create_ReturnsExistingWhenAttrsMatch(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewLineItemRepo(tx)
+
+	app := dbtest.CreateApp(t, tx)
+	applovinDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+		source.HumanName = source.APIKey
+	})
+	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = applovinDemandSource
+	})
+
+	attrs := &admin.LineItemAttrs{
+		HumanName:   "banner",
+		AppID:       app.ID,
+		BidFloor:    ptr(decimal.NewFromInt(1)),
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		AccountID:   applovinAccount.ID,
+		AccountType: applovinAccount.Type,
+		IsBidding:   ptr(true),
+		Extra: map[string]any{
+			"placement_id": "abc",
+			"mediation":    "max",
+		},
+	}
+
+	first, err := repo.Create(context.Background(), attrs)
+	if err != nil {
+		t.Fatalf("first repo.Create(ctx, %+v) = %v, %q", attrs, first, err)
+	}
+
+	second, err := repo.Create(context.Background(), attrs)
+	if err != nil {
+		t.Fatalf("second repo.Create(ctx, %+v) = %v, %q", attrs, second, err)
+	}
+
+	if first.ID != second.ID {
+		t.Fatalf("repo.Create(ctx, %+v) created duplicate records: first id %d, second id %d", attrs, first.ID, second.ID)
+	}
+
+	got, err := repo.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("repo.List(ctx) = %v, %q", got, err)
+	}
+
+	if got.Meta.TotalCount != 1 {
+		t.Fatalf("repo.List(ctx) total count = %d, want 1", got.Meta.TotalCount)
+	}
+}
+
 func TestLineItemRepo_Update(t *testing.T) {
 	tx := testDB.Begin()
 	defer tx.Rollback()
@@ -392,5 +446,166 @@ func TestLineItemRepo_Delete(t *testing.T) {
 	got, err := repo.Find(context.Background(), item.ID)
 	if got != nil {
 		t.Fatalf("repo.Find(ctx, %v) = %+v, %q; want %v, %q", item.ID, got, err, nil, "record not found")
+	}
+}
+
+func TestLineItemRepo_ListOwnedByUser(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewLineItemRepo(tx)
+
+	owner := dbtest.CreateUser(t, tx)
+	anotherUser := dbtest.CreateUser(t, tx)
+	ownerApp := dbtest.CreateApp(t, tx, func(app *db.App) {
+		app.User = owner
+	})
+	anotherApp := dbtest.CreateApp(t, tx, func(app *db.App) {
+		app.User = anotherUser
+	})
+	demandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+		source.HumanName = source.APIKey
+	})
+	account := dbtest.CreateDemandSourceAccount(t, tx, func(acc *db.DemandSourceAccount) {
+		acc.User = owner
+		acc.DemandSource = demandSource
+	})
+
+	ownerItem, err := repo.Create(context.Background(), &admin.LineItemAttrs{
+		HumanName:   "owner-item",
+		AppID:       ownerApp.ID,
+		BidFloor:    ptr(decimal.NewFromFloat(0.1)),
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		Extra:       map[string]any{"ad_unit_id": "owner"},
+	})
+	if err != nil {
+		t.Fatalf("repo.Create(owner) error: %v", err)
+	}
+
+	_, err = repo.Create(context.Background(), &admin.LineItemAttrs{
+		HumanName:   "another-item",
+		AppID:       anotherApp.ID,
+		BidFloor:    ptr(decimal.NewFromFloat(0.2)),
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		Extra:       map[string]any{"ad_unit_id": "another"},
+	})
+	if err != nil {
+		t.Fatalf("repo.Create(another) error: %v", err)
+	}
+
+	got, err := repo.ListOwnedByUser(context.Background(), owner.ID, nil)
+	if err != nil {
+		t.Fatalf("repo.ListOwnedByUser() error: %v", err)
+	}
+	if got.Meta.TotalCount != 1 {
+		t.Fatalf("repo.ListOwnedByUser() total count = %d, want 1", got.Meta.TotalCount)
+	}
+	if len(got.Items) != 1 || got.Items[0].ID != ownerItem.ID {
+		t.Fatalf("repo.ListOwnedByUser() returned wrong items: %+v", got.Items)
+	}
+}
+
+func TestLineItemRepo_FindOwnedByUser(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewLineItemRepo(tx)
+
+	owner := dbtest.CreateUser(t, tx)
+	anotherUser := dbtest.CreateUser(t, tx)
+	ownerApp := dbtest.CreateApp(t, tx, func(app *db.App) {
+		app.User = owner
+	})
+	demandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+		source.HumanName = source.APIKey
+	})
+	account := dbtest.CreateDemandSourceAccount(t, tx, func(acc *db.DemandSourceAccount) {
+		acc.User = owner
+		acc.DemandSource = demandSource
+	})
+
+	item, err := repo.Create(context.Background(), &admin.LineItemAttrs{
+		HumanName:   "owner-item",
+		AppID:       ownerApp.ID,
+		BidFloor:    ptr(decimal.NewFromFloat(0.1)),
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		AccountID:   account.ID,
+		AccountType: account.Type,
+		Extra:       map[string]any{"ad_unit_id": "owner"},
+	})
+	if err != nil {
+		t.Fatalf("repo.Create() error: %v", err)
+	}
+
+	got, err := repo.FindOwnedByUser(context.Background(), owner.ID, item.ID)
+	if err != nil {
+		t.Fatalf("repo.FindOwnedByUser(owner) error: %v", err)
+	}
+	if got.ID != item.ID {
+		t.Fatalf("repo.FindOwnedByUser(owner) ID = %d, want %d", got.ID, item.ID)
+	}
+
+	got, err = repo.FindOwnedByUser(context.Background(), anotherUser.ID, item.ID)
+	if err == nil || got != nil {
+		t.Fatalf("repo.FindOwnedByUser(non-owner) = %+v, %v; want nil, error", got, err)
+	}
+}
+
+func TestLineItemRepo_CreateMany(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewLineItemRepo(tx)
+
+	app := dbtest.CreateApp(t, tx)
+	demandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+		source.HumanName = source.APIKey
+	})
+	account := dbtest.CreateDemandSourceAccount(t, tx, func(acc *db.DemandSourceAccount) {
+		acc.DemandSource = demandSource
+	})
+
+	items := []admin.LineItemAttrs{
+		{
+			HumanName:   "item-1",
+			AppID:       app.ID,
+			BidFloor:    ptr(decimal.NewFromFloat(0.1)),
+			AdType:      ad.BannerType,
+			Format:      ptr(ad.BannerFormat),
+			AccountID:   account.ID,
+			AccountType: account.Type,
+			Extra:       map[string]any{"ad_unit_id": "one"},
+		},
+		{
+			HumanName:   "item-2",
+			AppID:       app.ID,
+			BidFloor:    ptr(decimal.NewFromFloat(0.2)),
+			AdType:      ad.InterstitialType,
+			AccountID:   account.ID,
+			AccountType: account.Type,
+			Extra:       map[string]any{"ad_unit_id": "two"},
+		},
+	}
+
+	if err := repo.CreateMany(context.Background(), items); err != nil {
+		t.Fatalf("repo.CreateMany() error: %v", err)
+	}
+
+	got, err := repo.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("repo.List() error: %v", err)
+	}
+	if got.Meta.TotalCount != 2 {
+		t.Fatalf("repo.CreateMany() total count = %d, want 2", got.Meta.TotalCount)
 	}
 }

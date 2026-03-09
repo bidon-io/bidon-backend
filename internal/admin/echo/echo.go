@@ -185,6 +185,13 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) listColl
 }
 
 func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) create(c echo.Context) error {
+	return s.createWithStatus(c, nil)
+}
+
+func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) createWithStatus(
+	c echo.Context,
+	statusCode func(resource *ResourceData) int,
+) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
@@ -205,7 +212,13 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) create(c
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, resource)
+	status := http.StatusCreated
+	if statusCode != nil {
+		if customStatus := statusCode(resource); customStatus != 0 {
+			status = customStatus
+		}
+	}
+	return c.JSON(status, resource)
 }
 
 func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) get(c echo.Context) error {

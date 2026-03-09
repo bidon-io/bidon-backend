@@ -3,6 +3,8 @@ package adminstore
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/shopspring/decimal"
@@ -49,6 +51,56 @@ func (r *LineItemRepo) FindOwnedByUser(ctx context.Context, userID int64, id int
 	})
 }
 
+func (r *LineItemRepo) Create(ctx context.Context, attrs *admin.LineItemAttrs) (*admin.LineItem, error) {
+	dbItem := r.mapper.dbModel(attrs, 0)
+
+	id, alreadyExists, err := r.firstOrCreate(ctx, dbItem)
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := r.Find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	item.AlreadyExists = alreadyExists
+
+	return item, nil
+}
+
+func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id int64, exists bool, err error) {
+	err = r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := audit.SetContext(tx, ctx); err != nil {
+			return err
+		}
+
+		existingID, err := r.findExistingID(tx, item)
+		if err != nil {
+			return err
+		}
+
+		if existingID != 0 {
+			id = existingID
+			exists = true
+		} else {
+			if err := tx.Create(item).Error; err != nil {
+				return err
+			}
+			id = item.ID
+			exists = false
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, false, err
+	}
+
+	return id, exists, nil
+}
+
 func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAttrs) error {
 	dbItems := make([]*db.LineItem, len(items))
 	for i := range items {
@@ -60,6 +112,54 @@ func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAtt
 		}
 		return tx.Create(&dbItems).Error
 	})
+}
+
+func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem) (int64, error) {
+	query := tx.Model(&db.LineItem{}).
+		Select("id").
+		Where("app_id = ?", item.AppID).
+		Where("account_type = ?", item.AccountType).
+		Where("account_id = ?", item.AccountID).
+		Where("human_name = ?", item.HumanName).
+		Where("ad_type = ?", item.AdType)
+
+	if item.BidFloor.Valid {
+		query = query.Where("bid_floor = ?", item.BidFloor.Decimal)
+	} else {
+		query = query.Where("bid_floor IS NULL")
+	}
+
+	if item.Format.Valid {
+		query = query.Where("format = ?", item.Format.String)
+	} else {
+		query = query.Where("format IS NULL")
+	}
+
+	if item.IsBidding.Valid {
+		query = query.Where("bidding = ?", item.IsBidding.Bool)
+	} else {
+		query = query.Where("bidding IS NULL")
+	}
+
+	extraJSON, err := json.Marshal(item.Extra)
+	if err != nil {
+		return 0, err
+	}
+	if string(extraJSON) == "null" {
+		query = query.Where("extra IS NULL OR extra = '{}'::jsonb")
+	} else {
+		query = query.Where("extra = ?::jsonb", string(extraJSON))
+	}
+
+	var existing db.LineItem
+	if err := query.Take(&existing).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return existing.ID, nil
 }
 
 type lineItemMapper struct {
