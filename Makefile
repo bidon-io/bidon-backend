@@ -1,4 +1,6 @@
 REGISTRY ?= ghcr.io/bidon-io
+LANGGRAPH_BASE_IMAGE ?= langchain/langgraph-api
+LANGGRAPH_API_VERSION ?= 0.2.110
 
 .PHONY: test
 
@@ -43,7 +45,7 @@ docker-build-push-prod-proxy: docker-build-push-prod
 
 docker-build-push-prod-copilot:
 	cd copilot && \
-	uv run langgraph dockerfile Dockerfile && \
+	uv run langgraph dockerfile --base-image $(LANGGRAPH_BASE_IMAGE) --api-version $(LANGGRAPH_API_VERSION) Dockerfile && \
 	docker buildx build --platform linux/amd64 --provenance=false \
 		--cache-to type=inline --cache-from $(REGISTRY)/copilot \
 		$(tags) --push .
