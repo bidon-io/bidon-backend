@@ -146,7 +146,7 @@ func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem) (int64, er
 		return 0, err
 	}
 	if string(extraJSON) == "null" {
-		query = query.Where("extra IS NULL")
+		query = query.Where("extra IS NULL OR extra = '{}'::jsonb")
 	} else {
 		query = query.Where("extra = ?::jsonb", string(extraJSON))
 	}
