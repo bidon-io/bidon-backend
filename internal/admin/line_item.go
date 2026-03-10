@@ -761,6 +761,7 @@ type LineItemRepo interface {
 	OwnedResourceQuerier[LineItem]
 	ResourceManipulator[LineItem, LineItemAttrs]
 
+	FindDuplicateIDByAttrs(ctx context.Context, attrs *LineItemAttrs, excludeID int64) (int64, error)
 	CreateMany(ctx context.Context, items []LineItemAttrs) error
 }
 
@@ -830,6 +831,76 @@ func (p *lineItemPolicy) authorizeUpdate(ctx context.Context, authCtx AuthContex
 	return nil
 }
 
+func (s *LineItemService) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *LineItemAttrs) (*LineItem, error) {
+	scope := s.policy.getManageScope(authCtx)
+
+	profile, err := scope.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.policy.authorizeUpdate(ctx, authCtx, profile, attrs); err != nil {
+		return nil, err
+	}
+
+	target := mergeLineItemAttrsForKey(profile, attrs)
+	if err := s.validateUpdate(ctx, attrs, target, id); err != nil {
+		return nil, err
+	}
+
+	return s.repo.Update(ctx, id, attrs)
+}
+
+func mergeLineItemAttrsForKey(current *LineItem, update *LineItemAttrs) *LineItemAttrs {
+	target := &LineItemAttrs{
+		AppID:       current.AppID,
+		AccountType: current.AccountType,
+		AccountID:   current.AccountID,
+		AdType:      current.AdType,
+		Format:      current.Format,
+		IsBidding:   current.IsBidding,
+		Extra:       current.Extra,
+	}
+
+	if update.AppID != 0 {
+		target.AppID = update.AppID
+	}
+	if update.AccountType != "" {
+		target.AccountType = update.AccountType
+	}
+	if update.AccountID != 0 {
+		target.AccountID = update.AccountID
+	}
+	if update.AdType != ad.UnknownType {
+		target.AdType = update.AdType
+	}
+	if update.Format != nil {
+		target.Format = update.Format
+	}
+	if update.IsBidding != nil {
+		target.IsBidding = update.IsBidding
+	}
+	if update.Extra != nil {
+		target.Extra = update.Extra
+	}
+
+	return target
+}
+
+func (s *LineItemService) validateUpdate(ctx context.Context, attrs *LineItemAttrs, target *LineItemAttrs, excludeID int64) error {
+	validator := &lineItemUpdateValidator{
+		lineItemAttrsValidator: &lineItemAttrsValidator{
+			attrs:                   attrs,
+			demandSourceAccountRepo: s.store.DemandSourceAccounts(),
+		},
+		lineItemRepo: s.store.LineItems(),
+		targetAttrs:  target,
+		excludeID:    excludeID,
+	}
+
+	return validator.ValidateWithContext(ctx)
+}
+
 func (p *lineItemPolicy) authorizeDelete(_ context.Context, _ AuthContext, _ *LineItem) error {
 	return nil
 }
@@ -860,13 +931,46 @@ func (v *lineItemAttrsValidator) ValidateWithContext(ctx context.Context) error 
 		return v8n.NewInternalError(err)
 	}
 
-	return v.validateExtraField(account)
+	return v.validateExtraFieldForAttrs(v.attrs, account)
 }
 
 func (v *lineItemAttrsValidator) validateExtraField(account *DemandSourceAccount) error {
-	return v8n.ValidateStruct(v.attrs,
-		v8n.Field(&v.attrs.Extra, v.extraRule(account)),
+	return v.validateExtraFieldForAttrs(v.attrs, account)
+}
+
+func (v *lineItemAttrsValidator) validateExtraFieldForAttrs(attrs *LineItemAttrs, account *DemandSourceAccount) error {
+	return v8n.ValidateStruct(attrs,
+		v8n.Field(&attrs.Extra, v.extraRule(account)),
 	)
+}
+
+type lineItemUpdateValidator struct {
+	*lineItemAttrsValidator
+	lineItemRepo LineItemRepo
+	targetAttrs  *LineItemAttrs
+	excludeID    int64
+}
+
+func (v *lineItemUpdateValidator) ValidateWithContext(ctx context.Context) error {
+	account, err := v.demandSourceAccountRepo.Find(ctx, v.targetAttrs.AccountID)
+	if err != nil {
+		return v8n.NewInternalError(err)
+	}
+	if err := v.validateExtraFieldForAttrs(v.targetAttrs, account); err != nil {
+		return err
+	}
+
+	duplicateID, err := v.lineItemRepo.FindDuplicateIDByAttrs(ctx, v.targetAttrs, v.excludeID)
+	if err != nil {
+		return err
+	}
+	if duplicateID != 0 {
+		return v8n.Errors{
+			"line_item": fmt.Errorf("line item with these attributes already exists (id=%d)", duplicateID),
+		}
+	}
+
+	return nil
 }
 
 func (v *lineItemAttrsValidator) extraRule(account *DemandSourceAccount) v8n.Rule {

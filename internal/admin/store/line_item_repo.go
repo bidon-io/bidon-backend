@@ -26,9 +26,7 @@ type lineItemLockSignature struct {
 	AppID       int64           `json:"app_id"`
 	AccountType string          `json:"account_type"`
 	AccountID   int64           `json:"account_id"`
-	HumanName   string          `json:"human_name"`
 	AdType      db.AdType       `json:"ad_type"`
-	BidFloor    *string         `json:"bid_floor"`
 	Format      *string         `json:"format"`
 	IsBidding   *bool           `json:"is_bidding"`
 	Extra       json.RawMessage `json:"extra"`
@@ -95,7 +93,7 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 			return err
 		}
 
-		existingID, err := r.findExistingID(tx, item)
+		existingID, err := r.findExistingID(tx, item, 0)
 		if err != nil {
 			return err
 		}
@@ -121,13 +119,12 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 	return id, exists, nil
 }
 
-func lineItemAdvisoryLockKey(item *db.LineItem) (int64, error) {
-	var bidFloor *string
-	if item.BidFloor.Valid {
-		s := item.BidFloor.Decimal.String()
-		bidFloor = &s
-	}
+func (r *LineItemRepo) FindDuplicateIDByAttrs(ctx context.Context, attrs *admin.LineItemAttrs, excludeID int64) (int64, error) {
+	dbItem := r.mapper.dbModel(attrs, 0)
+	return r.findExistingID(r.db.WithContext(ctx), dbItem, excludeID)
+}
 
+func lineItemAdvisoryLockKey(item *db.LineItem) (int64, error) {
 	var format *string
 	if item.Format.Valid {
 		s := item.Format.String
@@ -154,9 +151,7 @@ func lineItemAdvisoryLockKey(item *db.LineItem) (int64, error) {
 		AppID:       item.AppID,
 		AccountType: item.AccountType,
 		AccountID:   item.AccountID,
-		HumanName:   item.HumanName,
 		AdType:      item.AdType,
-		BidFloor:    bidFloor,
 		Format:      format,
 		IsBidding:   isBidding,
 		Extra:       extraJSON,
@@ -183,19 +178,15 @@ func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAtt
 	})
 }
 
-func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem) (int64, error) {
+func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem, excludeID int64) (int64, error) {
 	query := tx.Model(&db.LineItem{}).
 		Select("id").
 		Where("app_id = ?", item.AppID).
 		Where("account_type = ?", item.AccountType).
 		Where("account_id = ?", item.AccountID).
-		Where("human_name = ?", item.HumanName).
 		Where("ad_type = ?", item.AdType)
-
-	if item.BidFloor.Valid {
-		query = query.Where("bid_floor = ?", item.BidFloor.Decimal)
-	} else {
-		query = query.Where("bid_floor IS NULL")
+	if excludeID != 0 {
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	if item.Format.Valid {
