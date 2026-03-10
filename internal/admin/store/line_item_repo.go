@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"hash/fnv"
 	"strconv"
 
 	"github.com/shopspring/decimal"
@@ -19,6 +20,16 @@ import (
 
 type LineItemRepo struct {
 	*resourceRepo[admin.LineItem, admin.LineItemAttrs, db.LineItem]
+}
+
+type lineItemLockSignature struct {
+	AppID       int64           `json:"app_id"`
+	AccountType string          `json:"account_type"`
+	AccountID   int64           `json:"account_id"`
+	AdType      db.AdType       `json:"ad_type"`
+	Format      *string         `json:"format"`
+	IsBidding   *bool           `json:"is_bidding"`
+	Extra       json.RawMessage `json:"extra"`
 }
 
 func NewLineItemRepo(d *db.DB) *LineItemRepo {
@@ -74,8 +85,15 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
+		lockKey, err := lineItemAdvisoryLockKey(item)
+		if err != nil {
+			return err
+		}
+		if err := tx.Exec("SELECT pg_advisory_xact_lock(?)", lockKey).Error; err != nil {
+			return err
+		}
 
-		existingID, err := r.findExistingID(tx, item)
+		existingID, err := r.findExistingID(tx, item, 0)
 		if err != nil {
 			return err
 		}
@@ -101,6 +119,52 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 	return id, exists, nil
 }
 
+func (r *LineItemRepo) FindDuplicateIDByAttrs(ctx context.Context, attrs *admin.LineItemAttrs, excludeID int64) (int64, error) {
+	dbItem := r.mapper.dbModel(attrs, 0)
+	return r.findExistingID(r.db.WithContext(ctx), dbItem, excludeID)
+}
+
+func lineItemAdvisoryLockKey(item *db.LineItem) (int64, error) {
+	var format *string
+	if item.Format.Valid {
+		s := item.Format.String
+		format = &s
+	}
+
+	var isBidding *bool
+	if item.IsBidding.Valid {
+		b := item.IsBidding.Bool
+		isBidding = &b
+	}
+
+	extraJSON, err := json.Marshal(item.Extra)
+	if err != nil {
+		return 0, err
+	}
+	// Keep lock semantics aligned with findExistingID:
+	// nil extra and {} should map to one lock key.
+	if string(extraJSON) == "null" {
+		extraJSON = []byte("{}")
+	}
+
+	signatureJSON, err := json.Marshal(lineItemLockSignature{
+		AppID:       item.AppID,
+		AccountType: item.AccountType,
+		AccountID:   item.AccountID,
+		AdType:      item.AdType,
+		Format:      format,
+		IsBidding:   isBidding,
+		Extra:       extraJSON,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	h := fnv.New64a()
+	_, _ = h.Write(signatureJSON)
+	return int64(h.Sum64()), nil
+}
+
 func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAttrs) error {
 	dbItems := make([]*db.LineItem, len(items))
 	for i := range items {
@@ -114,19 +178,15 @@ func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAtt
 	})
 }
 
-func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem) (int64, error) {
+func (r *LineItemRepo) findExistingID(tx *gorm.DB, item *db.LineItem, excludeID int64) (int64, error) {
 	query := tx.Model(&db.LineItem{}).
 		Select("id").
 		Where("app_id = ?", item.AppID).
 		Where("account_type = ?", item.AccountType).
 		Where("account_id = ?", item.AccountID).
-		Where("human_name = ?", item.HumanName).
 		Where("ad_type = ?", item.AdType)
-
-	if item.BidFloor.Valid {
-		query = query.Where("bid_floor = ?", item.BidFloor.Decimal)
-	} else {
-		query = query.Where("bid_floor IS NULL")
+	if excludeID != 0 {
+		query = query.Where("id <> ?", excludeID)
 	}
 
 	if item.Format.Valid {

@@ -2,11 +2,14 @@ package admin
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
+	v8n "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 func Test_lineItemAttrsValidator_ValidateWithContext(t *testing.T) {
@@ -704,6 +707,200 @@ func TestLineItemService_NewServiceAndPolicyMethods(t *testing.T) {
 	}
 }
 
+func TestLineItemService_Update_DuplicateByKey(t *testing.T) {
+	t.Parallel()
+
+	updateCalled := false
+	lineItemRepo := &lineItemRepoStub{
+		findOwnedByUserFn: func(_ context.Context, _ int64, id int64) (*LineItem, error) {
+			return &LineItem{
+				ID: id,
+				LineItemAttrs: LineItemAttrs{
+					AppID:       11,
+					AccountType: "DemandSourceAccount::admob",
+					AccountID:   22,
+					AdType:      ad.BannerType,
+					Format:      ptr(ad.BannerFormat),
+					Extra:       map[string]any{"ad_unit_id": "old"},
+				},
+			}, nil
+		},
+		findDuplicateFn: func(_ context.Context, _ *LineItemAttrs, _ int64) (int64, error) {
+			return 999, nil
+		},
+		updateFn: func(_ context.Context, _ int64, _ *LineItemAttrs) (*LineItem, error) {
+			updateCalled = true
+			return &LineItem{}, nil
+		},
+	}
+
+	store := &StoreMock{
+		LineItemsFunc: func() LineItemRepo { return lineItemRepo },
+		DemandSourceAccountsFunc: func() DemandSourceAccountRepo {
+			return &DemandSourceAccountRepoMock{
+				FindFunc: func(_ context.Context, _ int64) (*DemandSourceAccount, error) {
+					return &DemandSourceAccount{
+						DemandSource: DemandSource{
+							DemandSourceAttrs: DemandSourceAttrs{ApiKey: string(adapter.AdmobKey)},
+						},
+					}, nil
+				},
+			}
+		},
+		AppsFunc:          func() AppRepo { return &AppRepoMock{} },
+		UsersFunc:         func() UserRepo { return &UserRepoMock{} },
+		DemandSourcesFunc: func() DemandSourceRepo { return &DemandSourceRepoMock{} },
+	}
+	service := NewLineItemService(store)
+
+	_, err := service.Update(context.Background(), lineItemTestAuthCtx{userID: 1, isAdmin: false}, 123, &LineItemAttrs{
+		AppID:       11,
+		AccountType: "DemandSourceAccount::admob",
+		AccountID:   22,
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		Extra:       map[string]any{"ad_unit_id": "new"},
+	})
+	if err == nil {
+		t.Fatalf("Update() error = nil, want duplicate validation error")
+	}
+
+	var validationErr v8n.Errors
+	if !errors.As(err, &validationErr) {
+		t.Fatalf("Update() error type = %T, want v8n.Errors", err)
+	}
+	if updateCalled {
+		t.Fatalf("Update() called repo.Update when duplicate exists")
+	}
+}
+
+func TestLineItemService_Update_NoDuplicate(t *testing.T) {
+	t.Parallel()
+
+	updateCalled := false
+	lineItemRepo := &lineItemRepoStub{
+		findOwnedByUserFn: func(_ context.Context, _ int64, id int64) (*LineItem, error) {
+			return &LineItem{
+				ID: id,
+				LineItemAttrs: LineItemAttrs{
+					AppID:       11,
+					AccountType: "DemandSourceAccount::admob",
+					AccountID:   22,
+					AdType:      ad.BannerType,
+					Format:      ptr(ad.BannerFormat),
+					Extra:       map[string]any{"ad_unit_id": "old"},
+				},
+			}, nil
+		},
+		findDuplicateFn: func(_ context.Context, _ *LineItemAttrs, _ int64) (int64, error) {
+			return 0, nil
+		},
+		updateFn: func(_ context.Context, id int64, attrs *LineItemAttrs) (*LineItem, error) {
+			updateCalled = true
+			return &LineItem{ID: id, LineItemAttrs: *attrs}, nil
+		},
+	}
+
+	store := &StoreMock{
+		LineItemsFunc: func() LineItemRepo { return lineItemRepo },
+		DemandSourceAccountsFunc: func() DemandSourceAccountRepo {
+			return &DemandSourceAccountRepoMock{
+				FindFunc: func(_ context.Context, _ int64) (*DemandSourceAccount, error) {
+					return &DemandSourceAccount{
+						DemandSource: DemandSource{
+							DemandSourceAttrs: DemandSourceAttrs{ApiKey: string(adapter.AdmobKey)},
+						},
+					}, nil
+				},
+			}
+		},
+		AppsFunc:          func() AppRepo { return &AppRepoMock{} },
+		UsersFunc:         func() UserRepo { return &UserRepoMock{} },
+		DemandSourcesFunc: func() DemandSourceRepo { return &DemandSourceRepoMock{} },
+	}
+	service := NewLineItemService(store)
+
+	got, err := service.Update(context.Background(), lineItemTestAuthCtx{userID: 1, isAdmin: false}, 123, &LineItemAttrs{
+		AppID:       11,
+		AccountType: "DemandSourceAccount::admob",
+		AccountID:   22,
+		AdType:      ad.BannerType,
+		Format:      ptr(ad.BannerFormat),
+		Extra:       map[string]any{"ad_unit_id": "new"},
+	})
+	if err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	if !updateCalled {
+		t.Fatalf("Update() did not call repo.Update")
+	}
+	if got == nil || got.ID != 123 {
+		t.Fatalf("Update() = %+v, want id 123", got)
+	}
+}
+
+func TestLineItemService_Update_UsesMergedAttrsForDuplicateValidation(t *testing.T) {
+	t.Parallel()
+
+	lineItemRepo := &lineItemRepoStub{
+		findOwnedByUserFn: func(_ context.Context, _ int64, id int64) (*LineItem, error) {
+			return &LineItem{
+				ID: id,
+				LineItemAttrs: LineItemAttrs{
+					AppID:       11,
+					AccountType: "DemandSourceAccount::admob",
+					AccountID:   22,
+					AdType:      ad.BannerType,
+					Format:      ptr(ad.BannerFormat),
+					Extra:       map[string]any{"ad_unit_id": "old"},
+				},
+			}, nil
+		},
+		findDuplicateFn: func(_ context.Context, attrs *LineItemAttrs, excludeID int64) (int64, error) {
+			if excludeID != 123 {
+				t.Fatalf("excludeID = %d, want 123", excludeID)
+			}
+			if attrs.AppID != 11 || attrs.AccountID != 22 || attrs.AdType != ad.BannerType {
+				t.Fatalf("merged attrs not used, got %+v", attrs)
+			}
+			if attrs.Extra["ad_unit_id"] != "new" {
+				t.Fatalf("merged attrs extra not overridden, got %+v", attrs.Extra)
+			}
+			return 999, nil
+		},
+		updateFn: func(_ context.Context, _ int64, _ *LineItemAttrs) (*LineItem, error) {
+			t.Fatalf("repo.Update should not be called on duplicate")
+			return nil, nil
+		},
+	}
+
+	store := &StoreMock{
+		LineItemsFunc: func() LineItemRepo { return lineItemRepo },
+		DemandSourceAccountsFunc: func() DemandSourceAccountRepo {
+			return &DemandSourceAccountRepoMock{
+				FindFunc: func(_ context.Context, _ int64) (*DemandSourceAccount, error) {
+					return &DemandSourceAccount{
+						DemandSource: DemandSource{
+							DemandSourceAttrs: DemandSourceAttrs{ApiKey: string(adapter.AdmobKey)},
+						},
+					}, nil
+				},
+			}
+		},
+		AppsFunc:          func() AppRepo { return &AppRepoMock{} },
+		UsersFunc:         func() UserRepo { return &UserRepoMock{} },
+		DemandSourcesFunc: func() DemandSourceRepo { return &DemandSourceRepoMock{} },
+	}
+	service := NewLineItemService(store)
+
+	_, err := service.Update(context.Background(), lineItemTestAuthCtx{userID: 1, isAdmin: false}, 123, &LineItemAttrs{
+		Extra: map[string]any{"ad_unit_id": "new"},
+	})
+	if err == nil {
+		t.Fatalf("Update() error = nil, want duplicate validation error")
+	}
+}
+
 type lineItemTestAuthCtx struct {
 	userID  int64
 	isAdmin bool
@@ -718,7 +915,10 @@ func (a lineItemTestAuthCtx) IsAdmin() bool {
 }
 
 type lineItemRepoStub struct {
-	createManyFn func(ctx context.Context, items []LineItemAttrs) error
+	createManyFn      func(ctx context.Context, items []LineItemAttrs) error
+	findOwnedByUserFn func(ctx context.Context, userID int64, id int64) (*LineItem, error)
+	updateFn          func(ctx context.Context, id int64, attrs *LineItemAttrs) (*LineItem, error)
+	findDuplicateFn   func(ctx context.Context, attrs *LineItemAttrs, excludeID int64) (int64, error)
 }
 
 func (s *lineItemRepoStub) List(_ context.Context, _ map[string][]string) (*resource.Collection[LineItem], error) {
@@ -733,7 +933,10 @@ func (s *lineItemRepoStub) Find(_ context.Context, _ int64) (*LineItem, error) {
 	return nil, nil
 }
 
-func (s *lineItemRepoStub) FindOwnedByUser(_ context.Context, _ int64, _ int64) (*LineItem, error) {
+func (s *lineItemRepoStub) FindOwnedByUser(ctx context.Context, userID int64, id int64) (*LineItem, error) {
+	if s.findOwnedByUserFn != nil {
+		return s.findOwnedByUserFn(ctx, userID, id)
+	}
 	return nil, nil
 }
 
@@ -741,7 +944,10 @@ func (s *lineItemRepoStub) Create(_ context.Context, _ *LineItemAttrs) (*LineIte
 	return nil, nil
 }
 
-func (s *lineItemRepoStub) Update(_ context.Context, _ int64, _ *LineItemAttrs) (*LineItem, error) {
+func (s *lineItemRepoStub) Update(ctx context.Context, id int64, attrs *LineItemAttrs) (*LineItem, error) {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, id, attrs)
+	}
 	return nil, nil
 }
 
@@ -754,4 +960,11 @@ func (s *lineItemRepoStub) CreateMany(ctx context.Context, items []LineItemAttrs
 		return s.createManyFn(ctx, items)
 	}
 	return nil
+}
+
+func (s *lineItemRepoStub) FindDuplicateIDByAttrs(ctx context.Context, attrs *LineItemAttrs, excludeID int64) (int64, error) {
+	if s.findDuplicateFn != nil {
+		return s.findDuplicateFn(ctx, attrs, excludeID)
+	}
+	return 0, nil
 }
