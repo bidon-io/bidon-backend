@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"hash/fnv"
 	"strconv"
 
 	"github.com/shopspring/decimal"
@@ -19,6 +20,18 @@ import (
 
 type LineItemRepo struct {
 	*resourceRepo[admin.LineItem, admin.LineItemAttrs, db.LineItem]
+}
+
+type lineItemLockSignature struct {
+	AppID       int64           `json:"app_id"`
+	AccountType string          `json:"account_type"`
+	AccountID   int64           `json:"account_id"`
+	HumanName   string          `json:"human_name"`
+	AdType      db.AdType       `json:"ad_type"`
+	BidFloor    *string         `json:"bid_floor"`
+	Format      *string         `json:"format"`
+	IsBidding   *bool           `json:"is_bidding"`
+	Extra       json.RawMessage `json:"extra"`
 }
 
 func NewLineItemRepo(d *db.DB) *LineItemRepo {
@@ -74,6 +87,13 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 		if err := audit.SetContext(tx, ctx); err != nil {
 			return err
 		}
+		lockKey, err := lineItemAdvisoryLockKey(item)
+		if err != nil {
+			return err
+		}
+		if err := tx.Exec("SELECT pg_advisory_xact_lock(?)", lockKey).Error; err != nil {
+			return err
+		}
 
 		existingID, err := r.findExistingID(tx, item)
 		if err != nil {
@@ -99,6 +119,55 @@ func (r *LineItemRepo) firstOrCreate(ctx context.Context, item *db.LineItem) (id
 	}
 
 	return id, exists, nil
+}
+
+func lineItemAdvisoryLockKey(item *db.LineItem) (int64, error) {
+	var bidFloor *string
+	if item.BidFloor.Valid {
+		s := item.BidFloor.Decimal.String()
+		bidFloor = &s
+	}
+
+	var format *string
+	if item.Format.Valid {
+		s := item.Format.String
+		format = &s
+	}
+
+	var isBidding *bool
+	if item.IsBidding.Valid {
+		b := item.IsBidding.Bool
+		isBidding = &b
+	}
+
+	extraJSON, err := json.Marshal(item.Extra)
+	if err != nil {
+		return 0, err
+	}
+	// Keep lock semantics aligned with findExistingID:
+	// nil extra and {} should map to one lock key.
+	if string(extraJSON) == "null" {
+		extraJSON = []byte("{}")
+	}
+
+	signatureJSON, err := json.Marshal(lineItemLockSignature{
+		AppID:       item.AppID,
+		AccountType: item.AccountType,
+		AccountID:   item.AccountID,
+		HumanName:   item.HumanName,
+		AdType:      item.AdType,
+		BidFloor:    bidFloor,
+		Format:      format,
+		IsBidding:   isBidding,
+		Extra:       extraJSON,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	h := fnv.New64a()
+	_, _ = h.Write(signatureJSON)
+	return int64(h.Sum64()), nil
 }
 
 func (r *LineItemRepo) CreateMany(ctx context.Context, items []admin.LineItemAttrs) error {
