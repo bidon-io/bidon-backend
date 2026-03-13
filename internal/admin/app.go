@@ -21,17 +21,18 @@ type App struct {
 }
 
 type AppAttrs struct {
-	PlatformID  PlatformID `json:"platform_id"`
-	HumanName   string     `json:"human_name"`
-	PackageName string     `json:"package_name"`
-	UserID      int64      `json:"user_id"`
-	AppKey      string     `json:"app_key"`
-	StoreID     string     `json:"store_id"`
-	StoreURL    string     `json:"store_url"`
-	Categories  []string   `json:"categories"`
-	Badv        string     `json:"badv"`
-	Bcat        string     `json:"bcat"`
-	Bapp        string     `json:"bapp"`
+	PlatformID  PlatformID     `json:"platform_id"`
+	HumanName   string         `json:"human_name"`
+	PackageName string         `json:"package_name"`
+	UserID      int64          `json:"user_id"`
+	AppKey      string         `json:"app_key"`
+	StoreID     string         `json:"store_id"`
+	StoreURL    string         `json:"store_url"`
+	Categories  []string       `json:"categories"`
+	Badv        string         `json:"badv"`
+	Bcat        string         `json:"bcat"`
+	Bapp        string         `json:"bapp"`
+	Settings    map[string]any `json:"settings"`
 }
 
 type PlatformID string

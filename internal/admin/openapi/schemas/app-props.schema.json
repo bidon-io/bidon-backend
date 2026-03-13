@@ -55,6 +55,10 @@
     "bapp": {
       "type": "string",
       "description": "Blocked apps for OpenRTB (comma-separated)"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Additional app settings map (e.g. { \"insights\": { \"nefta\": { \"enabled\": true } } })"
     }
   }
 }
