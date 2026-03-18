@@ -5,7 +5,6 @@ This file provides context and guidelines for working with the Bidon admin web U
 ## Overview
 
 **bidon_ui** is a Nuxt 3 SPA (Single Page Application) — the admin dashboard for the Bidon ad mediation platform. It provides CRUD management for:
-
 - Apps, Demand Sources, Demand Source Accounts
 - Line Items, App Demand Profiles
 - Auction Configurations (v2)
@@ -103,7 +102,6 @@ Every resource follows the same four-page pattern:
 **Prefer `$apiFetch` (ofetch) over `ApiService` (Axios).** Axios is being phased out.
 
 Both clients:
-
 - Base URL: `/api`
 - Header: `X-Bidon-App: web`
 - Auto-convert request body to `snake_case`
@@ -226,7 +224,6 @@ Use `ResourceCard` for show pages. Field definitions from `constants/ResourceCar
 ## Data Transformation
 
 All snake_case ↔ camelCase conversion is automatic:
-
 - Request: `{ adType: "banner" }` → `{ ad_type: "banner" }`
 - Response: `{ ad_type: "banner" }` → `{ adType: "banner" }`
 - Fields starting with `_` are preserved (e.g. `_permissions`)
