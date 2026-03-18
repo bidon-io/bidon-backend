@@ -16,7 +16,7 @@ The app is statically generated (`yarn generate`) and served by the Go backend (
 ## Tech Stack
 
 | Category          | Library                         | Version         |
-| ----------------- | ------------------------------- | --------------- |
+|-------------------|---------------------------------|-----------------|
 | Framework         | Nuxt 3                          | 3.13.2          |
 | UI                | Vue 3 + TypeScript              | 5.2.2           |
 | Component Library | PrimeVue                        | 3.34.0          |
@@ -91,7 +91,7 @@ bidon_ui/
 Every resource follows the same four-page pattern:
 
 | File                       | Route           | Purpose                        |
-| -------------------------- | --------------- | ------------------------------ |
+|----------------------------|-----------------|--------------------------------|
 | `pages/foo/index.vue`      | `/foo`          | List with `LazyResourcesTable` |
 | `pages/foo/new.vue`        | `/foo/new`      | Create form                    |
 | `pages/foo/[id]/index.vue` | `/foo/:id`      | Detail with `ResourceCard`     |
@@ -128,7 +128,7 @@ const { data } = await ApiService.get("/line_items");
 These composables wrap API calls with toast notifications and navigation:
 
 | Composable          | Method | Purpose                     |
-| ------------------- | ------ | --------------------------- |
+|---------------------|--------|-----------------------------|
 | `useCreateResource` | POST   | Create + navigate to detail |
 | `useUpdateResource` | PATCH  | Update + show success toast |
 | `useDeleteResource` | DELETE | Confirm dialog + DELETE     |
@@ -208,7 +208,7 @@ Use `ResourceCard` for show pages. Field definitions from `constants/ResourceCar
 ### 7. State Management (Pinia)
 
 | Store             | File                             | Purpose                           |
-| ----------------- | -------------------------------- | --------------------------------- |
+|-------------------|----------------------------------|-----------------------------------|
 | `useAuthStore`    | `composables/useAuthStore.ts`    | Current user, auth state          |
 | `useResources`    | `composables/useResources.ts`    | Available resources + permissions |
 | `useCopilotStore` | `composables/useCopilotStore.ts` | AI copilot thread state           |
