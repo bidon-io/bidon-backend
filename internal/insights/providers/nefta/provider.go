@@ -8,6 +8,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/pkg/clock"
+	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
 type initClient interface {
@@ -66,6 +67,7 @@ func (p *Provider) Init(ctx context.Context, req insights.InitRequest) (insights
 		initResult, err := p.client.Init(ctx, toNeftaInitRequest(req))
 		// Preserve raw payloads/status for observability even when Init returns an error.
 		result.RawRequest = initResult.RawRequest
+		result.RawRequestHeaders = initResult.RawRequestHeaders
 		result.RawResponse = initResult.RawResponse
 		result.Status = initResult.Status
 		return result, err
@@ -96,6 +98,7 @@ func (p *Provider) Init(ctx context.Context, req insights.InitRequest) (insights
 		}))
 		// Preserve raw payloads/status for observability even when Init returns an error.
 		result.RawRequest = initCallResult.RawRequest
+		result.RawRequestHeaders = initCallResult.RawRequestHeaders
 		result.RawResponse = initCallResult.RawResponse
 		result.Status = initCallResult.Status
 		if err != nil {
@@ -124,6 +127,7 @@ func (p *Provider) Init(ctx context.Context, req insights.InitRequest) (insights
 		}))
 		// Preserve raw payloads/status for observability even when Init returns an error.
 		result.RawRequest = initCallResult.RawRequest
+		result.RawRequestHeaders = initCallResult.RawRequestHeaders
 		result.RawResponse = initCallResult.RawResponse
 		result.Status = initCallResult.Status
 		if err != nil {
@@ -160,12 +164,26 @@ func toNeftaInitRequest(req insights.InitRequest) InitRequest {
 	}
 
 	return InitRequest{
-		NUID:       req.NUID,
-		SessionID:  req.SessionID,
-		AppBundle:  appBundle,
-		AppVersion: appVersion,
-		SDKVersion: req.SDKVersion,
-		Device:     req.OpenRTB.Device,
-		UserGeo:    req.OpenRTB.UserGeo,
+		NUID:        req.NUID,
+		SessionID:   req.SessionID,
+		AppBundle:   appBundle,
+		AppPlatform: resolveAppPlatform(req.OpenRTB.Device),
+		AppVersion:  appVersion,
+		SDKVersion:  req.SDKVersion,
+		Device:      req.OpenRTB.Device,
+		UserGeo:     req.OpenRTB.UserGeo,
 	}
+}
+
+func resolveAppPlatform(device *openrtb2.Device) string {
+	if device == nil {
+		return ""
+	}
+
+	platform := strings.ToLower(strings.TrimSpace(device.OS))
+	if platform == "ios" || platform == "android" {
+		return platform
+	}
+
+	return ""
 }

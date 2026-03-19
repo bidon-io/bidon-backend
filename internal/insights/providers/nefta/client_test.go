@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +23,21 @@ func TestClientInitSuccess(t *testing.T) {
 		if r.Header.Get("Content-Type") != "application/json" {
 			t.Fatalf("expected application/json content type")
 		}
+		if r.Header.Get("nefta-sdk-version") != "0.8.0" {
+			t.Fatalf("expected nefta-sdk-version 0.8.0, got %q", r.Header.Get("nefta-sdk-version"))
+		}
+		if r.Header.Get("nefta-sdk-platform") != "ios" {
+			t.Fatalf("expected nefta-sdk-platform ios, got %q", r.Header.Get("nefta-sdk-platform"))
+		}
+		if r.Header.Get("nefta-sdk-bundle") != "com.example.app" {
+			t.Fatalf("expected nefta-sdk-bundle com.example.app, got %q", r.Header.Get("nefta-sdk-bundle"))
+		}
+		if r.Header.Get("nefta-sdk-app-version") != "1.0.0" {
+			t.Fatalf("expected nefta-sdk-app-version 1.0.0, got %q", r.Header.Get("nefta-sdk-app-version"))
+		}
+		if r.Header.Get("nefta-sdk-nuid") != "old-nuid" {
+			t.Fatalf("expected nefta-sdk-nuid old-nuid, got %q", r.Header.Get("nefta-sdk-nuid"))
+		}
 		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
 			t.Fatalf("decode request: %v", err)
 		}
@@ -34,13 +50,14 @@ func TestClientInitSuccess(t *testing.T) {
 	client.InitURL = server.URL
 
 	resp, err := client.Init(context.Background(), InitRequest{
-		NUID:       "old-nuid",
-		SessionID:  42,
-		AppBundle:  "com.example.app",
-		AppVersion: "1.0.0",
-		SDKVersion: "0.8.0",
-		Device:     &openrtb2.Device{OS: "iOS"},
-		UserGeo:    &openrtb2.Geo{Country: "USA"},
+		NUID:        "old-nuid",
+		SessionID:   42,
+		AppBundle:   "com.example.app",
+		AppPlatform: "ios",
+		AppVersion:  "1.0.0",
+		SDKVersion:  "0.8.0",
+		Device:      &openrtb2.Device{OS: "iOS"},
+		UserGeo:     &openrtb2.Geo{Country: "USA"},
 	})
 	if err != nil {
 		t.Fatalf("client init failed: %v", err)
@@ -49,11 +66,17 @@ func TestClientInitSuccess(t *testing.T) {
 	if resp.Response.NUID != "new-nuid" {
 		t.Fatalf("expected nuid new-nuid, got %s", resp.Response.NUID)
 	}
+	if !strings.Contains(resp.RawRequestHeaders, `"Nefta-Sdk-Version":["0.8.0"]`) {
+		t.Fatalf("expected request headers to include nefta-sdk-version, got %q", resp.RawRequestHeaders)
+	}
 	if captured.SessionID != 42 {
 		t.Fatalf("expected session_id 42, got %d", captured.SessionID)
 	}
 	if captured.AppBundle != "com.example.app" {
 		t.Fatalf("expected app_bundle com.example.app, got %s", captured.AppBundle)
+	}
+	if captured.AppPlatform != "ios" {
+		t.Fatalf("expected app_platform ios, got %q", captured.AppPlatform)
 	}
 	if captured.Device == nil || captured.Device.OS != "iOS" {
 		t.Fatalf("expected device.os iOS, got %+v", captured.Device)

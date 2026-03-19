@@ -80,6 +80,9 @@ func TestProviderInitMapsRequest(t *testing.T) {
 	if gotReq.AppBundle != "com.example.app" {
 		t.Fatalf("expected app_bundle com.example.app, got %q", gotReq.AppBundle)
 	}
+	if gotReq.AppPlatform != "ios" {
+		t.Fatalf("expected app_platform ios, got %q", gotReq.AppPlatform)
+	}
 	if gotReq.Device == nil || gotReq.Device.OS != "iOS" {
 		t.Fatalf("expected device.os iOS, got %+v", gotReq.Device)
 	}

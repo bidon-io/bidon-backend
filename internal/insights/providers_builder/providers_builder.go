@@ -1,6 +1,7 @@
 package providers_builder
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -54,7 +55,7 @@ func newInitResultLogger(eventLogger *event.Logger) func(insights.InitRequest, i
 		adRequestParams := event.AdRequestParams{
 			EventType:   insightsProviderInitEventType(result.Provider),
 			Status:      initResultStatus(result),
-			RawRequest:  result.RawRequest,
+			RawRequest:  combineRawWithHeaders(result.RawRequest, result.RawRequestHeaders),
 			RawResponse: result.RawResponse,
 			Error:       result.Error,
 		}
@@ -84,4 +85,34 @@ func initResultStatus(result insights.InitResult) string {
 	default:
 		return ""
 	}
+}
+
+func combineRawWithHeaders(body, headers string) string {
+	if headers == "" {
+		return body
+	}
+
+	payload := map[string]any{
+		"headers": decodeJSONOrRaw(headers),
+	}
+
+	if body != "" {
+		payload["body"] = decodeJSONOrRaw(body)
+	}
+
+	merged, err := json.Marshal(payload)
+	if err != nil {
+		return body
+	}
+
+	return string(merged)
+}
+
+func decodeJSONOrRaw(raw string) any {
+	var decoded any
+	if err := json.Unmarshal([]byte(raw), &decoded); err == nil {
+		return decoded
+	}
+
+	return raw
 }

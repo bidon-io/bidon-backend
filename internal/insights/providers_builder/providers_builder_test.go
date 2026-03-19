@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/go-redis/redismock/v9"
@@ -74,10 +75,11 @@ func TestNewInitResultLoggerEmitsLifecycleEvents(t *testing.T) {
 		{
 			name: "called success",
 			result: insights.InitResult{
-				Provider:    insights.NeftaKey,
-				RawRequest:  `{"nuid":""}`,
-				RawResponse: `{"nuid":"abc"}`,
-				Status:      200,
+				Provider:          insights.NeftaKey,
+				RawRequest:        `{"nuid":""}`,
+				RawRequestHeaders: `{"nefta-sdk-version":["1.0.0"]}`,
+				RawResponse:       `{"nuid":"abc"}`,
+				Status:            200,
 			},
 			wantStatus: "SUCCESS",
 		},
@@ -134,7 +136,15 @@ func TestNewInitResultLoggerEmitsLifecycleEvents(t *testing.T) {
 				t.Fatalf("expected status %q, got %q", tt.wantStatus, logged.Status)
 			}
 			if logged.RawRequest != tt.result.RawRequest {
-				t.Fatalf("expected raw_request %q, got %q", tt.result.RawRequest, logged.RawRequest)
+				if tt.result.RawRequestHeaders == "" {
+					t.Fatalf("expected raw_request %q, got %q", tt.result.RawRequest, logged.RawRequest)
+				}
+				if !strings.Contains(logged.RawRequest, `"headers":{"nefta-sdk-version":["1.0.0"]}`) {
+					t.Fatalf("expected raw_request to contain headers, got %q", logged.RawRequest)
+				}
+				if !strings.Contains(logged.RawRequest, `"body":{"nuid":""}`) {
+					t.Fatalf("expected raw_request to contain body, got %q", logged.RawRequest)
+				}
 			}
 			if logged.RawResponse != tt.result.RawResponse {
 				t.Fatalf("expected raw_response %q, got %q", tt.result.RawResponse, logged.RawResponse)

@@ -41,10 +41,11 @@ type InitRequest struct {
 }
 
 type InitResult struct {
-	Provider    Key
-	RawRequest  string
-	RawResponse string
-	Status      int
-	Error       string
-	Skipped     bool
+	Provider          Key
+	RawRequest        string
+	RawRequestHeaders string
+	RawResponse       string
+	Status            int
+	Error             string
+	Skipped           bool
 }

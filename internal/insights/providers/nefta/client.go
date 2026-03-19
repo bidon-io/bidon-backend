@@ -22,13 +22,14 @@ const (
 var ErrInvalidNUID = errors.New("nefta init response nuid is empty")
 
 type InitRequest struct {
-	NUID       string           `json:"nuid"`
-	SessionID  int64            `json:"session_id"`
-	AppBundle  string           `json:"app_bundle"`
-	AppVersion string           `json:"app_version"`
-	SDKVersion string           `json:"sdk_version"`
-	Device     *openrtb2.Device `json:"device,omitempty"`
-	UserGeo    *openrtb2.Geo    `json:"user_geo,omitempty"`
+	NUID        string           `json:"nuid"`
+	SessionID   int64            `json:"session_id"`
+	AppBundle   string           `json:"app_bundle"`
+	AppPlatform string           `json:"app_platform"`
+	AppVersion  string           `json:"app_version"`
+	SDKVersion  string           `json:"sdk_version"`
+	Device      *openrtb2.Device `json:"device,omitempty"`
+	UserGeo     *openrtb2.Geo    `json:"user_geo,omitempty"`
 }
 
 type InitResponse struct {
@@ -54,10 +55,11 @@ func NewClient(httpClient *http.Client) *Client {
 }
 
 type InitCallResult struct {
-	Response    InitResponse
-	RawRequest  string
-	RawResponse string
-	Status      int
+	Response          InitResponse
+	RawRequest        string
+	RawRequestHeaders string
+	RawResponse       string
+	Status            int
 }
 
 func (c *Client) Init(ctx context.Context, req InitRequest) (InitCallResult, error) {
@@ -82,6 +84,12 @@ func (c *Client) Init(ctx context.Context, req InitRequest) (InitCallResult, err
 		return result, fmt.Errorf("build nefta init request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("nefta-sdk-version", req.SDKVersion)
+	httpReq.Header.Set("nefta-sdk-platform", req.AppPlatform)
+	httpReq.Header.Set("nefta-sdk-bundle", req.AppBundle)
+	httpReq.Header.Set("nefta-sdk-app-version", req.AppVersion)
+	httpReq.Header.Set("nefta-sdk-nuid", req.NUID)
+	result.RawRequestHeaders = headerToJSON(httpReq.Header)
 
 	httpResp, err := c.HTTPClient.Do(httpReq)
 	if err != nil {
@@ -111,4 +119,17 @@ func (c *Client) Init(ctx context.Context, req InitRequest) (InitCallResult, err
 	}
 
 	return result, nil
+}
+
+func headerToJSON(header http.Header) string {
+	if len(header) == 0 {
+		return ""
+	}
+
+	payload, err := json.Marshal(header)
+	if err != nil {
+		return ""
+	}
+
+	return string(payload)
 }
