@@ -7,6 +7,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auction"
 	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
@@ -28,6 +29,7 @@ type Router struct {
 	AdapterInitConfigsFetcher *sdkapistore.AdapterInitConfigsFetcher
 	ConfigurationFetcher      *adapterstore.ConfigurationFetcher
 	BiddingBuilder            *bidding.Builder
+	InsightsService           insights.Service
 	AuctionService            *auction.Service
 	AdUnitLookup              *sdkapistore.AdUnitLookup
 }
@@ -59,6 +61,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		SegmentMatcher:            r.SegmentMatcher,
 		AdapterInitConfigsFetcher: r.AdapterInitConfigsFetcher,
 		EventLogger:               r.EventLogger,
+		InsightsService:           r.InsightsService,
 	}
 	showHandler := apihandlers.ShowHandler{
 		BaseHandler: &apihandlers.BaseHandler[schema.ShowRequest, *schema.ShowRequest]{

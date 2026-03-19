@@ -53,7 +53,7 @@ func TestAppFetcher_Fetch(t *testing.T) {
 			name:      "App matches",
 			appKey:    app.AppKey.String,
 			appBundle: app.PackageName.String,
-			want:      sdkapi.App{ID: app.ID},
+			want:      sdkapi.App{ID: app.ID, Settings: map[string]any{}},
 		},
 		{
 			name:      "App key does not match",

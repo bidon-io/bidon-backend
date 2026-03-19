@@ -37,7 +37,7 @@ func (f *AppFetcher) Fetch(ctx context.Context, appKey, appBundle string) (app s
 	var dbApp db.App
 	err = f.DB.
 		WithContext(ctx).
-		Select("id", "store_id", "store_url", "categories", "badv", "bcat", "bapp").
+		Select("id", "store_id", "store_url", "categories", "badv", "bcat", "bapp", "settings").
 		Take(&dbApp, map[string]any{"app_key": appKey, "package_name": appBundle}).
 		Error
 	if err != nil {
@@ -55,6 +55,7 @@ func (f *AppFetcher) Fetch(ctx context.Context, appKey, appBundle string) (app s
 	app.Badv = dbApp.Badv.String
 	app.Bcat = dbApp.Bcat.String
 	app.Bapp = dbApp.Bapp.String
+	app.Settings = dbApp.Settings
 
 	return app, nil
 }

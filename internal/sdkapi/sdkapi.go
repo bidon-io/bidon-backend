@@ -19,6 +19,7 @@ type App struct {
 	Badv       string
 	Bcat       string
 	Bapp       string
+	Settings   map[string]any
 }
 
 func (a *App) GetBadv() string {

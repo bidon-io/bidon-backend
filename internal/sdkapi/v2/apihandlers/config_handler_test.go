@@ -2,14 +2,17 @@ package apihandlers_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"testing"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
@@ -19,6 +22,29 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )
+
+type insightsServiceMock struct {
+	callCount int
+	lastReq   insights.InitRequest
+}
+
+func (m *insightsServiceMock) Init(_ context.Context, req insights.InitRequest) {
+	m.callCount++
+	m.lastReq = req
+}
+
+type failingInsightsProvider struct {
+	called *atomic.Bool
+}
+
+func (p failingInsightsProvider) Key() insights.Key {
+	return "failing-provider"
+}
+
+func (p failingInsightsProvider) Init(_ context.Context, _ insights.InitRequest) (insights.InitResult, error) {
+	p.called.Store(true)
+	return insights.InitResult{}, errors.New("insights provider failure")
+}
 
 func SetupConfigHandler() apihandlers.ConfigHandler {
 	app := sdkapi.App{ID: 1}
@@ -126,6 +152,90 @@ func SetupConfigHandler() apihandlers.ConfigHandler {
 		EventLogger:               &event.Logger{Engine: &engine.Log{}},
 		SegmentMatcher:            segmentMatcher,
 		AdapterInitConfigsFetcher: adapterInitConfigsFetcher,
+	}
+}
+
+func TestConfigHandler_HandleCallsInsightsService(t *testing.T) {
+	reqBody, err := os.ReadFile("testdata/config/valid_request.json")
+	if err != nil {
+		t.Fatalf("Error reading request file: %v", err)
+	}
+
+	handler := SetupConfigHandler()
+	insightsMock := &insightsServiceMock{}
+	handler.InsightsService = insightsMock
+
+	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
+		Headers: map[string]string{
+			"X-Bidon-Version": "0.6.0",
+		},
+	})
+	if err != nil {
+		t.Fatalf("Handler returned error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rec.Code)
+	}
+
+	if insightsMock.callCount != 1 {
+		t.Fatalf("expected insights service to be called once, got %d", insightsMock.callCount)
+	}
+
+	if insightsMock.lastReq.AppID != 1 {
+		t.Fatalf("expected insights app id 1, got %d", insightsMock.lastReq.AppID)
+	}
+
+	if insightsMock.lastReq.OpenRTB.App == nil || insightsMock.lastReq.OpenRTB.App.Bundle != "com.app.name" {
+		t.Fatalf("unexpected insights app mapping: %+v", insightsMock.lastReq.OpenRTB.App)
+	}
+
+	if insightsMock.lastReq.IDFA != "00000000-0000-0000-0000-000000000000" {
+		t.Fatalf("unexpected idfa mapping: %s", insightsMock.lastReq.IDFA)
+	}
+}
+
+func TestConfigHandler_HandleNonBlockingWhenInsightsProviderFails(t *testing.T) {
+	reqBody, err := os.ReadFile("testdata/config/valid_request.json")
+	if err != nil {
+		t.Fatalf("Error reading request file: %v", err)
+	}
+
+	handler := SetupConfigHandler()
+	providerCalled := &atomic.Bool{}
+	insightsService := insights.NewService()
+	if err := insightsService.Register(failingInsightsProvider{called: providerCalled}); err != nil {
+		t.Fatalf("register failing insights provider: %v", err)
+	}
+	handler.InsightsService = insightsService
+	handler.BaseHandler.AppFetcher = &mocks.AppFetcherMock{
+		FetchCachedFunc: func(context.Context, string, string) (sdkapi.App, error) {
+			return sdkapi.App{
+				ID: 1,
+				Settings: map[string]any{
+					"insights": map[string]any{
+						"failing-provider": map[string]any{"enabled": true},
+					},
+				},
+			}, nil
+		},
+	}
+
+	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
+		Headers: map[string]string{
+			"X-Bidon-Version": "0.6.0",
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+	if !providerCalled.Load() {
+		t.Fatalf("expected failing insights provider to be executed")
+	}
+	if rec.Body.Len() == 0 {
+		t.Fatalf("expected non-empty config response body")
 	}
 }
 
