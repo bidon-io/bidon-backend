@@ -316,10 +316,13 @@ func TestHandler_HandleWin_NonRTBBid(t *testing.T) {
 	wg.Add(2) // Expect 2 notifications (1 win + 1 loss) for all bids regardless of incoming bid type
 
 	var sentEvents []notification.Params
+	var sentEventsMu sync.Mutex
 	sender := &mocks.SenderMock{
 		SendEventFunc: func(_ context.Context, p notification.Params) {
 			defer wg.Done()
+			sentEventsMu.Lock()
 			sentEvents = append(sentEvents, p)
+			sentEventsMu.Unlock()
 		},
 	}
 
