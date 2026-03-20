@@ -85,7 +85,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 		insightsReq := insights.InitRequestFromConfigRequest(req.app.ID, &req.raw)
 		insightsReq.GeoData = req.geoData
 		insightsReq.Settings = req.app.Settings
-		h.InsightsService.Init(ctx, insightsReq)
+		go h.InsightsService.Init(context.WithoutCancel(ctx), insightsReq)
 	}
 
 	setOrder := req.raw.Device.OS == "android"                      // Set order for Android devices only

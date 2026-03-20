@@ -176,7 +176,7 @@ func main() {
 		}),
 	}
 	insightsHTTPClient := &http.Client{
-		Timeout: 4 * time.Second,
+		Timeout: 2 * time.Second,
 		Transport: otelhttp.NewTransport(&http.Transport{
 			MaxConnsPerHost:     30 * cpus,
 			MaxIdleConns:        30 * cpus,

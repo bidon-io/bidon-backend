@@ -231,7 +231,7 @@ func TestProviderInitSameSessionSkipsNeftaInitAndRefreshesActivity(t *testing.T)
 	}
 	provider := NewProvider(client, WithStateStore(store), WithClock(mockClock))
 
-	_, err := provider.Init(context.Background(), insights.InitRequest{
+	result, err := provider.Init(context.Background(), insights.InitRequest{
 		AppID: 12,
 		IDG:   "idg-1",
 		BaseRequest: &schema.BaseRequest{
@@ -244,6 +244,9 @@ func TestProviderInitSameSessionSkipsNeftaInitAndRefreshesActivity(t *testing.T)
 
 	if len(client.requests) != 0 {
 		t.Fatalf("expected no nefta init call for active session, got %d", len(client.requests))
+	}
+	if !result.Skipped {
+		t.Fatalf("expected skipped result for active session")
 	}
 	if savedState == nil {
 		t.Fatalf("expected state update")

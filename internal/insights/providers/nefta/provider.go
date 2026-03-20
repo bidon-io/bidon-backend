@@ -143,6 +143,7 @@ func (p *Provider) Init(ctx context.Context, req insights.InitRequest) (insights
 		return result, err
 	}
 
+	result.Skipped = true
 	state.LastActivityTS = nowTS
 	err = p.stateStore.Save(ctx, key, state)
 	return result, err

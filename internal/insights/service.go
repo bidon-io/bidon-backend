@@ -90,6 +90,18 @@ func (s *service) Init(ctx context.Context, req InitRequest) {
 		wg.Add(1)
 		go func(providerKey Key, providerInstance Provider) {
 			defer wg.Done()
+			defer func() {
+				recovered := recover()
+				if recovered == nil {
+					return
+				}
+				if s.resultFn != nil {
+					s.resultFn(req, InitResult{
+						Provider: providerKey,
+						Error:    fmt.Sprintf("provider panic: %v", recovered),
+					})
+				}
+			}()
 
 			result, err := providerInstance.Init(ctx, req)
 			if result.Provider == "" {

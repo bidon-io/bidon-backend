@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -24,13 +26,46 @@ import (
 )
 
 type insightsServiceMock struct {
+	mu        sync.Mutex
 	callCount int
 	lastReq   insights.InitRequest
+	called    chan struct{}
+}
+
+func newInsightsServiceMock() *insightsServiceMock {
+	return &insightsServiceMock{
+		called: make(chan struct{}, 1),
+	}
 }
 
 func (m *insightsServiceMock) Init(_ context.Context, req insights.InitRequest) {
+	m.mu.Lock()
 	m.callCount++
 	m.lastReq = req
+	m.mu.Unlock()
+
+	select {
+	case m.called <- struct{}{}:
+	default:
+	}
+}
+
+func (m *insightsServiceMock) Snapshot() (int, insights.InitRequest) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.callCount, m.lastReq
+}
+
+func waitFor(t *testing.T, timeout time.Duration, condition func() bool, message string) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("%s", message)
 }
 
 type failingInsightsProvider struct {
@@ -162,7 +197,7 @@ func TestConfigHandler_HandleCallsInsightsService(t *testing.T) {
 	}
 
 	handler := SetupConfigHandler()
-	insightsMock := &insightsServiceMock{}
+	insightsMock := newInsightsServiceMock()
 	handler.InsightsService = insightsMock
 
 	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
@@ -177,20 +212,26 @@ func TestConfigHandler_HandleCallsInsightsService(t *testing.T) {
 		t.Fatalf("Expected status 200, got %d", rec.Code)
 	}
 
-	if insightsMock.callCount != 1 {
-		t.Fatalf("expected insights service to be called once, got %d", insightsMock.callCount)
+	waitFor(t, 300*time.Millisecond, func() bool {
+		callCount, _ := insightsMock.Snapshot()
+		return callCount == 1
+	}, "expected insights service to be called once")
+
+	callCount, lastReq := insightsMock.Snapshot()
+	if callCount != 1 {
+		t.Fatalf("expected insights service to be called once, got %d", callCount)
 	}
 
-	if insightsMock.lastReq.AppID != 1 {
-		t.Fatalf("expected insights app id 1, got %d", insightsMock.lastReq.AppID)
+	if lastReq.AppID != 1 {
+		t.Fatalf("expected insights app id 1, got %d", lastReq.AppID)
 	}
 
-	if insightsMock.lastReq.OpenRTB.App == nil || insightsMock.lastReq.OpenRTB.App.Bundle != "com.app.name" {
-		t.Fatalf("unexpected insights app mapping: %+v", insightsMock.lastReq.OpenRTB.App)
+	if lastReq.OpenRTB.App == nil || lastReq.OpenRTB.App.Bundle != "com.app.name" {
+		t.Fatalf("unexpected insights app mapping: %+v", lastReq.OpenRTB.App)
 	}
 
-	if insightsMock.lastReq.IDFA != "00000000-0000-0000-0000-000000000000" {
-		t.Fatalf("unexpected idfa mapping: %s", insightsMock.lastReq.IDFA)
+	if lastReq.IDFA != "00000000-0000-0000-0000-000000000000" {
+		t.Fatalf("unexpected idfa mapping: %s", lastReq.IDFA)
 	}
 }
 
@@ -231,9 +272,9 @@ func TestConfigHandler_HandleNonBlockingWhenInsightsProviderFails(t *testing.T) 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", rec.Code)
 	}
-	if !providerCalled.Load() {
-		t.Fatalf("expected failing insights provider to be executed")
-	}
+	waitFor(t, 300*time.Millisecond, func() bool {
+		return providerCalled.Load()
+	}, "expected failing insights provider to be executed")
 	if rec.Body.Len() == 0 {
 		t.Fatalf("expected non-empty config response body")
 	}
