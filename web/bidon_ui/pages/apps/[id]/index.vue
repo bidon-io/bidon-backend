@@ -13,13 +13,28 @@
         :path="resourcesPath"
       />
     </NavigationContainer>
-    <ResourceCard title="App" :fields="fields" :resource="resource" />
+    <ResourceCard title="App" :fields="fields" :resource="resource">
+      <FormField label="Insights Services">
+        <div
+          v-for="provider in INSIGHTS_PROVIDERS"
+          :key="provider.key"
+          class="flex items-center gap-2"
+        >
+          <Checkbox
+            :model-value="isInsightsProviderEnabled(provider.key)"
+            :binary="true"
+            :disabled="true"
+          />
+          <span class="font-medium">{{ provider.label }}</span>
+        </div>
+      </FormField>
+    </ResourceCard>
   </PageContainer>
 </template>
 
 <script setup>
 import axios from "@/services/ApiService.js";
-import { ResourceCardFields } from "@/constants";
+import { INSIGHTS_PROVIDERS, ResourceCardFields } from "@/constants";
 
 const route = useRoute();
 const id = route.params.id;
@@ -27,6 +42,8 @@ const resourcesPath = "/apps";
 
 const response = await axios.get(`${resourcesPath}/${id}`);
 const resource = response.data;
+const isInsightsProviderEnabled = (providerKey) =>
+  Boolean(resource.settings?.insights?.[providerKey]?.enabled);
 
 const fields = [
   { ...ResourceCardFields.PublicUid, copyable: true },

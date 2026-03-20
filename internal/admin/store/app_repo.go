@@ -101,6 +101,7 @@ func (m appMapper) dbModel(a *admin.AppAttrs, id int64) *db.App {
 		Badv:        badv,
 		Bcat:        bcat,
 		Bapp:        bapp,
+		Settings:    a.Settings,
 	}
 }
 
@@ -127,6 +128,7 @@ func (m appMapper) resourceAttrs(a *db.App) admin.AppAttrs {
 		Badv:        a.Badv.String,
 		Bcat:        a.Bcat.String,
 		Bapp:        a.Bapp.String,
+		Settings:    a.Settings,
 	}
 }
 

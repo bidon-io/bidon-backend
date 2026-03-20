@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -19,11 +20,16 @@ type ConfigHandler struct {
 	AdapterInitConfigsFetcher AdapterInitConfigsFetcher
 	SegmentMatcher            *segment.Matcher
 	EventLogger               *event.Logger
+	InsightsService           InsightsService
 }
 
 //go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/config_mocks.go -pkg mocks . AdapterInitConfigsFetcher
 type AdapterInitConfigsFetcher interface {
 	FetchAdapterInitConfigs(ctx context.Context, appID int64, adapterKeys []adapter.Key, setAmazonSlots bool, setOrder bool) ([]sdkapi.AdapterInitConfig, error)
+}
+
+type InsightsService interface {
+	Init(ctx context.Context, req insights.InitRequest)
 }
 
 type ConfigResponse struct {
@@ -73,6 +79,13 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 	sdkVersion, err := req.raw.GetSDKVersionSemver()
 	if err != nil {
 		return sdkapi.ErrInvalidSDKVersion
+	}
+
+	if h.InsightsService != nil {
+		insightsReq := insights.InitRequestFromConfigRequest(req.app.ID, &req.raw)
+		insightsReq.GeoData = req.geoData
+		insightsReq.Settings = req.app.Settings
+		go h.InsightsService.Init(context.WithoutCancel(ctx), insightsReq)
 	}
 
 	setOrder := req.raw.Device.OS == "android"                      // Set order for Android devices only

@@ -84,6 +84,27 @@
           OpenRTB blocked apps (comma-separated)
         </small>
       </FormField>
+      <FormField label="Insights Services">
+        <div class="border border-gray-200 rounded-md p-3">
+          <div
+            v-for="provider in insightsProviders"
+            :key="provider.key"
+            class="flex items-center gap-2"
+          >
+            <Checkbox
+              :model-value="isInsightsProviderEnabled(provider.key)"
+              :binary="true"
+              :input-id="`insights-${provider.key}`"
+              @update:model-value="
+                (enabled) => setInsightsProviderEnabled(provider.key, enabled)
+              "
+            />
+            <label :for="`insights-${provider.key}`" class="text-sm">
+              {{ provider.label }}
+            </label>
+          </div>
+        </div>
+      </FormField>
       <FormSubmitButton />
     </FormCard>
   </form>
@@ -92,6 +113,7 @@
 <script setup>
 import * as yup from "yup";
 import { computed } from "vue";
+import { INSIGHTS_PROVIDERS } from "@/constants";
 
 const props = defineProps({
   value: {
@@ -117,6 +139,7 @@ let validationFields = {
   badv: yup.string().label("Blocked Advertiser Domains"),
   bcat: yup.string().label("Blocked Categories"),
   bapp: yup.string().label("Blocked Apps"),
+  settings: yup.object().label("Settings"),
 };
 
 if (currentUser.isAdmin) {
@@ -138,6 +161,7 @@ const { errors, useFieldModel, handleSubmit } = useForm({
     badv: resource.value.badv || "",
     bcat: resource.value.bcat || "",
     bapp: resource.value.bapp || "",
+    settings: resource.value.settings || {},
   },
 });
 
@@ -151,6 +175,7 @@ const categories = useFieldModel("categories");
 const badv = useFieldModel("badv");
 const bcat = useFieldModel("bcat");
 const bapp = useFieldModel("bapp");
+const settings = useFieldModel("settings");
 
 // Convert categories array to/from comma-separated string
 const categoriesText = computed({
@@ -166,6 +191,28 @@ const categoriesText = computed({
       : [];
   },
 });
+
+const insightsProviders = INSIGHTS_PROVIDERS;
+
+const isInsightsProviderEnabled = (providerKey) =>
+  Boolean(settings.value?.insights?.[providerKey]?.enabled);
+
+const setInsightsProviderEnabled = (providerKey, enabled) => {
+  const currentSettings = settings.value || {};
+  const currentInsights = currentSettings.insights || {};
+  const currentProvider = currentInsights[providerKey] || {};
+
+  settings.value = {
+    ...currentSettings,
+    insights: {
+      ...currentInsights,
+      [providerKey]: {
+        ...currentProvider,
+        enabled: Boolean(enabled),
+      },
+    },
+  };
+};
 
 // push submit error to error messages
 const errorMsgs = ref([]);

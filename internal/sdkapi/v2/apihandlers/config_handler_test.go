@@ -2,14 +2,19 @@ package apihandlers_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
@@ -19,6 +24,62 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 )
+
+type insightsServiceMock struct {
+	mu        sync.Mutex
+	callCount int
+	lastReq   insights.InitRequest
+	called    chan struct{}
+}
+
+func newInsightsServiceMock() *insightsServiceMock {
+	return &insightsServiceMock{
+		called: make(chan struct{}, 1),
+	}
+}
+
+func (m *insightsServiceMock) Init(_ context.Context, req insights.InitRequest) {
+	m.mu.Lock()
+	m.callCount++
+	m.lastReq = req
+	m.mu.Unlock()
+
+	select {
+	case m.called <- struct{}{}:
+	default:
+	}
+}
+
+func (m *insightsServiceMock) Snapshot() (int, insights.InitRequest) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.callCount, m.lastReq
+}
+
+func waitFor(t *testing.T, timeout time.Duration, condition func() bool, message string) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("%s", message)
+}
+
+type failingInsightsProvider struct {
+	called *atomic.Bool
+}
+
+func (p failingInsightsProvider) Key() insights.Key {
+	return "failing-provider"
+}
+
+func (p failingInsightsProvider) Init(_ context.Context, _ insights.InitRequest) (insights.InitResult, error) {
+	p.called.Store(true)
+	return insights.InitResult{}, errors.New("insights provider failure")
+}
 
 func SetupConfigHandler() apihandlers.ConfigHandler {
 	app := sdkapi.App{ID: 1}
@@ -126,6 +187,96 @@ func SetupConfigHandler() apihandlers.ConfigHandler {
 		EventLogger:               &event.Logger{Engine: &engine.Log{}},
 		SegmentMatcher:            segmentMatcher,
 		AdapterInitConfigsFetcher: adapterInitConfigsFetcher,
+	}
+}
+
+func TestConfigHandler_HandleCallsInsightsService(t *testing.T) {
+	reqBody, err := os.ReadFile("testdata/config/valid_request.json")
+	if err != nil {
+		t.Fatalf("Error reading request file: %v", err)
+	}
+
+	handler := SetupConfigHandler()
+	insightsMock := newInsightsServiceMock()
+	handler.InsightsService = insightsMock
+
+	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
+		Headers: map[string]string{
+			"X-Bidon-Version": "0.6.0",
+		},
+	})
+	if err != nil {
+		t.Fatalf("Handler returned error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rec.Code)
+	}
+
+	waitFor(t, 300*time.Millisecond, func() bool {
+		callCount, _ := insightsMock.Snapshot()
+		return callCount == 1
+	}, "expected insights service to be called once")
+
+	callCount, lastReq := insightsMock.Snapshot()
+	if callCount != 1 {
+		t.Fatalf("expected insights service to be called once, got %d", callCount)
+	}
+
+	if lastReq.AppID != 1 {
+		t.Fatalf("expected insights app id 1, got %d", lastReq.AppID)
+	}
+
+	if lastReq.OpenRTB.App == nil || lastReq.OpenRTB.App.Bundle != "com.app.name" {
+		t.Fatalf("unexpected insights app mapping: %+v", lastReq.OpenRTB.App)
+	}
+
+	if lastReq.IDFA != "00000000-0000-0000-0000-000000000000" {
+		t.Fatalf("unexpected idfa mapping: %s", lastReq.IDFA)
+	}
+}
+
+func TestConfigHandler_HandleNonBlockingWhenInsightsProviderFails(t *testing.T) {
+	reqBody, err := os.ReadFile("testdata/config/valid_request.json")
+	if err != nil {
+		t.Fatalf("Error reading request file: %v", err)
+	}
+
+	handler := SetupConfigHandler()
+	providerCalled := &atomic.Bool{}
+	insightsService := insights.NewService()
+	if err := insightsService.Register(failingInsightsProvider{called: providerCalled}); err != nil {
+		t.Fatalf("register failing insights provider: %v", err)
+	}
+	handler.InsightsService = insightsService
+	handler.BaseHandler.AppFetcher = &mocks.AppFetcherMock{
+		FetchCachedFunc: func(context.Context, string, string) (sdkapi.App, error) {
+			return sdkapi.App{
+				ID: 1,
+				Settings: map[string]any{
+					"insights": map[string]any{
+						"failing-provider": map[string]any{"enabled": true},
+					},
+				},
+			}, nil
+		},
+	}
+
+	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/config", string(reqBody), &RequestOptions{
+		Headers: map[string]string{
+			"X-Bidon-Version": "0.6.0",
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+	waitFor(t, 300*time.Millisecond, func() bool {
+		return providerCalled.Load()
+	}, "expected failing insights provider to be executed")
+	if rec.Body.Len() == 0 {
+		t.Fatalf("expected non-empty config response body")
 	}
 }
 

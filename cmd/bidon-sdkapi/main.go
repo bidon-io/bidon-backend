@@ -35,6 +35,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
 	dbpkg "github.com/bidon-io/bidon-backend/internal/db"
+	insightsbuilder "github.com/bidon-io/bidon-backend/internal/insights/providers_builder"
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	notificationstore "github.com/bidon-io/bidon-backend/internal/notification/store"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
@@ -174,6 +175,14 @@ func main() {
 			MaxIdleConnsPerHost: 30 * cpus,
 		}),
 	}
+	insightsHTTPClient := &http.Client{
+		Timeout: 2 * time.Second,
+		Transport: otelhttp.NewTransport(&http.Transport{
+			MaxConnsPerHost:     30 * cpus,
+			MaxIdleConns:        30 * cpus,
+			MaxIdleConnsPerHost: 30 * cpus,
+		}),
+	}
 	notificationHandler := notification.Handler{
 		AuctionResultRepo: notificationstore.AuctionResultRepo{Redis: rdb},
 		Sender: notification.EventSender{
@@ -181,6 +190,16 @@ func main() {
 			EventLogger: eventLogger,
 		},
 	}
+
+	insightsService, err := insightsbuilder.Build(insightsbuilder.Deps{
+		Redis:       rdb,
+		EventLogger: eventLogger,
+		HTTPClient:  insightsHTTPClient,
+	})
+	if err != nil {
+		log.Fatalf("insightsbuilder.Build(): %v", err)
+	}
+
 	adUnitsCache := config.NewRedisCacheOf[[]auction.AdUnit](rdb, 10*time.Minute, "ad_units")
 	err = adUnitsCache.Monitor(meter)
 	if err != nil {
@@ -275,6 +294,7 @@ func main() {
 		EventLogger:               eventLogger,
 		AdapterInitConfigsFetcher: adapterInitConfigsFetcher,
 		ConfigurationFetcher:      configurationFetcher,
+		InsightsService:           insightsService,
 		AuctionService:            auctionService,
 		AdUnitLookup:              adUnitLookup,
 	}
