@@ -1,0 +1,186 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - '5434:5432'
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bidon
+      POSTGRES_USER: bidon
+      POSTGRES_PASSWORD: pass
+    healthcheck:
+      test: pg_isready -U bidon -d bidon
+      interval: 5s
+
+  redis:
+    build:
+      context: .
+      dockerfile: docker/redis/Dockerfile
+    ports:
+      - '7001-7003:7001-7003'
+    environment:
+      - REDIS_CLUSTER_START_PORT=7001
+      - REDIS_CLUSTER_ANNOUNCE_HOSTNAME=host.docker.internal
+    volumes:
+      - redis-data-dev:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.1
+    hostname: zookeeper
+    healthcheck:
+      test: echo srvr | nc zookeeper 2181 || exit 1
+      retries: 20
+      interval: 10s
+    ports:
+      - '2181:2181'
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.2.1
+    hostname: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,EXTERNAL_DOCKER:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_INTERNAL://:29092,EXTERNAL_DOCKER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092,EXTERNAL_DOCKER://host.docker.internal:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  migrate:
+    image: golang:1.24-alpine
+    volumes:
+      - .:/app
+      - gomodcache-dev:/go/pkg/mod
+      - gocache-dev:/root/.cache/go-build
+    working_dir: /app
+    command: go run ./cmd/bidon-migrate -no-gen up
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
+
+  bidon-seed:
+    image: golang:1.24-alpine
+    volumes:
+      - .:/app
+      - gomodcache-dev:/go/pkg/mod
+      - gocache-dev:/root/.cache/go-build
+    working_dir: /app
+    command: go run ./cmd/bidon-seed
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+
+  bidon-admin:
+    image: golang:1.24-alpine
+    volumes:
+      - .:/app
+      - gomodcache-dev:/go/pkg/mod
+      - gocache-dev:/root/.cache/go-build
+    working_dir: /app
+    command: go run ./cmd/bidon-admin
+    ports:
+      - '1323:1323'
+      - '50051:50051'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    environment:
+      PORT: 1323
+      GRPC_PORT: 50051
+      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
+      ENVIRONMENT: development
+      APP_SECRET: app_secret
+      SUPERUSER_LOGIN: login
+      SUPERUSER_PASSWORD: password
+      USE_GEOCODING: "false"
+      USE_KAFKA: "true"
+      KAFKA_BROKERS_LIST: kafka:29092
+      KAFKA_CLIENT_ID: bidon_dev
+      KAFKA_DELIVERY_INTERVAL: 5
+      KAFKA_AD_EVENTS_TOPIC: ad-events
+      KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+      REDIS_URL: redis://host.docker.internal:7001/0
+      REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
+      SNOWFLAKE_NODE_ID: 1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  bidon-sdkapi:
+    image: golang:1.24-alpine
+    volumes:
+      - .:/app
+      - gomodcache-dev:/go/pkg/mod
+      - gocache-dev:/root/.cache/go-build
+    working_dir: /app
+    command: go run ./cmd/bidon-sdkapi
+    ports:
+      - '1324:1323'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    environment:
+      PORT: 1323
+      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
+      ENVIRONMENT: development
+      APP_SECRET: app_secret
+      USE_GEOCODING: "false"
+      USE_KAFKA: "true"
+      KAFKA_BROKERS_LIST: kafka:29092
+      KAFKA_CLIENT_ID: bidon_dev
+      KAFKA_DELIVERY_INTERVAL: 5
+      KAFKA_AD_EVENTS_TOPIC: ad-events
+      KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+      REDIS_URL: redis://host.docker.internal:7001/0
+      REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
+      SNOWFLAKE_NODE_ID: 1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  init-admin:
+    image: alpine/curl
+    depends_on:
+      bidon-admin:
+        condition: service_started
+    environment:
+      SUPERUSER_LOGIN: login
+      SUPERUSER_PASSWORD: password
+      BIDON_ADMIN_URL: http://bidon-admin:1323
+    volumes:
+      - ./scripts/init-admin.sh:/init-admin.sh
+    command: sh /init-admin.sh
+
+volumes:
+  pgdata-dev:
+  gomodcache-dev:
+  gocache-dev:
+  redis-data-dev:
