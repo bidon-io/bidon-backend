@@ -177,6 +177,7 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		case adapter.StartIOKey:
 			adaptersMap[key]["app_id"] = appData["app_id"]
 			adaptersMap[key]["account"] = extra["account"]
+			adaptersMap[key]["publisher_id"] = extra["publisher_id"]
 
 			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
 			if adUnit != nil {
