@@ -17,6 +17,7 @@ import (
 var ErrNilRedisClient = errors.New("insights providers builder: redis client is nil")
 
 const insightsProviderInitEventTypePrefix = "insights_provider_init"
+const insightsProviderFloorPriceEventTypePrefix = "insights_provider_floor_price"
 
 type Deps struct {
 	Redis       *redis.ClusterClient
@@ -29,7 +30,10 @@ func Build(deps Deps) (insights.Service, error) {
 		return nil, ErrNilRedisClient
 	}
 
-	service := insights.NewService(insights.WithInitResultHandler(newInitResultLogger(deps.EventLogger)))
+	service := insights.NewService(
+		insights.WithInitResultHandler(newInitResultLogger(deps.EventLogger)),
+		insights.WithFloorPriceResultHandler(newFloorPriceResultLogger(deps.EventLogger)),
+	)
 	neftaClient := nefta.NewClient(deps.HTTPClient)
 
 	err := service.Register(nefta.NewProvider(
@@ -74,6 +78,13 @@ func insightsProviderInitEventType(providerKey insights.Key) string {
 	return fmt.Sprintf("%s_%s", insightsProviderInitEventTypePrefix, providerKey)
 }
 
+func insightsProviderFloorPriceEventType(providerKey insights.Key) string {
+	if providerKey == "" {
+		return insightsProviderFloorPriceEventTypePrefix
+	}
+	return fmt.Sprintf("%s_%s", insightsProviderFloorPriceEventTypePrefix, providerKey)
+}
+
 func initResultStatus(result insights.InitResult) string {
 	switch {
 	case result.Error != "":
@@ -84,6 +95,54 @@ func initResultStatus(result insights.InitResult) string {
 		return "SUCCESS"
 	default:
 		return ""
+	}
+}
+
+func floorPriceResultStatus(result insights.FloorPriceResult) string {
+	switch {
+	case result.Error != "":
+		return "ERROR"
+	case result.Skipped:
+		return "SKIPPED"
+	case result.Status > 0:
+		return "SUCCESS"
+	default:
+		return ""
+	}
+}
+
+func newFloorPriceResultLogger(eventLogger *event.Logger) func(insights.FloorPriceRequest, insights.FloorPriceResult) {
+	return func(req insights.FloorPriceRequest, result insights.FloorPriceResult) {
+		if eventLogger == nil {
+			return
+		}
+		if req.BaseRequest == nil {
+			return
+		}
+
+		var priceFloor float64
+		if result.Auction != nil {
+			priceFloor = result.Auction.FloorPrice
+		}
+
+		adRequestParams := event.AdRequestParams{
+			EventType:               insightsProviderFloorPriceEventType(result.Provider),
+			AdType:                  req.AdType,
+			AdFormat:                req.AdFormat,
+			AuctionID:               req.AuctionID,
+			AuctionConfigurationID:  req.AuctionConfigurationID,
+			AuctionConfigurationUID: req.AuctionConfigurationUID,
+			Status:                  floorPriceResultStatus(result),
+			PriceFloor:              priceFloor,
+			RawRequest:              combineRawWithHeaders(result.RawRequest, result.RawRequestHeaders),
+			RawResponse:             result.RawResponse,
+			Error:                   result.Error,
+		}
+		ev := event.NewAdEvent(req.BaseRequest, adRequestParams, req.GeoData)
+
+		eventLogger.Log(ev, func(err error) {
+			log.Printf("log insights floor-price event: %v", err)
+		})
 	}
 }
 

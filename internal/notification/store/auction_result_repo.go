@@ -26,10 +26,16 @@ func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.
 
 	if auctionResult != nil {
 		auctionResult.Bids = bids
+		if adObject.InsightsNotifications != nil {
+			auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
+		}
 	} else {
 		auctionResult = &notification.AuctionResult{
 			AuctionID: adObject.AuctionID,
 			Bids:      bids,
+		}
+		if adObject.InsightsNotifications != nil {
+			auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
 		}
 	}
 
@@ -39,6 +45,19 @@ func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.
 	}
 
 	return nil
+}
+
+func copyInsightsNotifications(src []schema.InsightsNotifications) []notification.InsightsNotifications {
+	dst := make([]notification.InsightsNotifications, 0, len(src))
+	for _, notificationItem := range src {
+		dst = append(dst, notification.InsightsNotifications{
+			InsightProvider: notificationItem.InsightProvider,
+			Auction:         notificationItem.Auction,
+			Impression:      notificationItem.Impression,
+			Click:           notificationItem.Click,
+		})
+	}
+	return dst
 }
 
 func (r AuctionResultRepo) FinalizeResult(ctx context.Context, statsRequest *schema.Stats) error {

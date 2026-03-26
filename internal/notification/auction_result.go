@@ -7,8 +7,16 @@ import (
 )
 
 type AuctionResult struct {
-	AuctionID string `json:"auction_id"`
-	Bids      []Bid  `json:"bids"`
+	AuctionID             string                  `json:"auction_id"`
+	Bids                  []Bid                   `json:"bids"`
+	InsightsNotifications []InsightsNotifications `json:"insights_notifications,omitempty"`
+}
+
+type InsightsNotifications struct {
+	InsightProvider string `json:"insights_provider,omitempty"`
+	Auction         string `json:"auction"`
+	Impression      string `json:"impression"`
+	Click           string `json:"click"`
 }
 
 type Bid struct {

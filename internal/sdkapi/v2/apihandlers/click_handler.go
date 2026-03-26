@@ -1,6 +1,7 @@
 package apihandlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,7 +15,12 @@ import (
 
 type ClickHandler struct {
 	*BaseHandler[schema.ClickRequest, *schema.ClickRequest]
-	EventLogger *event.Logger
+	EventLogger         *event.Logger
+	NotificationHandler ClickNotificationHandler
+}
+
+type ClickNotificationHandler interface {
+	HandleClick(ctx context.Context, bid *schema.Bid, bundle, adType string)
 }
 
 func (h *ClickHandler) Handle(c echo.Context) error {
@@ -27,6 +33,9 @@ func (h *ClickHandler) Handle(c echo.Context) error {
 	h.EventLogger.Log(adEvent, func(err error) {
 		sdkapi.LogError(c, fmt.Errorf("log click event: %v", err))
 	})
+	if h.NotificationHandler != nil {
+		h.NotificationHandler.HandleClick(c.Request().Context(), req.raw.Bid, req.raw.App.Bundle, string(req.raw.AdType))
+	}
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }

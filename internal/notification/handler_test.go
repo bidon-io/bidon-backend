@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/bidding"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/notification"
 	"github.com/bidon-io/bidon-backend/internal/notification/mocks"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -162,6 +164,109 @@ func TestHandler_HandleStats_Loss(t *testing.T) {
 
 	if waitTimeout(wg, 1*time.Second) {
 		t.Errorf("timeout waiting for events, sent event lower than expected")
+	}
+}
+
+func TestHandler_HandleBiddingRound_PersistsInsightsNotificationsWithoutBids(t *testing.T) {
+	ctx := context.Background()
+	adObject := &schema.AdObject{
+		AuctionID: "test-auction-id",
+		InsightsNotifications: []schema.InsightsNotifications{
+			{
+				InsightProvider: "nefta",
+				Auction:         "https://example.com/a",
+				Impression:      "https://example.com/i",
+				Click:           "https://example.com/c",
+			},
+		},
+	}
+	auctionResult := bidding.AuctionResult{Bids: []adapters.DemandResponse{}}
+
+	var called bool
+	repo := &mocks.AuctionResultRepoMock{
+		CreateOrUpdateFunc: func(_ context.Context, gotAdObject *schema.AdObject, gotBids []notification.Bid) error {
+			called = true
+			if gotAdObject == nil || len(gotAdObject.InsightsNotifications) == 0 {
+				t.Fatalf("expected insights notifications on ad object")
+			}
+			if len(gotBids) != 0 {
+				t.Fatalf("expected empty bids, got %d", len(gotBids))
+			}
+			return nil
+		},
+	}
+
+	handler := notification.Handler{
+		AuctionResultRepo: repo,
+		Sender:            &mocks.SenderMock{},
+	}
+
+	err := handler.HandleBiddingRound(ctx, adObject, auctionResult, "bundle-1", "rewarded")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !called {
+		t.Fatalf("expected CreateOrUpdate to be called")
+	}
+}
+
+func TestHandler_HandleClick_SendsInsightsClickNotification(t *testing.T) {
+	ctx := context.Background()
+	bid := &schema.Bid{
+		AuctionID:         "test-auction-id",
+		DemandID:          "bidmachine",
+		ImpID:             "imp-1",
+		Price:             2.34,
+		AuctionPriceFloor: 1.11,
+		BidType:           schema.RTBBidType,
+	}
+	auctionResult := &notification.AuctionResult{
+		AuctionID: "test-auction-id",
+		InsightsNotifications: []notification.InsightsNotifications{
+			{
+				InsightProvider: "nefta",
+				Click:           "https://example.com/click?aw=${AUCTION_WINNER}&aufp=${AUCTION_USED_FP}",
+			},
+		},
+	}
+
+	repo := &mocks.AuctionResultRepoMock{
+		FindFunc: func(_ context.Context, auctionID string) (*notification.AuctionResult, error) {
+			if auctionID != "test-auction-id" {
+				t.Fatalf("unexpected auction id: %s", auctionID)
+			}
+			return auctionResult, nil
+		},
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	sender := &mocks.SenderMock{
+		SendEventFunc: func(_ context.Context, p notification.Params) {
+			defer wg.Done()
+			if p.NotificationType != "INSIGHTS_CLICK_NEFTA" {
+				t.Fatalf("expected INSIGHTS_CLICK_NEFTA, got %s", p.NotificationType)
+			}
+			if p.AuctionWinner != "bidmachine" {
+				t.Fatalf("expected auction winner bidmachine, got %q", p.AuctionWinner)
+			}
+			if p.UsedFloor != 1.11 {
+				t.Fatalf("expected used floor 1.11, got %v", p.UsedFloor)
+			}
+			if p.InsightProvider != "nefta" {
+				t.Fatalf("expected insight provider nefta, got %q", p.InsightProvider)
+			}
+		},
+	}
+
+	handler := notification.Handler{
+		AuctionResultRepo: repo,
+		Sender:            sender,
+	}
+
+	handler.HandleClick(ctx, bid, "bundle-1", "rewarded")
+	if waitTimeout(wg, time.Second) {
+		t.Fatalf("timeout waiting click notification")
 	}
 }
 

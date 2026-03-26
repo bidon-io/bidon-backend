@@ -27,6 +27,19 @@ func (m *initClientMock) Init(_ context.Context, req InitRequest) (InitCallResul
 	return InitCallResult{Response: InitResponse{NUID: "nuid-from-nefta"}}, nil
 }
 
+type floorPriceClientMock struct {
+	requests []FloorPriceRequest
+	response FloorPriceResponse
+	err      error
+}
+
+func (m *floorPriceClientMock) FloorPrice(_ context.Context, req FloorPriceRequest) (FloorPriceCallResult, error) {
+	m.requests = append(m.requests, req)
+	return FloorPriceCallResult{
+		Response: m.response,
+	}, m.err
+}
+
 type stateStoreMock struct {
 	findFn func(ctx context.Context, key string) (*State, error)
 	saveFn func(ctx context.Context, key string, state *State) error
@@ -318,5 +331,262 @@ func TestProviderInitNewSessionAfterInactivity(t *testing.T) {
 	}
 	if savedState.SessionStartTS != mockClock.Now().UnixMilli() {
 		t.Fatalf("expected session_start_ts reset for new session, got %d", savedState.SessionStartTS)
+	}
+}
+
+func TestProviderFloorPriceSkipsUnsupportedAdType(t *testing.T) {
+	floorClient := &floorPriceClientMock{}
+	store := &stateStoreMock{
+		findFn: func(context.Context, string) (*State, error) {
+			t.Fatalf("state store should not be used for unsupported ad type")
+			return nil, nil
+		},
+		saveFn: func(context.Context, string, *State) error {
+			t.Fatalf("state store should not be used for unsupported ad type")
+			return nil
+		},
+	}
+
+	provider := NewProvider(nil, WithStateStore(store), WithFloorPriceClient(floorClient))
+	result, err := provider.FloorPrice(context.Background(), insights.FloorPriceRequest{
+		AppID:  10,
+		AdType: "banner",
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !result.Skipped {
+		t.Fatalf("expected skipped result for unsupported ad type")
+	}
+	if len(floorClient.requests) != 0 {
+		t.Fatalf("expected no floor-price request, got %d", len(floorClient.requests))
+	}
+}
+
+func TestProviderFloorPriceUsesStateAndIncrementsAdOpportunity(t *testing.T) {
+	mockClock := clock.NewMock()
+	mockClock.Set(time.Unix(3000, 0))
+
+	initClient := &initClientMock{}
+	floorClient := &floorPriceClientMock{
+		response: FloorPriceResponse{
+			FloorPrices: []FloorPriceRecommendation{
+				{
+					AuctionID:  1,
+					FloorPrice: 0.21,
+					Notification: FloorPriceNotification{
+						Auction:    "auc-link",
+						Impression: "imp-link",
+						Click:      "click-link",
+					},
+				},
+			},
+		},
+	}
+
+	var savedState *State
+	store := &stateStoreMock{
+		findFn: func(context.Context, string) (*State, error) {
+			return &State{
+				NUID:            "stored-nuid",
+				SessionID:       5,
+				AdOpportunityID: 2,
+				LastActivityTS:  time.Unix(2990, 0).UnixMilli(),
+				SessionStartTS:  1000,
+			}, nil
+		},
+		saveFn: func(_ context.Context, _ string, state *State) error {
+			cp := *state
+			savedState = &cp
+			return nil
+		},
+	}
+
+	provider := NewProvider(initClient, WithStateStore(store), WithFloorPriceClient(floorClient), WithClock(mockClock))
+	result, err := provider.FloorPrice(context.Background(), insights.FloorPriceRequest{
+		AppID:  10,
+		AdType: "interstitial",
+		IDFA:   "idfa-1",
+		BaseRequest: &schema.BaseRequest{
+			Device: schema.Device{OS: "iOS"},
+		},
+		SDKVersion: "1.0.0",
+		OpenRTB: insightsopenrtb.InitRequest{
+			App:    &openrtb2.App{Bundle: "com.test.app", Domain: "com.test.app", Ver: "1.2.3"},
+			Device: &openrtb2.Device{OS: "iOS"},
+			UserGeo: &openrtb2.Geo{
+				Country: "USA",
+				Region:  "CA",
+			},
+		},
+		FloorPrice: 0.05,
+		Bidders:    []string{"bidmachine"},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Skipped {
+		t.Fatalf("expected non-skipped result")
+	}
+	if result.Auction == nil || result.Auction.FloorPrice != 0.21 {
+		t.Fatalf("unexpected result auction: %+v", result.Auction)
+	}
+
+	if len(floorClient.requests) != 1 {
+		t.Fatalf("expected one floor-price request, got %d", len(floorClient.requests))
+	}
+	if len(initClient.requests) != 0 {
+		t.Fatalf("expected no init calls for active session, got %d", len(initClient.requests))
+	}
+	if floorClient.requests[0].AdOpportunityID != 3 {
+		t.Fatalf("expected ad_opportunity_id 3, got %d", floorClient.requests[0].AdOpportunityID)
+	}
+	if floorClient.requests[0].App == nil {
+		t.Fatalf("expected app to be mapped")
+	}
+	if floorClient.requests[0].App.Domain != "com.test.app" {
+		t.Fatalf("expected app.domain fallback to bundle, got %q", floorClient.requests[0].App.Domain)
+	}
+	if floorClient.requests[0].UserGeo == nil || floorClient.requests[0].UserGeo.Region != "CA" {
+		t.Fatalf("expected user_geo.region CA, got %+v", floorClient.requests[0].UserGeo)
+	}
+	if floorClient.requests[0].NUID != "stored-nuid" || floorClient.requests[0].SessionID != 5 {
+		t.Fatalf("unexpected state mapping: %+v", floorClient.requests[0])
+	}
+	if savedState == nil {
+		t.Fatalf("expected state save")
+	}
+	if savedState.AdOpportunityID != 3 {
+		t.Fatalf("expected persisted ad_opportunity_id 3, got %d", savedState.AdOpportunityID)
+	}
+	if savedState.LastActivityTS != mockClock.Now().UnixMilli() {
+		t.Fatalf("expected updated last_activity_ts, got %d", savedState.LastActivityTS)
+	}
+}
+
+func TestProviderFloorPriceInitializesSessionWhenStateMissing(t *testing.T) {
+	initClient := &initClientMock{}
+	floorClient := &floorPriceClientMock{}
+
+	var savedState *State
+	store := &stateStoreMock{
+		findFn: func(context.Context, string) (*State, error) {
+			return nil, nil
+		},
+		saveFn: func(_ context.Context, _ string, state *State) error {
+			cp := *state
+			savedState = &cp
+			return nil
+		},
+	}
+
+	provider := NewProvider(initClient, WithStateStore(store), WithFloorPriceClient(floorClient))
+	result, err := provider.FloorPrice(context.Background(), insights.FloorPriceRequest{
+		AppID:      10,
+		AdType:     "rewarded",
+		IDG:        "idg-1",
+		SDKVersion: "1.0.0",
+		BaseRequest: &schema.BaseRequest{
+			Device: schema.Device{OS: "android"},
+		},
+		OpenRTB: insightsopenrtb.InitRequest{
+			App:    &openrtb2.App{Bundle: "com.test.app", Ver: "1.0.0"},
+			Device: &openrtb2.Device{OS: "android"},
+		},
+		FloorPrice: 0.1,
+		Bidders:    []string{"bidmachine"},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Skipped {
+		t.Fatalf("expected non-skipped result when session can be initialized")
+	}
+	if len(initClient.requests) != 1 {
+		t.Fatalf("expected one init call when state missing, got %d", len(initClient.requests))
+	}
+	if len(floorClient.requests) != 1 {
+		t.Fatalf("expected one floor-price call, got %d", len(floorClient.requests))
+	}
+	if floorClient.requests[0].SessionID != 0 {
+		t.Fatalf("expected floor-price request session_id 0, got %d", floorClient.requests[0].SessionID)
+	}
+	if floorClient.requests[0].AdOpportunityID != 1 {
+		t.Fatalf("expected floor-price request ad_opportunity_id 1, got %d", floorClient.requests[0].AdOpportunityID)
+	}
+	if savedState == nil {
+		t.Fatalf("expected state to be saved")
+	}
+	if savedState.SessionID != 0 || savedState.AdOpportunityID != 1 {
+		t.Fatalf("unexpected saved state %+v", savedState)
+	}
+}
+
+func TestProviderFloorPriceReinitializesSessionAfterInactivity(t *testing.T) {
+	initClient := &initClientMock{}
+	mockClock := clock.NewMock()
+	mockClock.Set(time.Unix(4000, 0))
+
+	floorClient := &floorPriceClientMock{}
+	var savedState *State
+	store := &stateStoreMock{
+		findFn: func(context.Context, string) (*State, error) {
+			return &State{
+				NUID:            "existing-nuid",
+				SessionID:       9,
+				AdOpportunityID: 7,
+				LastActivityTS:  time.Unix(0, 0).UnixMilli(),
+				SessionStartTS:  time.Unix(1000, 0).UnixMilli(),
+			}, nil
+		},
+		saveFn: func(_ context.Context, _ string, state *State) error {
+			cp := *state
+			savedState = &cp
+			return nil
+		},
+	}
+
+	provider := NewProvider(initClient, WithStateStore(store), WithFloorPriceClient(floorClient), WithClock(mockClock))
+	result, err := provider.FloorPrice(context.Background(), insights.FloorPriceRequest{
+		AppID:      10,
+		AdType:     "rewarded",
+		IDG:        "idg-1",
+		SDKVersion: "1.0.0",
+		BaseRequest: &schema.BaseRequest{
+			Device: schema.Device{OS: "android"},
+		},
+		OpenRTB: insightsopenrtb.InitRequest{
+			App:    &openrtb2.App{Bundle: "com.test.app", Ver: "1.0.0"},
+			Device: &openrtb2.Device{OS: "android"},
+		},
+		FloorPrice: 0.1,
+		Bidders:    []string{"bidmachine"},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Skipped {
+		t.Fatalf("expected non-skipped result")
+	}
+	if len(initClient.requests) != 1 {
+		t.Fatalf("expected one init call after inactivity, got %d", len(initClient.requests))
+	}
+	if initClient.requests[0].SessionID != 10 {
+		t.Fatalf("expected init request session_id 10, got %d", initClient.requests[0].SessionID)
+	}
+	if len(floorClient.requests) != 1 {
+		t.Fatalf("expected one floor-price call, got %d", len(floorClient.requests))
+	}
+	if floorClient.requests[0].SessionID != 10 {
+		t.Fatalf("expected floor-price request session_id 10, got %d", floorClient.requests[0].SessionID)
+	}
+	if floorClient.requests[0].AdOpportunityID != 1 {
+		t.Fatalf("expected floor-price request ad_opportunity_id 1, got %d", floorClient.requests[0].AdOpportunityID)
+	}
+	if savedState == nil {
+		t.Fatalf("expected state to be saved")
+	}
+	if savedState.SessionID != 10 || savedState.AdOpportunityID != 1 {
+		t.Fatalf("unexpected saved state %+v", savedState)
 	}
 }

@@ -27,8 +27,8 @@ func TestRedisStateStoreFindNotFound(t *testing.T) {
 
 func TestRedisStateStoreFindAndSave(t *testing.T) {
 	rdb, mock := redismock.NewClusterMock()
-	mock.ExpectGet("nefta:2:idfa").SetVal(`{"nuid":"abc","session_id":3,"last_activity_ts":10,"session_start_ts":5}`)
-	mock.ExpectSet("nefta:2:idfa", `{"nuid":"def","session_id":4,"last_activity_ts":11,"session_start_ts":11}`, 30*24*time.Hour).SetVal("OK")
+	mock.ExpectGet("nefta:2:idfa").SetVal(`{"nuid":"abc","session_id":3,"ad_opportunity_id":0,"last_activity_ts":10,"session_start_ts":5}`)
+	mock.ExpectSet("nefta:2:idfa", `{"nuid":"def","session_id":4,"ad_opportunity_id":1,"last_activity_ts":11,"session_start_ts":11}`, 30*24*time.Hour).SetVal("OK")
 
 	store := NewRedisStateStore(rdb)
 
@@ -41,10 +41,11 @@ func TestRedisStateStoreFindAndSave(t *testing.T) {
 	}
 
 	err = store.Save(context.Background(), "nefta:2:idfa", &State{
-		NUID:           "def",
-		SessionID:      4,
-		LastActivityTS: 11,
-		SessionStartTS: 11,
+		NUID:            "def",
+		SessionID:       4,
+		AdOpportunityID: 1,
+		LastActivityTS:  11,
+		SessionStartTS:  11,
 	})
 	if err != nil {
 		t.Fatalf("save state: %v", err)

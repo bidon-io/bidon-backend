@@ -82,8 +82,7 @@ func (h *ConfigHandler) Handle(c echo.Context) error {
 	}
 
 	if h.InsightsService != nil {
-		insightsReq := insights.InitRequestFromConfigRequest(req.app.ID, &req.raw)
-		insightsReq.GeoData = req.geoData
+		insightsReq := insights.InitRequestFromConfigRequestWithGeoData(req.app.ID, &req.raw, req.geoData)
 		insightsReq.Settings = req.app.Settings
 		go h.InsightsService.Init(context.WithoutCancel(ctx), insightsReq)
 	}
