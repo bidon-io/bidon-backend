@@ -215,9 +215,10 @@ func TestAdapter_ParseBids(t *testing.T) {
 func TestBuilder(t *testing.T) {
 	cfg := adapter.ProcessedConfigsMap{
 		adapter.StartIOKey: {
-			"tag_id":  "tag",
-			"app_id":  "app",
-			"account": "acc",
+			"tag_id":       "tag",
+			"app_id":       "app",
+			"account":      "acc",
+			"publisher_id": "pub",
 		},
 	}
 
@@ -235,7 +236,7 @@ func TestBuilder(t *testing.T) {
 		t.Fatalf("unexpected adapter type %T", bidder.Adapter)
 	}
 
-	want := startio.Adapter{TagID: "tag", AppID: "app", Account: "acc"}
+	want := startio.Adapter{TagID: "tag", AppID: "app", Account: "acc", PublisherID: "pub"}
 	if diff := cmp.Diff(want, *adpt); diff != "" {
 		t.Fatalf("builder mismatch (-want +got):\n%s", diff)
 	}

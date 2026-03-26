@@ -25,9 +25,10 @@ import (
 
 // Adapter represents the Start.io bidding adapter.
 type Adapter struct {
-	TagID   string
-	AppID   string
-	Account string
+	TagID       string
+	AppID       string
+	Account     string
+	PublisherID string
 }
 
 // bannerFormats defines the supported banner formats and their dimensions.
@@ -167,7 +168,9 @@ func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *sche
 		request.App = &openrtb2.App{}
 	}
 	request.App.ID = a.AppID
-	request.App.Publisher = &openrtb2.Publisher{}
+	request.App.Publisher = &openrtb2.Publisher{
+		ID: a.PublisherID,
+	}
 
 	demandData, ok := auctionRequest.AdObject.Demands[adapter.StartIOKey]
 	if !ok {
@@ -307,11 +310,13 @@ func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bi
 	tagID, _ := startioCfg["tag_id"].(string)
 	appID, _ := startioCfg["app_id"].(string)
 	account, _ := startioCfg["account"].(string)
+	publisherID, _ := startioCfg["publisher_id"].(string)
 
 	adpt := &Adapter{
-		TagID:   tagID,
-		AppID:   appID,
-		Account: account,
+		TagID:       tagID,
+		AppID:       appID,
+		Account:     account,
+		PublisherID: publisherID,
 	}
 
 	return &adapters.Bidder{
