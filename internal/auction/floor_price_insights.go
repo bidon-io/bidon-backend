@@ -11,7 +11,7 @@ import (
 
 type floorPriceDecision struct {
 	EffectiveFloor        float64
-	InsightsNotifications []schema.InsightsNotifications
+	InsightsNotifications []schema.InsightsNotification
 }
 
 func (s *Service) applyInsightsFloorPrice(
@@ -57,7 +57,7 @@ func (s *Service) applyInsightsFloorPrice(
 
 	results := s.InsightsService.FloorPrice(ctx, floorReq)
 	recommendedFloor := existingFloor
-	collectedNotifications := make([]schema.InsightsNotifications, 0, len(results))
+	collectedNotifications := make([]schema.InsightsNotification, 0, len(results))
 	for _, result := range results {
 		if result.Auction == nil {
 			continue
@@ -69,7 +69,7 @@ func (s *Service) applyInsightsFloorPrice(
 		if recommendation.Notification.Auction != "" ||
 			recommendation.Notification.Impression != "" ||
 			recommendation.Notification.Click != "" {
-			collectedNotifications = append(collectedNotifications, schema.InsightsNotifications{
+			collectedNotifications = append(collectedNotifications, schema.InsightsNotification{
 				InsightProvider: string(result.Provider),
 				Auction:         recommendation.Notification.Auction,
 				Impression:      recommendation.Notification.Impression,
@@ -82,6 +82,12 @@ func (s *Service) applyInsightsFloorPrice(
 		}
 	}
 
+	// Keep this assignment unconditional: CreateOrUpdate updates cached
+	// insights_notifications when the slice is non-nil, so we always pass
+	// the current slice (including empty) to refresh auction cache state.
+	// AuctionResult uses `json:"insights_notifications,omitempty"`, so an
+	// empty slice is omitted in Redis payload while still expressing
+	// "clear notifications" in update semantics.
 	decision.InsightsNotifications = collectedNotifications
 	decision.EffectiveFloor = recommendedFloor
 	return decision

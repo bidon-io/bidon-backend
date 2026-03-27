@@ -26,17 +26,15 @@ func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.
 
 	if auctionResult != nil {
 		auctionResult.Bids = bids
-		if adObject.InsightsNotifications != nil {
-			auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
-		}
 	} else {
 		auctionResult = &notification.AuctionResult{
 			AuctionID: adObject.AuctionID,
 			Bids:      bids,
 		}
-		if adObject.InsightsNotifications != nil {
-			auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
-		}
+	}
+
+	if adObject.InsightsNotifications != nil {
+		auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
 	}
 
 	err = r.Save(ctx, auctionResult)
@@ -47,10 +45,10 @@ func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.
 	return nil
 }
 
-func copyInsightsNotifications(src []schema.InsightsNotifications) []notification.InsightsNotifications {
-	dst := make([]notification.InsightsNotifications, 0, len(src))
+func copyInsightsNotifications(src []schema.InsightsNotification) []notification.InsightsNotification {
+	dst := make([]notification.InsightsNotification, 0, len(src))
 	for _, notificationItem := range src {
-		dst = append(dst, notification.InsightsNotifications{
+		dst = append(dst, notification.InsightsNotification{
 			InsightProvider: notificationItem.InsightProvider,
 			Auction:         notificationItem.Auction,
 			Impression:      notificationItem.Impression,

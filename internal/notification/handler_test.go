@@ -171,7 +171,7 @@ func TestHandler_HandleBiddingRound_PersistsInsightsNotificationsWithoutBids(t *
 	ctx := context.Background()
 	adObject := &schema.AdObject{
 		AuctionID: "test-auction-id",
-		InsightsNotifications: []schema.InsightsNotifications{
+		InsightsNotifications: []schema.InsightsNotification{
 			{
 				InsightProvider: "nefta",
 				Auction:         "https://example.com/a",
@@ -222,7 +222,7 @@ func TestHandler_HandleClick_SendsInsightsClickNotification(t *testing.T) {
 	}
 	auctionResult := &notification.AuctionResult{
 		AuctionID: "test-auction-id",
-		InsightsNotifications: []notification.InsightsNotifications{
+		InsightsNotifications: []notification.InsightsNotification{
 			{
 				InsightProvider: "nefta",
 				Click:           "https://example.com/click?aw=${AUCTION_WINNER}&aufp=${AUCTION_USED_FP}",

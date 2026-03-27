@@ -50,7 +50,7 @@ func TestAuctionResultRepo_CreateOrUpdate_WithInsightsNotifications(t *testing.T
 	imp := &schema.AdObject{
 		AuctionID:  "auction-1",
 		PriceFloor: 0.5,
-		InsightsNotifications: []schema.InsightsNotifications{
+		InsightsNotifications: []schema.InsightsNotification{
 			{
 				InsightProvider: "nefta",
 				Auction:         "https://example.com/a",
@@ -65,7 +65,7 @@ func TestAuctionResultRepo_CreateOrUpdate_WithInsightsNotifications(t *testing.T
 	expectedAuctionResult := &notification.AuctionResult{
 		AuctionID: "auction-1",
 		Bids:      bids,
-		InsightsNotifications: []notification.InsightsNotifications{
+		InsightsNotifications: []notification.InsightsNotification{
 			{
 				InsightProvider: "nefta",
 				Auction:         "https://example.com/a",

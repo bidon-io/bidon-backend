@@ -13,13 +13,13 @@ type AdObject struct {
 	PriceFloor              float64                        `json:"auction_pricefloor" validate:"gte=0"`
 	Orientation             string                         `json:"orientation" validate:"oneof=PORTRAIT LANDSCAPE"`
 	Demands                 map[adapter.Key]map[string]any `json:"demands"`
-	InsightsNotifications   []InsightsNotifications        `json:"-"`
+	InsightsNotifications   []InsightsNotification         `json:"-"`
 	Banner                  *BannerAdObject                `json:"banner"`
 	Interstitial            *InterstitialAdObject          `json:"interstitial"`
 	Rewarded                *RewardedAdObject              `json:"rewarded"`
 }
 
-type InsightsNotifications struct {
+type InsightsNotification struct {
 	InsightProvider string
 	Auction         string
 	Impression      string
