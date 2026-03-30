@@ -79,7 +79,8 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 			ConfigFetcher: r.ConfigFetcher,
 			Geocoder:      r.GeoCoder,
 		},
-		EventLogger: r.EventLogger,
+		EventLogger:         r.EventLogger,
+		NotificationHandler: r.NotificationHandler,
 	}
 	rewardHandler := apihandlers.RewardHandler{
 		BaseHandler: &apihandlers.BaseHandler[schema.RewardRequest, *schema.RewardRequest]{

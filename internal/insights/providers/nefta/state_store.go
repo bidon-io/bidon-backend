@@ -13,10 +13,11 @@ import (
 const StateTTL = 30 * 24 * time.Hour
 
 type State struct {
-	NUID           string `json:"nuid"`
-	SessionID      int64  `json:"session_id"`
-	LastActivityTS int64  `json:"last_activity_ts"`
-	SessionStartTS int64  `json:"session_start_ts"`
+	NUID            string `json:"nuid"`
+	SessionID       int64  `json:"session_id"`
+	AdOpportunityID int64  `json:"ad_opportunity_id"`
+	LastActivityTS  int64  `json:"last_activity_ts"`
+	SessionStartTS  int64  `json:"session_start_ts"`
 }
 
 type StateStore interface {

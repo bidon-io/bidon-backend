@@ -33,12 +33,29 @@ func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.
 		}
 	}
 
+	if adObject.InsightsNotifications != nil {
+		auctionResult.InsightsNotifications = copyInsightsNotifications(adObject.InsightsNotifications)
+	}
+
 	err = r.Save(ctx, auctionResult)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func copyInsightsNotifications(src []schema.InsightsNotification) []notification.InsightsNotification {
+	dst := make([]notification.InsightsNotification, 0, len(src))
+	for _, notificationItem := range src {
+		dst = append(dst, notification.InsightsNotification{
+			InsightProvider: notificationItem.InsightProvider,
+			Auction:         notificationItem.Auction,
+			Impression:      notificationItem.Impression,
+			Click:           notificationItem.Click,
+		})
+	}
+	return dst
 }
 
 func (r AuctionResultRepo) FinalizeResult(ctx context.Context, statsRequest *schema.Stats) error {

@@ -15,6 +15,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bidmachine"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
@@ -28,6 +29,7 @@ type Service struct {
 	AuctionBuilder     AuctionBuilder
 	SegmentMatcher     *segment.Matcher
 	AdapterKeysFetcher AdapterKeysFetcher
+	InsightsService    FloorPriceService
 	EventLogger        *event.Logger
 }
 
@@ -66,6 +68,10 @@ type AdapterKeysFetcher interface {
 
 type AuctionBuilder interface { //nolint:revive
 	Build(ctx context.Context, params *BuildParams) (*Result, error)
+}
+
+type FloorPriceService interface {
+	FloorPrice(ctx context.Context, req insights.FloorPriceRequest) []insights.FloorPriceResult
 }
 
 const (
@@ -131,6 +137,9 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	req.AdObject.AuctionConfigurationID = auctionConfig.ID
 	req.AdObject.AuctionConfigurationUID = auctionConfig.UID
 	req.AdObject.PriceFloor = priceFloor(req, auctionConfig)
+	floorDecision := s.applyInsightsFloorPrice(ctx, params, adapterKeys, req.AdObject.PriceFloor)
+	req.AdObject.PriceFloor = floorDecision.EffectiveFloor
+	req.AdObject.InsightsNotifications = floorDecision.InsightsNotifications
 
 	bp := &BuildParams{
 		App:                  params.App,

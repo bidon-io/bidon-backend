@@ -3,7 +3,12 @@ package insights
 import (
 	"testing"
 
+	"github.com/prebid/openrtb/v19/adcom1"
+	"github.com/prebid/openrtb/v19/openrtb2"
+
 	"github.com/bidon-io/bidon-backend/internal/device"
+	insightsopenrtb "github.com/bidon-io/bidon-backend/internal/insights/openrtb"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -15,7 +20,7 @@ func TestOpenRTBFromBaseRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("maps app device and user_geo", func(t *testing.T) {
+	t.Run("maps app and device only (geo via geocoder enrichment)", func(t *testing.T) {
 		js := 1
 		req := &schema.BaseRequest{
 			App: schema.App{
@@ -44,14 +49,6 @@ func TestOpenRTBFromBaseRequest(t *testing.T) {
 			User: schema.User{
 				IDFA: "6f9619ff-8b86-d011-b42d-00cf4fc964ff",
 			},
-			Geo: &schema.Geo{
-				Lat:      37.7749,
-				Lon:      -122.4194,
-				Accuracy: 25,
-				Country:  "USA",
-				City:     "San Francisco",
-				ZIP:      "94103",
-			},
 		}
 
 		got := OpenRTBFromBaseRequest(req)
@@ -64,6 +61,9 @@ func TestOpenRTBFromBaseRequest(t *testing.T) {
 		}
 		if got.App.Ver != req.App.Version {
 			t.Fatalf("expected app version %q, got %q", req.App.Version, got.App.Ver)
+		}
+		if got.App.Domain != req.App.Bundle {
+			t.Fatalf("expected app domain %q, got %q", req.App.Bundle, got.App.Domain)
 		}
 
 		if got.Device == nil {
@@ -79,14 +79,8 @@ func TestOpenRTBFromBaseRequest(t *testing.T) {
 			t.Fatalf("expected JS %d, got %d", js, got.Device.JS)
 		}
 
-		if got.UserGeo == nil {
-			t.Fatalf("expected user_geo to be mapped")
-		}
-		if got.UserGeo.Country != req.Geo.Country {
-			t.Fatalf("expected country %q, got %q", req.Geo.Country, got.UserGeo.Country)
-		}
-		if got.UserGeo.City != req.Geo.City {
-			t.Fatalf("expected city %q, got %q", req.Geo.City, got.UserGeo.City)
+		if got.UserGeo != nil {
+			t.Fatalf("expected user_geo to be nil before geocoder enrichment, got %+v", got.UserGeo)
 		}
 	})
 
@@ -166,5 +160,50 @@ func TestInitRequestFromAuctionRequest(t *testing.T) {
 	}
 	if got.IDFA != "idfa-auction" {
 		t.Fatalf("expected idfa-auction, got %q", got.IDFA)
+	}
+}
+
+func TestEnrichOpenRTBWithGeoData(t *testing.T) {
+	req := insightsopenrtb.InitRequest{
+		UserGeo: &openrtb2.Geo{
+			Country: "USA",
+		},
+	}
+
+	enrichOpenRTBWithGeoData(&req, geocoder.GeoData{
+		CountryCode3: "CAN",
+		RegionCode:   "CA",
+		CityName:     "San Francisco",
+		ZipCode:      "94103",
+		Lat:          37.77,
+		Lon:          -122.41,
+		Accuracy:     25,
+	})
+
+	if req.UserGeo == nil {
+		t.Fatalf("expected user geo to be present")
+	}
+	if req.UserGeo.Region != "CA" {
+		t.Fatalf("expected region CA, got %q", req.UserGeo.Region)
+	}
+	if req.UserGeo.Country != "CAN" {
+		t.Fatalf("expected country from geodata, got %q", req.UserGeo.Country)
+	}
+	if req.UserGeo.City != "San Francisco" {
+		t.Fatalf("expected city fallback, got %q", req.UserGeo.City)
+	}
+	if req.UserGeo.ZIP != "94103" {
+		t.Fatalf("expected zip fallback, got %q", req.UserGeo.ZIP)
+	}
+	if req.UserGeo.Type != adcom1.LocationIP {
+		t.Fatalf("expected geo type LocationIP, got %v", req.UserGeo.Type)
+	}
+	if req.UserGeo.IPService != adcom1.LocationServiceMaxMind {
+		t.Fatalf("expected ip service MaxMind, got %v", req.UserGeo.IPService)
+	}
+
+	enrichOpenRTBWithGeoData(&req, geocoder.GeoData{})
+	if req.UserGeo != nil {
+		t.Fatalf("expected nil user geo for empty geodata, got %+v", req.UserGeo)
 	}
 }

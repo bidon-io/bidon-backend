@@ -88,7 +88,7 @@ func (h Handler) HandleBiddingRound(ctx context.Context, adObject *schema.AdObje
 		}
 	}
 
-	if len(bids) > 0 {
+	if len(bids) > 0 || len(adObject.InsightsNotifications) > 0 {
 		return h.AuctionResultRepo.CreateOrUpdate(ctx, adObject, bids)
 	}
 
@@ -206,6 +206,16 @@ func (h Handler) HandleStats(ctx context.Context, stats schema.Stats, config *au
 		}
 	}
 
+	notifications = append(notifications, buildInsightsAuctionNotifications(
+		auctionResult,
+		bundle,
+		adType,
+		stats.AuctionID,
+		stats.Result.Price,
+		stats.Result.WinnerDemandID,
+		stats.AuctionPricefloor,
+	)...)
+
 	for _, n := range notifications {
 		go h.Sender.SendEvent(ctx, n)
 	}
@@ -230,9 +240,10 @@ func (h Handler) HandleShow(ctx context.Context, impression *schema.Bid, bundle,
 		return
 	}
 
+	var notifications []Params
 	for _, bid := range auctionResult.Bids {
 		if bid.Price == impression.GetPrice() {
-			go h.Sender.SendEvent(ctx, Params{
+			notifications = append(notifications, Params{
 				Bundle:           bundle,
 				AdType:           adType,
 				AuctionID:        impression.AuctionID,
@@ -243,9 +254,13 @@ func (h Handler) HandleShow(ctx context.Context, impression *schema.Bid, bundle,
 				FirstPrice:       impression.GetPrice(),
 				SecondPrice:      0,
 			})
-
+			notifications = append(notifications, buildInsightsImpressionNotifications(auctionResult, impression, bundle, adType)...)
 			break
 		}
+	}
+
+	for _, n := range notifications {
+		go h.Sender.SendEvent(ctx, n)
 	}
 }
 
@@ -299,11 +314,10 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 		secondPrice = prices[len(prices)-2]
 	}
 
-	// Send notifications for all bids stored in auctionResult, regardless of incoming bid type
+	var notifications []Params
 	for _, auctionBid := range auctionResult.Bids {
 		if auctionBid.Price == winningPrice {
-			// Send win notification
-			go h.Sender.SendEvent(ctx, Params{
+			notifications = append(notifications, Params{
 				Bundle:           bundle,
 				AdType:           adType,
 				AuctionID:        bid.AuctionID,
@@ -315,8 +329,7 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 				SecondPrice:      secondPrice,
 			})
 		} else {
-			// Send loss notification
-			go h.Sender.SendEvent(ctx, Params{
+			notifications = append(notifications, Params{
 				Bundle:           bundle,
 				AdType:           adType,
 				AuctionID:        bid.AuctionID,
@@ -328,6 +341,20 @@ func (h Handler) HandleWin(ctx context.Context, bid *schema.Bid, config *auction
 				SecondPrice:      secondPrice,
 			})
 		}
+	}
+
+	notifications = append(notifications, buildInsightsAuctionNotifications(
+		auctionResult,
+		bundle,
+		adType,
+		bid.AuctionID,
+		winningPrice,
+		bid.DemandID,
+		bid.AuctionPriceFloor,
+	)...)
+
+	for _, n := range notifications {
+		go h.Sender.SendEvent(ctx, n)
 	}
 
 	return nil
@@ -390,10 +417,9 @@ func (h Handler) HandleLoss(ctx context.Context, bid *schema.Bid, externalWinner
 		secondPrice = prices[len(prices)-2]
 	}
 
-	// Send loss notifications for all bids stored in auctionResult
-	// (since external winner won)
+	var notifications []Params
 	for _, auctionBid := range auctionResult.Bids {
-		go h.Sender.SendEvent(ctx, Params{
+		notifications = append(notifications, Params{
 			Bundle:           bundle,
 			AdType:           adType,
 			AuctionID:        bid.AuctionID,
@@ -406,5 +432,47 @@ func (h Handler) HandleLoss(ctx context.Context, bid *schema.Bid, externalWinner
 		})
 	}
 
+	winnerDemandID := ""
+	if externalWinner != nil {
+		winnerDemandID = externalWinner.DemandID
+	}
+	notifications = append(notifications, buildInsightsAuctionNotifications(
+		auctionResult,
+		bundle,
+		adType,
+		bid.AuctionID,
+		firstPrice,
+		winnerDemandID,
+		bid.AuctionPriceFloor,
+	)...)
+
+	for _, n := range notifications {
+		go h.Sender.SendEvent(ctx, n)
+	}
+
 	return nil
+}
+
+// HandleClick is used to handle /click request.
+// Send insights click notification when links are available.
+func (h Handler) HandleClick(ctx context.Context, bid *schema.Bid, bundle, adType string) {
+	if bid == nil || !bid.IsBidding() {
+		return
+	}
+
+	auctionResult, err := h.AuctionResultRepo.Find(ctx, bid.AuctionID)
+	if err != nil {
+		log.Printf("HandleClick: AuctionResult exception: %s", err)
+		return
+	}
+
+	if auctionResult == nil {
+		log.Printf("HandleClick: AuctionResult not found: %s", bid.AuctionID)
+		return
+	}
+
+	notifications := buildInsightsClickNotifications(auctionResult, bid, bundle, adType)
+	for _, n := range notifications {
+		go h.Sender.SendEvent(ctx, n)
+	}
 }

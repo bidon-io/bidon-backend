@@ -229,6 +229,9 @@ func TestConfigHandler_HandleCallsInsightsService(t *testing.T) {
 	if lastReq.OpenRTB.App == nil || lastReq.OpenRTB.App.Bundle != "com.app.name" {
 		t.Fatalf("unexpected insights app mapping: %+v", lastReq.OpenRTB.App)
 	}
+	if lastReq.GeoData.CountryCode != "US" {
+		t.Fatalf("expected insights geodata country US, got %q", lastReq.GeoData.CountryCode)
+	}
 
 	if lastReq.IDFA != "00000000-0000-0000-0000-000000000000" {
 		t.Fatalf("unexpected idfa mapping: %s", lastReq.IDFA)

@@ -45,6 +45,50 @@ func TestAuctionResultRepo_CreateOrUpdate(t *testing.T) {
 	}
 }
 
+func TestAuctionResultRepo_CreateOrUpdate_WithInsightsNotifications(t *testing.T) {
+	ctx := context.Background()
+	imp := &schema.AdObject{
+		AuctionID:  "auction-1",
+		PriceFloor: 0.5,
+		InsightsNotifications: []schema.InsightsNotification{
+			{
+				InsightProvider: "nefta",
+				Auction:         "https://example.com/a",
+				Impression:      "https://example.com/i",
+				Click:           "https://example.com/c",
+			},
+		},
+	}
+	bids := []notification.Bid{
+		{ID: "bid-1", ImpID: "imp-1", Price: 1.23},
+	}
+	expectedAuctionResult := &notification.AuctionResult{
+		AuctionID: "auction-1",
+		Bids:      bids,
+		InsightsNotifications: []notification.InsightsNotification{
+			{
+				InsightProvider: "nefta",
+				Auction:         "https://example.com/a",
+				Impression:      "https://example.com/i",
+				Click:           "https://example.com/c",
+			},
+		},
+	}
+	rdb, mock := redismock.NewClusterMock()
+	mock.ExpectGet("auction-1").RedisNil()
+	mock.ExpectSet("auction-1", expectedAuctionResult, 4*time.Hour).SetVal("OK")
+
+	repo := store.AuctionResultRepo{Redis: rdb}
+	err := repo.CreateOrUpdate(ctx, imp, bids)
+
+	if mock.ExpectationsWereMet() != nil {
+		t.Errorf("expectation not met: %v", mock.ExpectationsWereMet())
+	}
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
 func TestAuctionResultRepo_Find(t *testing.T) {
 	ctx := context.Background()
 	expectedAuctionResultV2 := &notification.AuctionResult{

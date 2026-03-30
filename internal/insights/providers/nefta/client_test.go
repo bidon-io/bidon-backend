@@ -135,3 +135,67 @@ func TestClientInitHonorsTimeout(t *testing.T) {
 		t.Fatalf("expected timeout error")
 	}
 }
+
+func TestClientFloorPriceSuccess(t *testing.T) {
+	var captured FloorPriceRequest
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST method, got %s", r.Method)
+		}
+		if r.Header.Get("Content-Type") != "application/json" {
+			t.Fatalf("expected application/json content type")
+		}
+		if r.Header.Get("nefta-sdk-version") != "0.8.0" {
+			t.Fatalf("expected nefta-sdk-version 0.8.0, got %q", r.Header.Get("nefta-sdk-version"))
+		}
+		if r.Header.Get("nefta-sdk-platform") != "android" {
+			t.Fatalf("expected nefta-sdk-platform android, got %q", r.Header.Get("nefta-sdk-platform"))
+		}
+		if r.Header.Get("nefta-sdk-bundle") != "com.example.app" {
+			t.Fatalf("expected nefta-sdk-bundle com.example.app, got %q", r.Header.Get("nefta-sdk-bundle"))
+		}
+		if r.Header.Get("nefta-sdk-app-version") != "2.0.0" {
+			t.Fatalf("expected nefta-sdk-app-version 2.0.0, got %q", r.Header.Get("nefta-sdk-app-version"))
+		}
+		if r.Header.Get("nefta-sdk-nuid") != "nuid-1" {
+			t.Fatalf("expected nefta-sdk-nuid nuid-1, got %q", r.Header.Get("nefta-sdk-nuid"))
+		}
+		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"floor_prices":[{"auction_id":1,"floor_price":0.12,"notification":{"auction":"a","impression":"i","click":"c"}}],"control":true}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.Client())
+	client.FloorPriceURL = server.URL
+
+	resp, err := client.FloorPrice(context.Background(), FloorPriceRequest{
+		NUID:            "nuid-1",
+		SessionID:       4,
+		AppPlatform:     "android",
+		SDKVersion:      "0.8.0",
+		AdOpportunityID: 2,
+		AdType:          "rewarded",
+		SessionStartTS:  12345,
+		App:             &openrtb2.App{Bundle: "com.example.app", Ver: "2.0.0"},
+		UserGeo:         &openrtb2.Geo{Country: "USA"},
+		Auctions: []FloorPriceAuction{
+			{ID: 1, FloorPrice: 0.05, Bidders: []string{"bidmachine", "meta"}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("client floor-price failed: %v", err)
+	}
+	if len(resp.Response.FloorPrices) != 1 || resp.Response.FloorPrices[0].FloorPrice != 0.12 {
+		t.Fatalf("unexpected floor-price response: %+v", resp.Response)
+	}
+	if captured.AdOpportunityID != 2 {
+		t.Fatalf("expected ad_opportunity_id 2, got %d", captured.AdOpportunityID)
+	}
+	if len(captured.Auctions) != 1 || captured.Auctions[0].Bidders[0] != "bidmachine" {
+		t.Fatalf("unexpected captured auctions: %+v", captured.Auctions)
+	}
+}

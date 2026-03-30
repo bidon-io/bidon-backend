@@ -15,17 +15,24 @@ var (
 )
 
 type service struct {
-	mu          sync.RWMutex
-	providers   map[Key]Provider
-	providerSeq []Key
-	resultFn    func(InitRequest, InitResult)
+	mu                 sync.RWMutex
+	providers          map[Key]Provider
+	providerSeq        []Key
+	initResultFn       func(InitRequest, InitResult)
+	floorPriceResultFn func(FloorPriceRequest, FloorPriceResult)
 }
 
 type Option func(*service)
 
 func WithInitResultHandler(resultFn func(InitRequest, InitResult)) Option {
 	return func(s *service) {
-		s.resultFn = resultFn
+		s.initResultFn = resultFn
+	}
+}
+
+func WithFloorPriceResultHandler(resultFn func(FloorPriceRequest, FloorPriceResult)) Option {
+	return func(s *service) {
+		s.floorPriceResultFn = resultFn
 	}
 }
 
@@ -95,8 +102,8 @@ func (s *service) Init(ctx context.Context, req InitRequest) {
 				if recovered == nil {
 					return
 				}
-				if s.resultFn != nil {
-					s.resultFn(req, InitResult{
+				if s.initResultFn != nil {
+					s.initResultFn(req, InitResult{
 						Provider: providerKey,
 						Error:    fmt.Sprintf("provider panic: %v", recovered),
 					})
@@ -110,12 +117,85 @@ func (s *service) Init(ctx context.Context, req InitRequest) {
 			if err != nil && result.Error == "" {
 				result.Error = err.Error()
 			}
-			if s.resultFn != nil {
-				s.resultFn(req, result)
+			if s.initResultFn != nil {
+				s.initResultFn(req, result)
 			}
 		}(key, provider)
 	}
 	wg.Wait()
+}
+
+func (s *service) FloorPrice(ctx context.Context, req FloorPriceRequest) []FloorPriceResult {
+	// Take a thread-safe snapshot of provider registry, so FloorPrice can run
+	// without holding the lock while providers execute.
+	s.mu.RLock()
+	providerSeq := make([]Key, len(s.providerSeq))
+	copy(providerSeq, s.providerSeq)
+	providers := make(map[Key]Provider, len(s.providers))
+	for key, provider := range s.providers {
+		providers[key] = provider
+	}
+	s.mu.RUnlock()
+
+	if len(providerSeq) == 0 {
+		return nil
+	}
+
+	var (
+		wg      sync.WaitGroup
+		resultM sync.Mutex
+		results []FloorPriceResult
+	)
+
+	for _, key := range providerSeq {
+		if !isProviderEnabled(req.Settings, key) {
+			continue
+		}
+
+		floorPriceProvider, ok := providers[key].(FloorPriceProvider)
+		if !ok {
+			continue
+		}
+
+		wg.Add(1)
+		go func(providerKey Key, providerInstance FloorPriceProvider) {
+			defer wg.Done()
+			defer func() {
+				recovered := recover()
+				if recovered == nil {
+					return
+				}
+				panicResult := FloorPriceResult{
+					Provider: providerKey,
+					Error:    fmt.Sprintf("provider panic: %v", recovered),
+				}
+				if s.floorPriceResultFn != nil {
+					s.floorPriceResultFn(req, panicResult)
+				}
+				resultM.Lock()
+				results = append(results, panicResult)
+				resultM.Unlock()
+			}()
+
+			result, err := providerInstance.FloorPrice(ctx, req)
+			if result.Provider == "" {
+				result.Provider = providerKey
+			}
+			if err != nil && result.Error == "" {
+				result.Error = err.Error()
+			}
+			if s.floorPriceResultFn != nil {
+				s.floorPriceResultFn(req, result)
+			}
+
+			resultM.Lock()
+			results = append(results, result)
+			resultM.Unlock()
+		}(key, floorPriceProvider)
+	}
+
+	wg.Wait()
+	return results
 }
 
 func isProviderEnabled(settings map[string]any, key Key) bool {

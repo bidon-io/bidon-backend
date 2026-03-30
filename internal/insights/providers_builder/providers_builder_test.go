@@ -155,3 +155,111 @@ func TestNewInitResultLoggerEmitsLifecycleEvents(t *testing.T) {
 		})
 	}
 }
+
+func TestNewFloorPriceResultLoggerEmitsLifecycleEvents(t *testing.T) {
+	baseReq := &schema.BaseRequest{
+		App: schema.App{
+			Bundle:     "com.example.app",
+			Version:    "1.0.0",
+			SDKVersion: "0.9.0",
+		},
+		Device: schema.Device{
+			OS:    "android",
+			Model: "Pixel",
+		},
+	}
+
+	tests := []struct {
+		name       string
+		result     insights.FloorPriceResult
+		wantStatus string
+	}{
+		{
+			name: "called success",
+			result: insights.FloorPriceResult{
+				Provider:          insights.NeftaKey,
+				Auction:           &insights.FloorPriceRecommendation{AuctionID: 1, FloorPrice: 0.42},
+				RawRequest:        `{"nuid":"abc"}`,
+				RawRequestHeaders: `{"nefta-sdk-version":["1.0.0"]}`,
+				RawResponse:       `{"floor_prices":[]}`,
+				Status:            200,
+			},
+			wantStatus: "SUCCESS",
+		},
+		{
+			name: "called skipped",
+			result: insights.FloorPriceResult{
+				Provider: insights.NeftaKey,
+				Skipped:  true,
+			},
+			wantStatus: "SKIPPED",
+		},
+		{
+			name: "called failed",
+			result: insights.FloorPriceResult{
+				Provider: insights.NeftaKey,
+				Error:    "timeout",
+			},
+			wantStatus: "ERROR",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			engineMock := &loggerEngineMock{}
+			logger := &event.Logger{Engine: engineMock}
+			logResult := newFloorPriceResultLogger(logger)
+			req := insights.FloorPriceRequest{
+				AuctionID:               "auction-123",
+				AuctionConfigurationID:  11,
+				AuctionConfigurationUID: 22,
+				AdType:                  "rewarded",
+				AdFormat:                "VIDEO",
+				BaseRequest:             baseReq,
+				GeoData: geocoder.GeoData{
+					CountryCode: "US",
+				},
+			}
+
+			logResult(req, tt.result)
+
+			if len(engineMock.messages) != 1 {
+				t.Fatalf("expected one log message, got %d", len(engineMock.messages))
+			}
+			msg := engineMock.messages[0]
+			if msg.Topic != config.AdEventsTopic {
+				t.Fatalf("expected topic %q, got %q", config.AdEventsTopic, msg.Topic)
+			}
+
+			var logged event.AdEvent
+			if err := json.Unmarshal(msg.Value, &logged); err != nil {
+				t.Fatalf("unmarshal logged event: %v", err)
+			}
+
+			wantEventType := insightsProviderFloorPriceEventType(tt.result.Provider)
+			if logged.EventType != wantEventType {
+				t.Fatalf("expected event_type %q, got %q", wantEventType, logged.EventType)
+			}
+			if logged.Status != tt.wantStatus {
+				t.Fatalf("expected status %q, got %q", tt.wantStatus, logged.Status)
+			}
+			if tt.name == "called success" {
+				if logged.AuctionID != "auction-123" {
+					t.Fatalf("expected auction_id auction-123, got %q", logged.AuctionID)
+				}
+				if logged.AuctionConfigurationID != 11 {
+					t.Fatalf("expected auction_configuration_id 11, got %d", logged.AuctionConfigurationID)
+				}
+				if logged.AuctionConfigurationUID != 22 {
+					t.Fatalf("expected auction_configuration_uid 22, got %d", logged.AuctionConfigurationUID)
+				}
+				if logged.AdFormat != "VIDEO" {
+					t.Fatalf("expected ad_format VIDEO, got %q", logged.AdFormat)
+				}
+				if logged.PriceFloor != 0.42 {
+					t.Fatalf("expected price_floor 0.42, got %v", logged.PriceFloor)
+				}
+			}
+		})
+	}
+}

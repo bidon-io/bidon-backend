@@ -266,6 +266,7 @@ func main() {
 		ConfigFetcher:      configFetcher,
 		SegmentMatcher:     segmentMatcher,
 		AdapterKeysFetcher: adapterInitConfigsFetcher,
+		InsightsService:    insightsService,
 		AuctionBuilder: &auction.Builder{
 			AdUnitsMatcher:               adUnitsMatcher,
 			BiddingBuilder:               biddingBuilder,

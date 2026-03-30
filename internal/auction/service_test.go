@@ -15,6 +15,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/auction/mocks"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/insights"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
@@ -27,6 +28,17 @@ import (
 // MockEventLogger captures logged events for testing
 type MockEventLogger struct {
 	LoggedEvents []event.Event
+}
+
+type floorPriceServiceMock struct {
+	floorPriceFunc func(context.Context, insights.FloorPriceRequest) []insights.FloorPriceResult
+}
+
+func (m *floorPriceServiceMock) FloorPrice(ctx context.Context, req insights.FloorPriceRequest) []insights.FloorPriceResult {
+	if m.floorPriceFunc == nil {
+		return nil
+	}
+	return m.floorPriceFunc(ctx, req)
 }
 
 func (m *MockEventLogger) Produce(message event.LogMessage, _ func(error)) {
@@ -1216,5 +1228,189 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 
 	if diff := cmp.Diff(want, bidmachineAdUnit.Extra); diff != "" {
 		t.Errorf("Extra mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestServiceRunAppliesInsightsFloorPriceForSupportedAdTypes(t *testing.T) {
+	ctx := context.Background()
+
+	auctionConfig := &auction.Config{
+		ID:         1,
+		UID:        "config_uid",
+		PriceFloor: 0.05,
+	}
+	request := &schema.AuctionRequest{
+		AdType: ad.RewardedType,
+		AdObject: schema.AdObject{
+			AuctionID:  "auc-1",
+			PriceFloor: 0.01,
+		},
+		BaseRequest: schema.BaseRequest{
+			Device: schema.Device{OS: "android", Type: "phone"},
+		},
+		AdCache: []schema.AdCacheObject{
+			{Price: 0.02},
+		},
+	}
+	sgmnt := segment.Segment{ID: 1, UID: "1"}
+	segmentMatcher := &segment.Matcher{
+		Fetcher: &segmentmocks.FetcherMock{
+			FetchCachedFunc: func(_ context.Context, _ int64) ([]segment.Segment, error) {
+				return []segment.Segment{sgmnt}, nil
+			},
+		},
+	}
+
+	configFetcher := &mocks.ConfigFetcherMock{
+		MatchFunc: func(_ context.Context, _ int64, _ ad.Type, _ int64, _ string) (*auction.Config, error) {
+			return auctionConfig, nil
+		},
+		FetchByUIDCachedFunc: func(_ context.Context, _ int64, _, _ string) *auction.Config {
+			return auctionConfig
+		},
+	}
+	adapterKeysFetcher := &mocks.AdapterKeysFetcherMock{
+		FetchEnabledAdapterKeysFunc: func(_ context.Context, _ int64, keys []adapter.Key) ([]adapter.Key, error) {
+			return keys, nil
+		},
+	}
+
+	var buildPriceFloor float64
+	auctionBuilder := &mocks.AuctionBuilderMock{
+		BuildFunc: func(_ context.Context, params *auction.BuildParams) (*auction.Result, error) {
+			buildPriceFloor = params.PriceFloor
+			return &auction.Result{
+				AuctionConfiguration: auctionConfig,
+				CPMAdUnits:           &[]auction.AdUnit{},
+				BiddingAuctionResult: &bidding.AuctionResult{},
+			}, nil
+		},
+	}
+
+	floorSvc := &floorPriceServiceMock{
+		floorPriceFunc: func(_ context.Context, req insights.FloorPriceRequest) []insights.FloorPriceResult {
+			if req.AdType != string(ad.RewardedType) {
+				t.Fatalf("expected ad type %q, got %q", ad.RewardedType, req.AdType)
+			}
+			if req.FloorPrice <= 0 {
+				t.Fatalf("expected positive floor price, got %v", req.FloorPrice)
+			}
+			return []insights.FloorPriceResult{
+				{
+					Auction: &insights.FloorPriceRecommendation{AuctionID: 1, FloorPrice: 0.11},
+				},
+			}
+		},
+	}
+
+	service := &auction.Service{
+		AdapterKeysFetcher: adapterKeysFetcher,
+		ConfigFetcher:      configFetcher,
+		AuctionBuilder:     auctionBuilder,
+		SegmentMatcher:     segmentMatcher,
+		InsightsService:    floorSvc,
+		EventLogger:        &event.Logger{Engine: &engine.Log{}},
+	}
+
+	resp, err := service.Run(ctx, &auction.ExecutionParams{
+		Req:     request,
+		App:     testApp(1),
+		Country: "US",
+		Log:     func(string) {},
+		LogErr:  func(_ error) {},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.AuctionPriceFloor != 0.11 {
+		t.Fatalf("expected response floor 0.11, got %v", resp.AuctionPriceFloor)
+	}
+	if buildPriceFloor != 0.11 {
+		t.Fatalf("expected builder floor 0.11, got %v", buildPriceFloor)
+	}
+}
+
+func TestServiceRunCallsInsightsFloorPriceForBanner(t *testing.T) {
+	ctx := context.Background()
+
+	auctionConfig := &auction.Config{
+		ID:         2,
+		UID:        "config_uid_2",
+		PriceFloor: 0.05,
+	}
+	request := &schema.AuctionRequest{
+		AdType: ad.BannerType,
+		AdObject: schema.AdObject{
+			AuctionID:  "auc-2",
+			PriceFloor: 0.01,
+		},
+		BaseRequest: schema.BaseRequest{
+			Device: schema.Device{OS: "android", Type: "phone"},
+		},
+	}
+	sgmnt := segment.Segment{ID: 1, UID: "1"}
+	segmentMatcher := &segment.Matcher{
+		Fetcher: &segmentmocks.FetcherMock{
+			FetchCachedFunc: func(_ context.Context, _ int64) ([]segment.Segment, error) {
+				return []segment.Segment{sgmnt}, nil
+			},
+		},
+	}
+
+	configFetcher := &mocks.ConfigFetcherMock{
+		MatchFunc: func(_ context.Context, _ int64, _ ad.Type, _ int64, _ string) (*auction.Config, error) {
+			return auctionConfig, nil
+		},
+		FetchByUIDCachedFunc: func(_ context.Context, _ int64, _, _ string) *auction.Config {
+			return auctionConfig
+		},
+	}
+	adapterKeysFetcher := &mocks.AdapterKeysFetcherMock{
+		FetchEnabledAdapterKeysFunc: func(_ context.Context, _ int64, keys []adapter.Key) ([]adapter.Key, error) {
+			return keys, nil
+		},
+	}
+	auctionBuilder := &mocks.AuctionBuilderMock{
+		BuildFunc: func(_ context.Context, params *auction.BuildParams) (*auction.Result, error) {
+			if params.PriceFloor != 0.05 {
+				t.Fatalf("expected original floor 0.05 for banner, got %v", params.PriceFloor)
+			}
+			return &auction.Result{
+				AuctionConfiguration: auctionConfig,
+				CPMAdUnits:           &[]auction.AdUnit{},
+				BiddingAuctionResult: &bidding.AuctionResult{},
+			}, nil
+		},
+	}
+
+	callCount := 0
+	floorSvc := &floorPriceServiceMock{
+		floorPriceFunc: func(_ context.Context, _ insights.FloorPriceRequest) []insights.FloorPriceResult {
+			callCount++
+			return nil
+		},
+	}
+
+	service := &auction.Service{
+		AdapterKeysFetcher: adapterKeysFetcher,
+		ConfigFetcher:      configFetcher,
+		AuctionBuilder:     auctionBuilder,
+		SegmentMatcher:     segmentMatcher,
+		InsightsService:    floorSvc,
+		EventLogger:        &event.Logger{Engine: &engine.Log{}},
+	}
+
+	_, err := service.Run(ctx, &auction.ExecutionParams{
+		Req:     request,
+		App:     testApp(2),
+		Country: "US",
+		Log:     func(string) {},
+		LogErr:  func(_ error) {},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if callCount != 1 {
+		t.Fatalf("expected floor-price call for banner, got %d", callCount)
 	}
 }
