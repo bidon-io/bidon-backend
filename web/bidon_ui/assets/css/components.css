@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* ── Buttons ────────────────────────────────────────────────────────────
+   *
+   *  Usage:
+   *    <NuxtLink class="btn-new">   <i class="pi pi-plus" /> New Thing   </NuxtLink>
+   *    <NuxtLink class="btn-edit">  <i class="pi pi-pencil" /> Edit       </NuxtLink>
+   *    <NuxtLink class="btn-view">  <i class="pi pi-eye" /> View          </NuxtLink>
+   *    <button   class="btn-delete"><i class="pi pi-trash" /> Delete       </button>
+   *
+   *  All sizes can be modified with btn-sm / btn-lg modifiers.
+   * ──────────────────────────────────────────────────────────────────── */
+
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap;
+  }
+
+  .btn-sm {
+    @apply px-2.5 py-1 text-xs;
+  }
+
+  .btn-new {
+    @apply btn bg-green-500 text-white hover:bg-green-600;
+  }
+
+  .btn-edit {
+    @apply btn bg-blue-500 text-white hover:bg-blue-600;
+  }
+
+  .btn-cancel {
+    @apply btn bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100;
+  }
+
+  .btn-view {
+    @apply btn bg-white text-gray-600 border border-gray-300 hover:bg-gray-50;
+  }
+
+  .btn-delete {
+    @apply btn bg-red-500 text-white hover:bg-red-600;
+  }
+
+  /* ── Badges / chips ─────────────────────────────────────────────────────
+   *
+   *  Usage:
+   *    <span class="badge badge-platform">ios</span>
+   *    <span class="badge badge-ad-type">interstitial</span>
+   *    <span class="badge badge-active">Active</span>
+   *    <span class="badge badge-count">3</span>
+   * ──────────────────────────────────────────────────────────────────── */
+
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium;
+  }
+
+  .badge-platform {
+    @apply badge bg-blue-100 text-blue-700;
+  }
+
+  .badge-ad-type {
+    @apply badge bg-violet-100 text-violet-700 capitalize;
+  }
+
+  .badge-segment {
+    @apply badge bg-blue-100 text-blue-700;
+  }
+
+  .badge-active {
+    @apply badge bg-green-100 text-green-700;
+  }
+
+  .badge-disabled {
+    @apply badge bg-red-100 text-red-500;
+  }
+
+  .badge-count-cpm {
+    @apply badge bg-amber-100 text-amber-700;
+  }
+
+  .badge-count-rtb {
+    @apply badge bg-teal-100 text-teal-700;
+  }
+
+  /* ── Cards ──────────────────────────────────────────────────────────────
+   *
+   *  Usage:
+   *    <div class="card">
+   *      <div class="card-header"> ... </div>
+   *      <div class="card-body">   ... </div>
+   *      <div class="card-footer"> ... </div>
+   *    </div>
+   * ──────────────────────────────────────────────────────────────────── */
+
+  .card {
+    @apply border border-gray-200 rounded-lg bg-white overflow-hidden;
+  }
+
+  .card-header {
+    @apply flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200;
+  }
+
+  .card-body {
+    @apply px-6 py-4;
+  }
+
+  .card-footer {
+    @apply px-6 py-3 border-t border-gray-100 bg-gray-50;
+  }
+}
