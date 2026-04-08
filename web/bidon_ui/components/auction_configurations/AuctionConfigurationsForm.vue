@@ -1,6 +1,6 @@
 <template>
   <form @submit="onSubmit">
-    <FormCard title="Auction Configuration">
+    <FormCard :title="compact ? '' : 'Auction Configuration'">
       <div v-if="showCopySettings" class="px-6 py-4">
         <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 class="text-sm font-semibold text-blue-900 mb-3">
@@ -69,6 +69,7 @@
           placeholder="Timeout (ms)"
         />
       </FormField>
+
       <!-- App Demand Profile Validation Warnings -->
       <div v-if="hasValidationWarnings" class="mb-4">
         <transition-group name="p-message" tag="div">
@@ -83,26 +84,40 @@
         </transition-group>
       </div>
 
-      <FormField v-if="showNetworks" label="CPM Networks">
-        <NetworkAccordion
-          v-model:enabled-network-keys="demands"
-          v-model="selectedAdUnitIds"
-          :networks="demandNetworks"
-          :loading="demandLoading"
-          @network-enabled="onNetworkEnabled"
-          @network-disabled="onNetworkDisabled"
-        />
-      </FormField>
-      <FormField v-if="showNetworks" label="Bidding Networks">
-        <NetworkAccordion
-          v-model:enabled-network-keys="bidding"
-          v-model="selectedAdUnitIds"
-          :networks="biddingNetworks"
-          :loading="biddingLoading"
-          @network-enabled="onNetworkEnabled"
-          @network-disabled="onNetworkDisabled"
-        />
-      </FormField>
+      <!-- Bidding Networks -->
+      <AuctionConfigFormNetworkSection
+        v-if="showNetworks"
+        v-model:enabled-network-keys="bidding"
+        v-model:selected-ad-unit-ids="selectedAdUnitIds"
+        :is-bidding="true"
+        :ad-units="biddingAdUnitsData ?? []"
+        :loading="biddingLoading"
+        :app-id="appId"
+        :ad-type="adType"
+        :demand-profiles="demandProfiles"
+        @network-enabled="validateNetworkEnabled"
+        @network-disabled="validateNetworkDisabled"
+        @line-item-created="onLineItemCreated($event, true)"
+        @line-item-updated="onLineItemUpdated($event, true)"
+      />
+
+      <!-- Waterfall Networks -->
+      <AuctionConfigFormNetworkSection
+        v-if="showNetworks"
+        v-model:enabled-network-keys="demands"
+        v-model:selected-ad-unit-ids="selectedAdUnitIds"
+        :is-bidding="false"
+        :ad-units="demandAdUnitsData ?? []"
+        :loading="demandLoading"
+        :app-id="appId"
+        :ad-type="adType"
+        :demand-profiles="demandProfiles"
+        @network-enabled="validateNetworkEnabled"
+        @network-disabled="validateNetworkDisabled"
+        @line-item-created="onLineItemCreated($event, false)"
+        @line-item-updated="onLineItemUpdated($event, false)"
+      />
+
       <template #footer>
         <FormSubmitButton />
       </template>
@@ -113,50 +128,28 @@
 <script setup>
 import * as yup from "yup";
 import { useToast } from "primevue/usetoast";
-import axios from "@/services/ApiService.js";
 import { useAppDemandProfileValidation } from "@/composables/useAppDemandProfileValidation.js";
 import { useAdUnits } from "@/composables/useAdUnits.js";
-
-const NETWORKS_CONFIG = [
-  // Waterfall networks
-  { label: "Admob", key: "admob", isBidding: false },
-  { label: "Applovin", key: "applovin", isBidding: false },
-  { label: "BidMachine", key: "bidmachine", isBidding: false },
-  { label: "Bigoads", key: "bigoads", isBidding: false },
-  { label: "Chartboost", key: "chartboost", isBidding: false },
-  { label: "DtExchange", key: "dtexchange", isBidding: false },
-  { label: "Google Ad Manager", key: "gam", isBidding: false },
-  { label: "Mintegral", key: "mintegral", isBidding: false },
-  { label: "UnityAds", key: "unityads", isBidding: false },
-  { label: "IronSource", key: "ironsource", isBidding: false },
-  { label: "VK Ads", key: "vkads", isBidding: false },
-  { label: "Vungle", key: "vungle", isBidding: false },
-  { label: "Yandex", key: "yandex", isBidding: false },
-  // Bidding networks
-  { label: "Amazon", key: "amazon", isBidding: true },
-  { label: "BidMachine", key: "bidmachine", isBidding: true },
-  { label: "Bigoads", key: "bigoads", isBidding: true },
-  { label: "InMobi", key: "inmobi", isBidding: true },
-  { label: "Meta", key: "meta", isBidding: true },
-  { label: "Mintegral", key: "mintegral", isBidding: true },
-  { label: "MobileFuse", key: "mobilefuse", isBidding: true },
-  { label: "Moloco", key: "moloco", isBidding: true },
-  { label: "Start.io", key: "startio", isBidding: true },
-  { label: "TaurusX", key: "taurusx", isBidding: true },
-  { label: "Vungle", key: "vungle", isBidding: true },
-  { label: "VK Ads", key: "vkads", isBidding: true },
-  { label: "Yandex", key: "yandex", isBidding: true },
-  { label: "Zmaticoo", key: "zmaticoo", isBidding: true },
-];
 
 const props = defineProps({
   value: {
     type: Object,
     required: true,
   },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits(["submit"]);
 const resource = ref(props.value);
+
+const DEFAULT_TIMEOUTS = {
+  banner: 10000,
+  mrec: 10000,
+  interstitial: 15000,
+  rewarded: 15000,
+};
 
 const { errors, useFieldModel, handleSubmit } = useForm({
   validationSchema: yup.object({
@@ -181,7 +174,11 @@ const { errors, useFieldModel, handleSubmit } = useForm({
       resource.value.externalWinNotifications !== undefined
         ? resource.value.externalWinNotifications
         : true,
-    timeout: resource.value.timeout || null,
+    timeout:
+      resource.value.timeout ||
+      (resource.value.adType
+        ? (DEFAULT_TIMEOUTS[resource.value.adType] ?? null)
+        : null),
     settings: resource.value.settings || {},
   },
 });
@@ -195,44 +192,53 @@ const isDefault = useFieldModel("isDefault");
 const externalWinNotifications = useFieldModel("externalWinNotifications");
 const timeout = useFieldModel("timeout");
 
+const isNewConfig = !resource.value.id;
+
+watch(adType, (newAdType) => {
+  if (!isNewConfig) return;
+  const defaultTimeout = DEFAULT_TIMEOUTS[newAdType];
+  if (!defaultTimeout) return;
+  const currentIsDefault = Object.values(DEFAULT_TIMEOUTS).includes(
+    timeout.value,
+  );
+  if (!timeout.value || currentIsDefault) {
+    timeout.value = defaultTimeout;
+  }
+});
+
 const demands = ref(resource.value.demands || []);
 const bidding = ref(resource.value.bidding || []);
 const selectedAdUnitIds = ref(resource.value.adUnitIds || []);
 
-const showNetworks = computed(() => appId.value && adType.value);
+const showNetworks = computed(() => !!appId.value && !!adType.value);
+
+// Fetch Demand Profiles
+const demandProfiles = ref([]);
+watchEffect(async () => {
+  if (!appId.value) {
+    demandProfiles.value = [];
+    return;
+  }
+  const data = await $apiFetch("/app_demand_profiles_collection", {
+    params: { app_id: appId.value, limit: 200 },
+  });
+  demandProfiles.value = data.items ?? [];
+});
 
 // Fetch Ad Units
-const { data: demandAdUnitsData, status: demandStatus } = useAdUnits(
-  appId,
-  adType,
-  false,
-);
-const { data: biddingAdUnitsData, status: biddingStatus } = useAdUnits(
-  appId,
-  adType,
-  true,
-);
+const {
+  data: demandAdUnitsData,
+  status: demandStatus,
+  refresh: refreshDemandUnits,
+} = useAdUnits(appId, adType, false);
+const {
+  data: biddingAdUnitsData,
+  status: biddingStatus,
+  refresh: refreshBiddingUnits,
+} = useAdUnits(appId, adType, true);
 
 const demandLoading = computed(() => demandStatus.value === "pending");
 const biddingLoading = computed(() => biddingStatus.value === "pending");
-
-const buildNetworks = (isBidding, adUnits) => {
-  if (!adUnits) return [];
-  const config = NETWORKS_CONFIG.filter((n) => n.isBidding === isBidding);
-  return config.map((net) => ({
-    ...net,
-    adUnits: adUnits
-      .filter((unit) => unit.networkKey === net.key)
-      .sort((a, b) => a.pricefloor - b.pricefloor),
-  }));
-};
-
-const demandNetworks = computed(() =>
-  buildNetworks(false, demandAdUnitsData.value),
-);
-const biddingNetworks = computed(() =>
-  buildNetworks(true, biddingAdUnitsData.value),
-);
 
 // App Demand Profile Validation
 const {
@@ -243,15 +249,6 @@ const {
   hasWarnings: hasValidationWarnings,
 } = useAppDemandProfileValidation(appId);
 
-const onNetworkEnabled = async (networkApiKey) => {
-  await validateNetworkEnabled(networkApiKey);
-};
-
-const onNetworkDisabled = (networkApiKey) => {
-  validateNetworkDisabled(networkApiKey);
-};
-
-// Clear warnings when app changes
 watch(appId, () => {
   clearAllWarnings();
 });
@@ -261,13 +258,13 @@ const copyAuctionKey = ref("");
 const copyLoading = ref(false);
 const copyError = ref("");
 
-const showCopySettings = computed(() => !!resource.value.id);
+const showCopySettings = computed(() => !!resource.value.id && !props.compact);
 
 const fetchSourceConfig = async (auctionKey) => {
-  const response = await axios.get("/v2/auction_configurations_collection", {
+  const data = await $apiFetch("/v2/auction_configurations_collection", {
     params: { auction_key: auctionKey, limit: 1 },
   });
-  return response.data?.items?.[0];
+  return data?.items?.[0];
 };
 
 const validateSourceConfig = (sourceConfig) => {
@@ -320,6 +317,23 @@ const copySettings = async () => {
     copyLoading.value = false;
   }
 };
+
+async function onLineItemCreated(item, isBidding) {
+  selectedAdUnitIds.value = [...selectedAdUnitIds.value, Number(item.id)];
+  if (isBidding) {
+    await refreshBiddingUnits();
+  } else {
+    await refreshDemandUnits();
+  }
+}
+
+async function onLineItemUpdated(_item, isBidding) {
+  if (isBidding) {
+    await refreshBiddingUnits();
+  } else {
+    await refreshDemandUnits();
+  }
+}
 
 const onSubmit = handleSubmit((values) =>
   emit("submit", {

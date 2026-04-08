@@ -1,0 +1,293 @@
+<template>
+  <div class="px-6 py-4">
+    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+      {{ isBidding ? "Bidding Networks" : "Waterfall Networks" }}
+    </p>
+
+    <div
+      v-if="loading"
+      class="flex items-center gap-2 text-sm text-gray-400 py-2"
+    >
+      <i class="pi pi-spin pi-spinner" />
+      Loading…
+    </div>
+
+    <div v-else class="flex flex-col gap-2">
+      <details
+        v-for="network in allNetworks"
+        :key="network.key"
+        open
+        class="group border border-gray-100 rounded-lg overflow-hidden"
+      >
+        <summary
+          class="flex items-center justify-between px-3 py-2 bg-gray-50 cursor-pointer list-none select-none hover:bg-gray-100 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <svg
+              class="w-3.5 h-3.5 text-gray-400 transition-transform group-open:rotate-90 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span class="text-sm font-medium text-gray-700">
+              {{ network.label }}
+            </span>
+            <span
+              :class="[
+                'badge',
+                enabledNetworkKeys.includes(network.key)
+                  ? isBidding
+                    ? 'badge-count-rtb'
+                    : 'badge-count-cpm'
+                  : 'bg-gray-100 text-gray-400 text-xs font-medium px-1.5 py-0.5 rounded',
+              ]"
+            >
+              {{ networkLineItems(network.key).length }}
+            </span>
+            <!-- No demand profile warning -->
+            <span
+              v-if="!networkHasProfile(network.key)"
+              class="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
+              title="No demand source profile configured for this network"
+            >
+              <i class="pi pi-exclamation-triangle text-xs" />
+              No profile
+            </span>
+          </div>
+          <div class="flex items-center gap-2" @click.stop>
+            <button
+              :class="[
+                'text-xs px-2.5 py-1 rounded border font-medium transition-colors',
+                !networkHasProfile(network.key)
+                  ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
+                  : enabledNetworkKeys.includes(network.key)
+                    ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
+                    : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600',
+              ]"
+              type="button"
+              :disabled="!networkHasProfile(network.key)"
+              @click="toggleNetworkEnabled(network.key)"
+            >
+              <i
+                :class="[
+                  'pi mr-1',
+                  enabledNetworkKeys.includes(network.key)
+                    ? 'pi-check-circle'
+                    : 'pi-circle',
+                ]"
+              />
+              {{
+                enabledNetworkKeys.includes(network.key)
+                  ? "Enabled"
+                  : "Disabled"
+              }}
+            </button>
+            <button
+              :class="[
+                'btn-sm',
+                !networkHasProfile(network.key)
+                  ? 'btn cursor-not-allowed bg-gray-50 border border-gray-200 text-gray-300'
+                  : showCreateFor === network.key
+                    ? 'btn-cancel'
+                    : 'btn-new',
+              ]"
+              type="button"
+              :disabled="!networkHasProfile(network.key)"
+              :title="
+                !networkHasProfile(network.key)
+                  ? 'Add a demand profile first'
+                  : undefined
+              "
+              @click="toggleCreateForm(network.key)"
+            >
+              <i
+                :class="[
+                  'pi',
+                  showCreateFor === network.key ? 'pi-times' : 'pi-plus',
+                ]"
+              />
+              {{ showCreateFor === network.key ? "Cancel" : "New Line Item" }}
+            </button>
+          </div>
+        </summary>
+
+        <div class="divide-y divide-gray-50 bg-white">
+          <template
+            v-for="item in networkLineItems(network.key)"
+            :key="item.id"
+          >
+            <div class="flex items-center gap-3 px-4 py-2 text-sm">
+              <Checkbox
+                :model-value="selectedAdUnitIds"
+                :value="item.id"
+                @update:model-value="$emit('update:selectedAdUnitIds', $event)"
+              />
+              <span class="flex-1 text-gray-700 truncate">
+                {{ item.label }}
+              </span>
+              <span
+                v-if="!isBidding"
+                class="text-sm text-gray-400 shrink-0 font-mono"
+              >
+                ${{ item.pricefloor.toFixed(2) }}
+              </span>
+              <button
+                :class="[
+                  'btn-sm shrink-0',
+                  editingItemId === item.id ? 'btn-cancel' : 'btn-edit',
+                ]"
+                type="button"
+                @click.stop="toggleEditForm(item.id)"
+              >
+                <i
+                  :class="[
+                    'pi',
+                    editingItemId === item.id ? 'pi-times' : 'pi-pencil',
+                  ]"
+                />
+                {{ editingItemId === item.id ? "Cancel" : "Edit" }}
+              </button>
+            </div>
+            <InlineLineItemForm
+              v-if="editingItemId === item.id"
+              :app-id="appId"
+              :ad-type="adType"
+              :network-key="network.key"
+              :is-bidding="isBidding"
+              :initial-item="{
+                id: item.id,
+                humanName: item.label,
+                accountId: item.accountId,
+                bidFloor: item.pricefloor,
+                extra: item.extra,
+              }"
+              @updated="onItemUpdated"
+              @cancel="editingItemId = null"
+            />
+          </template>
+
+          <div
+            v-if="
+              !networkLineItems(network.key).length &&
+              showCreateFor !== network.key
+            "
+            class="px-4 py-2 text-sm text-gray-400"
+          >
+            No line items yet.
+          </div>
+
+          <InlineLineItemForm
+            v-if="showCreateFor === network.key"
+            :app-id="appId"
+            :ad-type="adType"
+            :network-key="network.key"
+            :is-bidding="isBidding"
+            @created="onItemCreated($event, network.key)"
+            @cancel="showCreateFor = null"
+          />
+        </div>
+      </details>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import {
+  AUCTION_NETWORKS,
+  NETWORK_LABEL_BY_KEY,
+  NETWORK_ACCOUNT_TYPE_BY_KEY,
+} from "@/constants/Networks.js";
+
+const props = defineProps({
+  isBidding: { type: Boolean, required: true },
+  adUnits: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+  appId: { type: [Number, String], required: true },
+  adType: { type: String, required: true },
+  enabledNetworkKeys: { type: Array, default: () => [] },
+  selectedAdUnitIds: { type: Array, default: () => [] },
+  demandProfiles: { type: Array, default: () => [] },
+});
+
+const emit = defineEmits([
+  "update:enabledNetworkKeys",
+  "update:selectedAdUnitIds",
+  "network-enabled",
+  "network-disabled",
+  "line-item-created",
+  "line-item-updated",
+]);
+
+const localProfiles = ref([...props.demandProfiles]);
+watch(
+  () => props.demandProfiles,
+  (val) => {
+    localProfiles.value = [...val];
+  },
+);
+
+const profileAccountTypes = computed(
+  () =>
+    new Set(
+      localProfiles.value
+        .map((p) => p.accountType ?? p.account?.type)
+        .filter(Boolean),
+    ),
+);
+
+function networkHasProfile(networkKey) {
+  return profileAccountTypes.value.has(NETWORK_ACCOUNT_TYPE_BY_KEY[networkKey]);
+}
+
+const allNetworks = computed(() =>
+  AUCTION_NETWORKS.filter((n) => n.isBidding === props.isBidding).map((n) => ({
+    key: n.key,
+    label: NETWORK_LABEL_BY_KEY[n.key] ?? n.key,
+  })),
+);
+
+function networkLineItems(networkKey) {
+  return props.adUnits.filter((u) => u.networkKey === networkKey);
+}
+
+function toggleNetworkEnabled(networkKey) {
+  if (!networkHasProfile(networkKey)) return;
+  const isEnabled = props.enabledNetworkKeys.includes(networkKey);
+  const keys = isEnabled
+    ? props.enabledNetworkKeys.filter((k) => k !== networkKey)
+    : [...props.enabledNetworkKeys, networkKey];
+  emit("update:enabledNetworkKeys", keys);
+  emit(isEnabled ? "network-disabled" : "network-enabled", networkKey);
+}
+
+const showCreateFor = ref(null);
+const editingItemId = ref(null);
+
+function toggleCreateForm(networkKey) {
+  showCreateFor.value = showCreateFor.value === networkKey ? null : networkKey;
+  editingItemId.value = null;
+}
+
+function toggleEditForm(itemId) {
+  editingItemId.value = editingItemId.value === itemId ? null : itemId;
+  showCreateFor.value = null;
+}
+
+function onItemCreated(item, networkKey) {
+  showCreateFor.value = null;
+  emit("line-item-created", item, networkKey);
+}
+
+function onItemUpdated(item) {
+  editingItemId.value = null;
+  emit("line-item-updated", item);
+}
+</script>
