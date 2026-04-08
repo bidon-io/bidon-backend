@@ -1,44 +1,154 @@
 <template>
   <nav class="mt-6">
-    <NuxtLink
-      v-for="resource in filteredResources"
-      :key="resource.key"
-      :to="resourcePath(resource.key)"
-      :class="[
-        'flex items-center mt-4 px-6 py-2 text-gray-600 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100',
-        route.path === resourcePath(resource.key)
-          ? 'bg-gray-700 bg-opacity-25 text-blue-100'
-          : '',
-      ]"
-    >
-      <span>{{ title(resource.key) }}</span>
-    </NuxtLink>
+    <div class="mt-4">
+      <button
+        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-200"
+        @click="openSections.apps = !openSections.apps"
+      >
+        <span>Apps</span>
+        <svg
+          :class="[
+            'w-3 h-3 transition-transform',
+            openSections.apps ? 'rotate-180' : '',
+          ]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <Transition name="section-slide">
+        <div v-if="openSections.apps" class="mt-1 px-3">
+          <NuxtLink
+            v-for="resource in appResources"
+            :key="resource.key"
+            :to="resourcePath(resource.key)"
+            :class="[
+              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              isActive(resourcePath(resource.key))
+                ? 'bg-blue-50 text-blue-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ]"
+          >
+            <span>{{ title(resource.key) }}</span>
+          </NuxtLink>
+        </div>
+      </Transition>
+    </div>
 
-    <NuxtLink
-      v-if="currentUser?.isAdmin === true"
-      to="/copilot"
-      :class="[
-        'flex items-center mt-4 px-6 py-2 text-gray-600 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100',
-        route.path === '/copilot'
-          ? 'bg-gray-700 bg-opacity-25 text-blue-100'
-          : '',
-      ]"
-    >
-      <span>AI Copilot</span>
-    </NuxtLink>
+    <div class="mt-6">
+      <button
+        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-600"
+        @click="openSections.global = !openSections.global"
+      >
+        <span>Global Configuration</span>
+        <svg
+          :class="[
+            'w-3 h-3 transition-transform',
+            openSections.global ? 'rotate-180' : '',
+          ]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <Transition name="section-slide">
+        <div v-if="openSections.global" class="mt-1 px-3">
+          <NuxtLink
+            v-for="resource in globalResources"
+            :key="resource.key"
+            :to="resourcePath(resource.key)"
+            :class="[
+              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              isActive(resourcePath(resource.key))
+                ? 'bg-blue-50 text-blue-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ]"
+          >
+            <span>{{ title(resource.key) }}</span>
+          </NuxtLink>
+        </div>
+      </Transition>
+    </div>
 
-    <div class="mt-4 px-6">
-      <span class="text-gray-400 uppercase text-sm">Settings</span>
+    <div class="mt-6">
+      <button
+        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-600"
+        @click="openSections.settings = !openSections.settings"
+      >
+        <span>Settings</span>
+        <svg
+          :class="[
+            'w-3 h-3 transition-transform',
+            openSections.settings ? 'rotate-180' : '',
+          ]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <Transition name="section-slide">
+        <div v-if="openSections.settings" class="mt-1 px-3">
+          <NuxtLink
+            v-for="resource in settingsResources"
+            :key="resource.key"
+            :to="resourcePath(resource.key)"
+            :class="[
+              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              isActive(resourcePath(resource.key))
+                ? 'bg-blue-50 text-blue-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ]"
+          >
+            <span>{{ title(resource.key) }}</span>
+          </NuxtLink>
+          <NuxtLink
+            to="/settings/security"
+            :class="[
+              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              isActive('/settings/security')
+                ? 'bg-blue-50 text-blue-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ]"
+          >
+            <span>Passwords</span>
+          </NuxtLink>
+        </div>
+      </Transition>
+    </div>
+
+    <div class="mt-4 px-3">
       <NuxtLink
-        to="/settings/security"
+        v-if="currentUser?.isAdmin === true"
+        to="/copilot"
         :class="[
-          'flex items-center mt-4 px-6 py-2 text-gray-600 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100',
-          route.path === '/settings/security'
-            ? 'bg-gray-700 bg-opacity-25 text-blue-100'
-            : '',
+          'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+          isActive('/copilot')
+            ? 'bg-blue-50 text-blue-600 font-medium'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
         ]"
       >
-        <span>Passwords</span>
+        <span>AI Copilot</span>
       </NuxtLink>
     </div>
   </nav>
@@ -51,50 +161,71 @@ interface User {
   isAdmin?: boolean;
 }
 
+const APP_RESOURCE_KEYS = [
+  "app",
+  "appDemandProfile",
+  "lineItem",
+  "auctionConfigurationV2",
+];
+
+const GLOBAL_RESOURCE_KEYS = ["demandSource", "demandSourceAccount", "segment"];
+
+const SETTINGS_RESOURCE_KEYS = ["user", "apiKey"];
+
 const resources = useResources();
 const route = useRoute();
 const authStore = useAuthStore();
 const currentUser = computed<User | null>(() => authStore.currentUser);
 
-// Filter resources based on permissions
-const filteredResources = computed(() => {
-  if (!resources.state) return [];
+const openSections = reactive({ apps: true, global: true, settings: true });
 
-  return Object.values(resources.state).filter((resource) => {
-    // Always hide country resource
-    if (resource.key === "country") {
-      return false;
-    }
+function isCountry(key: string): boolean {
+  return key === "country";
+}
 
-    // Only show demand_source to admin users
-    if (
-      resource.key === "demand_source" &&
-      (!currentUser.value || currentUser.value?.isAdmin !== true)
-    ) {
-      return false;
-    }
-
-    return true;
+function filterItems(keys: string[]) {
+  return computed(() => {
+    if (!resources.state) return [];
+    return keys
+      .filter((key) => resources.state![key] && !isCountry(key))
+      .map((key) => resources.state![key]);
   });
-});
+}
+
+const appResources = filterItems(APP_RESOURCE_KEYS);
+const globalResources = filterItems(GLOBAL_RESOURCE_KEYS);
+const settingsResources = filterItems(SETTINGS_RESOURCE_KEYS);
 
 function title(key: string) {
-  if (key === "auction_configuration_v2") {
-    return "Auction Configurations";
-  }
-
-  if (key === "api_key") {
-    return "API Credentials";
-  }
-
+  if (key === "auction_configuration_v2") return "Auction Configurations";
+  if (key === "api_key") return "API Credentials";
   return pluralize(titleize(key));
 }
 
 function resourcePath(key: string) {
-  if (key === "auction_configuration_v2") {
-    return "/v2/auction_configurations";
-  }
-
+  if (key === "auction_configuration_v2") return "/v2/auction_configurations";
   return `/${pluralize(key)}`;
 }
+
+function isActive(path: string): boolean {
+  return route.path === path || route.path.startsWith(path + "/");
+}
 </script>
+
+<!--Used by the sidebar sections to animate the open / collapsed state-->
+<style scoped>
+.section-slide-enter-active,
+.section-slide-leave-active {
+  transition:
+    max-height 0.2s ease-out,
+    opacity 0.2s ease-out;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.section-slide-enter-from,
+.section-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+</style>

@@ -12,8 +12,15 @@
 </template>
 
 <script setup>
-const resource = {};
-const resourcesPath = "/line_items";
+const route = useRoute();
+const appId = route.query.app_id;
+const adType = route.query.ad_type;
+const resource = {
+  ...(appId ? { appId: Number(appId) } : {}),
+  // banner requires a specific format so we can't pre-select it
+  ...(adType && adType !== "banner" ? { adType, format: "" } : {}),
+};
+const resourcesPath = appId ? `/apps/${appId}` : "/line_items";
 
 const error = ref(null);
 const handleSubmit = useCreateResource({

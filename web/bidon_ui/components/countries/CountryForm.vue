@@ -18,7 +18,9 @@
           placeholder="Alpha 3 Code"
         />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

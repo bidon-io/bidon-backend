@@ -36,7 +36,7 @@
     </FormField>
 
     <!-- Slot for additional content -->
-    <div class="mt-6 pt-6 border-t border-gray-200">
+    <div v-if="$slots.default" class="pt-4">
       <slot></slot>
     </div>
   </FormCard>

@@ -84,7 +84,9 @@
           OpenRTB blocked apps (comma-separated)
         </small>
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

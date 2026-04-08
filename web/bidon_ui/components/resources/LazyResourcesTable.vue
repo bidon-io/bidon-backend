@@ -166,6 +166,8 @@ const props = defineProps<{
   resourcesPath: string;
   collectionPath: string;
   columns: Column[];
+  staticFilters?: Record<string, string>;
+  syncUrl?: boolean;
 }>();
 
 const selectedResources = ref([]);
@@ -188,43 +190,53 @@ const debouncedFilter = debounce(
   500,
 );
 
-// Initialize filters from URL query parameters
+// Initialize filters from URL query parameters (or static values when syncUrl is off)
 const filters = ref<
   Record<
     string,
     { matchMode: keyof FilterMatchModeOptions; value: FilterValue }
   >
->(
-  props.columns
+>({
+  ...props.columns
     .filter((column) => column.filter)
     .map((column) => column.filter as Filter)
-    .reduce((result, filter) => {
-      let value;
+    .reduce(
+      (result, filter) => {
+        let value;
 
-      // Special handling for AdTypeWithFormat
-      if (filter.field === "adTypeWithFormat") {
-        const adType = route.query["ad_type"] as string;
-        const format = route.query["format"] as string;
-
-        if (adType) {
-          value = { adType, format: format || "" };
+        if (props.syncUrl) {
+          // Special handling for AdTypeWithFormat
+          if (filter.field === "adTypeWithFormat") {
+            const adType = route.query["ad_type"] as string;
+            const format = route.query["format"] as string;
+            if (adType) {
+              value = { adType, format: format || "" };
+            }
+          } else {
+            value =
+              (route.query[decamelize(filter.field)] as string | undefined) ||
+              (route.query[filter.field] as string | undefined);
+          }
         }
-      } else {
-        // Regular handling for other fields
-        value =
-          (route.query[decamelize(filter.field)] as string | undefined) ||
-          (route.query[filter.field] as string | undefined);
-      }
 
-      return {
-        ...result,
-        [filter.field]: {
-          matchMode: filter.matchMode,
-          value,
-        },
-      };
-    }, {}),
-);
+        return {
+          ...result,
+          [filter.field]: { matchMode: filter.matchMode, value },
+        };
+      },
+      {} as Record<
+        string,
+        { matchMode: keyof FilterMatchModeOptions; value: FilterValue }
+      >,
+    ),
+  // Static filters: always included in API calls, no UI element
+  ...Object.fromEntries(
+    Object.entries(props.staticFilters ?? {}).map(([field, value]) => [
+      field,
+      { matchMode: "equals" as keyof FilterMatchModeOptions, value },
+    ]),
+  ),
+});
 
 const filtersOptions = ref<Record<string, { label: string; value: string }[]>>(
   {},
@@ -282,7 +294,7 @@ const {
   error,
   execute: fetchData,
 } = useAsyncData(
-  "fetch-resources-collection",
+  `fetch-${props.collectionPath}`,
   async () => {
     await preloadFilterOptions();
     const params = buildQueryParams();
@@ -311,15 +323,17 @@ const onLimit = async (value: number) => {
   await fetchData();
 };
 
-// Update URL when filters, page, or limit change
-watch(
-  [page, limit, filters],
-  () => {
-    const query = buildQueryParams();
-    router.push({ query: query as Record<string, string | number> });
-  },
-  { deep: true },
-);
+// Update URL when filters, page, or limit change (disabled when syncUrl is false)
+if (props.syncUrl) {
+  watch(
+    [page, limit, filters],
+    () => {
+      const query = buildQueryParams();
+      router.push({ query: query as Record<string, string | number> });
+    },
+    { deep: true },
+  );
+}
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,

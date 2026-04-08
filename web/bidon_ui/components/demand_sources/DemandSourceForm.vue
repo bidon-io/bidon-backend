@@ -7,7 +7,9 @@
       <FormField label="Api Key" :error="errors.apiKey" required>
         <InputText v-model="apiKey" type="text" placeholder="Api Key" />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

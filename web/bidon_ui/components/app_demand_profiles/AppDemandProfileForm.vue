@@ -27,7 +27,9 @@
       <FormField label="Enabled" :error="errors.enabled">
         <Checkbox v-model="enabled" :binary="true" />
       </FormField>
-      <FormSubmitButton :disabled="!meta.valid" />
+      <template #footer>
+        <FormSubmitButton :disabled="!meta.valid" />
+      </template>
     </FormCard>
   </form>
 </template>

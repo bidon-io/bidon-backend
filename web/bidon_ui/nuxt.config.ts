@@ -21,6 +21,10 @@ export default defineNuxtConfig({
     "primeicons/primeicons.css",
   ],
 
+  tailwindcss: {
+    cssPath: "~/assets/css/components.css",
+  },
+
   components: [
     {
       path: "~/components",

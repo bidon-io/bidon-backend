@@ -5,6 +5,7 @@ This file provides context and guidelines for working with the Bidon admin web U
 ## Overview
 
 **bidon_ui** is a Nuxt 3 SPA (Single Page Application) — the admin dashboard for the Bidon ad mediation platform. It provides CRUD management for:
+
 - Apps, Demand Sources, Demand Source Accounts
 - Line Items, App Demand Profiles
 - Auction Configurations (v2)
@@ -15,19 +16,19 @@ The app is statically generated (`yarn generate`) and served by the Go backend (
 
 ## Tech Stack
 
-| Category | Library | Version |
-|---|---|---|
-| Framework | Nuxt 3 | 3.13.2 |
-| UI | Vue 3 + TypeScript | 5.2.2 |
-| Component Library | PrimeVue | 3.34.0 |
-| Styling | Tailwind CSS | 6.7.0 |
-| State Management | Pinia | 2.1.6 |
-| Form Validation | Vee-Validate + Yup | 4.11.8 / 1.3.2 |
-| HTTP | ofetch (`$apiFetch`) | (Nuxt built-in) |
-| HTTP (legacy) | Axios (`ApiService`) | 1.5.1 |
-| Utilities | @vueuse/core, humps, inflection | — |
-| AI Copilot | @langgraph-js/sdk | 1.10.3 |
-| Linting | ESLint + Prettier | 8.51.0 / 3.0.3 |
+| Category          | Library                         | Version         |
+| ----------------- | ------------------------------- | --------------- |
+| Framework         | Nuxt 3                          | 3.13.2          |
+| UI                | Vue 3 + TypeScript              | 5.2.2           |
+| Component Library | PrimeVue                        | 3.34.0          |
+| Styling           | Tailwind CSS                    | 6.7.0           |
+| State Management  | Pinia                           | 2.1.6           |
+| Form Validation   | Vee-Validate + Yup              | 4.11.8 / 1.3.2  |
+| HTTP              | ofetch (`$apiFetch`)            | (Nuxt built-in) |
+| HTTP (legacy)     | Axios (`ApiService`)            | 1.5.1           |
+| Utilities         | @vueuse/core, humps, inflection | —               |
+| AI Copilot        | @langgraph-js/sdk               | 1.10.3          |
+| Linting           | ESLint + Prettier               | 8.51.0 / 3.0.3  |
 
 **Routing:** File-based (Nuxt pages directory)
 **Mode:** SPA (`ssr: false`)
@@ -90,18 +91,19 @@ bidon_ui/
 
 Every resource follows the same four-page pattern:
 
-| File | Route | Purpose |
-|---|---|---|
-| `pages/foo/index.vue` | `/foo` | List with `LazyResourcesTable` |
-| `pages/foo/new.vue` | `/foo/new` | Create form |
-| `pages/foo/[id]/index.vue` | `/foo/:id` | Detail with `ResourceCard` |
-| `pages/foo/[id]/edit.vue` | `/foo/:id/edit` | Edit form |
+| File                       | Route           | Purpose                        |
+| -------------------------- | --------------- | ------------------------------ |
+| `pages/foo/index.vue`      | `/foo`          | List with `LazyResourcesTable` |
+| `pages/foo/new.vue`        | `/foo/new`      | Create form                    |
+| `pages/foo/[id]/index.vue` | `/foo/:id`      | Detail with `ResourceCard`     |
+| `pages/foo/[id]/edit.vue`  | `/foo/:id/edit` | Edit form                      |
 
 ### 2. API Calls
 
 **Prefer `$apiFetch` (ofetch) over `ApiService` (Axios).** Axios is being phased out.
 
 Both clients:
+
 - Base URL: `/api`
 - Header: `X-Bidon-App: web`
 - Auto-convert request body to `snake_case`
@@ -110,14 +112,15 @@ Both clients:
 
 ```typescript
 // utils/$apiFetch.ts — preferred
-const data = await $apiFetch('/line_items', { method: 'GET' })
+const data = await $apiFetch("/line_items", { method: "GET" });
 
 // services/ApiService.js — legacy
-import ApiService from '~/services/ApiService'
-const { data } = await ApiService.get('/line_items')
+import ApiService from "~/services/ApiService";
+const { data } = await ApiService.get("/line_items");
 ```
 
 **Collection response shape:**
+
 ```typescript
 { items: T[], meta: { totalCount: number } }
 ```
@@ -126,23 +129,23 @@ const { data } = await ApiService.get('/line_items')
 
 These composables wrap API calls with toast notifications and navigation:
 
-| Composable | Method | Purpose |
-|---|---|---|
-| `useCreateResource` | POST | Create + navigate to detail |
-| `useUpdateResource` | PATCH | Update + show success toast |
-| `useDeleteResource` | DELETE | Confirm dialog + DELETE |
-| `useFormSubmit` | any | Generic form submission |
+| Composable          | Method | Purpose                     |
+| ------------------- | ------ | --------------------------- |
+| `useCreateResource` | POST   | Create + navigate to detail |
+| `useUpdateResource` | PATCH  | Update + show success toast |
+| `useDeleteResource` | DELETE | Confirm dialog + DELETE     |
+| `useFormSubmit`     | any    | Generic form submission     |
 
 ```javascript
 // Create example
-const { submit } = useCreateResource({ path: '/line_items' })
-await submit(formData)  // navigates to /line_items/:id on success
+const { submit } = useCreateResource({ path: "/line_items" });
+await submit(formData); // navigates to /line_items/:id on success
 
 // Delete example
 const { destroy } = useDeleteResource({
-  path: '/line_items',
-  hook: () => refreshData()
-})
+  path: "/line_items",
+  hook: () => refreshData(),
+});
 ```
 
 ### 4. Form Pattern (Vee-Validate + Yup)
@@ -151,20 +154,23 @@ All forms use the same pattern:
 
 ```vue
 <script setup>
-import * as yup from 'yup'
-import { useForm } from 'vee-validate'
+import * as yup from "yup";
+import { useForm } from "vee-validate";
 
 const schema = yup.object({
   name: yup.string().required(),
   // ...
-})
+});
 
-const { handleSubmit, values } = useForm({ validationSchema: schema, initialValues })
-const name = useFieldModel('name')
+const { handleSubmit, values } = useForm({
+  validationSchema: schema,
+  initialValues,
+});
+const name = useFieldModel("name");
 
 const onSubmit = handleSubmit(async (values) => {
-  await submit(values)
-})
+  await submit(values);
+});
 </script>
 
 <template>
@@ -186,10 +192,7 @@ Use `LazyResourcesTable` for all list pages — it handles server-side paginatio
 Column definitions come from `constants/ResourceTableFields.js`.
 
 ```vue
-<LazyResourcesTable
-  path="/line_items"
-  :fields="LINE_ITEM_FIELDS"
-/>
+<LazyResourcesTable path="/line_items" :fields="LINE_ITEM_FIELDS" />
 ```
 
 Field types supported: `text`, `link`, `associated-link`, `copyable`.
@@ -201,19 +204,16 @@ Filter types: `input`, `select`, `select-filter`.
 Use `ResourceCard` for show pages. Field definitions from `constants/ResourceCardFields.js`.
 
 ```vue
-<ResourceCard
-  path="/line_items"
-  :fields="LINE_ITEM_CARD_FIELDS"
-/>
+<ResourceCard path="/line_items" :fields="LINE_ITEM_CARD_FIELDS" />
 ```
 
 ### 7. State Management (Pinia)
 
-| Store | File | Purpose |
-|---|---|---|
-| `useAuthStore` | `composables/useAuthStore.ts` | Current user, auth state |
-| `useResources` | `composables/useResources.ts` | Available resources + permissions |
-| `useCopilotStore` | `composables/useCopilotStore.ts` | AI copilot thread state |
+| Store             | File                             | Purpose                           |
+| ----------------- | -------------------------------- | --------------------------------- |
+| `useAuthStore`    | `composables/useAuthStore.ts`    | Current user, auth state          |
+| `useResources`    | `composables/useResources.ts`    | Available resources + permissions |
+| `useCopilotStore` | `composables/useCopilotStore.ts` | AI copilot thread state           |
 
 **Permission checking:** Resources expose `_permissions` from the backend. The UI hides/shows buttons based on these.
 
@@ -226,6 +226,7 @@ Use `ResourceCard` for show pages. Field definitions from `constants/ResourceCar
 ## Data Transformation
 
 All snake_case ↔ camelCase conversion is automatic:
+
 - Request: `{ adType: "banner" }` → `{ ad_type: "banner" }`
 - Response: `{ ad_type: "banner" }` → `{ adType: "banner" }`
 - Fields starting with `_` are preserved (e.g. `_permissions`)

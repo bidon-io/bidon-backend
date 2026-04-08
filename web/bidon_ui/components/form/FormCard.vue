@@ -1,20 +1,22 @@
 <template>
-  <Card class="p-6">
-    <template #title>{{ props.title }}</template>
-    <template #content>
-      <div class="divide-y">
-        <div></div>
-        <slot></slot>
-      </div>
-    </template>
-  </Card>
+  <div class="card mb-6">
+    <div v-if="props.title" class="card-header">
+      <span class="font-semibold text-gray-800">{{ props.title }}</span>
+    </div>
+    <div class="divide-y divide-gray-100">
+      <slot></slot>
+    </div>
+    <div v-if="$slots.footer" class="card-footer flex justify-end">
+      <slot name="footer"></slot>
+    </div>
+  </div>
 </template>
 
 <script setup>
 const props = defineProps({
   title: {
     type: String,
-    required: true,
+    default: "",
   },
 });
 </script>

@@ -1,5 +1,5 @@
 import { API_URL } from "~/constants";
-import { camelizeKeys } from "humps";
+import { camelizeKeys, decamelizeKeys } from "humps";
 import { $fetch } from "ofetch";
 
 const baseURL = `${API_URL}api`;
@@ -18,6 +18,24 @@ export const $apiFetch = $fetch.create({
       context.request.startsWith("/api_keys")
     ) {
       context.request = `${baseURL}${context.request}`;
+    }
+
+    if (
+      context.options.body &&
+      typeof context.options.body === "object" &&
+      !(context.options.body instanceof FormData)
+    ) {
+      context.options.body = decamelizeKeys(
+        context.options.body as Record<string, unknown>,
+      );
+    }
+
+    if (
+      context.options.params &&
+      Object.prototype.toString.call(context.options.params) ===
+        "[object Object]"
+    ) {
+      context.options.params = decamelizeKeys(context.options.params);
     }
   },
   onResponse({ response }) {

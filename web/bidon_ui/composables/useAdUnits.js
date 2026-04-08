@@ -12,12 +12,13 @@ export function useAdUnits(appId, adType, isBidding) {
       return result.map((adUnit) => ({
         id: adUnit.id,
         label: adUnit.humanName,
-        networkKey: adUnit.accountType.split("::")[1].toLowerCase(),
+        accountId: adUnit.accountId,
+        networkKey:
+          adUnit.accountType?.split("::")?.[1]?.toLowerCase() ??
+          adUnit.accountType,
         uid: adUnit.publicUid,
         pricefloor: parseFloat(adUnit.bidFloor),
-        account: `${adUnit.accountType.split("::")[1].toLowerCase()} (${
-          adUnit.accountId
-        })`,
+        account: `${adUnit.accountType?.split("::")?.[1]?.toLowerCase() ?? adUnit.accountType} (${adUnit.accountId})`,
         isBidding: adUnit.isBidding,
         extra: adUnit.extra || {},
       }));

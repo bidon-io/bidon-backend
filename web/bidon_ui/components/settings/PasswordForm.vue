@@ -35,7 +35,9 @@
           placeholder="Confirm New Password"
         />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

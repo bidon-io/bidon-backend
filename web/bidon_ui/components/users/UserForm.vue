@@ -10,7 +10,9 @@
       <FormField label="Password" :error="errors.password" required>
         <InputText v-model="password" type="password" placeholder="Password" />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

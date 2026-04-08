@@ -8,7 +8,17 @@ import { ResourceTableFields } from "@/constants";
 import { FilterMatchMode } from "primevue/api";
 
 const columns = [
-  ResourceTableFields.AppName,
+  {
+    ...ResourceTableFields.AppName,
+    link: {
+      basePath: "/apps",
+      extractLinkData: (rowData) => ({
+        isValid: true,
+        id: rowData.id,
+        linkText: rowData.humanName,
+      }),
+    },
+  },
   {
     field: "platformId",
     header: "Platform",

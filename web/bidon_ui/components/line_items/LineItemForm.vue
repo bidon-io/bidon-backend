@@ -70,7 +70,9 @@
         :ad-type="adType"
         :ad-type-with-format="adTypeWithFormat"
       />
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

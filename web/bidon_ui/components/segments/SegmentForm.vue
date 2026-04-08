@@ -17,7 +17,9 @@
       <FormField label="Priority" :error="errors.priority">
         <InputNumber v-model="priority" />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>

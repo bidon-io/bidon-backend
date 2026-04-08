@@ -31,7 +31,9 @@
         v-model:schema="extraSchema"
         :api-key="apiKey"
       />
-      <FormSubmitButton :disabled="!meta.valid" />
+      <template #footer>
+        <FormSubmitButton :disabled="!meta.valid" />
+      </template>
     </FormCard>
   </form>
 </template>
