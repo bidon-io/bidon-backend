@@ -99,6 +99,7 @@
         @network-disabled="validateNetworkDisabled"
         @line-item-created="onLineItemCreated($event, true)"
         @line-item-updated="onLineItemUpdated($event, true)"
+        @line-item-deleted="onLineItemDeleted($event, true)"
       />
 
       <!-- Waterfall Networks -->
@@ -116,6 +117,7 @@
         @network-disabled="validateNetworkDisabled"
         @line-item-created="onLineItemCreated($event, false)"
         @line-item-updated="onLineItemUpdated($event, false)"
+        @line-item-deleted="onLineItemDeleted($event, false)"
       />
 
       <template #footer>
@@ -328,6 +330,17 @@ async function onLineItemCreated(item, isBidding) {
 }
 
 async function onLineItemUpdated(_item, isBidding) {
+  if (isBidding) {
+    await refreshBiddingUnits();
+  } else {
+    await refreshDemandUnits();
+  }
+}
+
+async function onLineItemDeleted(itemId, isBidding) {
+  selectedAdUnitIds.value = selectedAdUnitIds.value.filter(
+    (id) => id !== Number(itemId),
+  );
   if (isBidding) {
     await refreshBiddingUnits();
   } else {

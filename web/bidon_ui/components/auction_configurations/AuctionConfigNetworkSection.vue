@@ -73,6 +73,13 @@
                 />
                 {{ editingItemId === item.id ? "Cancel" : "Edit" }}
               </button>
+              <button
+                class="btn-sm btn-delete shrink-0"
+                @click.stop="deleteItem(item.id)"
+              >
+                <i class="pi pi-trash" />
+                Delete
+              </button>
             </div>
             <InlineLineItemForm
               v-if="editingItemId === item.id"
@@ -113,6 +120,8 @@
 </template>
 
 <script setup>
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 import { NETWORK_LABEL_BY_KEY } from "@/constants/Networks.js";
 
 const props = defineProps({
@@ -127,6 +136,7 @@ const emit = defineEmits([
   "toggleInlineForm",
   "lineItemCreated",
   "lineItemUpdated",
+  "lineItemDeleted",
   "inlineFormCancel",
   "dismissInlineCreate",
 ]);
@@ -155,6 +165,30 @@ function toggleEditForm(itemId) {
 function onItemUpdated(updatedItem) {
   editingItemId.value = null;
   emit("lineItemUpdated", updatedItem);
+}
+
+const confirm = useConfirm();
+const toast = useToast();
+
+function deleteItem(itemId) {
+  confirm.require({
+    message: "Delete this line item?",
+    header: "Confirm Delete",
+    icon: "pi pi-exclamation-triangle",
+    acceptClass: "p-button-danger",
+    accept: async () => {
+      try {
+        await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
+        emit("lineItemDeleted", itemId);
+      } catch (err) {
+        toast.add({
+          severity: "error",
+          summary: "Delete failed",
+          detail: err.data?.error?.message ?? "Could not delete the line item.",
+        });
+      }
+    },
+  });
 }
 
 const groups = computed(() => {

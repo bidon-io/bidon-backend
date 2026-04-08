@@ -155,6 +155,14 @@
                 />
                 {{ editingItemId === item.id ? "Cancel" : "Edit" }}
               </button>
+              <button
+                class="btn-sm btn-delete shrink-0"
+                type="button"
+                @click.stop="deleteItem(item.id)"
+              >
+                <i class="pi pi-trash" />
+                Delete
+              </button>
             </div>
             <InlineLineItemForm
               v-if="editingItemId === item.id"
@@ -200,6 +208,7 @@
 </template>
 
 <script setup>
+import { useConfirm } from "primevue/useconfirm";
 import {
   AUCTION_NETWORKS,
   NETWORK_LABEL_BY_KEY,
@@ -224,6 +233,7 @@ const emit = defineEmits([
   "network-disabled",
   "line-item-created",
   "line-item-updated",
+  "line-item-deleted",
 ]);
 
 const localProfiles = ref([...props.demandProfiles]);
@@ -289,5 +299,20 @@ function onItemCreated(item, networkKey) {
 function onItemUpdated(item) {
   editingItemId.value = null;
   emit("line-item-updated", item);
+}
+
+const confirm = useConfirm();
+
+function deleteItem(itemId) {
+  confirm.require({
+    message: "Delete this line item?",
+    header: "Confirm Delete",
+    icon: "pi pi-exclamation-triangle",
+    acceptClass: "p-button-danger",
+    accept: async () => {
+      await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
+      emit("line-item-deleted", itemId);
+    },
+  });
 }
 </script>

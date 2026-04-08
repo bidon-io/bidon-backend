@@ -232,6 +232,7 @@
                   @toggle-inline-form="toggleInlineForm"
                   @line-item-created="handleLineItemCreated"
                   @line-item-updated="handleLineItemUpdated"
+                  @line-item-deleted="handleLineItemDeleted"
                   @dismiss-inline-create="showInlineForm = null"
                   @inline-form-cancel="showInlineForm = null"
                 />
@@ -244,6 +245,7 @@
                   @toggle-inline-form="toggleInlineForm"
                   @line-item-created="handleLineItemCreated"
                   @line-item-updated="handleLineItemUpdated"
+                  @line-item-deleted="handleLineItemDeleted"
                   @dismiss-inline-create="showInlineForm = null"
                   @inline-form-cancel="showInlineForm = null"
                 />
@@ -401,6 +403,38 @@ function handleLineItemUpdated(updatedItem) {
   const idx = allLineItems.value.findIndex((i) => i.id === updatedItem.id);
   if (idx !== -1) {
     allLineItems.value[idx] = updatedItem;
+  }
+}
+
+async function handleLineItemDeleted(itemId) {
+  const idNum = Number(itemId);
+  allLineItems.value = allLineItems.value.filter((i) => Number(i.id) !== idNum);
+
+  for (const config of auctionConfigs.value) {
+    const unitIds = config.adUnitIds ?? [];
+    if (!unitIds.some((id) => Number(id) === idNum)) continue;
+
+    const updatedAdUnitIds = unitIds.filter((id) => Number(id) !== idNum);
+    try {
+      const data = await $apiFetch(`/v2/auction_configurations/${config.id}`, {
+        method: "PATCH",
+        body: { adUnitIds: updatedAdUnitIds },
+      });
+      const configIdx = auctionConfigs.value.findIndex(
+        (c) => c.id === config.id,
+      );
+      if (configIdx !== -1) {
+        auctionConfigs.value[configIdx] = data;
+      }
+    } catch (err) {
+      toast.add({
+        severity: "error",
+        summary: "Unlink failed",
+        detail:
+          err.data?.error?.message ??
+          "Line item was deleted but could not be unlinked from auction configuration. Please refresh the page.",
+      });
+    }
   }
 }
 </script>
