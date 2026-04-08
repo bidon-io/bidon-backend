@@ -1,39 +1,38 @@
 <template>
   <form @submit="onSubmit">
     <FormCard title="Auction Configuration">
-      <div
-        v-if="showCopySettings"
-        class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-      >
-        <h3 class="text-sm font-semibold text-blue-900 mb-3">
-          Clone Settings from Another Configuration
-        </h3>
-        <div class="flex gap-3 items-start">
-          <div class="flex-1">
-            <label class="block text-xs font-medium text-gray-700 mb-1"
-              >Auction Key</label
-            >
-            <InputText
-              v-model="copyAuctionKey"
-              type="text"
-              placeholder="Enter auction key (e.g., 1HVR32MFO0400)"
-              class="w-full"
-              size="small"
-            />
-            <div v-if="copyError" class="text-xs text-red-600 mt-1">
-              {{ copyError }}
+      <div v-if="showCopySettings" class="px-6 py-4">
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 class="text-sm font-semibold text-blue-900 mb-3">
+            Clone Settings from Another Configuration
+          </h3>
+          <div class="flex gap-3 items-start">
+            <div class="flex-1">
+              <label class="block text-xs font-medium text-gray-700 mb-1">
+                Auction Key
+              </label>
+              <InputText
+                v-model="copyAuctionKey"
+                type="text"
+                placeholder="Enter auction key (e.g., 1HVR32MFO0400)"
+                class="w-full"
+                size="small"
+              />
+              <div v-if="copyError" class="text-xs text-red-600 mt-1">
+                {{ copyError }}
+              </div>
             </div>
-          </div>
-          <div class="pt-5">
-            <Button
-              type="button"
-              label="Clone"
-              icon="pi pi-copy"
-              size="small"
-              :loading="copyLoading"
-              :disabled="!copyAuctionKey || copyLoading"
-              @click="copySettings"
-            />
+            <div class="pt-5">
+              <Button
+                type="button"
+                label="Clone"
+                icon="pi pi-copy"
+                size="small"
+                :loading="copyLoading"
+                :disabled="!copyAuctionKey || copyLoading"
+                @click="copySettings"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -104,7 +103,9 @@
           @network-disabled="onNetworkDisabled"
         />
       </FormField>
-      <FormSubmitButton />
+      <template #footer>
+        <FormSubmitButton />
+      </template>
     </FormCard>
   </form>
 </template>
