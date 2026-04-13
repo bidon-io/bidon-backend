@@ -372,13 +372,34 @@ function toggleInlineForm(configId, networkKey, isBidding) {
 }
 
 async function handleLineItemCreated(newItem, configId) {
-  allLineItems.value.push(newItem);
+  const id = Number(newItem.id);
 
   const configIdx = auctionConfigs.value.findIndex((c) => c.id === configId);
   if (configIdx === -1) return;
 
   const config = auctionConfigs.value[configIdx];
-  const updatedAdUnitIds = [...(config.adUnitIds ?? []), Number(newItem.id)];
+  const adUnitIds = (config.adUnitIds ?? []).map(Number);
+
+  // Server may return an existing row (deduped) with the same id as a line item
+  // already linked here, or the client may not see HTTP 200 vs 201 — avoid
+  // duplicate rows in the list and duplicate ids in ad_unit_ids.
+  if (adUnitIds.includes(id)) {
+    toast.add({
+      severity: "warn",
+      summary: "Line item already linked",
+      detail:
+        "A line item with the same app, account, ad type, and settings already exists and is already part of this auction configuration.",
+      life: 6000,
+    });
+    return;
+  }
+
+  const alreadyLoaded = allLineItems.value.some((i) => i.id === id);
+  if (!alreadyLoaded) {
+    allLineItems.value.push(newItem);
+  }
+
+  const updatedAdUnitIds = [...adUnitIds, id];
 
   try {
     const data = await $apiFetch(`/v2/auction_configurations/${configId}`, {

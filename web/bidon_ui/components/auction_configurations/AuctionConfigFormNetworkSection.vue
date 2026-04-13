@@ -314,6 +314,12 @@ function deleteItem(itemId) {
     accept: async () => {
       try {
         await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
+        toast.add({
+          severity: "success",
+          summary: "Success",
+          detail: "Line item deleted.",
+          life: 3000,
+        });
         emit("line-item-deleted", itemId);
       } catch (err) {
         toast.add({

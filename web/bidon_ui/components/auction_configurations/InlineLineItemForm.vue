@@ -73,7 +73,10 @@
         />
       </div>
 
-      <p v-if="submitError" class="text-xs text-red-500 mb-2">
+      <p v-if="submitWarning" class="text-xs text-amber-800 mb-2">
+        {{ submitWarning }}
+      </p>
+      <p v-else-if="submitError" class="text-xs text-red-500 mb-2">
         {{ submitError }}
       </p>
 
@@ -110,6 +113,7 @@
 <script setup>
 import * as yup from "yup";
 import { NETWORK_ACCOUNT_TYPE_BY_KEY } from "@/constants/Networks.js";
+import { $apiFetch } from "~/utils/$apiFetch";
 
 const props = defineProps({
   appId: { type: [Number, String], required: true },
@@ -184,10 +188,12 @@ onMounted(async () => {
 
 const saving = ref(false);
 const submitError = ref("");
+const submitWarning = ref("");
 
 const save = handleSubmit(async (values) => {
   saving.value = true;
   submitError.value = "";
+  submitWarning.value = "";
   try {
     if (isEditMode.value) {
       const data = await $apiFetch(`/line_items/${props.initialItem.id}`, {
@@ -201,7 +207,9 @@ const save = handleSubmit(async (values) => {
       });
       emit("updated", data);
     } else {
-      const data = await $apiFetch("/line_items", {
+      // POST returns 201 for a new row and 200 when an identical line item
+      // already exists (deduped server-side). Only 201 should add to the list.
+      const response = await $apiFetch.raw("/line_items", {
         method: "POST",
         body: {
           humanName: values.humanName,
@@ -215,7 +223,14 @@ const save = handleSubmit(async (values) => {
           extra: values.extra ?? {},
         },
       });
-      emit("created", data);
+      // Admin API: 201 = new row, 200 = existing row (deduped). See CreateLineItem.
+      console.log(response);
+      if (response.status === 200) {
+        submitWarning.value =
+          "A line item with the same app, account, ad type, and settings already exists. Nothing new was added. Edit that line item or change placement/extra so the combination is unique.";
+        return;
+      }
+      emit("created", response._data);
     }
   } catch (err) {
     const msg = err.data?.error?.message;

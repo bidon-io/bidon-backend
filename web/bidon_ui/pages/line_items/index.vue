@@ -4,6 +4,7 @@
     :columns="columns"
     :resources-path="resourcesPath"
     :collection-path="collectionPath"
+    delete-success-detail="Line item deleted."
   />
 </template>
 

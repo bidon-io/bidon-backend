@@ -166,6 +166,8 @@ const props = defineProps<{
   resourcesPath: string;
   collectionPath: string;
   columns: Column[];
+  /** Toast detail after a successful delete (default: "Record deleted") */
+  deleteSuccessDetail?: string;
 }>();
 
 const selectedResources = ref([]);
@@ -326,6 +328,7 @@ const deleteHandle = useDeleteResource({
   hook: () => {
     fetchData();
   },
+  successDetail: props.deleteSuccessDetail,
 });
 
 const copyField = (field: string) => {

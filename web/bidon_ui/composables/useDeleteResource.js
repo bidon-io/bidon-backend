@@ -2,7 +2,12 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import axios from "@/services/ApiService.js";
 
-export default function ({ path, hook }) {
+export default function ({
+  path,
+  hook,
+  successDetail = "Record deleted",
+  successSummary = "Success",
+}) {
   const confirm = useConfirm();
   const toastService = useToast();
 
@@ -21,9 +26,9 @@ export default function ({ path, hook }) {
         deleteResource(id, () => {
           hook(id);
           toastService.add({
-            severity: "info",
-            summary: "Success",
-            detail: "Record deleted",
+            severity: "success",
+            summary: successSummary,
+            detail: successDetail,
             life: 3000,
           });
         });

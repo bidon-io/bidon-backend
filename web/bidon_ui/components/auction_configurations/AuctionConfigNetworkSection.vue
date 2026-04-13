@@ -143,10 +143,14 @@ const emit = defineEmits([
 
 const editingItemId = ref(null);
 
+// Only dismiss inline *edit* when opening inline *create* — not when create
+// finishes (showInlineForm becomes null), so a stray edit is not cleared.
 watch(
   () => props.showInlineForm,
-  () => {
-    editingItemId.value = null;
+  (val) => {
+    if (val) {
+      editingItemId.value = null;
+    }
   },
 );
 
@@ -179,6 +183,12 @@ function deleteItem(itemId) {
     accept: async () => {
       try {
         await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
+        toast.add({
+          severity: "success",
+          summary: "Success",
+          detail: "Line item deleted.",
+          life: 3000,
+        });
         emit("lineItemDeleted", itemId);
       } catch (err) {
         toast.add({
