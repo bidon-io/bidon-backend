@@ -209,6 +209,7 @@
 
 <script setup>
 import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 import {
   AUCTION_NETWORKS,
   NETWORK_LABEL_BY_KEY,
@@ -302,6 +303,7 @@ function onItemUpdated(item) {
 }
 
 const confirm = useConfirm();
+const toast = useToast();
 
 function deleteItem(itemId) {
   confirm.require({
@@ -310,8 +312,16 @@ function deleteItem(itemId) {
     icon: "pi pi-exclamation-triangle",
     acceptClass: "p-button-danger",
     accept: async () => {
-      await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
-      emit("line-item-deleted", itemId);
+      try {
+        await $apiFetch(`/line_items/${itemId}`, { method: "DELETE" });
+        emit("line-item-deleted", itemId);
+      } catch (err) {
+        toast.add({
+          severity: "error",
+          summary: "Delete failed",
+          detail: err.data?.error?.message ?? "Could not delete the line item.",
+        });
+      }
     },
   });
 }
