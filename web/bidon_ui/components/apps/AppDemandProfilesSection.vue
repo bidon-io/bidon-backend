@@ -2,10 +2,10 @@
   <div class="mt-10">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="text-base font-semibold text-gray-700">
+        <h3 class="text-base font-semibold" style="color: var(--bidon-text-primary);">
           Demand Source Profiles
         </h3>
-        <p class="text-sm text-gray-400 mt-0.5">
+        <p class="text-sm mt-0.5" style="color: var(--bidon-muted);">
           App-level configuration for each connected demand source.
         </p>
       </div>
@@ -24,7 +24,8 @@
     <InlineDemandProfileForm
       v-if="showCreateForm"
       :app-id="appId"
-      class="mb-4 rounded-lg overflow-hidden border border-blue-100"
+      class="mb-4 rounded-lg overflow-hidden"
+      style="border: 1px solid rgba(16,175,108,0.2);"
       @created="onProfileCreated"
       @cancel="showCreateForm = false"
     />
@@ -37,14 +38,12 @@
       <div
         v-for="profile in profiles"
         :key="profile.id"
-        :class="[
-          'border border-gray-200 rounded-lg bg-white overflow-hidden',
-          !profile.enabled && 'opacity-60',
-        ]"
+        :class="['rounded-lg overflow-hidden', !profile.enabled && 'opacity-60']"
+        style="background-color: var(--bidon-bg-card); border: 1px solid var(--bidon-border-default); box-shadow: var(--bidon-shadow-sm);"
       >
         <div class="card-header">
           <div class="flex items-center gap-2 flex-wrap min-w-0">
-            <span class="font-semibold text-gray-800">
+            <span class="font-semibold" style="color: var(--bidon-text-primary);">
               {{ profileLabel(profile) }}
             </span>
             <span
@@ -93,27 +92,28 @@
           @cancel="editingId = null"
         />
 
-        <div v-else class="divide-y divide-gray-100">
+        <div v-else class="divide-y" style="border-color: var(--bidon-border-default);">
           <div class="flex items-start gap-3 px-6 py-3">
-            <span class="text-xs text-gray-400 w-28 shrink-0 pt-px">
+            <span class="text-xs w-28 shrink-0 pt-px" style="color: var(--bidon-muted);">
               Account
             </span>
-            <span class="text-sm text-gray-700">
+            <span class="text-sm" style="color: var(--bidon-text-primary);">
               {{ accountLabel(profile.account) }}
             </span>
           </div>
           <div class="flex items-start gap-3 px-6 py-3">
-            <span class="text-xs text-gray-400 w-28 shrink-0 pt-px">
+            <span class="text-xs w-28 shrink-0 pt-px" style="color: var(--bidon-muted);">
               Demand Source
             </span>
             <NuxtLink
               v-if="profile.demandSource"
               :to="`/demand_sources/${profile.demandSource.id}`"
-              class="text-sm text-blue-600 hover:underline"
+              class="text-sm hover:underline"
+              style="color: var(--bidon-primary);"
             >
               {{ profile.demandSource.humanName }}
             </NuxtLink>
-            <span v-else class="text-sm text-gray-400">—</span>
+            <span v-else class="text-sm" style="color: var(--bidon-muted);">—</span>
           </div>
           <template v-if="profile.data && Object.keys(profile.data).length">
             <div
@@ -122,26 +122,25 @@
               class="flex items-start gap-3 px-6 py-3"
             >
               <span
-                class="text-xs text-gray-400 w-28 shrink-0 pt-px capitalize"
+                class="text-xs w-28 shrink-0 pt-px capitalize"
+                style="color: var(--bidon-muted);"
               >
                 {{ key.replace(/_/g, " ") }}
               </span>
-              <span class="text-sm text-gray-700 font-mono break-all">
+              <span class="text-sm font-mono break-all" style="color: var(--bidon-text-primary);">
                 {{ value }}
               </span>
             </div>
           </template>
           <div v-else class="flex items-start gap-3 px-6 py-3">
-            <span class="text-xs text-gray-400 w-28 shrink-0 pt-px"
-              >Config Data</span
-            >
-            <span class="text-sm text-gray-400">No adapter data</span>
+            <span class="text-xs w-28 shrink-0 pt-px" style="color: var(--bidon-muted);">Config Data</span>
+            <span class="text-sm" style="color: var(--bidon-muted);">No adapter data</span>
           </div>
         </div>
       </div>
     </div>
 
-    <p v-if="!profiles.length" class="text-sm text-gray-400 py-4">
+    <p v-if="!profiles.length" class="text-sm py-4" style="color: var(--bidon-muted);">
       No demand sources configured for this app yet.
     </p>
   </div>

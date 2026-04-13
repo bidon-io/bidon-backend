@@ -2,11 +2,11 @@
   <div class="card mb-8">
     <div class="card-header">
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="font-semibold text-gray-800 text-lg">
+        <span class="font-semibold text-lg" style="color: var(--bidon-text-primary);">
           {{ resource.humanName }}
         </span>
         <span class="badge badge-platform">{{ resource.platformId }}</span>
-        <span class="text-sm text-gray-400">{{ resource.packageName }}</span>
+        <span class="text-sm" style="color: var(--bidon-muted);">{{ resource.packageName }}</span>
       </div>
       <div class="flex gap-2 shrink-0">
         <NuxtLink
@@ -24,17 +24,18 @@
       </div>
     </div>
 
-    <div class="divide-y divide-gray-100">
+    <div class="divide-y" style="border-color: var(--bidon-border-default);">
       <div
         v-for="field in OVERVIEW_FIELDS"
         :key="field.key ?? field.label"
         class="flex items-start gap-4 px-6 py-3"
       >
-        <span class="text-sm text-gray-400 w-44 shrink-0 pt-px">
+        <span class="text-sm w-44 shrink-0 pt-px" style="color: var(--bidon-muted);">
           {{ field.label }}
         </span>
         <span
-          class="text-sm text-gray-700 font-mono break-all flex items-center gap-1.5 min-w-0"
+          class="text-sm font-mono break-all flex items-center gap-1.5 min-w-0"
+          style="color: var(--bidon-text-primary);"
         >
           {{ field.value ? field.value(resource) : resource[field.key] }}
           <button
@@ -43,7 +44,7 @@
               (field.value ? field.value(resource) : resource[field.key])
             "
             :aria-label="`Copy ${field.label}`"
-            class="text-gray-300 hover:text-blue-400 transition-colors shrink-0"
+            class="table-action-btn shrink-0"
             @click="
               copyField(
                 field.value ? field.value(resource) : resource[field.key],

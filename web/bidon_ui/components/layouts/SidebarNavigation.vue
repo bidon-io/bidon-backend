@@ -1,8 +1,8 @@
 <template>
-  <nav class="mt-6">
-    <div class="mt-4">
+  <nav class="mt-4 flex-1 px-2 pb-4">
+    <div class="mt-2">
       <button
-        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-200"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
         @click="openSections.apps = !openSections.apps"
       >
         <span>Apps</span>
@@ -24,17 +24,18 @@
         </svg>
       </button>
       <Transition name="section-slide">
-        <div v-if="openSections.apps" class="mt-1 px-3">
+        <div v-if="openSections.apps" class="mt-1">
           <NuxtLink
             v-for="resource in appResources"
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+                ? 'text-white font-medium'
+                : 'nav-link-inactive',
             ]"
+            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
@@ -42,9 +43,9 @@
       </Transition>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-5">
       <button
-        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-600"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
         @click="openSections.global = !openSections.global"
       >
         <span>Global Configuration</span>
@@ -66,17 +67,18 @@
         </svg>
       </button>
       <Transition name="section-slide">
-        <div v-if="openSections.global" class="mt-1 px-3">
+        <div v-if="openSections.global" class="mt-1">
           <NuxtLink
             v-for="resource in globalResources"
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+                ? 'font-medium'
+                : 'nav-link-inactive',
             ]"
+            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
@@ -84,9 +86,9 @@
       </Transition>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-5">
       <button
-        class="flex items-center justify-between w-full px-6 text-gray-400 uppercase text-sm hover:text-gray-600"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
         @click="openSections.settings = !openSections.settings"
       >
         <span>Settings</span>
@@ -108,28 +110,30 @@
         </svg>
       </button>
       <Transition name="section-slide">
-        <div v-if="openSections.settings" class="mt-1 px-3">
+        <div v-if="openSections.settings" class="mt-1">
           <NuxtLink
             v-for="resource in settingsResources"
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+                ? 'font-medium'
+                : 'nav-link-inactive',
             ]"
+            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
           <NuxtLink
             to="/settings/security"
             :class="[
-              'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
               isActive('/settings/security')
-                ? 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+                ? 'font-medium'
+                : 'nav-link-inactive',
             ]"
+            :style="isActive('/settings/security') ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>Passwords</span>
           </NuxtLink>
@@ -137,16 +141,17 @@
       </Transition>
     </div>
 
-    <div class="mt-4 px-3">
+    <div class="mt-4">
       <NuxtLink
         v-if="currentUser?.isAdmin === true"
         to="/copilot"
         :class="[
-          'flex items-center mt-1 px-3 py-2 rounded-md text-sm transition-colors',
+          'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
           isActive('/copilot')
-            ? 'bg-blue-50 text-blue-600 font-medium'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ? 'font-medium'
+            : 'nav-link-inactive',
         ]"
+        :style="isActive('/copilot') ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
       >
         <span>AI Copilot</span>
       </NuxtLink>
@@ -163,9 +168,6 @@ interface User {
 
 const APP_RESOURCE_KEYS = [
   "app",
-  "appDemandProfile",
-  "lineItem",
-  "auctionConfigurationV2",
 ];
 
 const GLOBAL_RESOURCE_KEYS = ["demandSource", "demandSourceAccount", "segment"];

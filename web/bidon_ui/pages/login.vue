@@ -8,7 +8,7 @@
       </template>
       <template #content>
         <div class="flex flex-col mb-4">
-          <label class="font-semibold text-gray-500 mb-2" for="emailInput"
+          <label class="font-semibold mb-2" style="color: var(--bidon-text-primary);" for="emailInput"
             >Email</label
           >
           <InputText
@@ -20,7 +20,7 @@
           <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
         </div>
         <div class="flex flex-col mb-4">
-          <label class="font-semibold text-gray-500 mb-2" for="passwordInput"
+          <label class="font-semibold mb-2" style="color: var(--bidon-text-primary);" for="passwordInput"
             >Password</label
           >
           <InputText

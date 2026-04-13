@@ -1,5 +1,5 @@
 <template>
-  <NuxtLink v-if="isValid" :to="`${link.basePath}/${id}`" class="text-blue-500">
+  <NuxtLink v-if="isValid" :to="`${link.basePath}/${id}`" class="table-resource-link">
     {{ linkText }}
   </NuxtLink>
 </template>

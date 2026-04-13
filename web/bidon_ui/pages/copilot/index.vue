@@ -19,7 +19,7 @@
           class="px-3 sm:px-4 space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto"
           data-testid="copilot-messages"
         >
-          <div v-if="historyLoading" class="text-sm text-gray-400">
+          <div v-if="historyLoading" class="text-sm" style="color: var(--bidon-muted);">
             Loading conversation…
           </div>
           <div
@@ -34,8 +34,8 @@
               :class="[
                 'px-3 py-2 sm:px-4 sm:py-3 rounded-lg max-w-[85%] sm:max-w-[80%] whitespace-pre-wrap',
                 msg.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-800',
+                  ? 'chat-bubble-user'
+                  : 'chat-bubble-assistant',
               ]"
               :data-testid="
                 msg.role === 'user' ? 'user-message' : 'assistant-message'
@@ -44,7 +44,7 @@
               {{ msg.content }}
             </div>
           </div>
-          <div v-if="loading" class="text-sm text-gray-400">Thinking…</div>
+          <div v-if="loading" class="text-sm" style="color: var(--bidon-muted);">Thinking…</div>
         </div>
       </template>
 

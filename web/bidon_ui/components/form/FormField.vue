@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row py-3.5 px-6">
     <div class="w-1/4 pr-4">
-      <span class="text-sm font-medium text-gray-500">{{ props.label }}</span>
+      <span class="text-sm font-medium" style="color: var(--bidon-text-secondary);">{{ props.label }}</span>
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </div>
     <div class="w-3/4">

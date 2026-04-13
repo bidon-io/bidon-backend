@@ -2,13 +2,13 @@
   <form @submit="onSubmit">
     <FormCard :title="compact ? '' : 'Auction Configuration'">
       <div v-if="showCopySettings" class="px-6 py-4">
-        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 class="text-sm font-semibold text-blue-900 mb-3">
+        <div class="p-4 rounded-lg" style="background-color: var(--bidon-accent-subtle); border: 1px solid var(--bidon-accent-border);">
+          <h3 class="text-sm font-semibold mb-3" style="color: var(--bidon-accent-text);">
             Clone Settings from Another Configuration
           </h3>
           <div class="flex gap-3 items-start">
             <div class="flex-1">
-              <label class="block text-xs font-medium text-gray-700 mb-1">
+              <label class="block text-xs font-medium mb-1" style="color: var(--bidon-text-primary);">
                 Auction Key
               </label>
               <InputText

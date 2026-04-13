@@ -15,14 +15,53 @@ export default defineNuxtConfig({
     },
   },
 
+  app: {
+    head: {
+      link: [
+        {
+          rel: "preconnect",
+          href: "https://fonts.googleapis.com",
+        },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+        },
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "64x64",
+          href: "/favicon-64.png",
+        },
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "32x32",
+          href: "/favicon-32.png",
+        },
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "16x16",
+          href: "/favicon-16.png",
+        },
+      ],
+    },
+  },
+
   css: [
-    "primevue/resources/themes/lara-light-blue/theme.css",
+    "primevue/resources/themes/lara-light-teal/theme.css",
     "primevue/resources/primevue.css",
     "primeicons/primeicons.css",
   ],
 
   tailwindcss: {
     cssPath: "~/assets/css/components.css",
+    configPath: "~/tailwind.config.js",
   },
 
   components: [

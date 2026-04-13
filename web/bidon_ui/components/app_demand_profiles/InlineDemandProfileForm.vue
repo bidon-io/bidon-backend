@@ -1,12 +1,13 @@
 <template>
-  <div class="border-t border-blue-100 bg-blue-50 px-4 py-3">
-    <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
+  <div class="px-4 py-3" style="border-top: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card-header);">
+    <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--bidon-accent);">
       {{ isEditMode ? "Edit" : "New" }} Demand Profile
       <span v-if="activeNetworkLabel"> — {{ activeNetworkLabel }}</span>
     </p>
 
     <div
-      class="border border-blue-200 rounded-lg bg-white overflow-hidden divide-y divide-gray-100 mb-3"
+      class="rounded-lg overflow-hidden divide-y mb-3"
+      style="border: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card);"
     >
       <!-- Network selector (only when networkKey not pre-set and not editing) -->
       <FormField
@@ -26,7 +27,7 @@
       </FormField>
 
       <template v-if="activeNetworkKey">
-        <div v-if="accountsLoading" class="px-4 py-3 text-xs text-gray-400">
+        <div v-if="accountsLoading" class="px-4 py-3 text-xs" style="color: var(--bidon-muted);">
           Loading accounts…
         </div>
         <div
@@ -60,7 +61,7 @@
                 {{ errors.accountId }}
               </small>
             </template>
-            <span v-else class="text-sm text-gray-700">
+            <span v-else class="text-sm" style="color: var(--bidon-text-primary);">
               {{ accounts[0].label }}
             </span>
           </FormField>

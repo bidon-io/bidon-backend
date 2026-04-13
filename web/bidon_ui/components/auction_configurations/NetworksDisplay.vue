@@ -7,7 +7,7 @@
         <div
           v-for="network in biddingNetworks"
           :key="network.name"
-          class="p-4 bg-gray-100 rounded-md flex items-center justify-start text-left border border-gray-200 min-h-[60px]"
+          class="p-4 rounded-md flex items-center justify-start text-left min-h-[60px]" style="background-color: var(--bidon-bg-card-header); border: 1px solid var(--bidon-border-default);"
         >
           <div class="flex items-center justify-center w-[30px] mr-2">
             <i :class="getNetworkIcon(true)" class="text-xl"></i>
@@ -24,11 +24,9 @@
         <div
           v-for="(network, index) in cpmNetworks"
           :key="network.id"
-          class="p-4 bg-gray-100 rounded-md flex items-center"
-          :class="{
-            'mb-2': index !== cpmNetworks.length - 1,
-            'border border-gray-200': true,
-          }"
+          class="p-4 rounded-md flex items-center"
+          :class="{ 'mb-2': index !== cpmNetworks.length - 1 }"
+          style="background-color: var(--bidon-bg-card-header); border: 1px solid var(--bidon-border-default);"
         >
           <div class="flex items-center justify-center w-[30px] mr-3">
             <i :class="getNetworkIcon(network.isBidding)" class="text-xl"></i>
@@ -54,7 +52,7 @@
       "
       class="mt-4"
     >
-      <p class="text-gray-500">
+      <p style="color: var(--bidon-muted);">
         No networks configured for this auction configuration.
       </p>
     </div>

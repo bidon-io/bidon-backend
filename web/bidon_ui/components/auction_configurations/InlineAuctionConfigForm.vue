@@ -1,6 +1,7 @@
 <template>
   <div
-    class="inline-auction-config-form border border-gray-200 rounded-lg bg-white overflow-hidden mb-4 [&_.card]:mb-0"
+    class="inline-auction-config-form rounded-lg overflow-hidden mb-4 [&_.card]:mb-0"
+    style="background-color: var(--bidon-bg-card); border: 1px solid var(--bidon-border-default);"
   >
     <AuctionConfigurationsForm
       :key="formKey"

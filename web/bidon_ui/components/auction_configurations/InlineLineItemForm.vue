@@ -1,10 +1,10 @@
 <template>
-  <div class="border-t border-blue-100 bg-blue-50 px-4 py-3">
-    <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
+  <div class="px-4 py-3" style="border-top: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card-header);">
+    <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--bidon-accent);">
       {{ isEditMode ? "Edit" : "New" }} Line Item — {{ networkKey }}
     </p>
 
-    <div v-if="accountsLoading" class="text-xs text-gray-400 mb-2">
+    <div v-if="accountsLoading" class="text-xs mb-2" style="color: var(--bidon-muted);">
       Loading accounts…
     </div>
     <div v-else-if="!accounts.length" class="text-xs text-red-500 mb-2">
@@ -14,7 +14,8 @@
 
     <template v-else>
       <div
-        class="border border-blue-200 rounded-lg bg-white overflow-hidden divide-y divide-gray-100 mb-3"
+        class="rounded-lg overflow-hidden divide-y mb-3"
+        style="border: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default);"
       >
         <!-- Account (read-only when single, dropdown when multiple) -->
         <FormField label="Account" :required="accounts.length > 1">
@@ -38,7 +39,7 @@
               {{ errors.accountId }}
             </small>
           </template>
-          <span v-else class="text-sm text-gray-700">
+          <span v-else class="text-sm" style="color: var(--bidon-text-primary);">
             {{ accounts[0].label || `#${accounts[0].id}` }}
           </span>
         </FormField>

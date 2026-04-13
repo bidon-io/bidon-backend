@@ -8,7 +8,7 @@
     ></i>
     <Menu ref="menu" :model="dropdownItems" :popup="true" />
   </div>
-  <NuxtLink v-else :to="path" class="text-blue-500">
+  <NuxtLink v-else :to="path" class="table-resource-link">
     {{ label }}
   </NuxtLink>
 </template>

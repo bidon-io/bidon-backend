@@ -1,11 +1,14 @@
 <template>
-  <Button
-    label="Go back"
-    icon="pi pi-arrow-left"
-    severity="secondary"
-    text
+  <button
+    class="inline-flex items-center gap-1 text-xs mb-3 transition-colors"
+    style="color: var(--bidon-muted);"
+    @mouseenter="$event.currentTarget.style.color = 'var(--bidon-primary)'"
+    @mouseleave="$event.currentTarget.style.color = 'var(--bidon-muted)'"
     @click.prevent="goBack"
-  />
+  >
+    <i class="pi pi-arrow-left text-xs" />
+    Back
+  </button>
 </template>
 
 <script setup>

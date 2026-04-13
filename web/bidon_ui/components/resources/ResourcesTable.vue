@@ -32,7 +32,7 @@
       >
         <div v-if="column.copyable">
           <button @click="copyField(data[field])">
-            <i class="pi pi-copy" style="color: slateblue"></i>
+            <i class="pi pi-copy table-action-btn"></i>
           </button>
           <span>{{ data[field] }}</span>
         </div>
@@ -70,30 +70,36 @@
     </Column>
     <Column
       style="width: 10%; min-width: 8rem"
-      body-style="text-align:center; position: sticky; right: 0; background-color: white"
+      body-style="text-align:center; position: sticky; right: 0; background-color: var(--bidon-bg-card)"
     >
       <template #body="slotProps">
-        <div class="flex justify-between">
+        <div class="flex justify-center gap-3">
           <NuxtLink
             :key="slotProps.data.id"
             :to="`${resourcesPath}/${slotProps.data.id}`"
+            class="table-action-btn"
+            title="View"
           >
-            <i class="pi pi-eye" style="color: slateblue"></i>
+            <i class="pi pi-eye"></i>
           </NuxtLink>
           <NuxtLink
             v-if="slotProps.data._permissions.update"
             :key="slotProps.data.id"
             :to="`${resourcesPath}/${slotProps.data.id}/edit`"
+            class="table-action-btn table-action-btn--edit"
+            title="Edit"
           >
-            <i class="pi pi-pencil" style="color: green"></i>
+            <i class="pi pi-pencil"></i>
           </NuxtLink>
           <a
             v-if="slotProps.data._permissions.delete"
             :key="slotProps.data.id"
             href="_"
+            class="table-action-btn table-action-btn--delete"
+            title="Delete"
             @:click.prevent="deleteHandle(slotProps.data.id)"
           >
-            <i class="pi pi-trash" style="color: red"></i>
+            <i class="pi pi-trash"></i>
           </a>
         </div>
       </template>

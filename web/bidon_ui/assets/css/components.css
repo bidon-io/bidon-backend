@@ -2,7 +2,475 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── BidOn brand CSS variables ─────────────────────────────────────────────── */
+
+/* Light mode (default) — blue accent */
+:root {
+  --bidon-accent:         #23283B;
+  --bidon-accent-hover:   #1a1f2e;
+  --bidon-accent-subtle:  rgba(35, 40, 59, 0.07);
+  --bidon-accent-border:  rgba(35, 40, 59, 0.2);
+  --bidon-accent-text:    #23283B;
+
+  --bidon-primary:        #10AF6C;
+  --bidon-primary-hover:  #0E9C62;
+  --bidon-dark:           #23283B;
+  --bidon-darker:         #0A0630;
+  --bidon-muted:          #8C8C9C;
+  --bidon-subtle:         #E1E7E5;
+  --bidon-white:          #FFFFFF;
+
+  --bidon-text-primary:   #23283B;
+  --bidon-text-secondary: #8C8C9C;
+  --bidon-text-link:      #23283B;
+
+  --bidon-bg-page:        #FFFFFF;
+  --bidon-bg-layout:      #FAFBFE;
+  --bidon-bg-sidebar:     #F0F1F4;
+  --bidon-bg-card:        #FFFFFF;
+  --bidon-bg-card-header: #F4F6F8;
+  --bidon-bg-dark:        #23283B;
+
+  --bidon-border-default: #E1E7E5;
+  --bidon-border-card:    rgba(59, 130, 246, 0.15);
+  --bidon-border-focus:   #23283B;
+
+  --bidon-radius-sm:      4px;
+  --bidon-radius-md:      8px;
+  --bidon-radius-lg:      12px;
+  --bidon-radius-full:    9999px;
+
+  --bidon-shadow-sm:      0 1px 3px rgba(10, 6, 48, 0.08);
+  --bidon-shadow-md:      0 4px 12px rgba(10, 6, 48, 0.10);
+  --bidon-shadow-focus:   0 0 0 3px rgba(35, 40, 59, 0.25);
+}
+
+/* Dark mode — green accent */
+html.dark {
+  --bidon-accent:         #10AF6C;
+  --bidon-accent-hover:   #0E9C62;
+  --bidon-accent-subtle:  rgba(16, 175, 108, 0.15);
+  --bidon-accent-border:  rgba(16, 175, 108, 0.35);
+  --bidon-accent-text:    #10AF6C;
+
+  --bidon-primary:        #10AF6C;
+  --bidon-primary-hover:  #0E9C62;
+  --bidon-dark:           #23283B;
+  --bidon-darker:         #0A0630;
+  --bidon-muted:          rgba(255,255,255,0.45);
+  --bidon-subtle:         rgba(255,255,255,0.08);
+  --bidon-white:          #FFFFFF;
+
+  --bidon-text-primary:   #F0F4FF;
+  --bidon-text-secondary: rgba(255,255,255,0.55);
+  --bidon-text-link:      #10AF6C;
+
+  --bidon-bg-page:        #2C3147;
+  --bidon-bg-layout:      #1C2030;
+  --bidon-bg-sidebar:     #252A3D;
+  --bidon-bg-card:        #2C3147;
+  --bidon-bg-card-header: rgba(255, 255, 255, 0.05);
+  --bidon-bg-dark:        #1C2030;
+
+  --bidon-border-default: rgba(255,255,255,0.1);
+  --bidon-border-card:    rgba(16, 175, 108, 0.2);
+  --bidon-border-focus:   #10AF6C;
+
+  --bidon-shadow-sm:      0 1px 3px rgba(0,0,0,0.3);
+  --bidon-shadow-md:      0 4px 12px rgba(0,0,0,0.4);
+  --bidon-shadow-focus:   0 0 0 3px rgba(16, 175, 108, 0.35);
+}
+
+/* ── Base font ──────────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--bidon-text-primary);
+  background-color: var(--bidon-bg-layout);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Override browser monospace default — keep Inter throughout */
+code, kbd, samp, pre, .font-mono {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* ── Dark mode global overrides ─────────────────────────────────────────────── */
+
+/* Cards and white surfaces */
+html.dark .card,
+html.dark .bg-white,
+html.dark [style*="background-color: white"],
+html.dark [style*="background-color: #fff"],
+html.dark [style*="background-color: #FFF"],
+html.dark [style*="background: white"],
+html.dark [style*="background: #fff"] {
+  background-color: var(--bidon-bg-card) !important;
+  color: var(--bidon-text-primary) !important;
+}
+
+/* Card headers / footers */
+html.dark .card-header,
+html.dark .card-footer {
+  background-color: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Inline form / nested card surfaces */
+html.dark .rounded-lg,
+html.dark .rounded-xl {
+  background-color: var(--bidon-bg-card);
+}
+
+/* Override the above for elements that should stay transparent */
+html.dark .rounded-lg.bg-transparent,
+html.dark button.rounded-lg,
+html.dark a.rounded-lg,
+html.dark nav .rounded-lg,
+html.dark .p-button {
+  background-color: unset !important;
+}
+
+/* Badge dark mode — stronger backgrounds so they stand out from cards */
+html.dark .badge-platform {
+  background-color: rgba(148, 163, 184, 0.2) !important;
+  color: #94A3B8 !important;
+}
+html.dark .badge-ad-type {
+  background-color: rgba(16, 175, 108, 0.25) !important;
+  color: #4ADE80 !important;
+}
+html.dark .badge-segment {
+  background-color: rgba(148, 163, 184, 0.2) !important;
+  color: #CBD5E1 !important;
+}
+html.dark .badge-active {
+  background-color: rgba(16, 175, 108, 0.25) !important;
+  color: #4ADE80 !important;
+}
+html.dark .badge-count-cpm {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+  color: #FCD34D !important;
+}
+html.dark .badge-count-rtb {
+  background-color: rgba(16, 175, 108, 0.25) !important;
+  color: #4ADE80 !important;
+}
+
+/* Text colors */
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700 {
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-gray-300 {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* Borders */
+html.dark .border-gray-200,
+html.dark .border-gray-100,
+html.dark .divide-gray-100 > * {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+html.dark .divide-y > * {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Inline styles with border */
+html.dark [style*="border: 1px solid #E1E7E5"],
+html.dark [style*="border: 1px solid var(--bidon-border-default)"] {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+html.dark .p-datatable .p-datatable-thead > tr > th {
+  background: rgba(16, 175, 108, 0.08) !important;
+  border-color: rgba(16, 175, 108, 0.18) !important;
+  color: #A7F3D0 !important;
+}
+html.dark .p-datatable .p-datatable-tbody > tr {
+  background: #23283B !important;
+  color: var(--bidon-text-primary) !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+html.dark .p-datatable .p-datatable-tbody > tr > td {
+  border-color: rgba(255,255,255,0.07) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-datatable .p-datatable-tbody > tr:hover {
+  background: rgba(255,255,255,0.05) !important;
+}
+html.dark .p-datatable {
+  border-color: rgba(255,255,255,0.1) !important;
+  box-shadow: none !important;
+  background: #23283B !important;
+}
+html.dark .p-datatable .p-datatable-wrapper {
+  background: #23283B !important;
+  border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+}
+html.dark .p-datatable .p-paginator,
+html.dark .p-datatable .p-paginator-bottom {
+  background: #23283B !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html.dark .p-datatable .p-datatable-tbody > tr > td[style*="sticky"] {
+  background-color: #23283B !important;
+}
+html.dark .p-paginator,
+html.dark .p-paginator .p-paginator-current,
+html.dark .p-paginator .p-dropdown,
+html.dark .p-paginator .p-inputnumber-input {
+  background: var(--bidon-bg-card) !important;
+  color: var(--bidon-text-primary) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+html.dark .p-paginator .p-paginator-page:not(.p-highlight):hover,
+html.dark .p-paginator .p-paginator-prev:hover,
+html.dark .p-paginator .p-paginator-next:hover {
+  color: #10AF6C !important;
+  background: rgba(16,175,108,0.1) !important;
+}
+html.dark .p-paginator .p-paginator-page,
+html.dark .p-paginator .p-paginator-prev,
+html.dark .p-paginator .p-paginator-next {
+  color: rgba(255,255,255,0.6) !important;
+}
+html.dark .p-inputtext {
+  background: var(--bidon-bg-sidebar) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-dropdown {
+  background: var(--bidon-bg-sidebar) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-dropdown-panel {
+  background: var(--bidon-bg-card) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+html.dark .p-dropdown-panel .p-dropdown-header {
+  background: var(--bidon-bg-sidebar) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-dropdown-panel .p-dropdown-header .p-inputtext {
+  background: var(--bidon-bg-sidebar) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+  background: var(--bidon-bg-card) !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):hover {
+  background: rgba(255,255,255,0.07) !important;
+}
+html.dark .p-toast .p-toast-message {
+  background: #23283B !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-confirm-dialog,
+html.dark .p-dialog {
+  background: #23283B !important;
+  color: var(--bidon-text-primary) !important;
+}
+html.dark .p-button.p-button-text {
+  color: rgba(255,255,255,0.7) !important;
+}
+html.dark .p-button.p-button-text:hover {
+  background: rgba(255,255,255,0.07) !important;
+}
+
+/* ── PrimeVue theme overrides ───────────────────────────────────────────────── */
+
+/* Buttons */
+.p-button.p-button-primary,
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-link) {
+  background: var(--bidon-primary) !important;
+  border-color: var(--bidon-primary) !important;
+}
+.p-button.p-button-primary:hover,
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-link):hover {
+  background: var(--bidon-primary-hover) !important;
+  border-color: var(--bidon-primary-hover) !important;
+}
+
+/* Inputs */
+.p-inputtext:focus {
+  border-color: var(--bidon-border-focus) !important;
+  box-shadow: var(--bidon-shadow-focus) !important;
+}
+.p-inputtext {
+  border-color: var(--bidon-border-default) !important;
+  color: var(--bidon-text-primary) !important;
+}
+
+/* Checkboxes & radio */
+.p-checkbox .p-checkbox-box.p-highlight,
+.p-radiobutton .p-radiobutton-box.p-highlight {
+  background: var(--bidon-primary) !important;
+  border-color: var(--bidon-primary) !important;
+}
+
+/* Paginator */
+.p-paginator .p-paginator-page.p-highlight {
+  background: var(--bidon-accent) !important;
+  border-color: var(--bidon-accent) !important;
+  color: #fff !important;
+}
+.p-paginator .p-paginator-page:not(.p-highlight):hover,
+.p-paginator .p-paginator-prev:hover,
+.p-paginator .p-paginator-next:hover {
+  color: var(--bidon-accent) !important;
+  background: var(--bidon-accent-subtle) !important;
+}
+.p-paginator {
+  background: var(--bidon-bg-card) !important;
+  border: none !important;
+}
+
+/* DataTable — outer container owns the border + radius */
+.p-datatable {
+  border-radius: var(--bidon-radius-lg) !important;
+  border: 1px solid var(--bidon-border-default) !important;
+  overflow: hidden !important;
+  box-shadow: var(--bidon-shadow-sm) !important;
+}
+.p-datatable .p-datatable-header {
+  background: var(--bidon-bg-card) !important;
+  border-color: var(--bidon-border-default) !important;
+  color: var(--bidon-text-primary) !important;
+}
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--bidon-accent-subtle) !important;
+  border-color: var(--bidon-accent-border) !important;
+  color: var(--bidon-accent-text) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+.p-datatable .p-datatable-tbody > tr {
+  background: #fff !important;
+  color: var(--bidon-text-primary) !important;
+  border-color: var(--bidon-border-default) !important;
+}
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--bidon-border-default) !important;
+  color: var(--bidon-text-primary) !important;
+  font-size: 0.875rem !important;
+}
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: #f8faf9 !important;
+}
+.p-datatable .p-sortable-column:not(.p-highlight):hover {
+  background: #f8faf9 !important;
+}
+.p-datatable .p-sortable-column.p-highlight {
+  background: #f0faf5 !important;
+  color: var(--bidon-primary) !important;
+}
+.p-datatable .p-sortable-column.p-highlight .p-sortable-column-icon {
+  color: var(--bidon-primary) !important;
+}
+.p-datatable .p-column-filter-row .p-inputtext,
+.p-datatable .p-column-filter-row .p-dropdown {
+  border-color: var(--bidon-border-default) !important;
+  font-size: 0.8125rem !important;
+}
+.p-datatable .p-datatable-wrapper {
+  border: none !important;
+  overflow: hidden;
+}
+/* Sticky actions column bg */
+.p-datatable .p-datatable-tbody > tr > td[style*="sticky"] {
+  background-color: var(--bidon-bg-card) !important;
+}
+
+/* Dropdown */
+.p-dropdown {
+  border-color: var(--bidon-border-default) !important;
+}
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+  background: rgba(16, 175, 108, 0.1) !important;
+  color: var(--bidon-primary) !important;
+}
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):hover {
+  background: #f8faf9 !important;
+}
+
+/* Tabs / accordion in forms */
+.p-accordion .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+  background: rgba(16, 175, 108, 0.08) !important;
+  border-color: var(--bidon-border-default) !important;
+  color: var(--bidon-primary) !important;
+}
+.p-accordion .p-accordion-header .p-accordion-header-link:focus {
+  box-shadow: var(--bidon-shadow-focus) !important;
+}
+
+/* Toast */
+.p-toast .p-toast-message.p-toast-message-success {
+  background: rgba(16, 175, 108, 0.1) !important;
+  border-left: 4px solid var(--bidon-primary) !important;
+  color: var(--bidon-text-primary) !important;
+}
+.p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-success .p-toast-icon-close {
+  color: var(--bidon-primary) !important;
+}
+
 @layer components {
+  /* ── Sidebar nav inactive links ─────────────────────────────────────────*/
+  .nav-link-inactive {
+    color: var(--bidon-text-primary);
+  }
+  .nav-link-inactive:hover {
+    background-color: var(--bidon-accent-subtle);
+  }
+
+  /* ── Table action icon buttons ──────────────────────────────────────────
+   *  Used in ResourcesTable / LazyResourcesTable action columns
+   * ──────────────────────────────────────────────────────────────────── */
+
+  .table-action-btn {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors text-sm;
+    color: var(--bidon-muted);
+    background: transparent;
+  }
+  .table-action-btn:hover {
+    color: #3B82F6;
+    background: #EFF6FF;
+  }
+  .table-action-btn--edit:hover {
+    color: var(--bidon-primary);
+    background: rgba(16, 175, 108, 0.10);
+  }
+  .table-action-btn--delete:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  .table-resource-link {
+    color: var(--bidon-primary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+  .table-resource-link:hover,
+  .table-resource-link:focus-visible {
+    color: var(--bidon-primary-hover);
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-underline-offset: 2px;
+  }
+  html.dark .table-resource-link {
+    color: var(--bidon-text-link);
+  }
+
   /* ── Buttons ────────────────────────────────────────────────────────────
    *
    *  Usage:
@@ -23,24 +491,94 @@
   }
 
   .btn-new {
-    @apply btn bg-green-500 text-white hover:bg-green-600;
+    @apply btn text-white;
+    background-color: var(--bidon-primary);
+  }
+  .btn-new:hover {
+    background-color: var(--bidon-primary-hover);
   }
 
   .btn-edit {
-    @apply btn bg-blue-500 text-white hover:bg-blue-600;
+    @apply btn bg-white font-medium;
+    color: #3B82F6;
+    border: 1.5px solid #BFDBFE;
+  }
+  .btn-edit:hover {
+    background-color: #EFF6FF;
+    border-color: #3B82F6;
   }
 
   .btn-cancel {
-    @apply btn bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100;
+    @apply btn bg-white font-medium;
+    color: var(--bidon-muted);
+    border: 1.5px solid var(--bidon-border-default);
+  }
+  .btn-cancel:hover {
+    background-color: var(--bidon-subtle);
   }
 
   .btn-view {
-    @apply btn bg-white text-gray-600 border border-gray-300 hover:bg-gray-50;
+    @apply btn bg-white border text-bidon-ebony-clay hover:bg-bidon-geyser;
+    border-color: var(--bidon-border-default);
   }
 
   .btn-delete {
     @apply btn bg-red-500 text-white hover:bg-red-600;
   }
+}
+
+/* Copilot chat bubbles */
+.chat-bubble-user {
+  background-color: var(--bidon-accent);
+  color: #fff;
+}
+.chat-bubble-assistant {
+  background-color: var(--bidon-bg-card-header);
+  color: var(--bidon-text-primary);
+  border: 1px solid var(--bidon-border-default);
+}
+
+/* No demand profile warning chip */
+.network-no-profile-warning {
+  color: #92400E;
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+html.dark .network-no-profile-warning {
+  color: #FCD34D;
+  background-color: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* Dark mode button overrides */
+html.dark .btn-edit {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #93C5FD !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+html.dark .btn-edit:hover {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  border-color: #93C5FD !important;
+}
+html.dark .btn-cancel {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: var(--bidon-muted) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html.dark .btn-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.dark .btn-new {
+  background-color: var(--bidon-primary) !important;
+  color: #fff !important;
+}
+html.dark .btn-view {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: var(--bidon-text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+@layer components {
 
   /* ── Badges / chips ─────────────────────────────────────────────────────
    *
@@ -52,35 +590,47 @@
    * ──────────────────────────────────────────────────────────────────── */
 
   .badge {
-    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium;
+    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium;
   }
 
   .badge-platform {
-    @apply badge bg-blue-100 text-blue-700;
+    @apply badge font-semibold;
+    background-color: rgba(35, 40, 59, 0.12);
+    color: #23283B;
   }
 
   .badge-ad-type {
-    @apply badge bg-violet-100 text-violet-700 capitalize;
+    @apply badge capitalize font-semibold;
+    background-color: rgba(16, 175, 108, 0.12);
+    color: var(--bidon-primary);
   }
 
   .badge-segment {
-    @apply badge bg-blue-100 text-blue-700;
+    @apply badge font-semibold;
+    background-color: rgba(35, 40, 59, 0.1);
+    color: var(--bidon-dark);
   }
 
   .badge-active {
-    @apply badge bg-green-100 text-green-700;
+    @apply badge font-semibold;
+    background-color: rgba(16, 175, 108, 0.12);
+    color: var(--bidon-primary);
   }
 
   .badge-disabled {
-    @apply badge bg-red-100 text-red-500;
+    @apply badge font-semibold bg-red-50 text-red-500;
   }
 
   .badge-count-cpm {
-    @apply badge bg-amber-100 text-amber-700;
+    @apply badge font-semibold;
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #b45309;
   }
 
   .badge-count-rtb {
-    @apply badge bg-teal-100 text-teal-700;
+    @apply badge font-semibold;
+    background-color: rgba(16, 175, 108, 0.12);
+    color: var(--bidon-primary);
   }
 
   /* ── Cards ──────────────────────────────────────────────────────────────
@@ -94,11 +644,16 @@
    * ──────────────────────────────────────────────────────────────────── */
 
   .card {
-    @apply border border-gray-200 rounded-lg bg-white overflow-hidden;
+    @apply rounded-xl overflow-hidden;
+    background-color: var(--bidon-bg-card);
+    border: 1px solid var(--bidon-border-card);
+    box-shadow: var(--bidon-shadow-sm);
   }
 
   .card-header {
-    @apply flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200;
+    @apply flex items-center justify-between px-6 py-4;
+    background-color: var(--bidon-bg-card-header);
+    border-bottom: 1px solid var(--bidon-border-card);
   }
 
   .card-body {
@@ -106,6 +661,8 @@
   }
 
   .card-footer {
-    @apply px-6 py-3 border-t border-gray-100 bg-gray-50;
+    @apply px-6 py-3;
+    border-top: 1px solid var(--bidon-border-card);
+    background-color: var(--bidon-bg-card-header);
   }
 }

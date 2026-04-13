@@ -1,31 +1,107 @@
 <template>
-  <header class="z-5 py-4 bg-white shadow-md">
-    <div class="container mx-auto px-6 lg:px-8">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <div class="relative mx-4 lg:mx-0">
-            <span class="left-0 p-3 flex items-center">
-              <a class="text-blue-500 font-semibold" target="_blank" href="/"
-                >BidON Management Console</a
-              >
-            </span>
-          </div>
-        </div>
-        <div v-if="currentUser" class="flex items-center">
-          <div>
-            <span>{{ currentUser.email }}</span>
-            <span class="text-red-500 font-bold pl-1">
-              {{ currentUser.isAdmin ? "[Admin]" : "" }}
-            </span>
-          </div>
+  <header class="z-5 flex-shrink-0" style="background-color: var(--bidon-bg-sidebar); border-bottom: 3px solid var(--bidon-accent); box-shadow: var(--bidon-shadow-sm); transition: background-color 0.2s ease;">
+    <div class="px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
 
-          <Button label="Log out" icon="pi pi-sign-out" text @click="logout" />
-        </div>
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-1.5 min-w-0 text-sm">
+        <NuxtLink to="/" class="shrink-0 font-medium hover:opacity-70 transition-opacity" style="color: var(--bidon-accent);">
+          Home
+        </NuxtLink>
+        <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
+          <span style="color: var(--bidon-muted);">/</span>
+          <NuxtLink
+            v-if="i < breadcrumbs.length - 1"
+            :to="crumb.path"
+            class="hover:opacity-70 transition-opacity truncate"
+            style="color: var(--bidon-accent);"
+          >{{ crumb.label }}</NuxtLink>
+          <span v-else class="font-semibold truncate" style="color: var(--bidon-text-primary);">{{ crumb.label }}</span>
+        </template>
+      </nav>
+
+      <!-- User info -->
+      <div v-if="currentUser" class="flex items-center gap-2 shrink-0">
+        <!-- Dark mode toggle -->
+        <button
+          class="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+          style="color: var(--bidon-muted); border: 1px solid var(--bidon-border-default);"
+          :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+          @click="toggleDark()"
+        >
+          <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" class="text-xs" />
+        </button>
+        <span v-if="currentUser.isAdmin" class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: rgba(16,175,108,0.12); color: #10AF6C;">
+          Admin
+        </span>
+        <span class="text-sm" style="color: var(--bidon-muted);">{{ currentUser.email }}</span>
+        <button
+          class="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
+          style="color: var(--bidon-muted); border: 1px solid var(--bidon-border-default);"
+          @mouseenter="$event.currentTarget.style.borderColor = 'var(--bidon-primary)'; $event.currentTarget.style.color = 'var(--bidon-primary)'"
+          @mouseleave="$event.currentTarget.style.borderColor = 'var(--bidon-border-default)'; $event.currentTarget.style.color = 'var(--bidon-muted)'"
+          @click="logout"
+        >
+          <i class="pi pi-sign-out text-xs" />
+          Log out
+        </button>
       </div>
+
     </div>
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
+const { isDark, toggleDark } = useColorMode();
+import { titleize, pluralize } from "inflection";
+
 const { currentUser, logout } = useAuthStore();
+const route = useRoute();
+
+const ROUTE_LABELS: Record<string, string> = {
+  apps: "Apps",
+  app_demand_profiles: "App Demand Profiles",
+  line_items: "Line Items",
+  demand_sources: "Demand Sources",
+  demand_source_accounts: "Demand Source Accounts",
+  segments: "Segments",
+  users: "Users",
+  api_keys: "API Credentials",
+  auction_configurations: "Auction Configurations",
+  copilot: "AI Copilot",
+  settings: "Settings",
+  security: "Passwords",
+  v2: null, // skip v2 prefix in breadcrumb
+};
+
+const breadcrumbs = computed(() => {
+  const parts = route.path.split("/").filter(Boolean);
+  const crumbs: { label: string; path: string }[] = [];
+  let pathSoFar = "";
+
+  for (const part of parts) {
+    pathSoFar += `/${part}`;
+
+    // Skip "v2" as a standalone segment
+    if (part === "v2") continue;
+
+    const isId = /^\d+$/.test(part);
+    let label: string;
+
+    if (isId) {
+      label = `#${part}`;
+    } else if (part === "new") {
+      label = "New";
+    } else if (part === "edit") {
+      label = "Edit";
+    } else if (part in ROUTE_LABELS) {
+      label = ROUTE_LABELS[part] ?? part;
+    } else {
+      label = pluralize(titleize(part.replace(/_/g, " ")));
+    }
+
+    crumbs.push({ label, path: pathSoFar });
+  }
+
+  return crumbs;
+});
 </script>

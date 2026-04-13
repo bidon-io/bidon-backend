@@ -1,18 +1,18 @@
 <template>
   <FormCard :title="title">
     <FormField v-for="field in fields" :key="field.key" :label="field.label">
-      <div v-if="!field.type" class="text-gray-900">
+      <div v-if="!field.type" style="color: var(--bidon-text-primary);">
         <button
           v-if="field.copyable"
           @click="copyField(localResource[field.key])"
         >
-          <i class="pi pi-copy" style="color: slateblue"></i>
+          <i class="pi pi-copy table-action-btn"></i>
         </button>
         {{ localResource[field.key] }}
       </div>
-      <div v-if="field.type === 'static'" class="text-gray-900">
+      <div v-if="field.type === 'static'" style="color: var(--bidon-text-primary);">
         <button v-if="field.copyable" @click="copyField(field.value)">
-          <i class="pi pi-copy" style="color: slateblue"></i>
+          <i class="pi pi-copy table-action-btn"></i>
         </button>
         {{ field.value }}
       </div>

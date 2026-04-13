@@ -1,12 +1,13 @@
 <template>
   <div class="px-6 py-4">
-    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+    <p class="text-sm font-semibold uppercase tracking-wide mb-2" style="color: var(--bidon-muted);">
       {{ isBidding ? "Bidding Networks" : "Waterfall Networks" }}
     </p>
 
     <div
       v-if="loading"
-      class="flex items-center gap-2 text-sm text-gray-400 py-2"
+      class="flex items-center gap-2 text-sm py-2"
+      style="color: var(--bidon-muted);"
     >
       <i class="pi pi-spin pi-spinner" />
       Loading…
@@ -17,14 +18,17 @@
         v-for="network in allNetworks"
         :key="network.key"
         open
-        class="group border border-gray-100 rounded-lg overflow-hidden"
+        class="group rounded-lg overflow-hidden"
+        style="border: 1px solid var(--bidon-border-default);"
       >
         <summary
-          class="flex items-center justify-between px-3 py-2 bg-gray-50 cursor-pointer list-none select-none hover:bg-gray-100 transition-colors"
+          class="flex items-center justify-between px-3 py-2 cursor-pointer list-none select-none transition-colors"
+          style="background-color: var(--bidon-bg-card-header);"
         >
           <div class="flex items-center gap-2">
             <svg
-              class="w-3.5 h-3.5 text-gray-400 transition-transform group-open:rotate-90 shrink-0"
+              class="w-3.5 h-3.5 transition-transform group-open:rotate-90 shrink-0"
+              style="color: var(--bidon-muted);"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -37,7 +41,7 @@
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span class="text-sm font-medium text-gray-700">
+            <span class="text-sm font-medium" style="color: var(--bidon-text-primary);">
               {{ network.label }}
             </span>
             <span
@@ -47,15 +51,16 @@
                   ? isBidding
                     ? 'badge-count-rtb'
                     : 'badge-count-cpm'
-                  : 'bg-gray-100 text-gray-400 text-xs font-medium px-1.5 py-0.5 rounded',
+                  : '',
               ]"
+              :style="!enabledNetworkKeys.includes(network.key) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-muted); font-size: 0.75rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 4px;' : ''"
             >
               {{ networkLineItems(network.key).length }}
             </span>
             <!-- No demand profile warning -->
             <span
               v-if="!networkHasProfile(network.key)"
-              class="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
+              class="network-no-profile-warning flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
               title="No demand source profile configured for this network"
             >
               <i class="pi pi-exclamation-triangle text-xs" />
@@ -64,14 +69,12 @@
           </div>
           <div class="flex items-center gap-2" @click.stop>
             <button
-              :class="[
-                'text-xs px-2.5 py-1 rounded border font-medium transition-colors',
-                !networkHasProfile(network.key)
-                  ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
-                  : enabledNetworkKeys.includes(network.key)
-                    ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                    : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600',
-              ]"
+              class="text-xs px-2.5 py-1 rounded border font-medium transition-colors"
+              :style="!networkHasProfile(network.key)
+                ? 'background-color: var(--bidon-accent-subtle); border-color: var(--bidon-border-default); color: var(--bidon-muted); cursor: not-allowed; opacity: 0.5;'
+                : enabledNetworkKeys.includes(network.key)
+                  ? 'background-color: rgba(16,175,108,0.12); border-color: rgba(16,175,108,0.4); color: var(--bidon-primary);'
+                  : 'background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'"
               type="button"
               :disabled="!networkHasProfile(network.key)"
               @click="toggleNetworkEnabled(network.key)"
@@ -94,7 +97,7 @@
               :class="[
                 'btn-sm',
                 !networkHasProfile(network.key)
-                  ? 'btn cursor-not-allowed bg-gray-50 border border-gray-200 text-gray-300'
+                  ? 'btn cursor-not-allowed opacity-40'
                   : showCreateFor === network.key
                     ? 'btn-cancel'
                     : 'btn-new',
@@ -119,7 +122,7 @@
           </div>
         </summary>
 
-        <div class="divide-y divide-gray-50 bg-white">
+        <div class="divide-y" style="background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default);">
           <template
             v-for="item in networkLineItems(network.key)"
             :key="item.id"
@@ -130,12 +133,12 @@
                 :value="item.id"
                 @update:model-value="$emit('update:selectedAdUnitIds', $event)"
               />
-              <span class="flex-1 text-gray-700 truncate">
+              <span class="flex-1 truncate" style="color: var(--bidon-text-primary);">
                 {{ item.label }}
               </span>
               <span
                 v-if="!isBidding"
-                class="text-sm text-gray-400 shrink-0 font-mono"
+                class="text-sm shrink-0 font-mono" style="color: var(--bidon-muted);"
               >
                 ${{ item.pricefloor.toFixed(2) }}
               </span>
