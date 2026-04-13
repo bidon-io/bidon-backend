@@ -188,10 +188,7 @@
                     'btn-sm',
                     editingConfigId === config.id ? 'btn-cancel' : 'btn-edit',
                   ]"
-                  @click="
-                    editingConfigId =
-                      editingConfigId === config.id ? null : config.id
-                  "
+                  @click="toggleEditingAuctionConfig(config.id)"
                 >
                   <i
                     :class="[
@@ -235,6 +232,7 @@
                   @toggle-inline-form="toggleInlineForm"
                   @line-item-created="handleLineItemCreated"
                   @line-item-updated="handleLineItemUpdated"
+                  @dismiss-inline-create="showInlineForm = null"
                   @inline-form-cancel="showInlineForm = null"
                 />
                 <AuctionConfigNetworkSection
@@ -246,6 +244,7 @@
                   @toggle-inline-form="toggleInlineForm"
                   @line-item-created="handleLineItemCreated"
                   @line-item-updated="handleLineItemUpdated"
+                  @dismiss-inline-create="showInlineForm = null"
                   @inline-form-cancel="showInlineForm = null"
                 />
               </div>
@@ -327,6 +326,7 @@ function cloneAuctionConfig(config) {
   cloneSourceConfig.value = config;
   showInlineConfigForm.value = true;
   editingConfigId.value = null;
+  showInlineForm.value = null;
   nextTick(() => {
     document
       .querySelector(".inline-auction-config-form")
@@ -346,6 +346,16 @@ function handleAuctionConfigUpdated(updatedConfig) {
     auctionConfigs.value[idx] = updatedConfig;
   }
   editingConfigId.value = null;
+}
+
+function toggleEditingAuctionConfig(configId) {
+  const next = editingConfigId.value === configId ? null : configId;
+  editingConfigId.value = next;
+  if (next !== null) {
+    showInlineConfigForm.value = false;
+    cloneSourceConfig.value = null;
+    showInlineForm.value = null;
+  }
 }
 
 const showInlineForm = ref(null);
@@ -382,10 +392,6 @@ async function handleLineItemCreated(newItem, configId) {
         err.data?.error?.message ??
         "Line item was created but could not be linked to the auction configuration. Please edit the configuration manually.",
     });
-    auctionConfigs.value[configIdx] = {
-      ...config,
-      adUnitIds: updatedAdUnitIds,
-    };
   }
 
   showInlineForm.value = null;
@@ -402,7 +408,9 @@ function handleLineItemUpdated(updatedItem) {
 <style scoped>
 .collapse-enter-active,
 .collapse-leave-active {
-  transition: max-height 0.3s ease, opacity 0.25s ease;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.25s ease;
   overflow: hidden;
   max-height: 2000px;
 }

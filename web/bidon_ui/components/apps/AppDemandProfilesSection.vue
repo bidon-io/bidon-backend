@@ -11,7 +11,10 @@
       </div>
       <button
         :class="['btn-sm', showCreateForm ? 'btn-cancel' : 'btn-new']"
-        @click="showCreateForm = !showCreateForm"
+        @click="
+          showCreateForm = !showCreateForm;
+          if (showCreateForm) editingId = null;
+        "
       >
         <i :class="['pi', showCreateForm ? 'pi-times' : 'pi-plus']" />
         {{ showCreateForm ? "Cancel" : "Create Profile" }}

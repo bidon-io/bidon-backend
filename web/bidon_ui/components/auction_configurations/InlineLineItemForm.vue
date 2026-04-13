@@ -168,7 +168,10 @@ onMounted(async () => {
       params: { limit: 1000 },
     });
     const allAccounts = Array.isArray(data) ? data : (data.items ?? []);
-    accounts.value = allAccounts.filter((a) => a.type === accountType.value);
+    const target = (accountType.value ?? "").toLowerCase();
+    accounts.value = allAccounts.filter(
+      (a) => (a.type ?? "").toLowerCase() === target,
+    );
     if (accounts.value.length === 1) {
       accountId.value = accounts.value[0].id;
     } else if (isEditMode.value && props.initialItem?.accountId) {

@@ -128,6 +128,7 @@ const emit = defineEmits([
   "lineItemCreated",
   "lineItemUpdated",
   "inlineFormCancel",
+  "dismissInlineCreate",
 ]);
 
 const editingItemId = ref(null);
@@ -144,7 +145,11 @@ function inlineFormKey(configId, networkKey, isBidding) {
 }
 
 function toggleEditForm(itemId) {
-  editingItemId.value = editingItemId.value === itemId ? null : itemId;
+  const next = editingItemId.value === itemId ? null : itemId;
+  if (next !== null) {
+    emit("dismissInlineCreate");
+  }
+  editingItemId.value = next;
 }
 
 function onItemUpdated(updatedItem) {
