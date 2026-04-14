@@ -30,12 +30,11 @@
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 py-2 text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'text-white font-medium'
-                : 'nav-link-inactive',
+                ? 'nav-link-active'
+                : 'nav-link-inactive rounded-md px-4',
             ]"
-            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
@@ -73,12 +72,11 @@
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 py-2 text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'font-medium'
-                : 'nav-link-inactive',
+                ? 'nav-link-active'
+                : 'nav-link-inactive rounded-md px-4',
             ]"
-            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
@@ -116,24 +114,22 @@
             :key="resource.key"
             :to="resourcePath(resource.key)"
             :class="[
-              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 py-2 text-sm transition-colors',
               isActive(resourcePath(resource.key))
-                ? 'font-medium'
-                : 'nav-link-inactive',
+                ? 'nav-link-active'
+                : 'nav-link-inactive rounded-md px-4',
             ]"
-            :style="isActive(resourcePath(resource.key)) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>{{ title(resource.key) }}</span>
           </NuxtLink>
           <NuxtLink
             to="/settings/security"
             :class="[
-              'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
+              'flex items-center mt-0.5 py-2 text-sm transition-colors',
               isActive('/settings/security')
-                ? 'font-medium'
-                : 'nav-link-inactive',
+                ? 'nav-link-active'
+                : 'nav-link-inactive rounded-md px-4',
             ]"
-            :style="isActive('/settings/security') ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
           >
             <span>Passwords</span>
           </NuxtLink>
@@ -146,12 +142,11 @@
         v-if="currentUser?.isAdmin === true"
         to="/copilot"
         :class="[
-          'flex items-center mt-0.5 px-4 py-2 rounded-md text-sm transition-colors',
+          'flex items-center mt-0.5 py-2 text-sm transition-colors',
           isActive('/copilot')
-            ? 'font-medium'
-            : 'nav-link-inactive',
+            ? 'nav-link-active'
+            : 'nav-link-inactive rounded-md px-4',
         ]"
-        :style="isActive('/copilot') ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-accent-text); border-left: 3px solid var(--bidon-accent); padding-left: calc(1rem - 3px); margin-left: -0.5rem; margin-right: -0.5rem; padding-right: 1rem; border-radius: 0;' : ''"
       >
         <span>AI Copilot</span>
       </NuxtLink>

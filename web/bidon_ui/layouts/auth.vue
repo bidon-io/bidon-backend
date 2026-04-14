@@ -22,30 +22,23 @@
 </template>
 
 <style>
-/* Force light mode on the auth layout regardless of user preference */
-.auth-layout,
-.auth-layout * {
-  --bidon-accent:         #23283B;
-  --bidon-accent-hover:   #1a1f2e;
-  --bidon-accent-subtle:  rgba(35, 40, 59, 0.07);
-  --bidon-accent-border:  rgba(35, 40, 59, 0.2);
-  --bidon-accent-text:    #23283B;
-  --bidon-primary:        #10AF6C;
-  --bidon-primary-hover:  #0E9C62;
-  --bidon-muted:          #8C8C9C;
-  --bidon-text-primary:   #23283B;
-  --bidon-text-secondary: #8C8C9C;
+/* Force light-mode appearance on the auth layout regardless of the user's dark-mode
+   preference. CSS custom properties set on html.dark cascade into every descendant,
+   so we override only the variables actually consumed by auth-page components here.
+   No need to repeat these on .auth-layout * — custom properties inherit automatically. */
+.auth-layout {
+  color-scheme: light;
   --bidon-bg-layout:      #E1E7E5;
-  --bidon-bg-sidebar:     #F0F1F4;
   --bidon-bg-card:        #FFFFFF;
   --bidon-bg-card-header: #F4F6F8;
+  --bidon-bg-sidebar:     #F0F1F4;
+  --bidon-text-primary:   #23283B;
+  --bidon-text-secondary: #8C8C9C;
+  --bidon-muted:          #8C8C9C;
   --bidon-border-default: #E1E7E5;
-  --bidon-shadow-sm:      0 1px 3px rgba(10, 6, 48, 0.08);
-  --bidon-shadow-focus:   0 0 0 3px rgba(35, 40, 59, 0.25);
-  color-scheme: light;
-}
-
-.auth-layout {
+  --bidon-accent:         #23283B;
+  --bidon-accent-text:    #23283B;
+  --bidon-accent-subtle:  rgba(35, 40, 59, 0.07);
   background-color: #E1E7E5;
 }
 </style>

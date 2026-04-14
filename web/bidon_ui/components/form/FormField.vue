@@ -30,9 +30,9 @@ const props = defineProps({
 });
 </script>
 
-<style>
-input,
-textarea {
+<style scoped>
+:deep(input),
+:deep(textarea) {
   min-width: 100%;
 }
 </style>

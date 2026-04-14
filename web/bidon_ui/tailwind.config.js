@@ -1,4 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+/**
+ * @type {import('tailwindcss').Config}
+ *
+ * Single source of truth for Tailwind-consumable brand tokens.
+ * CSS custom properties live alongside these in assets/css/components.css (:root / html.dark).
+ * Human-readable palette reference: branding/bidon-brand-tokens.jsx (not imported).
+ */
 module.exports = {
   theme: {
     extend: {

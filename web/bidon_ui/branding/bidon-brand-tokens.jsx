@@ -1,13 +1,14 @@
 /**
- * BidOn Brand Tokens — 2026
- * Generated from BidOn Brand Guidelines PDF
+ * DESIGN REFERENCE ONLY — not imported by any component.
  *
- * Usage:
- *   import { colors, typography, spacing, shadows, components } from './bidon-brand-tokens'
+ * This file documents the BidOn brand token palette derived from the Brand Guidelines PDF.
+ * It is kept as a human-readable reference and for use with external design tools.
  *
- * For Tailwind: paste the `tailwindTheme` export into tailwind.config.js → theme.extend
- * For CSS-in-JS (Emotion, styled-components): use the `colors` and `typography` objects directly
- * For global CSS variables: call injectCSSVariables() once at app root
+ * The single source of truth for deployed tokens is:
+ *   - CSS variables:   assets/css/components.css  (:root / html.dark blocks)
+ *   - Tailwind colors: tailwind.config.js          (theme.extend.colors.bidon)
+ *
+ * Do not import this file or call injectCSSVariables() — both are no-ops in production.
  */
 
 // ─── Color Palette ────────────────────────────────────────────────────────────

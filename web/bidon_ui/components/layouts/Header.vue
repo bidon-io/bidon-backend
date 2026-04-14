@@ -1,5 +1,5 @@
 <template>
-  <header class="z-5 flex-shrink-0" style="background-color: var(--bidon-bg-sidebar); border-bottom: 3px solid var(--bidon-accent); box-shadow: var(--bidon-shadow-sm); transition: background-color 0.2s ease;">
+  <header class="z-5 flex-shrink-0 app-header">
     <div class="px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
 
       <!-- Breadcrumb -->
@@ -23,24 +23,17 @@
       <div v-if="currentUser" class="flex items-center gap-2 shrink-0">
         <!-- Dark mode toggle -->
         <button
-          class="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
-          style="color: var(--bidon-muted); border: 1px solid var(--bidon-border-default);"
+          class="header-icon-btn"
           :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
           @click="toggleDark()"
         >
           <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" class="text-xs" />
         </button>
-        <span v-if="currentUser.isAdmin" class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: rgba(16,175,108,0.12); color: #10AF6C;">
+        <span v-if="currentUser.isAdmin" class="header-admin-badge">
           Admin
         </span>
         <span class="text-sm" style="color: var(--bidon-muted);">{{ currentUser.email }}</span>
-        <button
-          class="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
-          style="color: var(--bidon-muted); border: 1px solid var(--bidon-border-default);"
-          @mouseenter="$event.currentTarget.style.borderColor = 'var(--bidon-primary)'; $event.currentTarget.style.color = 'var(--bidon-primary)'"
-          @mouseleave="$event.currentTarget.style.borderColor = 'var(--bidon-border-default)'; $event.currentTarget.style.color = 'var(--bidon-muted)'"
-          @click="logout"
-        >
+        <button class="logout-btn" @click="logout">
           <i class="pi pi-sign-out text-xs" />
           Log out
         </button>
