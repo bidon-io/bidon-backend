@@ -412,14 +412,17 @@ html.dark .p-button.p-button-text:hover {
   box-shadow: var(--bidon-shadow-focus) !important;
 }
 
-/* Toast */
-.p-toast .p-toast-message.p-toast-message-success {
-  background: rgba(16, 175, 108, 0.1) !important;
-  border-left: 4px solid var(--bidon-primary) !important;
+/* Toast — light mode: opaque surface so page content doesn’t read through */
+html:not(.dark) .p-toast .p-toast-message {
+  background: var(--bidon-bg-card) !important;
+  box-shadow: var(--bidon-shadow-md) !important;
   color: var(--bidon-text-primary) !important;
 }
-.p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon,
-.p-toast .p-toast-message.p-toast-message-success .p-toast-icon-close {
+html:not(.dark) .p-toast .p-toast-message.p-toast-message-success {
+  border-left: 4px solid var(--bidon-primary) !important;
+}
+html:not(.dark) .p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon,
+html:not(.dark) .p-toast .p-toast-message.p-toast-message-success .p-toast-icon-close {
   color: var(--bidon-primary) !important;
 }
 
