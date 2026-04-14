@@ -5,7 +5,7 @@ SUPERUSER_PASSWORD=${SUPERUSER_PASSWORD}
 
 ADMIN_EMAIL="${SUPERUSER_LOGIN}@example.com"
 ADMIN_PASSWORD=${SUPERUSER_PASSWORD}
-API_URL="http://localhost:3200"
+API_URL=${BIDON_ADMIN_URL:-"http://localhost:3200"}
 
 if [ -z "$SUPERUSER_LOGIN" ] || [ -z "$SUPERUSER_PASSWORD" ]; then
   echo "Error: SUPERUSER_LOGIN and SUPERUSER_PASSWORD environment variables are required but not set."
@@ -14,8 +14,9 @@ fi
 
 AUTH_HEADER=$(echo -n "$SUPERUSER_LOGIN:$SUPERUSER_PASSWORD" | base64)
 
-echo "Waiting for bidon-admin API to be ready..."
-while ! curl -s "$API_URL/health_checks" | grep 'OK' > /dev/null; do
+echo "Waiting for bidon-admin API ($API_URL) to be ready..."
+while ! $(curl -s "$API_URL/health_checks" | grep -i 'OK' > /dev/null); do
+  echo "Waiting for bidon-admin API ..."
   sleep 5
 done
 
