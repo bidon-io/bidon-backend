@@ -2,13 +2,13 @@
   <PageContainer>
     <NavigationContainer>
       <GoBackButton :path="resourcesPath" />
-      <EditButton
-        v-if="resource._permissions.update"
-        :id="id"
-        :path="resourcesPath"
-      />
     </NavigationContainer>
     <ResourceCard title="Demand Source" :fields="fields" :resource="resource">
+      <template v-if="resource._permissions?.update" #headerActions>
+        <NuxtLink :to="`${resourcesPath}/${id}/edit`" class="btn-edit btn-sm">
+          <i class="pi pi-pencil" /> Edit
+        </NuxtLink>
+      </template>
       <template v-if="resource._permissions?.delete" #footer>
         <button
           type="button"
