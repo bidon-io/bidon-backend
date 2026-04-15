@@ -10,7 +10,7 @@
     },
     "value": {
       "type": "string",
-      "description": "The API key value (only returned when creating a new key)"
+      "description": "The API key secret (returned on create, list, and detail)"
     },
     "last_accessed_at": {
       "type": "string",

@@ -9,6 +9,7 @@ import (
 
 type APIKeyShort struct {
 	ID             string     `json:"id"`
+	Value          string     `json:"value,omitempty"`
 	LastAccessedAt *time.Time `json:"last_accessed_at"`
 }
 

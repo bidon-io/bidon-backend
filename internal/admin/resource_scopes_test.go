@@ -362,7 +362,7 @@ func TestOwnedOrSharedResourceScope_list(t *testing.T) {
 				},
 			},
 			&OwnedOrSharedResourceQuerierMock[TestResourceData]{
-				ListOwnedByUserOrSharedFunc: func(_ context.Context, userID int64) (*resource.Collection[TestResourceData], error) {
+				ListOwnedByUserOrSharedFunc: func(_ context.Context, userID int64, _ map[string][]string) (*resource.Collection[TestResourceData], error) {
 					if userID != 1 {
 						t.Errorf("ListOwnedByUserOrShared() got = %v, want %v", userID, 1)
 					}

@@ -1,16 +1,16 @@
 <template>
   <PageContainer>
     <NavigationContainer>
-      <GoBackButton :path="resourcesPath" />
+      <GoBackButton :path="backPath" />
       <DestroyButton
         v-if="resource._permissions.delete"
         :id="id"
-        :path="resourcesPath"
+        :path="accountResourcesPath"
       />
       <EditButton
         v-if="resource._permissions.update"
         :id="id"
-        :path="resourcesPath"
+        :path="accountResourcesPath"
       />
     </NavigationContainer>
     <ResourceCard
@@ -27,10 +27,12 @@ import { ResourceCardFields } from "@/constants";
 
 const route = useRoute();
 const id = route.params.id;
-const resourcesPath = "/demand_source_accounts";
+const accountResourcesPath = "/demand_source_accounts";
 
-const response = await axios.get(`${resourcesPath}/${id}`);
+const response = await axios.get(`${accountResourcesPath}/${id}`);
 const resource = response.data;
+
+const backPath = `/demand_sources/${resource.demandSourceId}`;
 
 const jsonFields = jsonToFields(resource.extra, "extra", "static", true);
 const fields = [

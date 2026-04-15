@@ -278,7 +278,7 @@ var _ OwnedOrSharedResourceQuerier[any] = &OwnedOrSharedResourceQuerierMock[any]
 //			FindOwnedByUserOrSharedFunc: func(ctx context.Context, userID int64, id int64) (*Resource, error) {
 //				panic("mock out the FindOwnedByUserOrShared method")
 //			},
-//			ListOwnedByUserOrSharedFunc: func(ctx context.Context, userID int64) (*resource.Collection[Resource], error) {
+//			ListOwnedByUserOrSharedFunc: func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[Resource], error) {
 //				panic("mock out the ListOwnedByUserOrShared method")
 //			},
 //		}
@@ -292,7 +292,7 @@ type OwnedOrSharedResourceQuerierMock[Resource any] struct {
 	FindOwnedByUserOrSharedFunc func(ctx context.Context, userID int64, id int64) (*Resource, error)
 
 	// ListOwnedByUserOrSharedFunc mocks the ListOwnedByUserOrShared method.
-	ListOwnedByUserOrSharedFunc func(ctx context.Context, userID int64) (*resource.Collection[Resource], error)
+	ListOwnedByUserOrSharedFunc func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[Resource], error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -311,6 +311,8 @@ type OwnedOrSharedResourceQuerierMock[Resource any] struct {
 			Ctx context.Context
 			// UserID is the userID argument value.
 			UserID int64
+			// QParams is the qParams argument value.
+			QParams map[string][]string
 		}
 	}
 	lockFindOwnedByUserOrShared sync.RWMutex
@@ -358,21 +360,23 @@ func (mock *OwnedOrSharedResourceQuerierMock[Resource]) FindOwnedByUserOrSharedC
 }
 
 // ListOwnedByUserOrShared calls ListOwnedByUserOrSharedFunc.
-func (mock *OwnedOrSharedResourceQuerierMock[Resource]) ListOwnedByUserOrShared(ctx context.Context, userID int64) (*resource.Collection[Resource], error) {
+func (mock *OwnedOrSharedResourceQuerierMock[Resource]) ListOwnedByUserOrShared(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[Resource], error) {
 	if mock.ListOwnedByUserOrSharedFunc == nil {
 		panic("OwnedOrSharedResourceQuerierMock.ListOwnedByUserOrSharedFunc: method is nil but OwnedOrSharedResourceQuerier.ListOwnedByUserOrShared was just called")
 	}
 	callInfo := struct {
-		Ctx    context.Context
-		UserID int64
+		Ctx     context.Context
+		UserID  int64
+		QParams map[string][]string
 	}{
-		Ctx:    ctx,
-		UserID: userID,
+		Ctx:     ctx,
+		UserID:  userID,
+		QParams: qParams,
 	}
 	mock.lockListOwnedByUserOrShared.Lock()
 	mock.calls.ListOwnedByUserOrShared = append(mock.calls.ListOwnedByUserOrShared, callInfo)
 	mock.lockListOwnedByUserOrShared.Unlock()
-	return mock.ListOwnedByUserOrSharedFunc(ctx, userID)
+	return mock.ListOwnedByUserOrSharedFunc(ctx, userID, qParams)
 }
 
 // ListOwnedByUserOrSharedCalls gets all the calls that were made to ListOwnedByUserOrShared.
@@ -380,12 +384,14 @@ func (mock *OwnedOrSharedResourceQuerierMock[Resource]) ListOwnedByUserOrShared(
 //
 //	len(mockedOwnedOrSharedResourceQuerier.ListOwnedByUserOrSharedCalls())
 func (mock *OwnedOrSharedResourceQuerierMock[Resource]) ListOwnedByUserOrSharedCalls() []struct {
-	Ctx    context.Context
-	UserID int64
+	Ctx     context.Context
+	UserID  int64
+	QParams map[string][]string
 } {
 	var calls []struct {
-		Ctx    context.Context
-		UserID int64
+		Ctx     context.Context
+		UserID  int64
+		QParams map[string][]string
 	}
 	mock.lockListOwnedByUserOrShared.RLock()
 	calls = mock.calls.ListOwnedByUserOrShared

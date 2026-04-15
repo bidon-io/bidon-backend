@@ -10,7 +10,7 @@ export interface FilterConfig {
   key: string;
   /** Label shown above the input */
   label: string;
-  type: 'text' | 'select';
+  type: "text" | "select";
   placeholder?: string;
   /** Optional Tailwind col-span class, e.g. 'lg:col-span-2' */
   colSpan?: string;
@@ -25,7 +25,7 @@ export interface FilterConfig {
 </script>
 
 <script setup lang="ts">
-import type { FilterConfig } from './ResourcesGrid.vue';
+import type { FilterConfig } from "./ResourcesGrid.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -48,22 +48,42 @@ const props = withDefaults(
     emptyMessage?: string;
     /** Toast detail after a successful delete */
     deleteSuccessDetail?: string;
+    /** Optional sort comparator applied after filtering */
+    sortFn?: (a: AnyRecord, b: AnyRecord) => number;
+    /** Optional grouping key; when provided, cards render by group */
+    groupBy?: (item: AnyRecord) => string;
+    /** Group render order (keys from groupBy) */
+    groupOrder?: string[];
+    /** Group titles keyed by group key */
+    groupTitles?: Record<string, string>;
   }>(),
   {
-    newLabel: 'New',
+    newLabel: "New",
     filters: () => [],
-    filterGridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+    filterGridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
     pageSize: 12,
-    emptyMessage: 'No records found.',
-    deleteSuccessDetail: 'Record deleted.',
+    emptyMessage: "No records found.",
+    deleteSuccessDetail: "Record deleted.",
+    sortFn: undefined,
+    groupBy: undefined,
+    groupOrder: () => [],
+    groupTitles: () => ({}),
   },
 );
 
 // ── Fetch ───────────────────────────────────────────────────────────────────
 
-type AnyRecord = Record<string, unknown> & { id: number; _permissions?: { update?: boolean; delete?: boolean } };
+type AnyRecord = Record<string, unknown> & {
+  id: number;
+  _permissions?: { update?: boolean; delete?: boolean };
+};
 
-const { data: items, pending, error, execute: refresh } = useAsyncData<AnyRecord[]>(
+const {
+  data: items,
+  pending,
+  error,
+  execute: refresh,
+} = useAsyncData<AnyRecord[]>(
   `resources-grid-${props.resourcesPath}`,
   () => $apiFetch<AnyRecord[]>(props.resourcesPath),
   { default: (): AnyRecord[] => [] },
@@ -72,16 +92,22 @@ const { data: items, pending, error, execute: refresh } = useAsyncData<AnyRecord
 // ── Filters ─────────────────────────────────────────────────────────────────
 
 const filterValues = reactive<Record<string, string>>(
-  Object.fromEntries((props.filters ?? []).map((f) => [f.key, ''])),
+  Object.fromEntries((props.filters ?? []).map((f) => [f.key, ""])),
 );
 
-const hasFilters = computed(() => Object.values(filterValues).some((v) => v !== ''));
+const hasFilters = computed(() =>
+  Object.values(filterValues).some((v) => v !== ""),
+);
 
-watch(filterValues, () => { currentPage.value = 1; });
+watch(filterValues, () => {
+  currentPage.value = 1;
+});
 
 const filteredItems = computed(() => {
   const all = items.value ?? [];
-  const activeFilters = (props.filters ?? []).filter((f) => filterValues[f.key] !== '');
+  const activeFilters = (props.filters ?? []).filter(
+    (f) => filterValues[f.key] !== "",
+  );
   if (!activeFilters.length) return all;
 
   return all.filter((item) =>
@@ -89,30 +115,65 @@ const filteredItems = computed(() => {
   );
 });
 
+const sortedFilteredItems = computed(() => {
+  const list = [...filteredItems.value];
+  if (props.sortFn) {
+    list.sort(props.sortFn);
+  }
+  return list;
+});
+
+const groupedItems = computed(() => {
+  if (!props.groupBy) return [];
+
+  const groupsMap: Record<string, AnyRecord[]> = {};
+  for (const item of sortedFilteredItems.value) {
+    const key = props.groupBy(item);
+    if (!groupsMap[key]) groupsMap[key] = [];
+    groupsMap[key].push(item);
+  }
+
+  const keys = [
+    ...props.groupOrder.filter((key) => groupsMap[key]?.length),
+    ...Object.keys(groupsMap).filter((key) => !props.groupOrder.includes(key)),
+  ];
+
+  return keys.map((key) => ({
+    key,
+    title: props.groupTitles[key] ?? key,
+    items: groupsMap[key],
+  }));
+});
+
 // ── Pagination ───────────────────────────────────────────────────────────────
 
 const currentPage = ref(1);
 const size = computed(() => props.pageSize);
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / size.value)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredItems.value.length / size.value)),
+);
 const pageStart = computed(() => (currentPage.value - 1) * size.value + 1);
-const pageEnd = computed(() => Math.min(currentPage.value * size.value, filteredItems.value.length));
+const pageEnd = computed(() =>
+  Math.min(currentPage.value * size.value, filteredItems.value.length),
+);
 
 const currentPageItems = computed(() =>
-  filteredItems.value.slice(
+  sortedFilteredItems.value.slice(
     (currentPage.value - 1) * size.value,
     currentPage.value * size.value,
   ),
 );
 
-const pageNumbers = computed((): (number | '...')[] => {
+const pageNumbers = computed((): (number | "...")[] => {
   const total = totalPages.value;
   const cur = currentPage.value;
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: (number | '...')[] = [1];
-  if (cur > 3) pages.push('...');
-  for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) pages.push(p);
-  if (cur < total - 2) pages.push('...');
+  const pages: (number | "...")[] = [1];
+  if (cur > 3) pages.push("...");
+  for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++)
+    pages.push(p);
+  if (cur < total - 2) pages.push("...");
   pages.push(total);
   return pages;
 });
@@ -137,9 +198,19 @@ const deleteHandle = useDeleteResource({
     >
       <span class="resources-grid-filter-label">{{ filter.label }}</span>
 
-      <select v-if="filter.type === 'select'" v-model="filterValues[filter.key]" class="resources-grid-filter-input">
-        <option value="">{{ filter.placeholder ?? 'All' }}</option>
-        <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      <select
+        v-if="filter.type === 'select'"
+        v-model="filterValues[filter.key]"
+        class="resources-grid-filter-input"
+      >
+        <option value="">{{ filter.placeholder ?? "All" }}</option>
+        <option
+          v-for="opt in filter.options"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </option>
       </select>
 
       <div v-else class="relative">
@@ -149,52 +220,88 @@ const deleteHandle = useDeleteResource({
           :placeholder="filter.placeholder ?? 'Filter…'"
           class="resources-grid-filter-input pr-7"
         />
-        <i class="pi pi-search absolute right-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color: var(--bidon-muted);" />
+        <i
+          class="pi pi-search absolute right-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+          style="color: var(--bidon-muted)"
+        />
       </div>
     </label>
   </div>
 
-  <!-- ── New button ───────────────────────────────────────────────────────── -->
-  <div v-if="newPath" class="flex justify-end mb-4">
-    <NuxtLink :to="newPath" class="btn-new">
+  <!-- ── Primary actions (custom slot and/or New link) ───────────────────── -->
+  <div
+    v-if="newPath || $slots.actions"
+    class="flex justify-end gap-2 mb-4 flex-wrap"
+  >
+    <slot name="actions" />
+    <NuxtLink v-if="newPath" :to="newPath" class="btn-new">
       <i class="pi pi-plus text-xs" /> {{ newLabel }}
     </NuxtLink>
   </div>
 
   <!-- ── Loading skeleton ─────────────────────────────────────────────────── -->
-  <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-    <div v-for="i in pageSize" :key="i" class="card" style="min-height: 160px; opacity: 0.45;">
+  <div
+    v-if="pending"
+    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+  >
+    <div
+      v-for="i in pageSize"
+      :key="i"
+      class="card"
+      style="min-height: 160px; opacity: 0.45"
+    >
       <div class="card-header">
         <div class="flex-1 space-y-2">
-          <div class="h-3 rounded w-3/4" style="background-color: var(--bidon-border-default);" />
-          <div class="h-2 rounded w-1/2" style="background-color: var(--bidon-border-default);" />
+          <div
+            class="h-3 rounded w-3/4"
+            style="background-color: var(--bidon-border-default)"
+          />
+          <div
+            class="h-2 rounded w-1/2"
+            style="background-color: var(--bidon-border-default)"
+          />
         </div>
       </div>
       <div class="card-body space-y-2 py-3">
-        <div class="h-2.5 rounded w-2/3" style="background-color: var(--bidon-border-default);" />
-        <div class="h-2.5 rounded w-1/3" style="background-color: var(--bidon-border-default);" />
+        <div
+          class="h-2.5 rounded w-2/3"
+          style="background-color: var(--bidon-border-default)"
+        />
+        <div
+          class="h-2.5 rounded w-1/3"
+          style="background-color: var(--bidon-border-default)"
+        />
       </div>
     </div>
   </div>
 
   <!-- ── Error ────────────────────────────────────────────────────────────── -->
-  <Message v-else-if="error" severity="error" closable>{{ error.message }}</Message>
+  <Message v-else-if="error" severity="error" closable>{{
+    error.message
+  }}</Message>
 
   <!-- ── Empty state ──────────────────────────────────────────────────────── -->
-  <div v-else-if="filteredItems.length === 0" class="card">
+  <div v-else-if="sortedFilteredItems.length === 0" class="card">
     <div class="card-body flex flex-col items-center py-16 gap-3">
-      <i class="pi pi-inbox text-3xl" style="color: var(--bidon-muted);" />
-      <p class="text-sm" style="color: var(--bidon-muted);">
-        {{ hasFilters ? 'No records match your filters.' : emptyMessage }}
+      <i class="pi pi-inbox text-3xl" style="color: var(--bidon-muted)" />
+      <p class="text-sm" style="color: var(--bidon-muted)">
+        {{ hasFilters ? "No records match your filters." : emptyMessage }}
       </p>
-      <NuxtLink v-if="!hasFilters && newPath" :to="newPath" class="btn-new mt-1">
+      <NuxtLink
+        v-if="!hasFilters && newPath"
+        :to="newPath"
+        class="btn-new mt-1"
+      >
         <i class="pi pi-plus text-xs" /> {{ newLabel }}
       </NuxtLink>
     </div>
   </div>
 
   <!-- ── Card grid ────────────────────────────────────────────────────────── -->
-  <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  <div
+    v-else-if="!groupBy"
+    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+  >
     <slot
       v-for="item in currentPageItems"
       :key="item.id"
@@ -204,25 +311,68 @@ const deleteHandle = useDeleteResource({
     />
   </div>
 
+  <div v-else class="space-y-6">
+    <section v-for="group in groupedItems" :key="group.key" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h3
+          class="text-xs font-semibold uppercase tracking-wide"
+          style="color: var(--bidon-muted)"
+        >
+          {{ group.title }}
+        </h3>
+        <span class="text-xs" style="color: var(--bidon-muted)">
+          {{ group.items.length }}
+        </span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <slot
+          v-for="item in group.items"
+          :key="item.id"
+          name="card"
+          :item="item"
+          :delete-handle="deleteHandle"
+        />
+      </div>
+    </section>
+  </div>
+
   <!-- ── Pagination ───────────────────────────────────────────────────────── -->
-  <div v-if="totalPages > 1" class="flex items-center justify-between mt-6 flex-wrap gap-3">
-    <span class="text-xs" style="color: var(--bidon-muted);">
-      Showing {{ pageStart }}–{{ pageEnd }} of {{ filteredItems.length }}
+  <div
+    v-if="!groupBy && totalPages > 1"
+    class="flex items-center justify-between mt-6 flex-wrap gap-3"
+  >
+    <span class="text-xs" style="color: var(--bidon-muted)">
+      Showing {{ pageStart }}–{{ pageEnd }} of {{ sortedFilteredItems.length }}
     </span>
     <div class="flex items-center gap-1">
-      <button class="rg-page-btn" :disabled="currentPage === 1" @click="currentPage--">
+      <button
+        class="rg-page-btn"
+        :disabled="currentPage === 1"
+        @click="currentPage--"
+      >
         <i class="pi pi-chevron-left text-xs" />
       </button>
       <template v-for="p in pageNumbers" :key="p">
-        <span v-if="p === '...'" class="px-1 text-xs" style="color: var(--bidon-muted);">…</span>
+        <span
+          v-if="p === '...'"
+          class="px-1 text-xs"
+          style="color: var(--bidon-muted)"
+          >…</span
+        >
         <button
           v-else
           class="rg-page-btn"
           :class="p === currentPage ? 'rg-page-btn--active' : ''"
-          @click="currentPage = (p as number)"
-        >{{ p }}</button>
+          @click="currentPage = p as number"
+        >
+          {{ p }}
+        </button>
       </template>
-      <button class="rg-page-btn" :disabled="currentPage === totalPages" @click="currentPage++">
+      <button
+        class="rg-page-btn"
+        :disabled="currentPage === totalPages"
+        @click="currentPage++"
+      >
         <i class="pi pi-chevron-right text-xs" />
       </button>
     </div>
@@ -274,7 +424,9 @@ const deleteHandle = useDeleteResource({
   background-color: var(--bidon-bg-card);
   color: var(--bidon-text-primary);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .rg-page-btn:hover:not(:disabled) {

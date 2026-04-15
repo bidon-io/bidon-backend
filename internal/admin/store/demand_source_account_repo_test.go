@@ -156,7 +156,7 @@ func TestDemandSourceAccountRepo_ListOwnedByUserOrSharedRepo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := repo.ListOwnedByUserOrShared(context.Background(), tt.userID)
+			got, err := repo.ListOwnedByUserOrShared(context.Background(), tt.userID, nil)
 			if err != nil {
 				t.Fatalf("ListOwnedByUserOrShared() got %v; want %+v", err, tt.want)
 			}

@@ -1,13 +1,25 @@
 <template>
-  <div class="px-4 py-3" style="border-top: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card-header);">
-    <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--bidon-accent);">
+  <div
+    class="px-4 py-3"
+    style="
+      border-top: 1px solid var(--bidon-border-default);
+      background-color: var(--bidon-bg-card-header);
+    "
+  >
+    <p
+      class="text-xs font-semibold uppercase tracking-wide mb-3"
+      style="color: var(--bidon-accent)"
+    >
       {{ isEditMode ? "Edit" : "New" }} Demand Profile
       <span v-if="activeNetworkLabel"> — {{ activeNetworkLabel }}</span>
     </p>
 
     <div
       class="rounded-lg overflow-hidden divide-y mb-3"
-      style="border: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card);"
+      style="
+        border: 1px solid var(--bidon-border-default);
+        background-color: var(--bidon-bg-card);
+      "
     >
       <!-- Network selector (only when networkKey not pre-set and not editing) -->
       <FormField
@@ -27,7 +39,11 @@
       </FormField>
 
       <template v-if="activeNetworkKey">
-        <div v-if="accountsLoading" class="px-4 py-3 text-xs" style="color: var(--bidon-muted);">
+        <div
+          v-if="accountsLoading"
+          class="px-4 py-3 text-xs"
+          style="color: var(--bidon-muted)"
+        >
           Loading accounts…
         </div>
         <div
@@ -35,10 +51,7 @@
           class="px-4 py-3 text-xs text-red-500"
         >
           No demand source accounts found for {{ activeNetworkLabel }}.
-          <NuxtLink
-            to="/demand_source_accounts"
-            class="underline hover:text-red-700"
-          >
+          <NuxtLink to="/demand_sources" class="underline hover:text-red-700">
             Set one up here.
           </NuxtLink>
         </div>
@@ -61,7 +74,11 @@
                 {{ errors.accountId }}
               </small>
             </template>
-            <span v-else class="text-sm" style="color: var(--bidon-text-primary);">
+            <span
+              v-else
+              class="text-sm"
+              style="color: var(--bidon-text-primary)"
+            >
               {{ accounts[0].label }}
             </span>
           </FormField>

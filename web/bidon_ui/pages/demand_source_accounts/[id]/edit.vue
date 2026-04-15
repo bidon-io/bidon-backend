@@ -1,7 +1,7 @@
 <template>
   <PageContainer>
     <NavigationContainer>
-      <GoBackButton :path="resourcePath" />
+      <GoBackButton v-if="isReady && resource" :path="backPath" />
     </NavigationContainer>
     <DemandSourceAccountForm
       v-if="isReady"
@@ -24,6 +24,12 @@ const { state: resource, isReady } = useAsyncState(async () => {
   const response = await axios.get(resourcePath);
   return response.data;
 });
+
+const backPath = computed(() =>
+  resource.value?.demandSourceId != null
+    ? `/demand_sources/${resource.value.demandSourceId}`
+    : "/demand_sources",
+);
 
 const error = ref(null);
 const handleSubmit = useUpdateResource({

@@ -40,7 +40,7 @@ var _ DemandSourceAccountRepo = &DemandSourceAccountRepoMock{}
 //			ListOwnedByUserFunc: func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[DemandSourceAccount], error) {
 //				panic("mock out the ListOwnedByUser method")
 //			},
-//			ListOwnedByUserOrSharedFunc: func(ctx context.Context, userID int64) (*resource.Collection[DemandSourceAccount], error) {
+//			ListOwnedByUserOrSharedFunc: func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[DemandSourceAccount], error) {
 //				panic("mock out the ListOwnedByUserOrShared method")
 //			},
 //			UpdateFunc: func(ctx context.Context, id int64, attrs *DemandSourceAccountAttrs) (*DemandSourceAccount, error) {
@@ -75,7 +75,7 @@ type DemandSourceAccountRepoMock struct {
 	ListOwnedByUserFunc func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[DemandSourceAccount], error)
 
 	// ListOwnedByUserOrSharedFunc mocks the ListOwnedByUserOrShared method.
-	ListOwnedByUserOrSharedFunc func(ctx context.Context, userID int64) (*resource.Collection[DemandSourceAccount], error)
+	ListOwnedByUserOrSharedFunc func(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[DemandSourceAccount], error)
 
 	// UpdateFunc mocks the Update method.
 	UpdateFunc func(ctx context.Context, id int64, attrs *DemandSourceAccountAttrs) (*DemandSourceAccount, error)
@@ -143,6 +143,8 @@ type DemandSourceAccountRepoMock struct {
 			Ctx context.Context
 			// UserID is the userID argument value.
 			UserID int64
+			// QParams is the qParams argument value.
+			QParams map[string][]string
 		}
 		// Update holds details about calls to the Update method.
 		Update []struct {
@@ -430,21 +432,23 @@ func (mock *DemandSourceAccountRepoMock) ListOwnedByUserCalls() []struct {
 }
 
 // ListOwnedByUserOrShared calls ListOwnedByUserOrSharedFunc.
-func (mock *DemandSourceAccountRepoMock) ListOwnedByUserOrShared(ctx context.Context, userID int64) (*resource.Collection[DemandSourceAccount], error) {
+func (mock *DemandSourceAccountRepoMock) ListOwnedByUserOrShared(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[DemandSourceAccount], error) {
 	if mock.ListOwnedByUserOrSharedFunc == nil {
 		panic("DemandSourceAccountRepoMock.ListOwnedByUserOrSharedFunc: method is nil but DemandSourceAccountRepo.ListOwnedByUserOrShared was just called")
 	}
 	callInfo := struct {
-		Ctx    context.Context
-		UserID int64
+		Ctx     context.Context
+		UserID  int64
+		QParams map[string][]string
 	}{
-		Ctx:    ctx,
-		UserID: userID,
+		Ctx:     ctx,
+		UserID:  userID,
+		QParams: qParams,
 	}
 	mock.lockListOwnedByUserOrShared.Lock()
 	mock.calls.ListOwnedByUserOrShared = append(mock.calls.ListOwnedByUserOrShared, callInfo)
 	mock.lockListOwnedByUserOrShared.Unlock()
-	return mock.ListOwnedByUserOrSharedFunc(ctx, userID)
+	return mock.ListOwnedByUserOrSharedFunc(ctx, userID, qParams)
 }
 
 // ListOwnedByUserOrSharedCalls gets all the calls that were made to ListOwnedByUserOrShared.
@@ -452,12 +456,14 @@ func (mock *DemandSourceAccountRepoMock) ListOwnedByUserOrShared(ctx context.Con
 //
 //	len(mockedDemandSourceAccountRepo.ListOwnedByUserOrSharedCalls())
 func (mock *DemandSourceAccountRepoMock) ListOwnedByUserOrSharedCalls() []struct {
-	Ctx    context.Context
-	UserID int64
+	Ctx     context.Context
+	UserID  int64
+	QParams map[string][]string
 } {
 	var calls []struct {
-		Ctx    context.Context
-		UserID int64
+		Ctx     context.Context
+		UserID  int64
+		QParams map[string][]string
 	}
 	mock.lockListOwnedByUserOrShared.RLock()
 	calls = mock.calls.ListOwnedByUserOrShared

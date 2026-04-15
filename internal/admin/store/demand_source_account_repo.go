@@ -27,9 +27,29 @@ func NewDemandSourceAccountRepo(d *db.DB) *DemandSourceAccountRepo {
 	}
 }
 
-func (r DemandSourceAccountRepo) ListOwnedByUser(ctx context.Context, userID int64, _ map[string][]string) (*resource.Collection[admin.DemandSourceAccount], error) {
+func applyDemandSourceAccountQueryFilters(db *gorm.DB, qParams map[string][]string) *gorm.DB {
+	if qParams == nil {
+		return db
+	}
+	if v, ok := qParams["demand_source_id"]; ok && len(v) > 0 && v[0] != "" {
+		if id, err := strconv.ParseInt(v[0], 10, 64); err == nil {
+			return db.Where("demand_source_id = ?", id)
+		}
+	}
+	return db
+}
+
+// List returns all demand source accounts visible to admins, optionally filtered by demand_source_id.
+func (r DemandSourceAccountRepo) List(ctx context.Context, qParams map[string][]string) (*resource.Collection[admin.DemandSourceAccount], error) {
 	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
-		return db.Where("user_id = ?", userID)
+		return applyDemandSourceAccountQueryFilters(db, qParams)
+	}, nil)
+}
+
+func (r DemandSourceAccountRepo) ListOwnedByUser(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[admin.DemandSourceAccount], error) {
+	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
+		db = db.Where("user_id = ?", userID)
+		return applyDemandSourceAccountQueryFilters(db, qParams)
 	}, nil)
 }
 
@@ -39,9 +59,10 @@ func (r DemandSourceAccountRepo) FindOwnedByUser(ctx context.Context, userID int
 	})
 }
 
-func (r DemandSourceAccountRepo) ListOwnedByUserOrShared(ctx context.Context, userID int64) (*resource.Collection[admin.DemandSourceAccount], error) {
+func (r DemandSourceAccountRepo) ListOwnedByUserOrShared(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[admin.DemandSourceAccount], error) {
 	return r.list(ctx, func(db *gorm.DB) *gorm.DB {
-		return db.Where("user_id IN ?", []int64{userID, 0, 1})
+		db = db.Where("user_id IN ?", []int64{userID, 0, 1})
+		return applyDemandSourceAccountQueryFilters(db, qParams)
 	}, nil)
 }
 

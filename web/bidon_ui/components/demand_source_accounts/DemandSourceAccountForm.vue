@@ -10,6 +10,7 @@
         v-model="type"
         label="Demand Source"
         :error="errors.type"
+        :disabled="lockDemandSource"
         required
       />
       <DemandSourceDropdown
@@ -50,6 +51,10 @@ const props = defineProps({
   submitError: {
     type: [Error, null],
     default: null,
+  },
+  lockDemandSource: {
+    type: Boolean,
+    default: false,
   },
 });
 const emit = defineEmits(["submit"]);

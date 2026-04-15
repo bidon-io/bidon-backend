@@ -26,7 +26,7 @@ type OwnedResourceQuerier[Resource any] interface {
 // OwnedOrSharedResourceQuerier defines the interface for querying resources owned by a user or shared with a user from persistence layer.
 // Resource repositories implement this interface.
 type OwnedOrSharedResourceQuerier[Resource any] interface {
-	ListOwnedByUserOrShared(ctx context.Context, userID int64) (*resource.Collection[Resource], error)
+	ListOwnedByUserOrShared(ctx context.Context, userID int64, qParams map[string][]string) (*resource.Collection[Resource], error)
 	FindOwnedByUserOrShared(ctx context.Context, userID, id int64) (*Resource, error)
 }
 
@@ -111,7 +111,7 @@ func (s *ownedOrSharedResourceScope[Resource]) list(ctx context.Context, qParams
 		return s.repo.List(ctx, qParams)
 	}
 
-	return s.repo.ListOwnedByUserOrShared(ctx, s.authCtx.UserID())
+	return s.repo.ListOwnedByUserOrShared(ctx, s.authCtx.UserID(), qParams)
 }
 
 func (s *ownedOrSharedResourceScope[Resource]) find(ctx context.Context, id int64) (*Resource, error) {

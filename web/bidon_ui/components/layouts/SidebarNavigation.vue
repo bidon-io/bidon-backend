@@ -2,7 +2,8 @@
   <nav class="mt-4 flex-1 px-2 pb-4">
     <div class="mt-2">
       <button
-        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
+        style="color: var(--bidon-accent)"
         @click="openSections.apps = !openSections.apps"
       >
         <span>Apps</span>
@@ -44,7 +45,8 @@
 
     <div class="mt-5">
       <button
-        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
+        style="color: var(--bidon-accent)"
         @click="openSections.global = !openSections.global"
       >
         <span>Global Configuration</span>
@@ -86,7 +88,8 @@
 
     <div class="mt-5">
       <button
-        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors" style="color: var(--bidon-accent);"
+        class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
+        style="color: var(--bidon-accent)"
         @click="openSections.settings = !openSections.settings"
       >
         <span>Settings</span>
@@ -161,11 +164,9 @@ interface User {
   isAdmin?: boolean;
 }
 
-const APP_RESOURCE_KEYS = [
-  "app",
-];
+const APP_RESOURCE_KEYS = ["app"];
 
-const GLOBAL_RESOURCE_KEYS = ["demandSource", "demandSourceAccount", "segment"];
+const GLOBAL_RESOURCE_KEYS = ["demandSource", "segment"];
 
 const SETTINGS_RESOURCE_KEYS = ["user", "apiKey"];
 
@@ -205,7 +206,17 @@ function resourcePath(key: string) {
 }
 
 function isActive(path: string): boolean {
-  return route.path === path || route.path.startsWith(path + "/");
+  if (route.path === path || route.path.startsWith(path + "/")) {
+    return true;
+  }
+  // Accounts are managed under each demand source; keep Demand Sources highlighted.
+  if (
+    path === "/demand_sources" &&
+    route.path.startsWith("/demand_source_accounts")
+  ) {
+    return true;
+  }
+  return false;
 }
 </script>
 
