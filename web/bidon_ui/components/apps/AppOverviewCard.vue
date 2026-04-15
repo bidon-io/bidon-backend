@@ -2,11 +2,16 @@
   <div class="card mb-8">
     <div class="card-header">
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="font-semibold text-lg" style="color: var(--bidon-text-primary);">
+        <span
+          class="font-semibold text-lg"
+          style="color: var(--bidon-text-primary)"
+        >
           {{ resource.humanName }}
         </span>
         <span class="badge badge-platform">{{ resource.platformId }}</span>
-        <span class="text-sm" style="color: var(--bidon-muted);">{{ resource.packageName }}</span>
+        <span class="text-sm" style="color: var(--bidon-muted)">{{
+          resource.packageName
+        }}</span>
       </div>
       <div class="flex gap-2 shrink-0">
         <NuxtLink
@@ -16,26 +21,24 @@
         >
           <i class="pi pi-pencil" /> Edit
         </NuxtLink>
-        <DestroyButton
-          v-if="resource._permissions?.delete"
-          :id="id"
-          :path="resourcesPath"
-        />
       </div>
     </div>
 
-    <div class="divide-y" style="border-color: var(--bidon-border-default);">
+    <div class="divide-y" style="border-color: var(--bidon-border-default)">
       <div
         v-for="field in OVERVIEW_FIELDS"
         :key="field.key ?? field.label"
         class="flex items-start gap-4 px-6 py-3"
       >
-        <span class="text-sm w-44 shrink-0 pt-px" style="color: var(--bidon-muted);">
+        <span
+          class="text-sm w-44 shrink-0 pt-px"
+          style="color: var(--bidon-muted)"
+        >
           {{ field.label }}
         </span>
         <span
           class="text-sm font-mono break-all flex items-center gap-1.5 min-w-0"
-          style="color: var(--bidon-text-primary);"
+          style="color: var(--bidon-text-primary)"
         >
           {{ field.value ? field.value(resource) : resource[field.key] }}
           <button
@@ -56,14 +59,36 @@
         </span>
       </div>
     </div>
+
+    <div
+      v-if="resource._permissions?.delete"
+      class="card-footer flex items-center justify-end"
+    >
+      <button
+        type="button"
+        class="table-action-btn table-action-btn--delete"
+        title="Delete"
+        aria-label="Delete"
+        @click="deleteHandle(String(id))"
+      >
+        <i class="pi pi-trash" />
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import useDeleteResource from "@/composables/useDeleteResource";
+
+const props = defineProps({
   resource: { type: Object, required: true },
   id: { type: [Number, String], required: true },
   resourcesPath: { type: String, required: true },
+});
+
+const deleteHandle = useDeleteResource({
+  path: props.resourcesPath,
+  hook: async () => await navigateTo(props.resourcesPath),
 });
 
 const OVERVIEW_FIELDS = [

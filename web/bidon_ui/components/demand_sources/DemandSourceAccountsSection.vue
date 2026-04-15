@@ -118,9 +118,10 @@
           class="card-footer flex items-center justify-end"
         >
           <button
+            type="button"
             class="table-action-btn table-action-btn--delete"
             title="Delete"
-            type="button"
+            aria-label="Delete"
             @click="deleteHandle(Number(item.id))"
           >
             <i class="pi pi-trash" />

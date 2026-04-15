@@ -2,11 +2,6 @@
   <PageContainer>
     <NavigationContainer>
       <GoBackButton :path="resourcesPath" />
-      <DestroyButton
-        v-if="resource._permissions.delete"
-        :id="id"
-        :path="resourcesPath"
-      />
       <EditButton
         v-if="resource._permissions.update"
         :id="id"
@@ -24,11 +19,23 @@
         :bidding="resource.bidding"
         :ad-unit-ids="resource.adUnitIds"
       />
+      <template v-if="resource._permissions?.delete" #footer>
+        <button
+          type="button"
+          class="table-action-btn table-action-btn--delete"
+          title="Delete"
+          aria-label="Delete"
+          @click="deleteHandle(String(id))"
+        >
+          <i class="pi pi-trash" />
+        </button>
+      </template>
     </ResourceCard>
   </PageContainer>
 </template>
 
 <script setup>
+import useDeleteResource from "@/composables/useDeleteResource";
 import axios from "@/services/ApiService.js";
 import { ResourceCardFields } from "@/constants";
 
@@ -38,6 +45,11 @@ const resourcesPath = "/v2/auction_configurations";
 
 const response = await axios.get(`${resourcesPath}/${id}`);
 const resource = response.data;
+
+const deleteHandle = useDeleteResource({
+  path: resourcesPath,
+  hook: async () => await navigateTo(resourcesPath),
+});
 
 const fields = [
   ResourceCardFields.PublicUid,

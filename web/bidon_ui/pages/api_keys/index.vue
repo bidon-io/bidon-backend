@@ -47,9 +47,10 @@
           </NuxtLink>
           <button
             v-if="item._permissions?.delete"
+            type="button"
             class="table-action-btn table-action-btn--delete"
             title="Delete"
-            type="button"
+            aria-label="Delete"
             @click="deleteHandle(String(item.id))"
           >
             <i class="pi pi-trash" />

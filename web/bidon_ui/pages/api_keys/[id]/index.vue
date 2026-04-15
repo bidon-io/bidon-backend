@@ -4,7 +4,7 @@
       <GoBackButton :path="resourcesPath" />
     </NavigationContainer>
     <ResourceCard title="API Credential" :fields="fields" :resource="resource">
-      <template v-if="resource._permissions?.delete" #headerActions>
+      <template v-if="resource._permissions?.delete" #footer>
         <button
           type="button"
           class="table-action-btn table-action-btn--delete"

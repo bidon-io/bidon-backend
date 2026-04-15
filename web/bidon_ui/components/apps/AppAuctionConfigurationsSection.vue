@@ -2,10 +2,13 @@
   <div class="mt-10 mb-10">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h3 class="text-base font-semibold" style="color: var(--bidon-text-primary);">
+        <h3
+          class="text-base font-semibold"
+          style="color: var(--bidon-text-primary)"
+        >
           Auction Configurations
         </h3>
-        <p class="text-sm mt-0.5" style="color: var(--bidon-muted);">
+        <p class="text-sm mt-0.5" style="color: var(--bidon-muted)">
           Per ad-type auction settings with CPM and bidding networks.
         </p>
       </div>
@@ -58,17 +61,31 @@
           type="text"
           placeholder="Search by name…"
           class="pl-8 pr-3 py-1.5 text-sm rounded-lg w-52 focus:outline-none"
-          style="background-color: var(--bidon-bg-card); border: 1px solid var(--bidon-border-default); color: var(--bidon-text-primary);"
-          @focus="$event.target.style.borderColor = 'var(--bidon-primary)'; $event.target.style.boxShadow = 'var(--bidon-shadow-focus)'"
-          @blur="$event.target.style.borderColor = 'var(--bidon-border-default)'; $event.target.style.boxShadow = 'none'"
+          style="
+            background-color: var(--bidon-bg-card);
+            border: 1px solid var(--bidon-border-default);
+            color: var(--bidon-text-primary);
+          "
+          @focus="
+            $event.target.style.borderColor = 'var(--bidon-primary)';
+            $event.target.style.boxShadow = 'var(--bidon-shadow-focus)';
+          "
+          @blur="
+            $event.target.style.borderColor = 'var(--bidon-border-default)';
+            $event.target.style.boxShadow = 'none';
+          "
         />
       </div>
       <div class="flex flex-wrap gap-1.5">
         <button
-          :class="['text-xs px-3 py-1 rounded-md border font-medium transition-colors']"
-          :style="configAdTypeFilter === null
-            ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
-            : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'"
+          :class="[
+            'text-xs px-3 py-1 rounded-md border font-medium transition-colors',
+          ]"
+          :style="
+            configAdTypeFilter === null
+              ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
+              : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
+          "
           @click="configAdTypeFilter = null"
         >
           All
@@ -76,10 +93,14 @@
         <button
           v-for="adTypeOption in configAdTypes"
           :key="adTypeOption"
-          :class="['text-xs px-3 py-1 rounded-md border font-medium capitalize transition-colors']"
-          :style="configAdTypeFilter === adTypeOption
-            ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
-            : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'"
+          :class="[
+            'text-xs px-3 py-1 rounded-md border font-medium capitalize transition-colors',
+          ]"
+          :style="
+            configAdTypeFilter === adTypeOption
+              ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
+              : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
+          "
           @click="configAdTypeFilter = adTypeOption"
         >
           {{ adTypeOption }}
@@ -87,13 +108,17 @@
       </div>
     </div>
 
-    <p v-if="!auctionConfigs.length" class="text-sm py-4" style="color: var(--bidon-muted);">
+    <p
+      v-if="!auctionConfigs.length"
+      class="text-sm py-4"
+      style="color: var(--bidon-muted)"
+    >
       No auction configurations for this app yet.
     </p>
     <p
       v-else-if="!filteredConfigGroups.length"
       class="text-sm py-4"
-      style="color: var(--bidon-muted);"
+      style="color: var(--bidon-muted)"
     >
       No configurations match the current filters.
     </p>
@@ -101,7 +126,7 @@
     <div v-for="group in filteredConfigGroups" :key="group.adType" class="mb-6">
       <div class="flex items-center gap-2 mb-3">
         <span class="badge badge-ad-type">{{ group.adType }}</span>
-        <span class="text-sm" style="color: var(--bidon-muted);">
+        <span class="text-sm" style="color: var(--bidon-muted)">
           {{ group.items.length }} config{{
             group.items.length !== 1 ? "s" : ""
           }}
@@ -112,7 +137,12 @@
         <div
           v-for="config in group.items"
           :key="config.id"
-          class="rounded-lg overflow-hidden flex flex-col" style="background-color: var(--bidon-bg-card); border: 1px solid var(--bidon-border-default); box-shadow: var(--bidon-shadow-sm);"
+          class="rounded-lg overflow-hidden flex flex-col"
+          style="
+            background-color: var(--bidon-bg-card);
+            border: 1px solid var(--bidon-border-default);
+            box-shadow: var(--bidon-shadow-sm);
+          "
         >
           <div
             class="card-header cursor-pointer select-none"
@@ -120,7 +150,10 @@
           >
             <div class="flex flex-col gap-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-semibold" style="color: var(--bidon-text-primary);">
+                <span
+                  class="font-semibold"
+                  style="color: var(--bidon-text-primary)"
+                >
                   {{ config.name }}
                 </span>
                 <span class="badge badge-ad-type">{{ config.adType }}</span>
@@ -134,22 +167,31 @@
               </div>
               <div class="flex items-center gap-3 flex-wrap">
                 <span
-                  class="flex items-center gap-1 text-xs font-mono" style="color: var(--bidon-muted);"
+                  class="flex items-center gap-1 text-xs font-mono"
+                  style="color: var(--bidon-muted)"
                 >
-                  <span style="color: var(--bidon-border-strong, #8C8C9C);">floor</span>
+                  <span style="color: var(--bidon-border-strong, #8c8c9c)"
+                    >floor</span
+                  >
                   ${{ config.pricefloor }}
                 </span>
                 <span
-                  class="flex items-center gap-1 text-xs font-mono" style="color: var(--bidon-muted);"
+                  class="flex items-center gap-1 text-xs font-mono"
+                  style="color: var(--bidon-muted)"
                 >
-                  <span style="color: var(--bidon-border-strong, #8C8C9C);">timeout</span>
+                  <span style="color: var(--bidon-border-strong, #8c8c9c)"
+                    >timeout</span
+                  >
                   {{ config.timeout }}ms
                 </span>
                 <span
                   v-if="config.auctionKey"
-                  class="flex items-center gap-1 text-xs font-mono" style="color: var(--bidon-muted);"
+                  class="flex items-center gap-1 text-xs font-mono"
+                  style="color: var(--bidon-muted)"
                 >
-                  <span style="color: var(--bidon-border-strong, #8C8C9C);">key</span>
+                  <span style="color: var(--bidon-border-strong, #8c8c9c)"
+                    >key</span
+                  >
                   {{ config.auctionKey }}
                   <button
                     :aria-label="`Copy auction key ${config.auctionKey}`"
@@ -161,9 +203,12 @@
                 </span>
                 <span
                   v-if="config.publicUid"
-                  class="flex items-center gap-1 text-xs font-mono" style="color: var(--bidon-muted);"
+                  class="flex items-center gap-1 text-xs font-mono"
+                  style="color: var(--bidon-muted)"
                 >
-                  <span style="color: var(--bidon-border-strong, #8C8C9C);">uid</span>
+                  <span style="color: var(--bidon-border-strong, #8c8c9c)"
+                    >uid</span
+                  >
                   {{ config.publicUid }}
                   <button
                     :aria-label="`Copy public UID ${config.publicUid}`"
@@ -201,7 +246,8 @@
                 </button>
               </div>
               <i
-                class="pi pi-chevron-down transition-transform duration-300" style="color: var(--bidon-muted);"
+                class="pi pi-chevron-down transition-transform duration-300"
+                style="color: var(--bidon-muted)"
                 :style="
                   collapsedConfigIds.has(config.id)
                     ? 'transform: rotate(-90deg)'
@@ -222,7 +268,11 @@
                 @updated="handleAuctionConfigUpdated"
                 @cancel="editingConfigId = null"
               />
-              <div v-else class="divide-y" style="border-color: var(--bidon-border-default);">
+              <div
+                v-else
+                class="divide-y"
+                style="border-color: var(--bidon-border-default)"
+              >
                 <AuctionConfigNetworkSection
                   :config="config"
                   :is-bidding="true"
@@ -252,6 +302,21 @@
               </div>
             </div>
           </Transition>
+
+          <div
+            v-if="editingConfigId !== config.id && config._permissions?.delete"
+            class="card-footer flex items-center justify-end"
+          >
+            <button
+              type="button"
+              class="table-action-btn table-action-btn--delete"
+              title="Delete auction configuration"
+              aria-label="Delete"
+              @click="deleteAuctionConfigHandle(Number(config.id))"
+            >
+              <i class="pi pi-trash" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -259,6 +324,7 @@
 </template>
 
 <script setup>
+import useDeleteResource from "@/composables/useDeleteResource";
 import { useToast } from "primevue/usetoast";
 
 const props = defineProps({
@@ -307,6 +373,24 @@ const showInlineConfigForm = ref(false);
 const cloneSourceConfig = ref(null);
 const editingConfigId = ref(null);
 const collapsedConfigIds = ref(new Set());
+
+const deleteAuctionConfigHandle = useDeleteResource({
+  path: "/v2/auction_configurations",
+  hook: (deletedId) => {
+    auctionConfigs.value = auctionConfigs.value.filter(
+      (c) => Number(c.id) !== Number(deletedId),
+    );
+    if (editingConfigId.value === Number(deletedId)) {
+      editingConfigId.value = null;
+    }
+    collapsedConfigIds.value = new Set(
+      [...collapsedConfigIds.value].filter(
+        (id) => Number(id) !== Number(deletedId),
+      ),
+    );
+  },
+  successDetail: "Auction configuration deleted.",
+});
 
 function toggleCollapse(configId) {
   const next = new Set(collapsedConfigIds.value);
