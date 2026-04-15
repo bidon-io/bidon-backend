@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"flag"
 	"io/fs"
 	"log"
 	"os"
@@ -18,6 +19,9 @@ import (
 var seedMigrations embed.FS
 
 func main() {
+	reset := flag.Bool("reset", false, "run all DOWN migrations before seeding (clears existing seed data)")
+	flag.Parse()
+
 	config.LoadEnvFile()
 
 	if config.GetEnv() == config.TestEnv {
@@ -55,7 +59,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if _, err = provider.Up(context.Background()); err != nil {
-		log.Fatal(err)
+	ctx := context.Background()
+
+	if *reset {
+		log.Println("Clearing seed data (running DOWN migrations)...")
+		results, err := provider.DownTo(ctx, 0)
+		if err != nil {
+			log.Fatal("failed to reset seeds: ", err)
+		}
+		for _, r := range results {
+			log.Printf("  down: %s (%s)", r.Source.Path, r.Duration)
+		}
 	}
+
+	log.Println("Running seeds...")
+	results, err := provider.Up(ctx)
+	if err != nil {
+		log.Fatal("failed to run seeds: ", err)
+	}
+	if len(results) == 0 {
+		log.Println("No seeds to run (all already applied).")
+	}
+	for _, r := range results {
+		log.Printf("  up: %s (%s)", r.Source.Path, r.Duration)
+	}
+	log.Println("Done.")
 }
