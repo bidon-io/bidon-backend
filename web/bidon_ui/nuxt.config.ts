@@ -1,5 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const apiProxyTarget = process.env.NUXT_API_PROXY_TARGET || "http://localhost:1323";
+
 export default defineNuxtConfig({
+
   alias: {
     assets: "/<rootDir>/assets",
   },
@@ -32,8 +35,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/auth/**": { proxy: "http://localhost:1323/auth/**" },
-    "/api/**": { proxy: "http://localhost:1323/api/**" },
+    "/auth/**": { proxy: `${apiProxyTarget}/auth/**` },
+    "/api/**": { proxy: `${apiProxyTarget}/api/**` },
   },
 
   compatibilityDate: "2024-10-31",

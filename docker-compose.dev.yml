@@ -1,3 +1,41 @@
+x-golang-dev-app-base: &golang-dev-app-base
+  volumes:
+    - .:/app
+    - gomodcache-dev:/go/pkg/mod
+    - gocache-dev:/root/.cache/go-build
+  working_dir: /app
+
+x-host-gateway-extra-hosts: &host-gateway-extra-hosts
+  - "host.docker.internal:host-gateway"
+
+x-dev-db-env: &dev-db-env
+  DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+  DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
+
+x-dev-kafka-env: &dev-kafka-env
+  USE_KAFKA: "true"
+  KAFKA_BROKERS_LIST: kafka:29092
+  KAFKA_CLIENT_ID: bidon_dev
+  KAFKA_DELIVERY_INTERVAL: 5
+  KAFKA_AD_EVENTS_TOPIC: ad-events
+  KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+
+x-redis-cluster-env: &redis-cluster-env
+  REDIS_CLUSTER_START_PORT: 7001
+  REDIS_CLUSTER_ANNOUNCE_HOSTNAME: host.docker.internal
+  REDIS_URL: redis://host.docker.internal:7001/0
+  REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
+
+x-dev-bidon-app-env: &dev-bidon-app-env
+  <<: [*dev-kafka-env, *redis-cluster-env]
+  ENVIRONMENT: development
+  USE_GEOCODING: "false"
+  SNOWFLAKE_NODE_ID: 1
+
+x-dev-superuser-env: &dev-superuser-env
+  SUPERUSER_LOGIN: login
+  SUPERUSER_PASSWORD: password
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -20,12 +58,10 @@ services:
     ports:
       - '7001-7003:7001-7003'
     environment:
-      - REDIS_CLUSTER_START_PORT=7001
-      - REDIS_CLUSTER_ANNOUNCE_HOSTNAME=host.docker.internal
+      <<: *redis-cluster-env
     volumes:
       - redis-data-dev:/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    extra_hosts: *host-gateway-extra-hosts
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
@@ -61,42 +97,27 @@ services:
 
   migrate:
     image: golang:1.24-alpine
-    volumes:
-      - .:/app
-      - gomodcache-dev:/go/pkg/mod
-      - gocache-dev:/root/.cache/go-build
-    working_dir: /app
+    <<: *golang-dev-app-base
     command: go run ./cmd/bidon-migrate -no-gen up
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      ENVIRONMENT: development
-      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
-      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
+      <<: [*dev-db-env, *dev-bidon-app-env]
 
   bidon-seed:
     image: golang:1.24-alpine
-    volumes:
-      - .:/app
-      - gomodcache-dev:/go/pkg/mod
-      - gocache-dev:/root/.cache/go-build
-    working_dir: /app
+    <<: *golang-dev-app-base
     command: go run ./cmd/bidon-seed
     depends_on:
       migrate:
         condition: service_completed_successfully
     environment:
-      ENVIRONMENT: development
-      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
+      <<: [*dev-db-env, *dev-bidon-app-env]
 
   bidon-admin:
     image: golang:1.24-alpine
-    volumes:
-      - .:/app
-      - gomodcache-dev:/go/pkg/mod
-      - gocache-dev:/root/.cache/go-build
-    working_dir: /app
+    <<: *golang-dev-app-base
     command: go run ./cmd/bidon-admin
     ports:
       - '1323:1323'
@@ -109,34 +130,15 @@ services:
       kafka:
         condition: service_started
     environment:
+      <<: [*dev-db-env, *dev-bidon-app-env, *dev-superuser-env]
       PORT: 1323
       GRPC_PORT: 50051
-      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
-      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
-      ENVIRONMENT: development
       APP_SECRET: app_secret
-      SUPERUSER_LOGIN: login
-      SUPERUSER_PASSWORD: password
-      USE_GEOCODING: "false"
-      USE_KAFKA: "true"
-      KAFKA_BROKERS_LIST: kafka:29092
-      KAFKA_CLIENT_ID: bidon_dev
-      KAFKA_DELIVERY_INTERVAL: 5
-      KAFKA_AD_EVENTS_TOPIC: ad-events
-      KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
-      REDIS_URL: redis://host.docker.internal:7001/0
-      REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
-      SNOWFLAKE_NODE_ID: 1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    extra_hosts: *host-gateway-extra-hosts
 
   bidon-sdkapi:
     image: golang:1.24-alpine
-    volumes:
-      - .:/app
-      - gomodcache-dev:/go/pkg/mod
-      - gocache-dev:/root/.cache/go-build
-    working_dir: /app
+    <<: *golang-dev-app-base
     command: go run ./cmd/bidon-sdkapi
     ports:
       - '1324:1323'
@@ -148,23 +150,31 @@ services:
       kafka:
         condition: service_started
     environment:
+      <<: [*dev-db-env, *dev-bidon-app-env]
       PORT: 1323
-      DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
-      DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
-      ENVIRONMENT: development
       APP_SECRET: app_secret
-      USE_GEOCODING: "false"
-      USE_KAFKA: "true"
-      KAFKA_BROKERS_LIST: kafka:29092
-      KAFKA_CLIENT_ID: bidon_dev
-      KAFKA_DELIVERY_INTERVAL: 5
-      KAFKA_AD_EVENTS_TOPIC: ad-events
-      KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
-      REDIS_URL: redis://host.docker.internal:7001/0
-      REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
-      SNOWFLAKE_NODE_ID: 1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    extra_hosts: *host-gateway-extra-hosts
+
+  bidon-ui:
+    image: node:22-alpine
+    working_dir: /workspace/web/bidon_ui
+    # Clear Nuxt's generated cache (`.nuxt`) so it regenerates against the container's `node_modules`
+    # (important when `node_modules` is mounted via a Docker volume).
+    command: sh -c "rm -rf .nuxt node_modules/.cache && yarn install --frozen-lockfile && yarn dev --hostname 0.0.0.0 --port 3010"
+    ports:
+      - '3010:3010'
+    depends_on:
+      bidon-admin:
+        condition: service_started
+    environment:
+      NUXT_API_PROXY_TARGET: http://bidon-admin:1323
+      # Force polling-based file watching so host file edits are reliably detected in Docker.
+      CHOKIDAR_USEPOLLING: "true"
+      # Enable polling in webpack/watchpack dependencies used by Nuxt/Vite plugin tooling.
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/workspace
+      - bidon-ui-node-modules-dev:/workspace/web/bidon_ui/node_modules
 
   init-admin:
     image: alpine/curl
@@ -172,8 +182,7 @@ services:
       bidon-admin:
         condition: service_started
     environment:
-      SUPERUSER_LOGIN: login
-      SUPERUSER_PASSWORD: password
+      <<: *dev-superuser-env
       BIDON_ADMIN_URL: http://bidon-admin:1323
     volumes:
       - ./scripts/init-admin.sh:/init-admin.sh
@@ -184,3 +193,4 @@ volumes:
   gomodcache-dev:
   gocache-dev:
   redis-data-dev:
+  bidon-ui-node-modules-dev:
