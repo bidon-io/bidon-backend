@@ -13,7 +13,7 @@ See the minimal setup guide at `copilot/README.md`.
 
 ### Full local stack (recommended)
 
-Runs Postgres, Redis, Kafka, migrations, seed data, and both API services in one command:
+Runs Postgres, Redis, Kafka, migrations, seed data, both API services, and the Nuxt frontend in one command:
 
 ```shell
 docker compose -f docker-compose.dev.yml up -d
@@ -21,12 +21,15 @@ docker compose -f docker-compose.dev.yml up -d
 
 | Service     | URL                        |
 |-------------|----------------------------|
+| bidon-ui    | http://localhost:3010      |
 | bidon-admin | http://localhost:1323      |
 | bidon-sdkapi| http://localhost:1324      |
 | Postgres    | localhost:5434             |
 | Kafka       | localhost:9092             |
 
 **First run** requires internet access to pull images and download Go modules. Subsequent runs work offline once the module cache is warm.
+Frontend (`bidon-ui`) runs with file watching enabled for Docker and hot-reloads on changes under `web/bidon_ui/`.
+API requests from the frontend (`/api/**`, `/auth/**`) are proxied to `bidon-admin` automatically in this setup.
 
 To re-run migrations and seed data (e.g. after a reset):
 ```shell
