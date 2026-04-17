@@ -1,4 +1,5 @@
 export const DEMAND_SOURCE_OPTIONS = [
+  { label: "Adikteev", value: "DemandSourceAccount::Adikteev" },
   { label: "Admob", value: "DemandSourceAccount::Admob" },
   { label: "Amazon", value: "DemandSourceAccount::Amazon" },
   { label: "Applovin", value: "DemandSourceAccount::Applovin" },

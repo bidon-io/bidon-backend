@@ -3,6 +3,11 @@
  * accountType, and bidding/waterfall membership.
  */
 export const NETWORK_DEFS = [
+  {
+    key: "adikteev",
+    label: "Adikteev",
+    accountType: "DemandSourceAccount::Adikteev",
+  },
   { key: "admob", label: "AdMob", accountType: "DemandSourceAccount::Admob" },
   {
     key: "applovin",
@@ -117,6 +122,7 @@ export const WATERFALL_NETWORK_KEYS = [
 
 /** Keys that participate in bidding (RTB) auctions */
 export const BIDDING_NETWORK_KEYS = [
+  "adikteev",
   "amazon",
   "bidmachine",
   "bigoads",
