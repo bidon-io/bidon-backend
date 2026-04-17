@@ -24,6 +24,7 @@ DECLARE
     admob_id      BIGINT;
     unityads_id   BIGINT;
     meta_id       BIGINT;
+    adikteev_id   BIGINT;
 
     -- Owner: use the first existing admin user (e.g. from init-admin.sh),
     -- falling back to the demo admin user (1000) inserted above.
@@ -35,6 +36,7 @@ DECLARE
     trivial_app_id     BIGINT := 2002;
     wordpuzzle_app_id  BIGINT := 2003;
     spacerunner_app_id BIGINT := 2004;
+    tetris_app_id      BIGINT := 2005;
 
     -- Demand source account IDs
     bidmachine_account_id BIGINT := 3000;
@@ -42,6 +44,7 @@ DECLARE
     admob_account_id      BIGINT := 3002;
     unityads_account_id   BIGINT := 3003;
     meta_account_id       BIGINT := 3004;
+    adikteev_account_id   BIGINT := 3005;
 BEGIN
     -- Resolve owner: prefer an existing admin user, fall back to demo user 1000.
     SELECT id INTO owner_id FROM users WHERE is_admin = true ORDER BY id LIMIT 1;
@@ -55,12 +58,14 @@ BEGIN
     SELECT id INTO admob_id      FROM demand_sources WHERE api_key = 'admob';
     SELECT id INTO unityads_id   FROM demand_sources WHERE api_key = 'unityads';
     SELECT id INTO meta_id       FROM demand_sources WHERE api_key = 'meta';
+    SELECT id INTO adikteev_id   FROM demand_sources WHERE api_key = 'adikteev';
 
     IF bidmachine_id IS NULL THEN RAISE EXCEPTION 'BidMachine demand source not found. Run demand_sources seed first.'; END IF;
     IF applovin_id   IS NULL THEN RAISE EXCEPTION 'AppLovin demand source not found. Run demand_sources seed first.'; END IF;
     IF admob_id      IS NULL THEN RAISE EXCEPTION 'AdMob demand source not found. Run demand_sources seed first.'; END IF;
     IF unityads_id   IS NULL THEN RAISE EXCEPTION 'Unity Ads demand source not found. Run demand_sources seed first.'; END IF;
     IF meta_id       IS NULL THEN RAISE EXCEPTION 'Meta demand source not found. Run demand_sources seed first.'; END IF;
+    IF adikteev_id   IS NULL THEN RAISE EXCEPTION 'Adikteev demand source not found. Run demand_sources seed first.'; END IF;
 
     -- =========================================================
     -- Demand Source Accounts (all owned by owner_id)
@@ -97,6 +102,12 @@ BEGIN
         'DemandSourceAccount::meta',
         '{}'::jsonb,
         false, false, NOW(), NOW(), 'Meta Audience Network', meta_account_id
+    ),
+    (
+        adikteev_account_id, adikteev_id, owner_id,
+        'DemandSourceAccount::adikteev',
+        '{"endpoint": "rubicon-eu.dsp.adikteev.com", "seller_id":  "1"}'::jsonb,
+        true, false, NOW(), NOW(), 'Adikteev Audience Network', adikteev_account_id
     )
     ON CONFLICT (id) DO NOTHING;
 
@@ -110,7 +121,8 @@ BEGIN
     (mahjong_app_id,     owner_id, 4, 'Mahjong Quest',           'com.demo.mahjongquest',   'mahjong_'     || mahjong_app_id,     '{}'::jsonb, NOW(), NOW(), mahjong_app_id),
     (trivial_app_id,     owner_id, 1, 'Trivial Pursuit Ultimate', 'com.demo.trivialpursuit', 'trivial_'     || trivial_app_id,     '{}'::jsonb, NOW(), NOW(), trivial_app_id),
     (wordpuzzle_app_id,  owner_id, 4, 'Word Puzzle Pro',         'com.demo.wordpuzzlepro',  'wordpuzzle_'  || wordpuzzle_app_id,  '{}'::jsonb, NOW(), NOW(), wordpuzzle_app_id),
-    (spacerunner_app_id, owner_id, 1, 'Space Runner',            'com.demo.spacerunner',    'spacerunner_' || spacerunner_app_id, '{}'::jsonb, NOW(), NOW(), spacerunner_app_id)
+    (spacerunner_app_id, owner_id, 1, 'Space Runner',            'com.demo.spacerunner',    'spacerunner_' || spacerunner_app_id, '{}'::jsonb, NOW(), NOW(), spacerunner_app_id),
+    (tetris_app_id,      owner_id, 1, 'Tetris',                  'com.demo.tetris',         'tetris_' || tetris_app_id,           '{}'::jsonb, NOW(), NOW(), tetris_app_id)
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================================================
@@ -120,6 +132,7 @@ BEGIN
     -- Trivial:      BidMachine, AdMob
     -- Word Puzzle:  Unity Ads, Meta
     -- Space Runner: Unity Ads, Meta
+    -- Tetris:       Adikteev
     -- =========================================================
     INSERT INTO app_demand_profiles (
         id, app_id, account_type, account_id, demand_source_id, data, created_at, updated_at, public_uid, enabled
@@ -152,7 +165,10 @@ BEGIN
     (4010, spacerunner_app_id, 'DemandSourceAccount::UnityAds', unityads_account_id, unityads_id,
      '{"game_id": 5123456}'::jsonb, NOW(), NOW(), 4010, true),
     (4011, spacerunner_app_id, 'DemandSourceAccount::Meta', meta_account_id, meta_id,
-     '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true)
+     '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true),
+    -- Tetris
+    (4012, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id, adikteev_id,
+     '{"app_id": 195876}'::jsonb, NOW(), NOW(), 4012, true)
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================================================
@@ -567,6 +583,32 @@ BEGIN
         ARRAY['unityads']::varchar[],
         ARRAY['unityads']::varchar[],
         ARRAY[5200, 5201, 5202, 5203]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    -- =========================================================
+    -- TETRIS
+    --
+    -- Auction strategy:
+    --   Banner        — Adikteev bidding
+    -- =========================================================
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5301, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id,
+     'Tetris Adikteev Banner [Bidding]', 0.01, 3, '{"placement_id": "4567822365_banner_bid"}'::jsonb, NOW(), NOW(), 320, 480, 'BANNER', 5301, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6050, 'Tetris Banner Config', tetris_app_id, 3, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6050, 10000,
+    ARRAY['adikteev']::varchar[],
+    ARRAY['adikteev']::varchar[],
+    ARRAY[5301]::bigint[]
     ) ON CONFLICT (id) DO NOTHING;
 
 END $$;
