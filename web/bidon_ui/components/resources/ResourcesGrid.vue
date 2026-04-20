@@ -42,6 +42,8 @@ const props = withDefaults(
      * Default: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
      */
     filterGridClass?: string;
+    /** Tailwind grid class applied to card grids (default: 3-up on xl) */
+    cardGridClass?: string;
     /** Items per page (default: 12) */
     pageSize?: number;
     /** Empty-state body text */
@@ -61,6 +63,7 @@ const props = withDefaults(
     newLabel: "New",
     filters: () => [],
     filterGridClass: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+    cardGridClass: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
     pageSize: 12,
     emptyMessage: "No records found.",
     deleteSuccessDetail: "Record deleted.",
@@ -242,7 +245,7 @@ const deleteHandle = useDeleteResource({
   <!-- ── Loading skeleton ─────────────────────────────────────────────────── -->
   <div
     v-if="pending"
-    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+    :class="['grid gap-4', cardGridClass]"
   >
     <div
       v-for="i in pageSize"
@@ -300,7 +303,7 @@ const deleteHandle = useDeleteResource({
   <!-- ── Card grid ────────────────────────────────────────────────────────── -->
   <div
     v-else-if="!groupBy"
-    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+    :class="['grid gap-4', cardGridClass]"
   >
     <slot
       v-for="item in currentPageItems"
@@ -324,7 +327,7 @@ const deleteHandle = useDeleteResource({
           {{ group.items.length }}
         </span>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div :class="['grid gap-4', cardGridClass]">
         <slot
           v-for="item in group.items"
           :key="item.id"
