@@ -418,6 +418,17 @@ func TestConfigFetcher_FetchBidMachinePlacements(t *testing.T) {
 		account.DemandSource = otherDemandSource
 	})
 
+	for i := range apps {
+		dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+			p.App = apps[i]
+			p.Account = bidmachineAccount
+		})
+		dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+			p.App = apps[i]
+			p.Account = otherAccount
+		})
+	}
+
 	// Create line items with BidMachine placements
 	lineItem1 := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.App = apps[0]
@@ -570,6 +581,11 @@ func TestConfigFetcher_FetchBidMachinePlacements_MultipleLineItemsSameAuctionKey
 		account.DemandSource = bidmachineDemandSource
 	})
 
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
+	})
+
 	// Create multiple line items with different placements
 	lineItem1 := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.App = app
@@ -639,6 +655,11 @@ func TestConfigFetcher_FetchBidMachinePlacements_EdgeCases(t *testing.T) {
 	// Create demand source account
 	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
 		account.DemandSource = bidmachineDemandSource
+	})
+
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
 	})
 
 	// Create line item with empty placement
@@ -746,6 +767,15 @@ func TestConfigFetcher_FetchBidMachinePlacements_NoBidMachineConfigs(t *testing.
 		account.DemandSource = dtexchangeDemandSource
 	})
 
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = gamAccount
+	})
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = dtexchangeAccount
+	})
+
 	// Create line items with placements (but not BidMachine)
 	lineItem1 := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.App = app
@@ -815,6 +845,11 @@ func TestConfigFetcher_FetchBidMachinePlacements_MissingPlacement(t *testing.T) 
 	// Create demand source account
 	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
 		account.DemandSource = bidmachineDemandSource
+	})
+
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
 	})
 
 	// Create line items with different placement scenarios
@@ -906,5 +941,110 @@ func TestConfigFetcher_FetchBidMachinePlacements_MissingPlacement(t *testing.T) 
 	// Verify that we got exactly 2 results (from configs with PublicUID 1 and 4)
 	if len(got) != 2 {
 		t.Errorf("Expected 2 placements, got %d: %v", len(got), got)
+	}
+}
+
+func TestConfigFetcher_FetchBidMachinePlacements_DisabledProfile(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	app := dbtest.CreateApp(t, tx)
+
+	bidmachineDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = "bidmachine"
+		source.HumanName = "BidMachine"
+	})
+	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = bidmachineDemandSource
+	})
+
+	disabled := false
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
+		p.Enabled = &disabled
+	})
+
+	lineItem := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.App = app
+		item.Account = bidmachineAccount
+		item.Extra = map[string]any{"placement": "placement-x"}
+	})
+
+	config := db.AuctionConfiguration{
+		AppID:      app.ID,
+		PublicUID:  sql.NullInt64{Int64: 1, Valid: true},
+		AdType:     db.BannerAdType,
+		AuctionKey: "auction-key-disabled",
+		Demands:    pq.StringArray{"bidmachine"},
+		AdUnitIds:  pq.Int64Array{lineItem.ID},
+	}
+	if err := tx.Create(&config).Error; err != nil {
+		t.Fatalf("Error creating config: %v", err)
+	}
+
+	fetcher := &store.ConfigFetcher{DB: tx}
+	got, err := fetcher.FetchBidMachinePlacements(context.Background(), app.ID)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	want := map[string]string{}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("FetchBidMachinePlacements() returned placements for disabled profile (-want, +got):\n%s", diff)
+	}
+}
+
+func TestConfigFetcher_FetchBidMachinePlacements_SoftDeletedLineItem(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	app := dbtest.CreateApp(t, tx)
+
+	bidmachineDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = "bidmachine"
+		source.HumanName = "BidMachine"
+	})
+	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = bidmachineDemandSource
+	})
+
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
+	})
+
+	lineItem := dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.App = app
+		item.Account = bidmachineAccount
+		item.Extra = map[string]any{"placement": "placement-soft-deleted"}
+	})
+
+	config := db.AuctionConfiguration{
+		AppID:      app.ID,
+		PublicUID:  sql.NullInt64{Int64: 1, Valid: true},
+		AdType:     db.BannerAdType,
+		AuctionKey: "auction-key-soft-deleted",
+		Demands:    pq.StringArray{"bidmachine"},
+		AdUnitIds:  pq.Int64Array{lineItem.ID},
+	}
+	if err := tx.Create(&config).Error; err != nil {
+		t.Fatalf("Error creating config: %v", err)
+	}
+
+	// Soft-delete the line item (sets deleted_at).
+	if err := tx.Delete(&lineItem).Error; err != nil {
+		t.Fatalf("Error soft-deleting line item: %v", err)
+	}
+
+	fetcher := &store.ConfigFetcher{DB: tx}
+	got, err := fetcher.FetchBidMachinePlacements(context.Background(), app.ID)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	want := map[string]string{}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("FetchBidMachinePlacements() returned placements from soft-deleted line item (-want, +got):\n%s", diff)
 	}
 }
