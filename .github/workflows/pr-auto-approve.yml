@@ -1,0 +1,19 @@
+name: pr
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  approve:
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == 'approve please' && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR') }}
+    runs-on: [self-hosted, main]
+    steps:
+      - name: PR approve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr review https://github.com/${{ github.repository }}/pull/${{ github.event.issue.number }} --approve
