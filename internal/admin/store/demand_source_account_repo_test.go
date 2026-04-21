@@ -2,6 +2,7 @@ package adminstore_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -165,6 +166,108 @@ func TestDemandSourceAccountRepo_ListOwnedByUserOrSharedRepo(t *testing.T) {
 				t.Fatalf("ListOwnedByUserOrShared() mismatch (-want, +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestDemandSourceAccountRepo_List_FilterByDemandSourceID(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewDemandSourceAccountRepo(tx)
+
+	ds1 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.ApplovinKey) })
+	ds2 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.BidmachineKey) })
+	user := dbtest.CreateUser(t, tx)
+
+	dbAcc1 := dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds1
+		a.User = user
+	})
+	dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds2
+		a.User = user
+	})
+
+	qParams := map[string][]string{"demand_source_id": {fmt.Sprintf("%d", ds1.ID)}}
+	got, err := repo.List(context.Background(), qParams)
+	if err != nil {
+		t.Fatalf("repo.List() error = %v", err)
+	}
+
+	want := &resource.Collection[admin.DemandSourceAccount]{
+		Items: []admin.DemandSourceAccount{adminstore.DemandSourceAccountResource(&dbAcc1)},
+		Meta:  resource.CollectionMeta{TotalCount: 1},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("repo.List() mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestDemandSourceAccountRepo_ListOwnedByUser_FilterByDemandSourceID(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewDemandSourceAccountRepo(tx)
+
+	ds1 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.ApplovinKey) })
+	ds2 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.BidmachineKey) })
+	user := dbtest.CreateUser(t, tx)
+
+	dbAcc1 := dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds1
+		a.User = user
+	})
+	dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds2
+		a.User = user
+	})
+
+	qParams := map[string][]string{"demand_source_id": {fmt.Sprintf("%d", ds1.ID)}}
+	got, err := repo.ListOwnedByUser(context.Background(), user.ID, qParams)
+	if err != nil {
+		t.Fatalf("repo.ListOwnedByUser() error = %v", err)
+	}
+
+	want := &resource.Collection[admin.DemandSourceAccount]{
+		Items: []admin.DemandSourceAccount{adminstore.DemandSourceAccountResource(&dbAcc1)},
+		Meta:  resource.CollectionMeta{TotalCount: 1},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("repo.ListOwnedByUser() mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestDemandSourceAccountRepo_ListOwnedByUserOrShared_FilterByDemandSourceID(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	repo := adminstore.NewDemandSourceAccountRepo(tx)
+
+	ds1 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.ApplovinKey) })
+	ds2 := dbtest.CreateDemandSource(t, tx, func(s *db.DemandSource) { s.APIKey = string(adapter.BidmachineKey) })
+	user := dbtest.CreateUser(t, tx)
+
+	dbAcc1 := dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds1
+		a.User = user
+	})
+	dbtest.CreateDemandSourceAccount(t, tx, func(a *db.DemandSourceAccount) {
+		a.DemandSource = ds2
+		a.User = user
+	})
+
+	qParams := map[string][]string{"demand_source_id": {fmt.Sprintf("%d", ds1.ID)}}
+	got, err := repo.ListOwnedByUserOrShared(context.Background(), user.ID, qParams)
+	if err != nil {
+		t.Fatalf("repo.ListOwnedByUserOrShared() error = %v", err)
+	}
+
+	want := &resource.Collection[admin.DemandSourceAccount]{
+		Items: []admin.DemandSourceAccount{adminstore.DemandSourceAccountResource(&dbAcc1)},
+		Meta:  resource.CollectionMeta{TotalCount: 1},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("repo.ListOwnedByUserOrShared() mismatch (-want, +got):\n%s", diff)
 	}
 }
 

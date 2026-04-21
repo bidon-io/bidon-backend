@@ -436,6 +436,38 @@ func TestOwnedOrSharedResourceScope_list(t *testing.T) {
 	}
 }
 
+func TestOwnedOrSharedResourceScope_list_forwardsQParams(t *testing.T) {
+	wantQParams := map[string][]string{"demand_source_id": {"42"}}
+	var gotQParams map[string][]string
+
+	type repo struct {
+		*AllResourceQuerierMock[TestResourceData]
+		*OwnedOrSharedResourceQuerierMock[TestResourceData]
+	}
+
+	s := &ownedOrSharedResourceScope[TestResourceData]{
+		authCtx: &AuthContextMock{
+			IsAdminFunc: func() bool { return false },
+			UserIDFunc:  func() int64 { return 1 },
+		},
+		repo: &repo{
+			&AllResourceQuerierMock[TestResourceData]{},
+			&OwnedOrSharedResourceQuerierMock[TestResourceData]{
+				ListOwnedByUserOrSharedFunc: func(_ context.Context, _ int64, qParams map[string][]string) (*resource.Collection[TestResourceData], error) {
+					gotQParams = qParams
+					return &resource.Collection[TestResourceData]{}, nil
+				},
+			},
+		},
+	}
+
+	_, _ = s.list(context.Background(), wantQParams)
+
+	if diff := cmp.Diff(wantQParams, gotQParams); diff != "" {
+		t.Errorf("list() did not forward qParams (-want +got):\n%s", diff)
+	}
+}
+
 func TestOwnedOrSharedResourceScope_find(t *testing.T) {
 	testResources := []TestResourceData{
 		{ID: 1, TestResourceAttrs: TestResourceAttrs{Name: "test1"}},
