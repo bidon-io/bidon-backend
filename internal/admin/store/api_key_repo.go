@@ -34,8 +34,7 @@ func (r *APIKeyRepo) ListOwnedByUser(ctx context.Context, userID int64) (*resour
 	keys := make([]admin.APIKeyShort, len(dbKeys))
 	for i := range dbKeys {
 		keys[i] = admin.APIKeyShort{
-			ID:    dbKeys[i].ID.String(),
-			Value: dbKeys[i].Value,
+			ID: dbKeys[i].ID.String(),
 		}
 		if !dbKeys[i].LastAccessedAt.IsZero() {
 			keys[i].LastAccessedAt = &dbKeys[i].LastAccessedAt

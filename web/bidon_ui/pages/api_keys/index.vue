@@ -42,9 +42,23 @@
         </div>
 
         <div class="card-footer flex items-center justify-between">
-          <NuxtLink :to="`/api_keys/${item.id}`" class="btn-view btn-sm">
-            <i class="pi pi-eye text-xs" /> View
-          </NuxtLink>
+          <div class="flex items-center gap-2">
+            <NuxtLink :to="`/api_keys/${item.id}`" class="btn-view btn-sm">
+              <i class="pi pi-eye text-xs" /> View
+            </NuxtLink>
+            <button
+              type="button"
+              class="btn-view btn-sm"
+              title="Copy API key"
+              :disabled="copyingId === item.id"
+              @click="copyKey(item.id)"
+            >
+              <i
+                :class="copiedId === item.id ? 'pi pi-check text-xs' : 'pi pi-copy text-xs'"
+              />
+              {{ copiedId === item.id ? "Copied" : "Copy Key" }}
+            </button>
+          </div>
           <button
             v-if="item._permissions?.delete"
             type="button"
@@ -110,6 +124,26 @@ function sortApiKeys(
   }
   return String(a.id ?? "").localeCompare(String(b.id ?? ""));
 }
+
+const copyingId = ref<string | null>(null);
+const copiedId = ref<string | null>(null);
+
+const copyKey = async (id: string) => {
+  copyingId.value = id;
+  try {
+    const key = await $apiFetch(`/api_keys/${id}`);
+    await navigator.clipboard.writeText(key.value ?? "");
+    copiedId.value = id;
+    setTimeout(() => {
+      if (copiedId.value === id) copiedId.value = null;
+    }, 2000);
+  } catch (error) {
+    console.error(error);
+    toast.add({ severity: "error", summary: "Failed to copy API key" });
+  } finally {
+    copyingId.value = null;
+  }
+};
 
 const buttonDisabled = ref(false);
 const createApiToken = async () => {
