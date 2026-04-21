@@ -18,8 +18,12 @@ import (
 //go:embed seeds/*.sql
 var seedMigrations embed.FS
 
+//go:embed sample_seeds/*.sql
+var sampleSeedMigrations embed.FS
+
 func main() {
 	reset := flag.Bool("reset", false, "run all DOWN migrations before seeding (clears existing seed data)")
+	withSamples := flag.Bool("sample", false, "also run sample test data from sample_seeds/")
 	flag.Parse()
 
 	config.LoadEnvFile()
@@ -44,7 +48,19 @@ func main() {
 		}
 	}()
 
-	seedsFS, err := fs.Sub(seedMigrations, "seeds")
+	ctx := context.Background()
+
+	runSeeds(ctx, db, seedMigrations, "seeds", *reset)
+
+	if *withSamples {
+		runSeeds(ctx, db, sampleSeedMigrations, "sample_seeds", *reset)
+	}
+
+	log.Println("Done.")
+}
+
+func runSeeds(ctx context.Context, db *sql.DB, migrations embed.FS, dir string, reset bool) {
+	subFS, err := fs.Sub(migrations, dir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,36 +68,33 @@ func main() {
 	provider, err := goose.NewProvider(
 		goose.DialectPostgres,
 		db,
-		seedsFS,
+		subFS,
 		goose.WithDisableVersioning(true),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ctx := context.Background()
-
-	if *reset {
-		log.Println("Clearing seed data (running DOWN migrations)...")
+	if reset {
+		log.Printf("Clearing %s (running DOWN migrations)...", dir)
 		results, err := provider.DownTo(ctx, 0)
 		if err != nil {
-			log.Fatal("failed to reset seeds: ", err)
+			log.Fatalf("failed to reset %s: %v", dir, err)
 		}
 		for _, r := range results {
 			log.Printf("  down: %s (%s)", r.Source.Path, r.Duration)
 		}
 	}
 
-	log.Println("Running seeds...")
+	log.Printf("Running %s...", dir)
 	results, err := provider.Up(ctx)
 	if err != nil {
-		log.Fatal("failed to run seeds: ", err)
+		log.Fatalf("failed to run %s: %v", dir, err)
 	}
 	if len(results) == 0 {
-		log.Println("No seeds to run (all already applied).")
+		log.Printf("No %s to run (all already applied).", dir)
 	}
 	for _, r := range results {
 		log.Printf("  up: %s (%s)", r.Source.Path, r.Duration)
 	}
-	log.Println("Done.")
 }
