@@ -52,9 +52,7 @@ async function reloadAccounts() {
   const result = await $apiFetch("/demand_source_accounts", {
     params: { demandSourceId: id },
   });
-  accounts.value = (
-    Array.isArray(result) ? result : (result?.items ?? [])
-  ).filter((account) => Number(account.demandSourceId) === Number(id));
+  accounts.value = Array.isArray(result) ? result : (result?.items ?? []);
 }
 await reloadAccounts();
 
