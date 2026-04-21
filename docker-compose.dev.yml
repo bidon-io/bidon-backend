@@ -108,7 +108,7 @@ services:
   bidon-seed:
     image: golang:1.24-alpine
     <<: *golang-dev-app-base
-    command: go run ./cmd/bidon-seed  -reset
+    command: go run ./cmd/bidon-seed --sample --reset
     depends_on:
       migrate:
         condition: service_completed_successfully
