@@ -191,9 +191,14 @@ func (f *AdapterInitConfigsFetcher) fetchAmazonSlots(ctx context.Context, appID 
 	err := f.DB.
 		WithContext(ctx).
 		Select("line_items.id, line_items.extra, line_items.ad_type, line_items.format").
-		Where("app_id", appID).
+		Where("line_items.app_id", appID).
 		InnerJoins("Account", f.DB.Select("id")).
 		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapter.AmazonKey)).
+		Joins(`INNER JOIN app_demand_profiles adp
+		         ON adp.app_id     = line_items.app_id
+		        AND adp.account_id = line_items.account_id
+		        AND adp.enabled    = TRUE
+		        AND adp.deleted_at IS NULL`).
 		Order("line_items.id").
 		Find(&dbLineItems).
 		Error
@@ -316,9 +321,14 @@ func (f *AdapterInitConfigsFetcher) fetchLineItems(ctx context.Context, appID in
 	err := f.DB.
 		WithContext(ctx).
 		Select("line_items.id, line_items.public_uid, line_items.extra, line_items.bid_floor, line_items.ad_type, line_items.format, line_items.bidding").
-		Where("app_id", appID).
+		Where("line_items.app_id", appID).
 		InnerJoins("Account", f.DB.Select("id")).
 		InnerJoins("Account.DemandSource", f.DB.Select("api_key").Where("api_key", adapterKey)).
+		Joins(`INNER JOIN app_demand_profiles adp
+		         ON adp.app_id     = line_items.app_id
+		        AND adp.account_id = line_items.account_id
+		        AND adp.enabled    = TRUE
+		        AND adp.deleted_at IS NULL`).
 		Order("line_items.id").
 		Find(&lineItems).
 		Error

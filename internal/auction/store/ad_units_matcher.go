@@ -43,11 +43,16 @@ func (m *AdUnitsMatcher) Match(ctx context.Context, params *auction.BuildParams)
 		WithContext(ctx).
 		Select("bid_floor", "line_items.human_name", "line_items.bidding", "line_items.extra", "line_items.public_uid").
 		Where(map[string]any{
-			"app_id":  params.App.ID,
-			"ad_type": db.AdTypeFromDomain(params.AdType),
+			"line_items.app_id":  params.App.ID,
+			"line_items.ad_type": db.AdTypeFromDomain(params.AdType),
 		}).
 		InnerJoins("Account", m.DB.Select("id")).
-		InnerJoins("Account.DemandSource", m.DB.Select("api_key").Where(map[string]any{"api_key": params.Adapters}))
+		InnerJoins("Account.DemandSource", m.DB.Select("api_key").Where(map[string]any{"api_key": params.Adapters})).
+		Joins(`INNER JOIN app_demand_profiles adp
+		         ON adp.app_id     = line_items.app_id
+		        AND adp.account_id = line_items.account_id
+		        AND adp.enabled    = TRUE
+		        AND adp.deleted_at IS NULL`)
 
 	if params.PriceFloor >= 0 {
 		query = query.Where("(bid_floor >= ? OR line_items.bidding)", params.PriceFloor)

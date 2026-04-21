@@ -576,6 +576,11 @@ func TestAdapterInitConfigsFetcher_FetchTaurusXPlacements(t *testing.T) {
 		account.DemandSourceID = taurusxDemandSource.ID
 	})
 
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = taurusxAccount
+	})
+
 	// Create line items with placement_id and different ad types
 	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.AppID = app.ID
@@ -643,6 +648,11 @@ func TestAdapterInitConfigsFetcher_FetchTaurusXPlacements_MissingPlacementID(t *
 		account.DemandSourceID = taurusxDemandSource.ID
 	})
 
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = taurusxAccount
+	})
+
 	// Create line item WITHOUT placement_id
 	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.AppID = app.ID
@@ -686,6 +696,11 @@ func TestAdapterInitConfigsFetcher_FetchBiddingZmaticooPlacements(t *testing.T) 
 	zmaticooAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
 		account.DemandSource = zmaticooDemandSource
 		account.DemandSourceID = zmaticooDemandSource.ID
+	})
+
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = zmaticooAccount
 	})
 
 	// Create line items with placement_id and different ad types
@@ -767,6 +782,11 @@ func TestAdapterInitConfigsFetcher_FetchBiddingZmaticooPlacements_MissingPlaceme
 		account.DemandSourceID = zmaticooDemandSource.ID
 	})
 
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = zmaticooAccount
+	})
+
 	// Create line item WITHOUT placement_id and bidding enabled
 	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
 		item.AppID = app.ID
@@ -842,5 +862,83 @@ func TestAdapterInitConfigsFetcher_FetchApplovinAdUnitIDs(t *testing.T) {
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("FetchAdapterInitConfigs() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestAdapterInitConfigsFetcher_fetchLineItems_SkipsDisabledProfile(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	app := dbtest.CreateApp(t, tx)
+
+	taurusxDemandSource := dbtest.CreateDemandSource(t, tx, func(ds *db.DemandSource) {
+		ds.APIKey = "taurusx"
+	})
+	taurusxAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = taurusxDemandSource
+	})
+
+	disabled := false
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = taurusxAccount
+		p.Enabled = &disabled
+	})
+
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.App = app
+		item.Account = taurusxAccount
+		item.AdType = db.InterstitialAdType
+		item.Extra = map[string]any{"placement_id": "placement-disabled"}
+	})
+
+	rdb, _ := redismock.NewClusterMock()
+	lineItemsCache := config.NewRedisCacheOf[[]db.LineItem](rdb, 10*time.Minute, "line_items")
+	fetcher := &AdapterInitConfigsFetcher{DB: tx, LineItemsCache: lineItemsCache}
+
+	got, err := fetcher.fetchLineItems(context.Background(), app.ID, adapter.TaurusXKey)
+	if err != nil {
+		t.Fatalf("fetchLineItems() error: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("fetchLineItems() returned %d line items for disabled profile, want 0", len(got))
+	}
+}
+
+func TestAdapterInitConfigsFetcher_fetchAmazonSlots_SkipsDisabledProfile(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	app := dbtest.CreateApp(t, tx)
+
+	amazonDemandSource := dbtest.CreateDemandSource(t, tx, func(ds *db.DemandSource) {
+		ds.APIKey = string(adapter.AmazonKey)
+	})
+	amazonAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = amazonDemandSource
+	})
+
+	disabled := false
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = amazonAccount
+		p.Enabled = &disabled
+	})
+
+	dbtest.CreateLineItem(t, tx, func(item *db.LineItem) {
+		item.App = app
+		item.Account = amazonAccount
+		item.AdType = db.BannerAdType
+		item.Extra = map[string]any{"slot_uuid": "amazon_slot_x", "format": "BANNER"}
+	})
+
+	fetcher := &AdapterInitConfigsFetcher{DB: tx}
+
+	got, err := fetcher.fetchAmazonSlots(context.Background(), app.ID)
+	if err != nil {
+		t.Fatalf("fetchAmazonSlots() error: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("fetchAmazonSlots() returned %d slots for disabled profile, want 0", len(got))
 	}
 }

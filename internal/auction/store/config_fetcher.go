@@ -166,7 +166,12 @@ func (m *ConfigFetcher) FetchBidMachinePlacements(ctx context.Context, appID int
 		Joins("JOIN auction_configurations ac ON li.id = ANY(ac.ad_unit_ids)").
 		Joins("JOIN demand_source_accounts dsa ON li.account_id = dsa.id").
 		Joins("JOIN demand_sources ds ON dsa.demand_source_id = ds.id").
-		Where("ac.id IN (?) AND ds.api_key = ? AND li.extra->>'placement' IS NOT NULL AND li.extra->>'placement' != ''", configIDs, "bidmachine").
+		Joins(`JOIN app_demand_profiles adp
+		         ON adp.app_id     = li.app_id
+		        AND adp.account_id = li.account_id
+		        AND adp.enabled    = TRUE
+		        AND adp.deleted_at IS NULL`).
+		Where("ac.id IN (?) AND ds.api_key = ? AND li.deleted_at IS NULL AND li.extra->>'placement' IS NOT NULL AND li.extra->>'placement' != ''", configIDs, "bidmachine").
 		Scan(&results).
 		Error
 	if err != nil {

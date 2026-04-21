@@ -52,6 +52,17 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 		account.DemandSource = bidmachineDemandSource
 	})
 
+	for i := range apps {
+		dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+			p.App = apps[i]
+			p.Account = applovinAccount
+		})
+		dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+			p.App = apps[i]
+			p.Account = bidmachineAccount
+		})
+	}
+
 	applovinInterstitialAdUnitID := int64(1234567890)
 	lineItems := []db.LineItem{
 		{
@@ -496,5 +507,100 @@ func TestAdUnitsMatcher_Match(t *testing.T) {
 		if diff := cmp.Diff(tC.want, got, cmpopts.SortSlices(less)); diff != "" {
 			t.Errorf("matcher.Match(ctx, %+v) mismatch (-want, +got)\n%s", tC.params, diff)
 		}
+	}
+}
+
+func TestAdUnitsMatcher_Match_SkipsDisabledAppDemandProfile(t *testing.T) {
+	tx := testDB.Begin()
+	defer tx.Rollback()
+
+	rdb, _ := redismock.NewClusterMock()
+
+	app := dbtest.CreateApp(t, tx)
+
+	applovinDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.ApplovinKey)
+	})
+	applovinAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = applovinDemandSource
+	})
+
+	bidmachineDemandSource := dbtest.CreateDemandSource(t, tx, func(source *db.DemandSource) {
+		source.APIKey = string(adapter.BidmachineKey)
+	})
+	bidmachineAccount := dbtest.CreateDemandSourceAccount(t, tx, func(account *db.DemandSourceAccount) {
+		account.DemandSource = bidmachineDemandSource
+	})
+
+	// Applovin profile is enabled, Bidmachine profile is disabled.
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = applovinAccount
+	})
+	disabled := false
+	dbtest.CreateAppDemandProfile(t, tx, func(p *db.AppDemandProfile) {
+		p.App = app
+		p.Account = bidmachineAccount
+		p.Enabled = &disabled
+	})
+
+	lineItems := []db.LineItem{
+		{
+			AppID:     app.ID,
+			AdType:    db.InterstitialAdType,
+			HumanName: "applovin-interstitial",
+			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.3")),
+			AccountID: applovinAccount.ID,
+			PublicUID: sql.NullInt64{Int64: 1701972528521547900, Valid: true},
+			Extra:     map[string]any{"placement_id": "applovin-interstitial"},
+		},
+		{
+			AppID:     app.ID,
+			AdType:    db.InterstitialAdType,
+			HumanName: "bidmachine-interstitial",
+			BidFloor:  decimal.NewNullDecimal(decimal.RequireFromString("0.0")),
+			AccountID: bidmachineAccount.ID,
+			IsBidding: sql.NullBool{Bool: true, Valid: true},
+			PublicUID: sql.NullInt64{Int64: 1701972528521547901, Valid: true},
+		},
+	}
+	if err := tx.Create(&lineItems).Error; err != nil {
+		t.Fatalf("Error creating line items: %v", err)
+	}
+
+	matcher := store.AdUnitsMatcher{
+		DB:    tx,
+		Cache: config.NewRedisCacheOf[[]auction.AdUnit](rdb, time.Minute, "ad units"),
+	}
+
+	// Pass both adapter keys, mimicking an upstream filter that has not yet
+	// propagated the disabled state (e.g. a stale cache).
+	params := &auction.BuildParams{
+		App:        testApp(app.ID),
+		AdType:     ad.InterstitialType,
+		AdFormat:   ad.EmptyFormat,
+		DeviceType: device.PhoneType,
+		Adapters:   []adapter.Key{adapter.ApplovinKey, adapter.BidmachineKey},
+	}
+
+	got, err := matcher.Match(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Match() error: %v", err)
+	}
+
+	want := []auction.AdUnit{
+		{
+			DemandID:   "applovin",
+			UID:        "1701972528521547900",
+			PriceFloor: ptr(0.3),
+			Label:      "applovin-interstitial",
+			BidType:    schema.CPMBidType,
+			Timeout:    store.AdUnitTimeout,
+			Extra:      map[string]any{"placement_id": "applovin-interstitial"},
+		},
+	}
+	less := func(a, b auction.AdUnit) bool { return a.Label < b.Label }
+	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
+		t.Errorf("Match() returned line items for disabled profile (-want, +got):\n%s", diff)
 	}
 }
