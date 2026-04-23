@@ -31,3 +31,6 @@ public/system
 target
 .cargo
 /docker/kafka-connect/connector-config.json
+
+# Compiled Go binaries at repo root
+/bidon-seed

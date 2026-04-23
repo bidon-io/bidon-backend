@@ -1,0 +1,7 @@
+#cloud-config
+# First-boot install of Coolify (https://coolify.io/). Logs: /var/log/coolify-install.log
+package_update: false
+packages:
+  - curl
+runcmd:
+  - bash -c 'set -eo pipefail; curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash 2>&1 | tee /var/log/coolify-install.log'

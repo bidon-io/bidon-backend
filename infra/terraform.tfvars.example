@@ -1,0 +1,51 @@
+# Copy to terraform.tfvars (gitignored) and adjust.
+# Authentication: export DIGITALOCEAN_TOKEN or set do_token below.
+# Spaces (if enable_spaces_bucket = true): export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY,
+#   or set spaces_access_key / spaces_secret_key.
+
+project_name = "bidon"
+environment  = "prod"
+
+# Droplet, VPC, Managed Postgres (fra1 is a common EU region).
+region = "fra1"
+
+# Spaces must use a Spaces-enabled region slug (often ams3 when the workload is in fra1).
+spaces_region = "ams3"
+
+# Phase 1 baseline: 4 vCPU / 8 GB RAM (proposal). Use g-4vcpu-8gb in regions that offer Premium Intel.
+droplet_size  = "s-4vcpu-8gb"
+droplet_image = "ubuntu-22-04-x64"
+
+# Official Coolify install on first boot (cloud-init). Set false to skip user_data and install manually.
+# install_coolify = true
+
+# Managed Postgres Basic, 1 GB (proposal).
+postgres_version = "16"
+postgres_size    = "db-s-1vcpu-1gb"
+postgres_db_name = "bidon"
+
+# SSH: add keys in DO account security, then paste MD5 fingerprints here. Leave empty to skip SSH on the firewall.
+ssh_key_fingerprints = [
+  # "aa:bb:cc:...",
+]
+
+# Restrict SSH to known networks (office/VPN). Empty = port 22 not opened by the cloud firewall.
+ssh_admin_source_cidrs = [
+  # "203.0.113.10/32",
+]
+
+# Restrict Coolify dashboard (port 8000) to known networks. Empty = open to the world.
+# Set this to your office/VPN CIDRs before production use.
+coolify_source_cidrs = [
+  # "203.0.113.10/32",
+]
+
+enable_weekly_droplet_backups = true
+enable_spaces_bucket          = true
+
+# DO Insights email alerts (CPU / memory / disk). Leave unset to skip alert resources.
+# monitor_alert_email = "ops@example.com"
+
+# do_token            = "dop_v1_..."
+# spaces_access_key   = "..."
+# spaces_secret_key   = "..."
