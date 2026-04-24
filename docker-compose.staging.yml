@@ -77,7 +77,8 @@ services:
     build:
       context: .
       target: bidon-migrate
-    command: up
+    entrypoint: ["/bin/sh", "-c"]
+    command: "until /bidon-migrate up; do echo 'Migration failed, retrying in 5s...'; sleep 5; done"
     restart: "no"
     environment:
       <<: [*staging-db-env, *staging-bidon-app-env]
@@ -131,7 +132,7 @@ services:
     build:
       context: .
       target: bidon-seed
-    profiles: ["seed"]
+    command: ["/bidon-seed", "--sample", "--reset"]
     depends_on:
       migrate:
         condition: service_completed_successfully
