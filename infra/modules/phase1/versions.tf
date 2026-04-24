@@ -1,9 +1,8 @@
 terraform {
   required_providers {
     digitalocean = {
-      source                = "digitalocean/digitalocean"
-      version               = "~> 2.44"
-      configuration_aliases = [digitalocean.spaces]
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.44"
     }
     random = {
       source  = "hashicorp/random"

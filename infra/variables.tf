@@ -90,7 +90,7 @@ variable "ssh_key_fingerprints" {
 
 variable "ssh_admin_source_cidrs" {
   type        = list(string)
-  description = "CIDR blocks allowed to reach TCP/22 on the Droplet. Empty = SSH not opened on the public interface (recommended until you list office/VPN IPs)."
+  description = "CIDR blocks allowed to reach TCP/22 on the Droplet. Empty = open to the world. Restrict to office/VPN CIDRs before production use."
   default     = []
 }
 

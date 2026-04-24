@@ -10,7 +10,7 @@ This directory contains Terraform configurations for provisioning the Phase 1 in
   - **Redpanda**: Managed via Docker on the same host (Phase 1).
 - **Managed Postgres**: A DigitalOcean Managed Database cluster (PostgreSQL 16, single node).
 - **Spaces Bucket**: S3-compatible storage for database backups and other object storage needs.
-- **Firewall**: Restricts inbound traffic to HTTP (80), HTTPS (443), and Coolify (8000). SSH (22) is disabled by default and can be restricted to specific CIDR blocks.
+- **Firewall**: Restricts inbound traffic to HTTP (80), HTTPS (443), Coolify (8000), and SSH (22). By default, Coolify and SSH are open to the world but should be restricted to specific CIDR blocks for security.
 - **Monitoring**: DigitalOcean Insights alerts for CPU (>80%), Memory (>85%), and Disk (>85%) utilization.
 
 ## Prerequisites
@@ -32,6 +32,16 @@ This directory contains Terraform configurations for provisioning the Phase 1 in
    ```bash
    cp terraform.tfvars.example terraform.tfvars
    ```
+
+### Advanced: Using `direnv` (.envrc)
+If you use `direnv`, you can define any Terraform variable as an environment variable by prefixing it with `TF_VAR_`. This is useful for avoiding local `terraform.tfvars` files for secrets or shared config.
+
+For lists like `ssh_key_fingerprints`, use JSON syntax:
+```bash
+# .envrc
+export TF_VAR_ssh_key_fingerprints='["xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"]'
+export TF_VAR_do_token="dop_v1_..."
+```
 
 3. **Plan**:
    ```bash
@@ -124,11 +134,12 @@ See `cmd/bidon-coolify/README.md` for full flag reference.
 
 ## Security Hardening
 
-After initial setup, restrict the Coolify dashboard to your office/VPN CIDRs:
+After initial setup, restrict the Coolify dashboard and SSH access to your office/VPN CIDRs:
 
 ```hcl
 # terraform.tfvars
-coolify_source_cidrs = ["203.0.113.10/32"]
+coolify_source_cidrs   = ["203.0.113.10/32"]
+ssh_admin_source_cidrs = ["203.0.113.10/32"]
 ```
 
 Then re-apply:

@@ -5,11 +5,6 @@ locals {
 module "phase1" {
   source = "./modules/phase1"
 
-  providers = {
-    digitalocean        = digitalocean
-    digitalocean.spaces = digitalocean.spaces
-  }
-
   name_prefix = local.name_prefix
   environment = var.environment
   region      = var.region

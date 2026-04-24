@@ -41,7 +41,7 @@ variable "ssh_key_fingerprints" {
 
 variable "ssh_admin_source_cidrs" {
   type        = list(string)
-  description = "CIDRs allowed to SSH (TCP/22). Empty disables the SSH inbound rule on the cloud firewall."
+  description = "CIDRs allowed to SSH (TCP/22). Empty = open to the world. Restrict to office/VPN CIDRs before production use."
 }
 
 variable "coolify_source_cidrs" {

@@ -18,6 +18,8 @@
 .env.local
 .env.staging
 .env.prod
+/**/.env
+/**/.envrc
 
 # Ignore UI static files, but keep the directory
 /cmd/bidon-admin/web/ui

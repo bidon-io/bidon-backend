@@ -29,7 +29,8 @@ ssh_key_fingerprints = [
   # "aa:bb:cc:...",
 ]
 
-# Restrict SSH to known networks (office/VPN). Empty = port 22 not opened by the cloud firewall.
+# Restrict SSH to known networks (office/VPN). Empty = open to the world.
+# Set this to your office/VPN CIDRs before production use.
 ssh_admin_source_cidrs = [
   # "203.0.113.10/32",
 ]
