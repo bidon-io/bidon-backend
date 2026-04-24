@@ -143,7 +143,6 @@ services:
 
   init-admin:
     image: curlimages/curl:latest
-    profiles: ["init"]
     depends_on:
       bidon-admin:
         condition: service_started
