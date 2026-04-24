@@ -77,9 +77,8 @@ services:
     build:
       context: .
       target: bidon-migrate
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["until /bidon-migrate up; do echo 'Migration failed, retrying in 5s...'; sleep 5; done"]
-    restart: "no"
+    command: up
+    restart: on-failure
     environment:
       <<: [*staging-db-env, *staging-bidon-app-env]
     logging: *default-logging
