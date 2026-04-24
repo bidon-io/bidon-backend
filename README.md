@@ -15,7 +15,7 @@ We use Nix to ensure reproducible development environments.
 
 1. Install [Nix](https://nixos.org/download/#nix-install-macos)
 2. Install [direnv](https://direnv.net/docs/installation.html)
-3. Run `direnv allow`
+3. Run `direnv allow` the nix flake shell will load
 
 ### Full local stack (recommended)
 

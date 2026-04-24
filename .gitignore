@@ -13,8 +13,11 @@
 !/**/tmp/.keep
 
 # Envs
-.env*
-!.env.sample
+.env
+.env.test
+.env.local
+.env.staging
+.env.prod
 
 # Ignore UI static files, but keep the directory
 /cmd/bidon-admin/web/ui
