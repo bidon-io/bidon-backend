@@ -79,9 +79,6 @@ services:
       target: bidon-migrate
     command: up
     restart: "no"
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       <<: [*staging-db-env, *staging-bidon-app-env]
     logging: *default-logging
