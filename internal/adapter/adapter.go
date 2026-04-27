@@ -28,6 +28,7 @@ const (
 	MintegralKey  Key = "mintegral"
 	MobileFuseKey Key = "mobilefuse"
 	MolocoKey     Key = "moloco"
+	PubRevPlus    Key = "pubrevplus"
 	StartIOKey    Key = "startio"
 	TaurusXKey    Key = "taurusx"
 	UnityAdsKey   Key = "unityads"
@@ -52,6 +53,7 @@ var Keys = []Key{
 	MintegralKey,
 	MobileFuseKey,
 	MolocoKey,
+	PubRevPlus,
 	StartIOKey,
 	TaurusXKey,
 	UnityAdsKey,

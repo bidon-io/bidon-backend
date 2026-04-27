@@ -16,6 +16,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mobilefuse"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/moloco"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/pubrevplus"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/startio"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/taurusx"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vkads"
@@ -33,6 +34,7 @@ var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.MintegralKey:  mintegral.Builder,
 	adapter.MobileFuseKey: mobilefuse.Builder,
 	adapter.MolocoKey:     moloco.Builder,
+	adapter.PubRevPlus:    pubrevplus.Builder,
 	adapter.StartIOKey:    startio.Builder,
 	adapter.TaurusXKey:    taurusx.Builder,
 	adapter.VKAdsKey:      vkads.Builder,
@@ -137,6 +139,9 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 				adaptersMap[key]["tag_id"] = adUnit.Extra["unit_id"]
 				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
 			}
+		case adapter.PubRevPlus:
+			adaptersMap[key]["seller_id"] = extra["seller_id"]
+			adaptersMap[key]["endpoint"] = extra["endpoint"]
 		case adapter.VKAdsKey:
 			adaptersMap[key]["app_id"] = appData["app_id"]
 
