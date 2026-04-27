@@ -14,8 +14,8 @@
 
 # Envs
 .env
-.env.test
 .env.local
+.env.test
 .env.staging
 .env.prod
 /**/.env

@@ -13,7 +13,15 @@ sdk-api:
 
 #
 
-[arg('env', pattern='local|staging|prod')]
+test-db:
+    docker compose up migrate-test
+
+test:
+    go test ./...
+
+#
+
+[arg('env', pattern='local|test|staging|prod')]
 switch env:
     ln -sf .env.{{env}} .env
 
