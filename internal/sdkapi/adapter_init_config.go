@@ -36,6 +36,8 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 		config = new(MintegralInitConfig)
 	case adapter.MolocoKey:
 		config = new(MolocoInitConfig)
+	case adapter.PubRevPlus:
+		config = new(PubRevPlusInitConfig)
 	case adapter.StartIOKey:
 		config = new(StartIOInitConfig)
 	case adapter.UnityAdsKey:
@@ -211,6 +213,18 @@ func (a *MolocoInitConfig) Key() adapter.Key {
 
 func (a *MolocoInitConfig) SetDefaultOrder() {
 	a.Order = 0
+}
+
+type PubRevPlusInitConfig struct {
+	Order int `json:"order"`
+}
+
+func (a *PubRevPlusInitConfig) Key() adapter.Key {
+	return adapter.PubRevPlus
+}
+
+func (a *PubRevPlusInitConfig) SetDefaultOrder() {
+	a.Order = 1
 }
 
 type StartIOInitConfig struct {

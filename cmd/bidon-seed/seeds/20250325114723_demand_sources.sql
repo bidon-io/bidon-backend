@@ -22,7 +22,8 @@ VALUES
 ('vkads', 'VK Ads', NOW(), NOW()),
 ('vungle', 'Vungle', NOW(), NOW()),
 ('yandex', 'Yandex', NOW(), NOW()),
-('zmaticoo', 'Zmaticoo', NOW(), NOW())
+('zmaticoo', 'Zmaticoo', NOW(), NOW()),
+('pubrevplus', 'PubRev+', NOW(), NOW())
 ON CONFLICT (api_key) DO NOTHING;
 -- +goose StatementEnd
 

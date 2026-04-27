@@ -13,6 +13,7 @@ export const DEMAND_SOURCE_OPTIONS = [
   { label: "Mintegral", value: "DemandSourceAccount::Mintegral" },
   { label: "MobileFuse", value: "DemandSourceAccount::MobileFuse" },
   { label: "Moloco", value: "DemandSourceAccount::Moloco" },
+  { label: "PubRevPlus", value: "DemandSourceAccount::PubRevPlus" },
   { label: "Start.io", value: "DemandSourceAccount::StartIO" },
   { label: "TaurusX", value: "DemandSourceAccount::TaurusX" },
   { label: "UnityAds", value: "DemandSourceAccount::UnityAds" },

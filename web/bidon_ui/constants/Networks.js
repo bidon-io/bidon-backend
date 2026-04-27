@@ -40,6 +40,11 @@ export const NETWORK_DEFS = [
     accountType: "DemandSourceAccount::Mintegral",
   },
   {
+    key: "pubrevplus",
+    label: "PubRevPlus",
+    accountType: "DemandSourceAccount::PubRevPlus",
+  },
+  {
     key: "unityads",
     label: "Unity Ads",
     accountType: "DemandSourceAccount::UnityAds",
@@ -125,6 +130,7 @@ export const BIDDING_NETWORK_KEYS = [
   "mintegral",
   "mobilefuse",
   "moloco",
+  "pubrevplus",
   "startio",
   "taurusx",
   "vungle",
