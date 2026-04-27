@@ -9,7 +9,13 @@ For detailed instructions on setting up a self-hosted instance of Bidon, visit o
 ## Copilot (LangGraph) — Local Setup
 See the minimal setup guide at `copilot/README.md`.
 
-## Set up development environment
+## Set up a development environment
+
+We use Nix to ensure reproducible development environments.
+
+1. Install [Nix](https://nixos.org/download/#nix-install-macos)
+2. Install [direnv](https://direnv.net/docs/installation.html)
+3. Run `direnv allow` the nix flake shell will load
 
 ### Full local stack (recommended)
 
