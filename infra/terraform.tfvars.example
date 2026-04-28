@@ -50,3 +50,7 @@ enable_spaces_bucket          = true
 # do_token            = "dop_v1_..."
 # spaces_access_key   = "..."
 # spaces_secret_key   = "..."
+
+# Your machine's public IP — opens the managed Postgres firewall temporarily so the
+# postgresql provider can apply schema grants. Get it with: curl -s ifconfig.me
+# terraform_runner_ip = "1.2.3.4"

@@ -118,3 +118,10 @@ variable "monitor_alert_email" {
   default     = null
   nullable    = true
 }
+
+variable "terraform_runner_ip" {
+  type        = string
+  description = "Public IP of the machine running Terraform (e.g. from 'curl -s ifconfig.me'). Opens the managed Postgres firewall to that IP so the postgresql provider can apply schema grants. Leave null to skip."
+  default     = null
+  nullable    = true
+}

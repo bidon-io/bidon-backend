@@ -45,4 +45,12 @@ resource "digitalocean_database_firewall" "postgres" {
     type  = "droplet"
     value = digitalocean_droplet.app.id
   }
+
+  dynamic "rule" {
+    for_each = var.terraform_runner_ip != null ? [var.terraform_runner_ip] : []
+    content {
+      type  = "ip_addr"
+      value = rule.value
+    }
+  }
 }

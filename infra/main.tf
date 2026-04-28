@@ -25,4 +25,5 @@ module "phase1" {
   enable_spaces_bucket = var.enable_spaces_bucket
 
   monitor_alert_email = var.monitor_alert_email
+  terraform_runner_ip = var.terraform_runner_ip
 }
