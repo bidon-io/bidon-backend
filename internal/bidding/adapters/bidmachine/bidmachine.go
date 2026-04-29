@@ -136,7 +136,9 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	extStructure := &map[string]interface{}{}
 	_ = json.Unmarshal(imp.Ext, extStructure)
 
-	(*extStructure)["bid_token"] = auctionRequest.AdObject.Demands[adapter.BidmachineKey]["token"]
+	(*extStructure)["bidder"] = map[string]interface{}{
+		"bid_token": auctionRequest.AdObject.Demands[adapter.BidmachineKey]["token"],
+	}
 
 	raw, _ := json.Marshal(extStructure)
 
