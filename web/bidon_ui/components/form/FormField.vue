@@ -31,8 +31,10 @@ const props = defineProps({
 </script>
 
 <style scoped>
+:deep(.p-dropdown),
 :deep(input),
 :deep(textarea) {
   min-width: 100%;
+  box-sizing: border-box;
 }
 </style>

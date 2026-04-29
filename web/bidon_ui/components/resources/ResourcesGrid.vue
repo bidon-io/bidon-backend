@@ -408,6 +408,17 @@ const deleteHandle = useDeleteResource({
   outline: none;
   transition: border-color 0.15s ease;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+select.resources-grid-filter-input {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C9C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 0.75rem;
 }
 
 .resources-grid-filter-input:focus {

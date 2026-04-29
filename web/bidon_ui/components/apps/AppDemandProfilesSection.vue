@@ -42,7 +42,8 @@
         v-for="profile in profiles"
         :key="profile.id"
         :class="[
-          'rounded-lg overflow-hidden flex flex-col h-full min-h-0',
+          'rounded-lg overflow-hidden flex flex-col',
+          editingId === profile.id ? 'self-start w-full' : 'h-full',
           !profile.enabled && 'opacity-60',
         ]"
         style="
@@ -92,7 +93,7 @@
           </div>
         </div>
 
-        <div class="flex min-h-0 flex-1 flex-col">
+        <div class="flex flex-col" :class="editingId !== profile.id && 'flex-1 min-h-0'">
           <InlineDemandProfileForm
             v-if="editingId === profile.id"
             :app-id="appId"
@@ -108,7 +109,7 @@
 
           <div
             v-else
-            class="divide-y flex min-h-0 flex-1 flex-col"
+            class="divide-y flex flex-col flex-1 min-h-0"
             style="border-color: var(--bidon-border-default)"
           >
             <div class="flex items-start gap-3 px-6 py-3">
