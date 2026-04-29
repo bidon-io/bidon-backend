@@ -2,7 +2,7 @@
   <FormField label="Upload Price Points">
     <Checkbox v-model="showUploads" :binary="true" />
   </FormField>
-  <div v-if="showUploads" class="grid grid-cols-2 gap-5 pt-4">
+  <div v-if="showUploads" class="grid grid-cols-1 gap-5 pt-4 sm:grid-cols-2">
     <AmazonPricePointsUpload
       v-model="bannerPricePoints"
       label="Banner Price Points"

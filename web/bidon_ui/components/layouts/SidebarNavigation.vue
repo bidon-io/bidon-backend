@@ -1,5 +1,8 @@
 <template>
-  <nav class="mt-4 flex-1 px-2 pb-4">
+  <nav
+    id="sidebar-navigation"
+    class="mt-4 flex-1 px-2 pb-4 overflow-y-auto"
+  >
     <div class="mt-2">
       <button
         class="flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"

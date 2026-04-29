@@ -1,6 +1,9 @@
 <template>
   <div class="px-6 py-4">
-    <p class="text-sm font-semibold uppercase tracking-wide mb-2" style="color: var(--bidon-muted);">
+    <p
+      class="text-sm font-semibold uppercase tracking-wide mb-2"
+      style="color: var(--bidon-muted)"
+    >
       {{ isBidding ? "Bidding Networks" : "Waterfall Networks" }}
     </p>
     <div v-if="groups.length" class="flex flex-col gap-2">
@@ -8,14 +11,17 @@
         v-for="group in groups"
         :key="group.key"
         open
-        class="group rounded-lg overflow-hidden" style="border: 1px solid var(--bidon-border-default);"
+        class="group rounded-lg overflow-hidden"
+        style="border: 1px solid var(--bidon-border-default)"
       >
         <summary
-          class="flex items-center justify-between px-3 py-2 cursor-pointer list-none select-none transition-colors" style="background-color: var(--bidon-bg-card-header);"
+          class="flex items-center justify-between px-3 py-2 cursor-pointer list-none select-none transition-colors"
+          style="background-color: var(--bidon-bg-card-header)"
         >
           <div class="flex items-center gap-2">
             <svg
-              class="w-3.5 h-3.5 transition-transform group-open:rotate-90" style="color: var(--bidon-muted);"
+              class="w-3.5 h-3.5 transition-transform group-open:rotate-90"
+              style="color: var(--bidon-muted)"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -28,9 +34,11 @@
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span class="text-sm font-medium" style="color: var(--bidon-text-primary);">{{
-              group.label
-            }}</span>
+            <span
+              class="text-sm font-medium"
+              style="color: var(--bidon-text-primary)"
+              >{{ group.label }}</span
+            >
             <span
               :class="[
                 'badge',
@@ -49,20 +57,42 @@
             <i class="pi pi-plus" /> New Line Item
           </button>
         </summary>
-        <div class="divide-y" style="background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default);">
+        <div
+          class="divide-y"
+          style="
+            background-color: var(--bidon-bg-card);
+            border-color: var(--bidon-border-default);
+          "
+        >
           <template v-for="item in group.items" :key="item.id">
-            <div class="flex items-center gap-3 px-4 py-2 text-sm">
-              <span class="flex-1 truncate" style="color: var(--bidon-text-primary);">
+            <div
+              class="flex min-w-0 items-center gap-2 px-4 py-2 text-sm sm:gap-3"
+            >
+              <span
+                class="min-w-0 flex-1 truncate"
+                style="color: var(--bidon-text-primary)"
+              >
                 {{ item.humanName }}
               </span>
-              <span v-if="!isBidding" class="text-sm shrink-0" style="color: var(--bidon-muted);">
+              <span
+                v-if="!isBidding"
+                class="text-sm shrink-0"
+                style="color: var(--bidon-muted)"
+              >
                 ${{ item.bidFloor }}
               </span>
               <button
+                type="button"
                 :class="[
                   'btn-sm shrink-0',
                   editingItemId === item.id ? 'btn-cancel' : 'btn-edit',
                 ]"
+                :aria-label="
+                  editingItemId === item.id
+                    ? 'Cancel editing line item'
+                    : 'Edit line item'
+                "
+                :title="editingItemId === item.id ? 'Cancel' : 'Edit'"
                 @click.stop="toggleEditForm(item.id)"
               >
                 <i
@@ -70,15 +100,21 @@
                     'pi',
                     editingItemId === item.id ? 'pi-times' : 'pi-pencil',
                   ]"
+                  aria-hidden="true"
                 />
-                {{ editingItemId === item.id ? "Cancel" : "Edit" }}
+                <span class="hidden sm:inline">{{
+                  editingItemId === item.id ? "Cancel" : "Edit"
+                }}</span>
               </button>
               <button
+                type="button"
                 class="btn-sm btn-delete shrink-0"
+                aria-label="Delete line item"
+                title="Delete"
                 @click.stop="deleteItem(item.id)"
               >
-                <i class="pi pi-trash" />
-                Delete
+                <i class="pi pi-trash" aria-hidden="true" />
+                <span class="hidden sm:inline">Delete</span>
               </button>
             </div>
             <InlineLineItemForm
@@ -97,7 +133,8 @@
               !group.items.length &&
               showInlineForm !== inlineFormKey(config.id, group.key, isBidding)
             "
-            class="px-4 py-2 text-sm" style="color: var(--bidon-muted);"
+            class="px-4 py-2 text-sm"
+            style="color: var(--bidon-muted)"
           >
             No line items linked yet.
           </div>
@@ -115,7 +152,9 @@
         </div>
       </details>
     </div>
-    <p v-else class="text-sm" style="color: var(--bidon-muted);">None configured</p>
+    <p v-else class="text-sm" style="color: var(--bidon-muted)">
+      None configured
+    </p>
   </div>
 </template>
 

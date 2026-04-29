@@ -1,6 +1,8 @@
 <template>
   <div class="mt-10">
-    <div class="flex items-center justify-between mb-4">
+    <div
+      class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+    >
       <div>
         <h3
           class="text-base font-semibold"
@@ -93,7 +95,10 @@
           </div>
         </div>
 
-        <div class="flex flex-col" :class="editingId !== profile.id && 'flex-1 min-h-0'">
+        <div
+          class="flex flex-col"
+          :class="editingId !== profile.id && 'flex-1 min-h-0'"
+        >
           <InlineDemandProfileForm
             v-if="editingId === profile.id"
             :app-id="appId"

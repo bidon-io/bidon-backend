@@ -4,7 +4,7 @@
     new-path="/apps/new"
     new-label="New App"
     :filters="filters"
-    filter-grid-class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
+    filter-grid-class="grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
     :page-size="12"
     empty-message="No apps yet."
     delete-success-detail="App deleted."

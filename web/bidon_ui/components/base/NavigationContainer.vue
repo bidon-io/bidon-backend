@@ -1,5 +1,5 @@
 <template>
-  <div class="flex mb-4 items-start space-x-2">
-    <slot></slot>
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-x-2">
+    <slot />
   </div>
 </template>

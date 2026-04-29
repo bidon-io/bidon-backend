@@ -3,11 +3,15 @@
     <!-- Bidding Networks Section -->
     <div v-if="biddingNetworks.length > 0" class="mb-6">
       <h2 class="text-xl font-semibold mb-4">Bidding Networks</h2>
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="network in biddingNetworks"
           :key="network.name"
-          class="p-4 rounded-md flex items-center justify-start text-left min-h-[60px]" style="background-color: var(--bidon-bg-card-header); border: 1px solid var(--bidon-border-default);"
+          class="p-4 rounded-md flex items-center justify-start text-left min-h-[60px]"
+          style="
+            background-color: var(--bidon-bg-card-header);
+            border: 1px solid var(--bidon-border-default);
+          "
         >
           <div class="flex items-center justify-center w-[30px] mr-2">
             <i :class="getNetworkIcon(true)" class="text-xl"></i>
@@ -26,7 +30,10 @@
           :key="network.id"
           class="p-4 rounded-md flex items-center"
           :class="{ 'mb-2': index !== cpmNetworks.length - 1 }"
-          style="background-color: var(--bidon-bg-card-header); border: 1px solid var(--bidon-border-default);"
+          style="
+            background-color: var(--bidon-bg-card-header);
+            border: 1px solid var(--bidon-border-default);
+          "
         >
           <div class="flex items-center justify-center w-[30px] mr-3">
             <i :class="getNetworkIcon(network.isBidding)" class="text-xl"></i>
@@ -52,7 +59,7 @@
       "
       class="mt-4"
     >
-      <p style="color: var(--bidon-muted);">
+      <p style="color: var(--bidon-muted)">
         No networks configured for this auction configuration.
       </p>
     </div>
