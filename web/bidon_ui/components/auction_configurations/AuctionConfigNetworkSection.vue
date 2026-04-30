@@ -49,12 +49,16 @@
             </span>
           </div>
           <button
-            class="btn-new btn-sm"
+            type="button"
+            class="btn-new btn-sm max-sm:inline-flex max-sm:items-center max-sm:justify-center max-sm:px-2.5"
+            aria-label="New line item"
+            title="New line item"
             @click.stop="
               $emit('toggleInlineForm', config.id, group.key, isBidding)
             "
           >
-            <i class="pi pi-plus" /> New Line Item
+            <i class="pi pi-plus" aria-hidden="true" />
+            <span class="hidden sm:inline">New Line Item</span>
           </button>
         </summary>
         <div
