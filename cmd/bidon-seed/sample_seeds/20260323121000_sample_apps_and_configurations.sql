@@ -167,7 +167,7 @@ BEGIN
     (4011, spacerunner_app_id, 'DemandSourceAccount::Meta', meta_account_id, meta_id,
      '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true),
     -- Tetris
-    (4012, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id, adikteev_id,
+    (4012, tetris_app_id, 'DemandSourceAccount::Adikteev', adikteev_account_id, adikteev_id,
      '{"app_id": 195876}'::jsonb, NOW(), NOW(), 4012, true)
     ON CONFLICT (id) DO NOTHING;
 
