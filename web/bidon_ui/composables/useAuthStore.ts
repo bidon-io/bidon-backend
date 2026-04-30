@@ -30,7 +30,7 @@ export const useAuthStore = defineStore("authStore", () => {
 
       setAuthorized();
 
-      return navigateTo("/");
+      return navigateTo("/apps");
     } catch (error) {
       toast.add({
         severity: "error",

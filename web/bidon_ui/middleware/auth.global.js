@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const normalizedPath = to.path.replace(/\/$/, "");
   if (["/login", "/signup"].includes(normalizedPath) && authStore.currentUser) {
-    return navigateTo("/");
+    return navigateTo("/apps");
   }
   if (
     !["/login", "/signup"].includes(normalizedPath) &&

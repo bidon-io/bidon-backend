@@ -24,7 +24,7 @@
         class="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs sm:text-sm"
       >
         <NuxtLink
-          to="/"
+          to="/apps"
           class="shrink-0 font-medium hover:opacity-70 transition-opacity"
           style="color: var(--bidon-accent)"
         >
