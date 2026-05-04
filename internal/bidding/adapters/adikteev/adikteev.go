@@ -16,6 +16,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/gofrs/uuid/v5"
+	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
@@ -25,7 +26,8 @@ type AdikteevAdapter struct {
 }
 
 var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat: {320, 480},
+	ad.BannerFormat: {320, 50},
+	ad.MRECFormat:   {300, 250},
 }
 
 func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
@@ -36,14 +38,32 @@ func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb
 	return &openrtb2.Imp{
 		Instl: 0,
 		Banner: &openrtb2.Banner{
-			W: &w,
-			H: &h,
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionAboveFold.Ptr(),
+		},
+	}
+}
+
+func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	w, h := size[0], size[1]
+	if !auctionRequest.AdObject.IsPortrait() {
+		w, h = h, w
+	}
+	return &openrtb2.Imp{
+		Instl: 1, //they don't check the instl field to interpret the ad format, but only look at w and h
+		Banner: &openrtb2.Banner{
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionFullScreen.Ptr(),
 		},
 	}
 }
 
 func getEndpoint() string {
-	return "http://rubicon-eu.dsp.adikteev.com"
+	//return "http://rubicon-eu.dsp.adikteev.com"
+	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
 }
 
 func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
@@ -53,6 +73,8 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
 		imp = a.banner(auctionRequest)
+	case ad.InterstitialType:
+		imp = a.interstitial(auctionRequest)
 	default:
 		return request, errors.New("unknown impression type")
 	}
