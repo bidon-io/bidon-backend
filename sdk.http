@@ -1,3 +1,4 @@
+
 ### Config
 POST {{sdkapiHost}}/v2/config
 Content-Type: application/json
@@ -31,8 +32,7 @@ Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
-#< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_banner_mrec.json
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/test_ios_adikteev_banner_mrec.json
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_banner_mrec.json
 
 ### Auction banner Adikteev — Android MREC
 
@@ -41,8 +41,7 @@ Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
-#< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner_mrec.json
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/test_android_adikteev_banner_mrec.json
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner_mrec.json
 
 ### Auction interstitial Adikteev — iOS
 
@@ -51,8 +50,7 @@ Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
-#< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_interstitial.json
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/test_ios_adikteev_interstitial.json
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_interstitial.json
 
 ### Auction interstitial Adikteev — Android
 
@@ -61,9 +59,7 @@ Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
-#< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_interstitial.json
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/test_android_adikteev_interstitial.json
-
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_interstitial.json
 
 ### Auction banner PubRevPlus
 
@@ -72,6 +68,4 @@ Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
-#< ./internal/sdkapi/v2/apihandlers/testdata/auction/ios_pubrevplus.json
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/test_ios_pubrevplus.json
-
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/ios_pubrevplus.json

@@ -604,7 +604,7 @@ BEGIN
         created_at, updated_at, segment_id, external_win_notifications, public_uid,
         timeout, demands, bidding, ad_unit_ids
     ) VALUES (
-    6050, 'Tetris Banner Config', tetris_app_id, 3, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    6050, 'Tetris Banner Auction', tetris_app_id, 3, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
     NOW(), NOW(), NULL, false, 6050, 10000,
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
