@@ -7,8 +7,11 @@ tag := `git rev-parse HEAD`
 dev:
     docker compose -f docker-compose.dev.yml up
 
+dev-down:
+    docker compose -f docker-compose.dev.yml down --remove-orphans
+
 seed:
-    go run ./cmd/bidon-seed -reset
+    go run ./cmd/bidon-seed -reset -sample
 
 sdk-api:
     go run ./cmd/bidon-sdkapi
