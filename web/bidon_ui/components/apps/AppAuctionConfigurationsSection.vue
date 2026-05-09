@@ -133,6 +133,9 @@
       :clone-from="cloneSourceConfig"
       @created="handleAuctionConfigCreated"
       @cancel="showInlineConfigForm = false"
+      @line-item-created="registerLineItemFromConfigForm"
+      @line-item-updated="handleLineItemUpdated"
+      @line-item-deleted="handleLineItemDeleted"
     />
 
     <p
@@ -298,6 +301,9 @@
                 class="!mb-0 !border-0 !rounded-none"
                 @updated="handleAuctionConfigUpdated"
                 @cancel="editingConfigId = null"
+                @line-item-created="registerLineItemFromConfigForm"
+                @line-item-updated="handleLineItemUpdated"
+                @line-item-deleted="handleLineItemDeleted"
               />
               <div
                 v-else
@@ -484,6 +490,16 @@ function inlineFormKey(configId, networkKey, isBidding) {
 function toggleInlineForm(configId, networkKey, isBidding) {
   const key = inlineFormKey(configId, networkKey, isBidding);
   showInlineForm.value = showInlineForm.value === key ? null : key;
+}
+
+/** Keeps app-level line item list in sync when line items are created from the full auction config form (edit / new / clone). Inline network UI uses this list to render linked line items. */
+function registerLineItemFromConfigForm(newItem) {
+  const id = Number(newItem.id);
+  if (Number.isNaN(id)) return;
+  const alreadyLoaded = allLineItems.value.some((i) => Number(i.id) === id);
+  if (!alreadyLoaded) {
+    allLineItems.value.push(newItem);
+  }
 }
 
 async function handleLineItemCreated(newItem, configId) {
