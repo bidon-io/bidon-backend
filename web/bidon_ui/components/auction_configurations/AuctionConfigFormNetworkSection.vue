@@ -167,12 +167,11 @@
                 class="flex min-w-0 flex-1 items-start gap-2 sm:items-center"
               >
                 <div class="shrink-0 pt-0.5 sm:pt-0">
+                  <!-- Intercept selection so we can auto-enable the row's network (see onSelectedAdUnitIdsChange). -->
                   <Checkbox
                     :model-value="selectedAdUnitIds"
                     :value="item.id"
-                    @update:model-value="
-                      $emit('update:selectedAdUnitIds', $event)
-                    "
+                    @update:model-value="onSelectedAdUnitIdsChange"
                   />
                 </div>
                 <span
@@ -344,6 +343,42 @@ function toggleNetworkEnabled(networkKey) {
   emit(isEnabled ? "network-disabled" : "network-enabled", networkKey);
 }
 
+/**
+ * Auto-enable a demand network when the user ties a line item to this config.
+ * Mirrors the manual "Enabled" toggle (including `network-enabled` for profile validation).
+ * No-op without a profile; user can still turn the network off afterward.
+ */
+function ensureNetworkEnabled(networkKey) {
+  if (!networkHasProfile(networkKey)) return;
+  if (props.enabledNetworkKeys.includes(networkKey)) return;
+  emit("update:enabledNetworkKeys", [...props.enabledNetworkKeys, networkKey]);
+  emit("network-enabled", networkKey);
+}
+
+/**
+ * PrimeVue emits the full selected-id array on each checkbox change.
+ * Only ids that were *added* vs the previous model should trigger auto-enable (avoids reacting
+ * to bulk loads like "clone settings" or parent-driven updates).
+ *
+ * Performance: one Map over `adUnits` (typically well under a few hundred rows per app/ad type)
+ * then O(1) lookup per newly checked id — fine for interactive UI; no watch on props.
+ */
+function onSelectedAdUnitIdsChange(newIds) {
+  const prev = new Set((props.selectedAdUnitIds ?? []).map((id) => Number(id)));
+  const nextList = newIds ?? [];
+  const unitById = new Map(props.adUnits.map((u) => [Number(u.id), u]));
+  for (const rawId of nextList) {
+    const id = Number(rawId);
+    if (!prev.has(id)) {
+      const unit = unitById.get(id);
+      if (unit?.networkKey) {
+        ensureNetworkEnabled(unit.networkKey);
+      }
+    }
+  }
+  emit("update:selectedAdUnitIds", nextList);
+}
+
 const showCreateFor = ref(null);
 const editingItemId = ref(null);
 
@@ -359,6 +394,8 @@ function toggleEditForm(itemId) {
 
 function onItemCreated(item, networkKey) {
   showCreateFor.value = null;
+  // New line item is always for this network; enable it before parent appends to selection.
+  ensureNetworkEnabled(networkKey);
   emit("line-item-created", item, networkKey);
 }
 
