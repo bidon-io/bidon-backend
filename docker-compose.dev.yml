@@ -29,7 +29,8 @@ x-redis-cluster-env: &redis-cluster-env
 x-dev-bidon-app-env: &dev-bidon-app-env
   <<: [*dev-kafka-env, *redis-cluster-env]
   ENVIRONMENT: development
-  USE_GEOCODING: "false"
+  USE_GEOCODING: "true"
+  MAXMIND_GEOIP_FILE_PATH: GeoLite2-City.mmdb
   SNOWFLAKE_NODE_ID: 1
 
 x-dev-superuser-env: &dev-superuser-env
