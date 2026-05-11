@@ -69,33 +69,13 @@ services:
   # Redpanda Console (UI): expose publicly via Coolify → Traefik; protect with Basic Auth middleware
   # labels only on this service. Kafka brokers stay at redpanda:29092 without proxy auth — see Coolify docs:
   # https://coolify.io/docs/knowledge-base/proxy/traefik/basic-auth#docker-compose-and-services
-  #
-  # After deploy: open Coolify proxy / Compose labels preview, find your HTTPS router for this resource
-  # (middlewares=gzip,...), append `,redpanda-console-ba` to that router’s middlewares if Traefik does
-  # not attach the middleware automatically.
   redpanda-console:
     image: redpandadata/console:latest
     depends_on:
       redpanda:
         condition: service_healthy
-    # Inline config avoids version drift in Console env-var keys; matches Redpanda’s compose lab pattern:
-    # https://docs.redpanda.com/redpanda-labs/docker-compose/single-broker
-    entrypoint: /bin/sh
-    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/console-config.yml && exec /app/console'
-    environment:
-      REDPANDA_CONSOLE_BA_USERS: ${REDPANDA_CONSOLE_BA_USERS}
-      CONFIG_FILEPATH: /tmp/console-config.yml
-      CONSOLE_CONFIG_FILE: |
-        kafka:
-          brokers: ["redpanda:29092"]
-        schemaRegistry:
-          enabled: false
-        redpanda:
-          adminApi:
-            enabled: true
-            urls: ["http://redpanda:9644"]
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     labels:
       - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
     logging: *default-logging
