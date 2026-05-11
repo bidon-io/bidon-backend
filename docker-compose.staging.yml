@@ -83,7 +83,7 @@ services:
     entrypoint: /bin/sh
     command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/console-config.yml && exec /app/console'
     environment:
-      REDPANDA_CONSOLE_BA_USERS: "<<PROVIDE_USER_PASSWORD_HERE>>"
+      REDPANDA_CONSOLE_BA_USERS: ${REDPANDA_CONSOLE_BA_USERS}
       CONFIG_FILEPATH: /tmp/console-config.yml
       CONSOLE_CONFIG_FILE: |
         kafka:
