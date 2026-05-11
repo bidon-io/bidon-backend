@@ -33,7 +33,7 @@ x-staging-bidon-app-env: &staging-bidon-app-env
   <<: [*staging-kafka-env, *staging-redis-env]
   ENVIRONMENT: production
   USE_GEOCODING: "true"
-  MAXMIND_GEOIP_FILE_PATH: GeoLite2-City.mmdb
+  MAXMIND_GEOIP_FILE_PATH: /GeoLite2-City.mmdb
   SNOWFLAKE_NODE_ID: 1
 
 services:
