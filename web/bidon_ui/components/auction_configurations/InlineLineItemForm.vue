@@ -319,6 +319,12 @@ const save = handleSubmit(async (values) => {
         return;
       }
       emit("created", response._data);
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: "Line item created.",
+        life: 3000,
+      });
     }
   } catch (err) {
     const msg = err.data?.error?.message;

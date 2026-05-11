@@ -538,6 +538,12 @@ async function handleLineItemCreated(newItem, configId) {
       body: { adUnitIds: updatedAdUnitIds },
     });
     auctionConfigs.value[configIdx] = data;
+    toast.add({
+      severity: "success",
+      summary: "Success",
+      detail: "Line item linked to auction configuration.",
+      life: 3000,
+    });
   } catch (err) {
     toast.add({
       severity: "error",

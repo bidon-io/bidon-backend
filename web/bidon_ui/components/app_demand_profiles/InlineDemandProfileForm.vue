@@ -119,11 +119,14 @@
 
 <script setup>
 import * as yup from "yup";
+import { useToast } from "primevue/usetoast";
 import {
   NETWORK_DEFS,
   NETWORK_ACCOUNT_TYPE_BY_KEY,
   NETWORK_LABEL_BY_KEY,
 } from "@/constants/Networks.js";
+
+const toast = useToast();
 
 const props = defineProps({
   appId: { type: [Number, String], required: true },
@@ -265,6 +268,12 @@ const save = handleSubmit(async (values) => {
         },
       );
       emit("updated", result);
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: "Demand source profile updated.",
+        life: 3000,
+      });
     } else {
       const result = await $apiFetch("/app_demand_profiles", {
         method: "POST",
@@ -278,6 +287,12 @@ const save = handleSubmit(async (values) => {
         },
       });
       emit("created", result);
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: "Demand source profile created.",
+        life: 3000,
+      });
     }
   } catch (err) {
     const msg = err.data?.error?.message;
