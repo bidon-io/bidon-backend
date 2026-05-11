@@ -14,7 +14,7 @@ x-dev-db-env: &dev-db-env
 
 x-dev-kafka-env: &dev-kafka-env
   USE_KAFKA: "true"
-  KAFKA_BROKERS_LIST: kafka:29092
+  KAFKA_BROKERS_LIST: redpanda:9092
   KAFKA_CLIENT_ID: bidon_dev
   KAFKA_DELIVERY_INTERVAL: 5
   KAFKA_AD_EVENTS_TOPIC: ad-events
@@ -63,37 +63,39 @@ services:
       - redis-data-dev:/data
     extra_hosts: *host-gateway-extra-hosts
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.2.1
-    hostname: zookeeper
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --mode dev-container
+      - --smp 1
+      - --default-log-level=warn
+    ports:
+      - '19092:19092'
+      - '9644:9644'
+    volumes:
+      - redpanda-data-dev:/var/lib/redpanda/data
     healthcheck:
-      test: echo srvr | nc zookeeper 2181 || exit 1
-      retries: 20
-      interval: 10s
-    ports:
-      - '2181:2181'
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
-  kafka:
-    image: confluentinc/cp-kafka:7.2.1
-    hostname: kafka
-    depends_on:
-      - zookeeper
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
     ports:
-      - '9092:9092'
-      - '9093:9093'
+      - '8080:8080'
+    depends_on:
+      redpanda:
+        condition: service_healthy
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,EXTERNAL_DOCKER:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_INTERNAL://:29092,EXTERNAL_DOCKER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092,EXTERNAL_DOCKER://host.docker.internal:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_BROKERS: redpanda:9092
 
   migrate:
     image: golang:1.24-alpine
@@ -127,8 +129,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_started
-      kafka:
-        condition: service_started
+      redpanda:
+        condition: service_healthy
     environment:
       <<: [*dev-db-env, *dev-bidon-app-env, *dev-superuser-env]
       PORT: 1323
@@ -147,8 +149,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_started
-      kafka:
-        condition: service_started
+      redpanda:
+        condition: service_healthy
     environment:
       <<: [*dev-db-env, *dev-bidon-app-env]
       PORT: 1323
@@ -188,9 +190,11 @@ services:
       - ./scripts/init-admin.sh:/init-admin.sh
     command: sh /init-admin.sh
 
+
 volumes:
   pgdata-dev:
   gomodcache-dev:
   gocache-dev:
   redis-data-dev:
+  redpanda-data-dev:
   bidon-ui-node-modules-dev:
