@@ -75,7 +75,7 @@ services:
       redpanda:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "18080:8080"
     labels:
       - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
     logging: *default-logging
