@@ -61,6 +61,29 @@ func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *o
 	}
 }
 
+func (a *AdikteevAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
+	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	w, h := size[0], size[1]
+	if !auctionRequest.AdObject.IsPortrait() {
+		w, h = h, w
+	}
+	return &openrtb2.Imp{
+		Instl: 1,
+		//Banner: &openrtb2.Banner{
+		//	W:   &w,
+		//	H:   &h,
+		//	Pos: adcom1.PositionFullScreen.Ptr(),
+		//},
+		Video: &openrtb2.Video{
+			W:         w,
+			H:         h,
+			Pos:       adcom1.PositionFullScreen.Ptr(),
+			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
+			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+	}
+}
+
 func getEndpoint() string {
 	//return "http://rubicon-eu.dsp.adikteev.com"
 	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
@@ -75,6 +98,8 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 		imp = a.banner(auctionRequest)
 	case ad.InterstitialType:
 		imp = a.interstitial(auctionRequest)
+	case ad.RewardedType:
+		imp = a.rewarded(auctionRequest)
 	default:
 		return request, errors.New("unknown impression type")
 	}
@@ -113,6 +138,8 @@ func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
+
+	//filename := fmt.Sprintf("%s_%s_%s_bid_req", request.Device.OS, request.Imp[0].DisplayManager, )
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
