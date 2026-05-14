@@ -80,6 +80,7 @@ services:
       KAFKA_BROKERS: redpanda:29092
     labels:
       - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
+      - traefik.http.services.redpanda-console.loadbalancer.server.port=8080
     logging: *default-logging
     <<: *restart-policy
 
