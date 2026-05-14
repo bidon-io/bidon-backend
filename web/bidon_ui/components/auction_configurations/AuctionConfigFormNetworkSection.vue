@@ -1,13 +1,16 @@
 <template>
-  <div class="px-6 py-4">
-    <p class="text-sm font-semibold uppercase tracking-wide mb-2" style="color: var(--bidon-muted);">
+  <div class="min-w-0 px-4 py-4 sm:px-6 sm:py-5">
+    <p
+      class="text-sm font-semibold uppercase tracking-wide mb-2"
+      style="color: var(--bidon-muted)"
+    >
       {{ isBidding ? "Bidding Networks" : "Waterfall Networks" }}
     </p>
 
     <div
       v-if="loading"
       class="flex items-center gap-2 text-sm py-2"
-      style="color: var(--bidon-muted);"
+      style="color: var(--bidon-muted)"
     >
       <i class="pi pi-spin pi-spinner" />
       Loading…
@@ -18,17 +21,17 @@
         v-for="network in allNetworks"
         :key="network.key"
         open
-        class="group rounded-lg overflow-hidden"
-        style="border: 1px solid var(--bidon-border-default);"
+        class="group min-w-0 rounded-lg"
+        style="border: 1px solid var(--bidon-border-default)"
       >
         <summary
-          class="flex items-center justify-between px-3 py-2 cursor-pointer list-none select-none transition-colors"
-          style="background-color: var(--bidon-bg-card-header);"
+          class="flex min-w-0 cursor-pointer list-none flex-col gap-2 px-3 py-3 transition-colors select-none sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+          style="background-color: var(--bidon-bg-card-header)"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             <svg
-              class="w-3.5 h-3.5 transition-transform group-open:rotate-90 shrink-0"
-              style="color: var(--bidon-muted);"
+              class="w-3.5 h-3.5 shrink-0 transition-transform group-open:rotate-90"
+              style="color: var(--bidon-muted)"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -41,7 +44,10 @@
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span class="text-sm font-medium" style="color: var(--bidon-text-primary);">
+            <span
+              class="text-sm font-medium"
+              style="color: var(--bidon-text-primary)"
+            >
               {{ network.label }}
             </span>
             <span
@@ -53,28 +59,37 @@
                     : 'badge-count-cpm'
                   : '',
               ]"
-              :style="!enabledNetworkKeys.includes(network.key) ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-muted); font-size: 0.75rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 4px;' : ''"
+              :style="
+                !enabledNetworkKeys.includes(network.key)
+                  ? 'background-color: var(--bidon-accent-subtle); color: var(--bidon-muted); font-size: 0.75rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 4px;'
+                  : ''
+              "
             >
               {{ networkLineItems(network.key).length }}
             </span>
             <!-- No demand profile warning -->
             <span
               v-if="!networkHasProfile(network.key)"
-              class="network-no-profile-warning flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
+              class="network-no-profile-warning flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium"
               title="No demand source profile configured for this network"
             >
               <i class="pi pi-exclamation-triangle text-xs" />
               No profile
             </span>
           </div>
-          <div class="flex items-center gap-2" @click.stop>
+          <div
+            class="flex shrink-0 flex-wrap items-center justify-end gap-2"
+            @click.stop
+          >
             <button
               class="text-xs px-2.5 py-1 rounded border font-medium transition-colors"
-              :style="!networkHasProfile(network.key)
-                ? 'background-color: var(--bidon-accent-subtle); border-color: var(--bidon-border-default); color: var(--bidon-muted); cursor: not-allowed; opacity: 0.5;'
-                : enabledNetworkKeys.includes(network.key)
-                  ? 'background-color: rgba(16,175,108,0.12); border-color: rgba(16,175,108,0.4); color: var(--bidon-primary);'
-                  : 'background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'"
+              :style="
+                !networkHasProfile(network.key)
+                  ? 'background-color: var(--bidon-accent-subtle); border-color: var(--bidon-border-default); color: var(--bidon-muted); cursor: not-allowed; opacity: 0.5;'
+                  : enabledNetworkKeys.includes(network.key)
+                    ? 'background-color: rgba(16,175,108,0.12); border-color: rgba(16,175,108,0.4); color: var(--bidon-primary);'
+                    : 'background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
+              "
               type="button"
               :disabled="!networkHasProfile(network.key)"
               @click="toggleNetworkEnabled(network.key)"
@@ -95,7 +110,7 @@
             </button>
             <button
               :class="[
-                'btn-sm',
+                'btn-sm max-sm:inline-flex max-sm:items-center max-sm:justify-center max-sm:px-2.5',
                 !networkHasProfile(network.key)
                   ? 'btn cursor-not-allowed opacity-40'
                   : showCreateFor === network.key
@@ -104,10 +119,19 @@
               ]"
               type="button"
               :disabled="!networkHasProfile(network.key)"
+              :aria-label="
+                !networkHasProfile(network.key)
+                  ? 'Add a demand profile first'
+                  : showCreateFor === network.key
+                    ? 'Cancel new line item'
+                    : 'New line item'
+              "
               :title="
                 !networkHasProfile(network.key)
                   ? 'Add a demand profile first'
-                  : undefined
+                  : showCreateFor === network.key
+                    ? 'Cancel'
+                    : 'New line item'
               "
               @click="toggleCreateForm(network.key)"
             >
@@ -116,56 +140,93 @@
                   'pi',
                   showCreateFor === network.key ? 'pi-times' : 'pi-plus',
                 ]"
+                aria-hidden="true"
               />
-              {{ showCreateFor === network.key ? "Cancel" : "New Line Item" }}
+              <span class="hidden sm:inline">{{
+                showCreateFor === network.key ? "Cancel" : "New Line Item"
+              }}</span>
             </button>
           </div>
         </summary>
 
-        <div class="divide-y" style="background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default);">
+        <div
+          class="min-w-0 divide-y"
+          style="
+            background-color: var(--bidon-bg-card);
+            border-color: var(--bidon-border-default);
+          "
+        >
           <template
             v-for="item in networkLineItems(network.key)"
             :key="item.id"
           >
-            <div class="flex items-center gap-3 px-4 py-2 text-sm">
-              <Checkbox
-                :model-value="selectedAdUnitIds"
-                :value="item.id"
-                @update:model-value="$emit('update:selectedAdUnitIds', $event)"
-              />
-              <span class="flex-1 truncate" style="color: var(--bidon-text-primary);">
-                {{ item.label }}
-              </span>
-              <span
-                v-if="!isBidding"
-                class="text-sm shrink-0 font-mono" style="color: var(--bidon-muted);"
+            <div
+              class="flex min-w-0 flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-3 sm:py-2.5"
+            >
+              <div
+                class="flex min-w-0 flex-1 items-start gap-2 sm:items-center"
               >
-                ${{ item.pricefloor.toFixed(2) }}
-              </span>
-              <button
-                :class="[
-                  'btn-sm shrink-0',
-                  editingItemId === item.id ? 'btn-cancel' : 'btn-edit',
-                ]"
-                type="button"
-                @click.stop="toggleEditForm(item.id)"
+                <div class="shrink-0 pt-0.5 sm:pt-0">
+                  <!-- Intercept selection so we can auto-enable the row's network (see onSelectedAdUnitIdsChange). -->
+                  <Checkbox
+                    :model-value="selectedAdUnitIds"
+                    :value="item.id"
+                    @update:model-value="onSelectedAdUnitIdsChange"
+                  />
+                </div>
+                <span
+                  class="min-w-0 flex-1 break-words leading-snug"
+                  style="color: var(--bidon-text-primary)"
+                >
+                  {{ item.label }}
+                </span>
+              </div>
+              <div
+                class="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3"
               >
-                <i
+                <span
+                  v-if="!isBidding"
+                  class="text-sm font-mono tabular-nums"
+                  style="color: var(--bidon-muted)"
+                >
+                  ${{ item.pricefloor.toFixed(2) }}
+                </span>
+                <button
+                  type="button"
                   :class="[
-                    'pi',
-                    editingItemId === item.id ? 'pi-times' : 'pi-pencil',
+                    'btn-sm shrink-0',
+                    editingItemId === item.id ? 'btn-cancel' : 'btn-edit',
                   ]"
-                />
-                {{ editingItemId === item.id ? "Cancel" : "Edit" }}
-              </button>
-              <button
-                class="btn-sm btn-delete shrink-0"
-                type="button"
-                @click.stop="deleteItem(item.id)"
-              >
-                <i class="pi pi-trash" />
-                Delete
-              </button>
+                  :aria-label="
+                    editingItemId === item.id
+                      ? 'Cancel editing line item'
+                      : 'Edit line item'
+                  "
+                  :title="editingItemId === item.id ? 'Cancel' : 'Edit'"
+                  @click.stop="toggleEditForm(item.id)"
+                >
+                  <i
+                    :class="[
+                      'pi',
+                      editingItemId === item.id ? 'pi-times' : 'pi-pencil',
+                    ]"
+                    aria-hidden="true"
+                  />
+                  <span class="hidden sm:inline">{{
+                    editingItemId === item.id ? "Cancel" : "Edit"
+                  }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-sm btn-delete shrink-0"
+                  aria-label="Delete line item"
+                  title="Delete"
+                  @click.stop="deleteItem(item.id)"
+                >
+                  <i class="pi pi-trash" aria-hidden="true" />
+                  <span class="hidden sm:inline">Delete</span>
+                </button>
+              </div>
             </div>
             <InlineLineItemForm
               v-if="editingItemId === item.id"
@@ -190,7 +251,7 @@
               !networkLineItems(network.key).length &&
               showCreateFor !== network.key
             "
-            class="px-4 py-2 text-sm text-gray-400"
+            class="px-4 py-3 text-sm text-gray-400"
           >
             No line items yet.
           </div>
@@ -282,6 +343,42 @@ function toggleNetworkEnabled(networkKey) {
   emit(isEnabled ? "network-disabled" : "network-enabled", networkKey);
 }
 
+/**
+ * Auto-enable a demand network when the user ties a line item to this config.
+ * Mirrors the manual "Enabled" toggle (including `network-enabled` for profile validation).
+ * No-op without a profile; user can still turn the network off afterward.
+ */
+function ensureNetworkEnabled(networkKey) {
+  if (!networkHasProfile(networkKey)) return;
+  if (props.enabledNetworkKeys.includes(networkKey)) return;
+  emit("update:enabledNetworkKeys", [...props.enabledNetworkKeys, networkKey]);
+  emit("network-enabled", networkKey);
+}
+
+/**
+ * PrimeVue emits the full selected-id array on each checkbox change.
+ * Only ids that were *added* vs the previous model should trigger auto-enable (avoids reacting
+ * to bulk loads like "clone settings" or parent-driven updates).
+ *
+ * Performance: one Map over `adUnits` (typically well under a few hundred rows per app/ad type)
+ * then O(1) lookup per newly checked id — fine for interactive UI; no watch on props.
+ */
+function onSelectedAdUnitIdsChange(newIds) {
+  const prev = new Set((props.selectedAdUnitIds ?? []).map((id) => Number(id)));
+  const nextList = newIds ?? [];
+  const unitById = new Map(props.adUnits.map((u) => [Number(u.id), u]));
+  for (const rawId of nextList) {
+    const id = Number(rawId);
+    if (!prev.has(id)) {
+      const unit = unitById.get(id);
+      if (unit?.networkKey) {
+        ensureNetworkEnabled(unit.networkKey);
+      }
+    }
+  }
+  emit("update:selectedAdUnitIds", nextList);
+}
+
 const showCreateFor = ref(null);
 const editingItemId = ref(null);
 
@@ -297,6 +394,8 @@ function toggleEditForm(itemId) {
 
 function onItemCreated(item, networkKey) {
   showCreateFor.value = null;
+  // New line item is always for this network; enable it before parent appends to selection.
+  ensureNetworkEnabled(networkKey);
   emit("line-item-created", item, networkKey);
 }
 

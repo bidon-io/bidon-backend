@@ -82,6 +82,13 @@ html.dark {
 }
 
 /* ── Base font ──────────────────────────────────────────────────────────────── */
+/* Phone + tablet: ~+1–2 px vs a typical 16px default (below Tailwind lg / 1024px) */
+@media (max-width: 1023px) {
+  html {
+    font-size: 109.375%;
+  }
+}
+
 body {
   font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
   color: var(--bidon-text-primary);
@@ -363,7 +370,15 @@ html.dark .p-button.p-button-text:hover {
 }
 .p-datatable .p-datatable-wrapper {
   border: none !important;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+@media (max-width: 1023px) {
+  .p-datatable .p-datatable-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 /* Sticky actions column bg */
 .p-datatable .p-datatable-tbody > tr > td[style*="sticky"] {
@@ -373,6 +388,8 @@ html.dark .p-button.p-button-text:hover {
 /* Dropdown */
 .p-dropdown {
   border-color: var(--bidon-border-default) !important;
+  /* Safari: inline-flex with width:100% misbehaves inside flex containers */
+  display: flex !important;
 }
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
   background: rgba(16, 175, 108, 0.1) !important;
@@ -583,8 +600,17 @@ html.dark .network-no-profile-warning {
     background-color: var(--bidon-bg-sidebar);
     border-right: 1px solid var(--bidon-border-default);
     transition: background-color 0.2s ease;
-    min-width: 256px;
-    width: 256px;
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
+    max-width: 256px;
+  }
+
+  @media (min-width: 1024px) {
+    .app-sidebar {
+      min-width: 256px;
+      width: 256px;
+    }
   }
 
   .app-header {
@@ -717,17 +743,17 @@ html.dark .network-no-profile-warning {
   }
 
   .card-header {
-    @apply flex items-center justify-between px-6 py-4;
+    @apply flex items-center justify-between gap-3 px-4 py-4 sm:px-6;
     background-color: var(--bidon-bg-card-header);
     border-bottom: 1px solid var(--bidon-border-card);
   }
 
   .card-body {
-    @apply px-6 py-4;
+    @apply px-4 py-4 sm:px-6;
   }
 
   .card-footer {
-    @apply px-6 py-3;
+    @apply px-4 py-3 sm:px-6;
     border-top: 1px solid var(--bidon-border-card);
     background-color: var(--bidon-bg-card-header);
   }

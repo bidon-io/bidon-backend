@@ -143,7 +143,12 @@ const props = defineProps({
     default: false,
   },
 });
-const emit = defineEmits(["submit"]);
+const emit = defineEmits([
+  "submit",
+  "lineItemCreated",
+  "lineItemUpdated",
+  "lineItemDeleted",
+]);
 const resource = ref(props.value);
 
 const DEFAULT_TIMEOUTS = {
@@ -327,14 +332,16 @@ async function onLineItemCreated(item, isBidding) {
   } else {
     await refreshDemandUnits();
   }
+  emit("lineItemCreated", item);
 }
 
-async function onLineItemUpdated(_item, isBidding) {
+async function onLineItemUpdated(item, isBidding) {
   if (isBidding) {
     await refreshBiddingUnits();
   } else {
     await refreshDemandUnits();
   }
+  emit("lineItemUpdated", item);
 }
 
 async function onLineItemDeleted(itemId, isBidding) {
@@ -346,6 +353,7 @@ async function onLineItemDeleted(itemId, isBidding) {
   } else {
     await refreshDemandUnits();
   }
+  emit("lineItemDeleted", itemId);
 }
 
 const onSubmit = handleSubmit((values) =>

@@ -1,10 +1,23 @@
 <template>
-  <div class="px-4 py-3" style="border-top: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card-header);">
-    <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--bidon-accent);">
+  <div
+    class="min-w-0 px-4 py-4 sm:px-5 sm:py-5"
+    style="
+      border-top: 1px solid var(--bidon-border-default);
+      background-color: var(--bidon-bg-card-header);
+    "
+  >
+    <p
+      class="text-xs font-semibold uppercase tracking-wide mb-3"
+      style="color: var(--bidon-accent)"
+    >
       {{ isEditMode ? "Edit" : "New" }} Line Item — {{ networkKey }}
     </p>
 
-    <div v-if="accountsLoading" class="text-xs mb-2" style="color: var(--bidon-muted);">
+    <div
+      v-if="accountsLoading"
+      class="text-xs mb-2"
+      style="color: var(--bidon-muted)"
+    >
       Loading accounts…
     </div>
     <div v-else-if="!accounts.length" class="text-xs text-red-500 mb-2">
@@ -14,8 +27,12 @@
 
     <template v-else>
       <div
-        class="rounded-lg overflow-hidden divide-y mb-3"
-        style="border: 1px solid var(--bidon-border-default); background-color: var(--bidon-bg-card); border-color: var(--bidon-border-default);"
+        class="min-w-0 divide-y rounded-lg mb-3"
+        style="
+          border: 1px solid var(--bidon-border-default);
+          background-color: var(--bidon-bg-card);
+          border-color: var(--bidon-border-default);
+        "
       >
         <!-- Account (read-only when single, dropdown when multiple) -->
         <FormField label="Account" :required="accounts.length > 1">
@@ -39,7 +56,7 @@
               {{ errors.accountId }}
             </small>
           </template>
-          <span v-else class="text-sm" style="color: var(--bidon-text-primary);">
+          <span v-else class="text-sm" style="color: var(--bidon-text-primary)">
             {{ accounts[0].label || `#${accounts[0].id}` }}
           </span>
         </FormField>
@@ -47,6 +64,31 @@
         <!-- Label -->
         <FormField label="Label" :error="errors.humanName" required>
           <InputText v-model="humanName" type="text" placeholder="Label" />
+        </FormField>
+
+        <FormField label="Ad Type">
+          <span class="text-sm" style="color: var(--bidon-text-primary)">
+            {{ adTypeDisplayLabel }}
+          </span>
+        </FormField>
+
+        <FormField
+          label="Ad Format"
+          :error="adType === 'banner' ? errors.format : undefined"
+          :required="adType === 'banner'"
+        >
+          <Dropdown
+            v-if="adType === 'banner'"
+            v-model="format"
+            :options="bannerFormatOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select format..."
+            class="w-full"
+          />
+          <span v-else class="text-sm" style="color: var(--bidon-text-primary)">
+            {{ nonBannerFormatDisplay }}
+          </span>
         </FormField>
 
         <!-- Bid Floor (waterfall only) -->
@@ -113,8 +155,11 @@
 
 <script setup>
 import * as yup from "yup";
+import { useToast } from "primevue/usetoast";
 import { NETWORK_ACCOUNT_TYPE_BY_KEY } from "@/constants/Networks.js";
 import { $apiFetch } from "~/utils/$apiFetch";
+
+const toast = useToast();
 
 const props = defineProps({
   appId: { type: [Number, String], required: true },
@@ -132,9 +177,33 @@ const accountType = computed(
   () => NETWORK_ACCOUNT_TYPE_BY_KEY[props.networkKey] ?? props.networkKey,
 );
 
+const bannerFormatOptions = [
+  { label: "Adaptive Banner", value: "ADAPTIVE" },
+  { label: "Banner", value: "BANNER" },
+  { label: "Leaderboard", value: "LEADERBOARD" },
+  { label: "MREC", value: "MREC" },
+];
+
+const adTypeDisplayLabel = computed(() => {
+  const t = (props.adType ?? "").toLowerCase();
+  if (t === "banner") return "Banner";
+  if (t === "interstitial") return "Interstitial";
+  if (t === "rewarded") return "Rewarded";
+  return props.adType || "—";
+});
+
+/** Non-banner line items use an empty format string (matches line item API). */
+const nonBannerFormatDisplay = computed(() => {
+  const f = props.initialItem?.format;
+  if (f != null && String(f).trim() !== "") {
+    return String(f);
+  }
+  return "—";
+});
+
 const adTypeWithFormat = computed(() => ({
   adType: props.adType,
-  format: null,
+  format: props.adType === "banner" ? (format.value ?? "") : "",
 }));
 
 const extraSchema = ref(yup.object());
@@ -143,6 +212,13 @@ const validationSchema = computed(() =>
   yup.object({
     humanName: yup.string().required().label("Label"),
     accountId: yup.number().required().label("Account"),
+    format: yup
+      .string()
+      .nullable(true)
+      .when([], {
+        is: () => props.adType === "banner",
+        then: (schema) => schema.required("Format is required for Banner Ad Type"),
+      }),
     bidFloor: props.isBidding
       ? yup.number().nullable(true).label("Bid Floor")
       : yup.number().required().positive().label("Bid Floor"),
@@ -155,6 +231,10 @@ const { errors, useFieldModel, handleSubmit } = useForm({
   initialValues: {
     humanName: props.initialItem?.humanName ?? "",
     accountId: props.initialItem?.accountId ?? null,
+    format:
+      props.adType === "banner"
+        ? (props.initialItem?.format || "BANNER")
+        : "",
     bidFloor: props.initialItem?.bidFloor ?? null,
     extra: props.initialItem?.extra ?? {},
   },
@@ -162,6 +242,7 @@ const { errors, useFieldModel, handleSubmit } = useForm({
 
 const humanName = useFieldModel("humanName");
 const accountId = useFieldModel("accountId");
+const format = useFieldModel("format");
 const bidFloor = useFieldModel("bidFloor");
 
 const accountsLoading = ref(true);
@@ -202,11 +283,18 @@ const save = handleSubmit(async (values) => {
         body: {
           humanName: values.humanName,
           accountId: values.accountId,
+          format: props.adType === "banner" ? values.format : "",
           bidFloor: props.isBidding ? null : values.bidFloor,
           extra: values.extra ?? {},
         },
       });
       emit("updated", data);
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: "Line item updated.",
+        life: 3000,
+      });
     } else {
       // POST returns 201 for a new row and 200 when an identical line item
       // already exists (deduped server-side). Only 201 should add to the list.
@@ -216,7 +304,7 @@ const save = handleSubmit(async (values) => {
           humanName: values.humanName,
           appId: Number(props.appId),
           adType: props.adType,
-          format: null,
+          format: props.adType === "banner" ? values.format : "",
           accountId: values.accountId,
           accountType: accountType.value,
           isBidding: props.isBidding,
@@ -225,13 +313,18 @@ const save = handleSubmit(async (values) => {
         },
       });
       // Admin API: 201 = new row, 200 = existing row (deduped). See CreateLineItem.
-      console.log(response);
       if (response.status === 200) {
         submitWarning.value =
           "A line item with the same app, account, ad type, and settings already exists. Nothing new was added. Edit that line item or change placement/extra so the combination is unique.";
         return;
       }
       emit("created", response._data);
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: "Line item created.",
+        life: 3000,
+      });
     }
   } catch (err) {
     const msg = err.data?.error?.message;

@@ -8,6 +8,9 @@
       :value="initialValue"
       :compact="isEditMode"
       @submit="handleSubmit"
+      @line-item-created="emit('lineItemCreated', $event)"
+      @line-item-updated="emit('lineItemUpdated', $event)"
+      @line-item-deleted="emit('lineItemDeleted', $event)"
     />
 
     <p v-if="submitError" class="text-xs text-red-500 px-6 pb-3">
@@ -25,7 +28,14 @@ const props = defineProps({
   editConfig: { type: Object, default: null },
 });
 
-const emit = defineEmits(["created", "updated", "cancel"]);
+const emit = defineEmits([
+  "created",
+  "updated",
+  "cancel",
+  "lineItemCreated",
+  "lineItemUpdated",
+  "lineItemDeleted",
+]);
 
 const isEditMode = computed(() => !!props.editConfig);
 

@@ -125,33 +125,33 @@ BEGIN
         id, app_id, account_type, account_id, demand_source_id, data, created_at, updated_at, public_uid, enabled
     ) VALUES
     -- Chess Master
-    (4000, chess_app_id, 'DemandSourceAccount::bidmachine', bidmachine_account_id, bidmachine_id,
+    (4000, chess_app_id, 'DemandSourceAccount::BidMachine', bidmachine_account_id, bidmachine_id,
      '{"source_id": "5"}'::jsonb, NOW(), NOW(), 4000, true),
-    (4001, chess_app_id, 'DemandSourceAccount::applovin', applovin_account_id, applovin_id,
+    (4001, chess_app_id, 'DemandSourceAccount::Applovin', applovin_account_id, applovin_id,
      '{"ad_unit_ids": ["chess_applovin_inter", "chess_applovin_rewarded"], "mediator": "Bidon"}'::jsonb, NOW(), NOW(), 4001, true),
-    (4002, chess_app_id, 'DemandSourceAccount::admob', admob_account_id, admob_id,
+    (4002, chess_app_id, 'DemandSourceAccount::Admob', admob_account_id, admob_id,
      '{"app_id": "ca-app-pub-3940256099942544~2001003922"}'::jsonb, NOW(), NOW(), 4002, true),
     -- Mahjong Quest
-    (4003, mahjong_app_id, 'DemandSourceAccount::bidmachine', bidmachine_account_id, bidmachine_id,
+    (4003, mahjong_app_id, 'DemandSourceAccount::BidMachine', bidmachine_account_id, bidmachine_id,
      '{"source_id": "6"}'::jsonb, NOW(), NOW(), 4003, true),
-    (4004, mahjong_app_id, 'DemandSourceAccount::applovin', applovin_account_id, applovin_id,
+    (4004, mahjong_app_id, 'DemandSourceAccount::Applovin', applovin_account_id, applovin_id,
      '{"ad_unit_ids": ["mahjong_applovin_banner", "mahjong_applovin_inter"], "mediator": "Bidon"}'::jsonb, NOW(), NOW(), 4004, true),
-    (4005, mahjong_app_id, 'DemandSourceAccount::admob', admob_account_id, admob_id,
+    (4005, mahjong_app_id, 'DemandSourceAccount::Admob', admob_account_id, admob_id,
      '{"app_id": "ca-app-pub-3940256099942544~3001003931"}'::jsonb, NOW(), NOW(), 4005, true),
     -- Trivial Pursuit
-    (4006, trivial_app_id, 'DemandSourceAccount::bidmachine', bidmachine_account_id, bidmachine_id,
+    (4006, trivial_app_id, 'DemandSourceAccount::BidMachine', bidmachine_account_id, bidmachine_id,
      '{"source_id": "7"}'::jsonb, NOW(), NOW(), 4006, true),
-    (4007, trivial_app_id, 'DemandSourceAccount::admob', admob_account_id, admob_id,
+    (4007, trivial_app_id, 'DemandSourceAccount::Admob', admob_account_id, admob_id,
      '{"app_id": "ca-app-pub-3940256099942544~4001003940"}'::jsonb, NOW(), NOW(), 4007, true),
     -- Word Puzzle Pro
-    (4008, wordpuzzle_app_id, 'DemandSourceAccount::unityads', unityads_account_id, unityads_id,
+    (4008, wordpuzzle_app_id, 'DemandSourceAccount::UnityAds', unityads_account_id, unityads_id,
      '{"game_id": 4968857}'::jsonb, NOW(), NOW(), 4008, true),
-    (4009, wordpuzzle_app_id, 'DemandSourceAccount::meta', meta_account_id, meta_id,
+    (4009, wordpuzzle_app_id, 'DemandSourceAccount::Meta', meta_account_id, meta_id,
      '{"app_id": 987654321}'::jsonb, NOW(), NOW(), 4009, true),
     -- Space Runner
-    (4010, spacerunner_app_id, 'DemandSourceAccount::unityads', unityads_account_id, unityads_id,
+    (4010, spacerunner_app_id, 'DemandSourceAccount::UnityAds', unityads_account_id, unityads_id,
      '{"game_id": 5123456}'::jsonb, NOW(), NOW(), 4010, true),
-    (4011, spacerunner_app_id, 'DemandSourceAccount::meta', meta_account_id, meta_id,
+    (4011, spacerunner_app_id, 'DemandSourceAccount::Meta', meta_account_id, meta_id,
      '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true)
     ON CONFLICT (id) DO NOTHING;
 

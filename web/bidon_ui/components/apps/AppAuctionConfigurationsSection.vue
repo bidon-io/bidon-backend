@@ -1,19 +1,122 @@
 <template>
   <div class="mt-10 mb-10">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h3
-          class="text-base font-semibold"
-          style="color: var(--bidon-text-primary)"
+    <div class="mb-4 flex flex-col gap-3">
+      <div
+        class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between"
+      >
+        <div class="min-w-0">
+          <h3
+            class="text-base font-semibold"
+            style="color: var(--bidon-text-primary)"
+          >
+            Auction Configurations
+          </h3>
+          <p class="text-sm mt-0.5" style="color: var(--bidon-muted)">
+            Per ad-type auction settings with CPM and bidding networks.
+          </p>
+        </div>
+        <button
+          type="button"
+          :class="[
+            'btn-sm shrink-0',
+            showInlineConfigForm ? 'btn-cancel' : 'btn-new',
+            'hidden md:inline-flex',
+          ]"
+          @click="toggleConfigForm"
         >
-          Auction Configurations
-        </h3>
-        <p class="text-sm mt-0.5" style="color: var(--bidon-muted)">
-          Per ad-type auction settings with CPM and bidding networks.
-        </p>
+          <i
+            :class="['pi', showInlineConfigForm ? 'pi-times' : 'pi-plus']"
+            aria-hidden="true"
+          />
+          {{ showInlineConfigForm ? "Cancel" : "New Auction Config" }}
+        </button>
       </div>
+
+      <!-- Filters: full width on small screens -->
+      <div
+        v-if="auctionConfigs.length"
+        class="flex w-full min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-3"
+      >
+        <div class="relative w-full md:w-auto">
+          <svg
+            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+            />
+          </svg>
+          <label for="auction-config-search" class="sr-only">
+            Search configurations by name
+          </label>
+          <input
+            id="auction-config-search"
+            v-model="configSearch"
+            type="text"
+            placeholder="Search by name…"
+            class="w-full max-w-none rounded-lg py-1.5 pr-3 pl-8 text-sm md:w-52 md:max-w-full focus:outline-none"
+            style="
+              background-color: var(--bidon-bg-card);
+              border: 1px solid var(--bidon-border-default);
+              color: var(--bidon-text-primary);
+              box-sizing: border-box;
+            "
+            @focus="
+              $event.target.style.borderColor = 'var(--bidon-primary)';
+              $event.target.style.boxShadow = 'var(--bidon-shadow-focus)';
+            "
+            @blur="
+              $event.target.style.borderColor = 'var(--bidon-border-default)';
+              $event.target.style.boxShadow = 'none';
+            "
+          />
+        </div>
+        <div
+          class="flex w-full min-w-0 flex-wrap gap-1.5 md:w-auto md:justify-start"
+        >
+          <button
+            :class="[
+              'text-xs px-3 py-1 rounded-md border font-medium transition-colors',
+            ]"
+            :style="
+              configAdTypeFilter === null
+                ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
+                : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
+            "
+            @click="configAdTypeFilter = null"
+          >
+            All
+          </button>
+          <button
+            v-for="adTypeOption in configAdTypes"
+            :key="adTypeOption"
+            :class="[
+              'text-xs px-3 py-1 rounded-md border font-medium capitalize transition-colors',
+            ]"
+            :style="
+              configAdTypeFilter === adTypeOption
+                ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
+                : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
+            "
+            @click="configAdTypeFilter = adTypeOption"
+          >
+            {{ adTypeOption }}
+          </button>
+        </div>
+      </div>
+
       <button
-        :class="['btn-sm', showInlineConfigForm ? 'btn-cancel' : 'btn-new']"
+        type="button"
+        :class="[
+          'btn-sm w-full justify-center md:hidden',
+          showInlineConfigForm ? 'btn-cancel' : 'btn-new',
+        ]"
         @click="toggleConfigForm"
       >
         <i
@@ -30,83 +133,10 @@
       :clone-from="cloneSourceConfig"
       @created="handleAuctionConfigCreated"
       @cancel="showInlineConfigForm = false"
+      @line-item-created="registerLineItemFromConfigForm"
+      @line-item-updated="handleLineItemUpdated"
+      @line-item-deleted="handleLineItemDeleted"
     />
-
-    <!-- Filters -->
-    <div
-      v-if="auctionConfigs.length"
-      class="flex flex-wrap items-center gap-3 mb-4"
-    >
-      <div class="relative">
-        <svg
-          class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-          />
-        </svg>
-        <label for="auction-config-search" class="sr-only">
-          Search configurations by name
-        </label>
-        <input
-          id="auction-config-search"
-          v-model="configSearch"
-          type="text"
-          placeholder="Search by name…"
-          class="pl-8 pr-3 py-1.5 text-sm rounded-lg w-52 focus:outline-none"
-          style="
-            background-color: var(--bidon-bg-card);
-            border: 1px solid var(--bidon-border-default);
-            color: var(--bidon-text-primary);
-          "
-          @focus="
-            $event.target.style.borderColor = 'var(--bidon-primary)';
-            $event.target.style.boxShadow = 'var(--bidon-shadow-focus)';
-          "
-          @blur="
-            $event.target.style.borderColor = 'var(--bidon-border-default)';
-            $event.target.style.boxShadow = 'none';
-          "
-        />
-      </div>
-      <div class="flex flex-wrap gap-1.5">
-        <button
-          :class="[
-            'text-xs px-3 py-1 rounded-md border font-medium transition-colors',
-          ]"
-          :style="
-            configAdTypeFilter === null
-              ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
-              : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
-          "
-          @click="configAdTypeFilter = null"
-        >
-          All
-        </button>
-        <button
-          v-for="adTypeOption in configAdTypes"
-          :key="adTypeOption"
-          :class="[
-            'text-xs px-3 py-1 rounded-md border font-medium capitalize transition-colors',
-          ]"
-          :style="
-            configAdTypeFilter === adTypeOption
-              ? 'background: var(--bidon-primary); border-color: var(--bidon-primary); color: #fff;'
-              : 'background: var(--bidon-bg-card); border-color: var(--bidon-border-default); color: var(--bidon-muted);'
-          "
-          @click="configAdTypeFilter = adTypeOption"
-        >
-          {{ adTypeOption }}
-        </button>
-      </div>
-    </div>
 
     <p
       v-if="!auctionConfigs.length"
@@ -145,10 +175,10 @@
           "
         >
           <div
-            class="card-header cursor-pointer select-none"
+            class="card-header cursor-pointer select-none flex flex-col gap-3 !items-stretch md:!flex-row md:items-start md:justify-between"
             @click="toggleCollapse(config.id)"
           >
-            <div class="flex flex-col gap-1 min-w-0">
+            <div class="flex min-w-0 w-full flex-col gap-1 md:flex-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <span
                   class="font-semibold"
@@ -220,15 +250,19 @@
                 </span>
               </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <div class="flex gap-2" @click.stop>
+            <div
+              class="flex w-full shrink-0 items-center justify-between gap-2 md:w-auto md:justify-end"
+            >
+              <div class="flex flex-wrap gap-2" @click.stop>
                 <button
+                  type="button"
                   class="btn-new btn-sm"
                   @click="cloneAuctionConfig(config)"
                 >
                   <i class="pi pi-clone" /> Clone
                 </button>
                 <button
+                  type="button"
                   :class="[
                     'btn-sm',
                     editingConfigId === config.id ? 'btn-cancel' : 'btn-edit',
@@ -246,7 +280,7 @@
                 </button>
               </div>
               <i
-                class="pi pi-chevron-down transition-transform duration-300"
+                class="pi pi-chevron-down shrink-0 transition-transform duration-300"
                 style="color: var(--bidon-muted)"
                 :style="
                   collapsedConfigIds.has(config.id)
@@ -267,6 +301,9 @@
                 class="!mb-0 !border-0 !rounded-none"
                 @updated="handleAuctionConfigUpdated"
                 @cancel="editingConfigId = null"
+                @line-item-created="registerLineItemFromConfigForm"
+                @line-item-updated="handleLineItemUpdated"
+                @line-item-deleted="handleLineItemDeleted"
               />
               <div
                 v-else
@@ -455,6 +492,16 @@ function toggleInlineForm(configId, networkKey, isBidding) {
   showInlineForm.value = showInlineForm.value === key ? null : key;
 }
 
+/** Keeps app-level line item list in sync when line items are created from the full auction config form (edit / new / clone). Inline network UI uses this list to render linked line items. */
+function registerLineItemFromConfigForm(newItem) {
+  const id = Number(newItem.id);
+  if (Number.isNaN(id)) return;
+  const alreadyLoaded = allLineItems.value.some((i) => Number(i.id) === id);
+  if (!alreadyLoaded) {
+    allLineItems.value.push(newItem);
+  }
+}
+
 async function handleLineItemCreated(newItem, configId) {
   const id = Number(newItem.id);
 
@@ -491,6 +538,12 @@ async function handleLineItemCreated(newItem, configId) {
       body: { adUnitIds: updatedAdUnitIds },
     });
     auctionConfigs.value[configIdx] = data;
+    toast.add({
+      severity: "success",
+      summary: "Success",
+      detail: "Line item linked to auction configuration.",
+      life: 3000,
+    });
   } catch (err) {
     toast.add({
       severity: "error",

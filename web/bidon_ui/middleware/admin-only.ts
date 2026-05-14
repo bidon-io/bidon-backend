@@ -4,6 +4,6 @@ export default defineNuxtRouteMiddleware(() => {
 
   // Redirect non-admins (or unauthenticated users) to home
   if (!user || user.isAdmin !== true) {
-    return navigateTo("/");
+    return navigateTo("/apps");
   }
 });

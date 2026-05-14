@@ -9,7 +9,7 @@
           </div>
           <Toast />
           <ConfirmDialog />
-          <main class="container mx-auto px-8 pb-10">
+          <main class="container mx-auto px-4 pb-10 sm:px-8">
             <slot></slot>
           </main>
         </div>
