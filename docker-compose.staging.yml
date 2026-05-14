@@ -12,9 +12,10 @@ x-logging: &default-logging
 #   APP_SECRET          — random secret for session signing
 #   SUPERUSER_LOGIN     — initial admin username
 #   SUPERUSER_PASSWORD  — initial admin password
-#   REDPANDA_CONSOLE_BA_USERS — Traefik HTTP basic-auth "users" value for the Console only.
-#     Generate locally: htpasswd -nbB <user> '<password>'
-#     (single line output like user:$2y$10$..., no quotes). Prefer a Coolify Secret.
+#   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
+#     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
+#     Coolify / runtime env: use the htpasswd output as-is (single $).
+#     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 # Bidon containers use kafka://redpanda:29092 on the Compose network — they never hit this middleware.
 
 x-staging-db-env: &staging-db-env
@@ -78,6 +79,9 @@ services:
       - "18080:8080"
     environment:
       KAFKA_BROKERS: redpanda:29092
+    labels:
+      - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
+      - coolify.traefik.middlewares=redpanda-console-ba
     logging: *default-logging
     <<: *restart-policy
 
