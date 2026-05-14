@@ -17,5 +17,10 @@ jobs:
             submodules: 'recursive'
             fetch-depth: 0
 
+        # TODO: remove once Coolify deploy key is added to bidon-protos (see .gitmodules).
+        # update=none prevents automatic submodule init, so we override it here explicitly.
+        - name: Initialize proto submodule
+          run: git -c submodule.proto.update=checkout submodule update --init proto
+
         - name: Run pre-commit checks
           run: docker compose run --rm go-pre-commit
