@@ -76,6 +76,8 @@ services:
         condition: service_healthy
     ports:
       - "18080:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:29092
     labels:
       - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
     logging: *default-logging
