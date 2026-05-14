@@ -374,6 +374,16 @@ const toast = useToast();
 const auctionConfigs = ref([...props.initialAuctionConfigs]);
 const allLineItems = ref([...props.initialLineItems]);
 
+/** PATCH/POST responses return bare records without `_permissions`; keep prior permissions so the delete footer stays visible. */
+function mergeAuctionConfigApiPayload(prev, data) {
+  if (!data) return data;
+  return {
+    ...data,
+    _permissions: data._permissions ??
+      prev?._permissions ?? { update: true, delete: true },
+  };
+}
+
 const configSearch = ref("");
 const configAdTypeFilter = ref(null);
 
@@ -466,7 +476,10 @@ function handleAuctionConfigCreated(newConfig) {
 function handleAuctionConfigUpdated(updatedConfig) {
   const idx = auctionConfigs.value.findIndex((c) => c.id === updatedConfig.id);
   if (idx !== -1) {
-    auctionConfigs.value[idx] = updatedConfig;
+    auctionConfigs.value[idx] = mergeAuctionConfigApiPayload(
+      auctionConfigs.value[idx],
+      updatedConfig,
+    );
   }
   editingConfigId.value = null;
 }
@@ -537,7 +550,10 @@ async function handleLineItemCreated(newItem, configId) {
       method: "PATCH",
       body: { adUnitIds: updatedAdUnitIds },
     });
-    auctionConfigs.value[configIdx] = data;
+    auctionConfigs.value[configIdx] = mergeAuctionConfigApiPayload(
+      auctionConfigs.value[configIdx],
+      data,
+    );
     toast.add({
       severity: "success",
       summary: "Success",
@@ -582,7 +598,10 @@ async function handleLineItemDeleted(itemId) {
         (c) => c.id === config.id,
       );
       if (configIdx !== -1) {
-        auctionConfigs.value[configIdx] = data;
+        auctionConfigs.value[configIdx] = mergeAuctionConfigApiPayload(
+          auctionConfigs.value[configIdx],
+          data,
+        );
       }
     } catch (err) {
       toast.add({

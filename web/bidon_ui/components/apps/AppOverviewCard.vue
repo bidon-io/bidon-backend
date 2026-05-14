@@ -6,16 +6,18 @@
           class="font-semibold text-lg"
           style="color: var(--bidon-text-primary)"
         >
-          {{ resource.humanName }}
+          {{ mergedResource.humanName }}
         </span>
-        <span class="badge badge-platform">{{ resource.platformId }}</span>
+        <span class="badge badge-platform">{{
+          mergedResource.platformId
+        }}</span>
         <span class="text-sm" style="color: var(--bidon-muted)">{{
-          resource.packageName
+          mergedResource.packageName
         }}</span>
       </div>
       <div class="flex gap-2 shrink-0">
         <NuxtLink
-          v-if="resource._permissions?.update"
+          v-if="mergedResource._permissions?.update"
           :to="`/apps/${id}/edit`"
           class="btn-edit btn-sm"
         >
@@ -40,17 +42,25 @@
           class="text-sm font-mono break-all flex items-center gap-1.5 min-w-0"
           style="color: var(--bidon-text-primary)"
         >
-          {{ field.value ? field.value(resource) : resource[field.key] }}
+          {{
+            field.value
+              ? field.value(mergedResource)
+              : mergedResource[field.key]
+          }}
           <button
             v-if="
               field.copyable &&
-              (field.value ? field.value(resource) : resource[field.key])
+              (field.value
+                ? field.value(mergedResource)
+                : mergedResource[field.key])
             "
             :aria-label="`Copy ${field.label}`"
             class="table-action-btn shrink-0"
             @click="
               copyField(
-                field.value ? field.value(resource) : resource[field.key],
+                field.value
+                  ? field.value(mergedResource)
+                  : mergedResource[field.key],
               )
             "
           >
@@ -61,7 +71,7 @@
     </div>
 
     <div
-      v-if="resource._permissions?.delete"
+      v-if="mergedResource._permissions?.delete"
       class="card-footer flex items-center justify-end"
     >
       <button
@@ -85,6 +95,30 @@ const props = defineProps({
   id: { type: [Number, String], required: true },
   resourcesPath: { type: String, required: true },
 });
+
+/** PATCH responses often omit `_permissions`; keep prior permissions so edit/delete controls stay correct. */
+function mergeAppResource(prev, data) {
+  if (!data) return data;
+  return {
+    ...data,
+    _permissions: data._permissions ??
+      prev?._permissions ?? { update: true, delete: true },
+  };
+}
+
+const mergedResource = ref(mergeAppResource(undefined, props.resource));
+
+watch(
+  () => [props.id, props.resource],
+  ([id, next], prevTuple) => {
+    const prevId = prevTuple?.[0];
+    if (prevTuple !== undefined && id !== prevId) {
+      mergedResource.value = mergeAppResource(undefined, next);
+      return;
+    }
+    mergedResource.value = mergeAppResource(mergedResource.value, next);
+  },
+);
 
 const deleteHandle = useDeleteResource({
   path: props.resourcesPath,
