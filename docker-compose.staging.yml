@@ -1,0 +1,160 @@
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-logging: &default-logging
+  options:
+    max-size: "100m"
+    max-file: "5"
+  driver: json-file
+
+# Required env vars (set in .env or Coolify environment):
+#   DATABASE_URL        — from: terraform output -raw db_app_private_uri
+#   APP_SECRET          — random secret for session signing
+#   SUPERUSER_LOGIN     — initial admin username
+#   SUPERUSER_PASSWORD  — initial admin password
+
+x-staging-db-env: &staging-db-env
+  DATABASE_URL: ${DATABASE_URL}
+  DATABASE_REPLICA_URL: ${DATABASE_URL}
+
+x-staging-kafka-env: &staging-kafka-env
+  USE_KAFKA: "true"
+  KAFKA_BROKERS_LIST: redpanda:29092
+  KAFKA_CLIENT_ID: bidon_staging
+  KAFKA_DELIVERY_INTERVAL: 5
+  KAFKA_AD_EVENTS_TOPIC: ad-events
+  KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+
+x-staging-redis-env: &staging-redis-env
+  REDIS_URL: redis://redis:6379/0
+  REDIS_CLUSTER: redis://redis:6379/0
+
+x-staging-bidon-app-env: &staging-bidon-app-env
+  <<: [*staging-kafka-env, *staging-redis-env]
+  ENVIRONMENT: production
+  USE_GEOCODING: "false"
+  SNOWFLAKE_NODE_ID: 1
+
+services:
+  redpanda:
+    image: redpandadata/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 1G
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    logging: *default-logging
+    <<: *restart-policy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+    logging: *default-logging
+    <<: *restart-policy
+
+  migrate:
+    build:
+      context: .
+      target: bidon-migrate
+    command: up
+    restart: on-failure
+    environment:
+      <<: [*staging-db-env, *staging-bidon-app-env]
+    logging: *default-logging
+
+  bidon-admin:
+    build:
+      context: .
+      target: bidon-admin
+    ports:
+      - "1323:1323"
+      - "50051:50051"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: [*staging-db-env, *staging-bidon-app-env]
+      PORT: 1323
+      GRPC_PORT: 50051
+      APP_SECRET: ${APP_SECRET}
+      SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+    logging: *default-logging
+    <<: *restart-policy
+
+  bidon-sdkapi:
+    build:
+      context: .
+      target: bidon-sdkapi
+    ports:
+      - "1324:1323"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: [*staging-db-env, *staging-bidon-app-env]
+      PORT: 1323
+      APP_SECRET: ${APP_SECRET}
+    logging: *default-logging
+    <<: *restart-policy
+
+  bidon-seed:
+    build:
+      context: .
+      target: bidon-seed
+    command: ["/bidon-seed", "--sample", "--reset"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: [*staging-db-env, *staging-bidon-app-env]
+    restart: "no"
+    logging: *default-logging
+
+  init-admin:
+    image: curlimages/curl:latest
+    depends_on:
+      bidon-admin:
+        condition: service_started
+    environment:
+      SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+      BIDON_ADMIN_URL: http://bidon-admin:1323
+    volumes:
+      - ./scripts:/scripts:ro
+    command: sh /scripts/init-admin.sh
+    restart: "no"
+    logging: *default-logging
+
+volumes:
+  redpanda-data:
+  redis-data:
