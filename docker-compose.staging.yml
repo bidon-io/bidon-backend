@@ -132,7 +132,7 @@ services:
     <<: *restart-policy
 
   bidon-sdkapi:
-    image: "registry.digitalocean.com/bidon-io/bidon-admin:${BIDON_SDKAPI_TAG}"
+    image: "registry.digitalocean.com/bidon-io/bidon-sdkapi:${BIDON_SDKAPI_TAG}"
     ports:
       - "1324:1323"
     depends_on:
