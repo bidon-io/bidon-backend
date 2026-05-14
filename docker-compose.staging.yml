@@ -80,8 +80,8 @@ services:
     environment:
       KAFKA_BROKERS: redpanda:29092
     labels:
-      - traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}
-      - coolify.traefik.middlewares=redpanda-console-ba
+      - "traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}"
+      - "coolify.traefik.middlewares=redpanda-console-ba"
     logging: *default-logging
     <<: *restart-policy
 
@@ -132,9 +132,7 @@ services:
     <<: *restart-policy
 
   bidon-sdkapi:
-    build:
-      context: .
-      target: bidon-sdkapi
+    image: "registry.digitalocean.com/bidon-io/bidon-admin:${BIDON_SDKAPI_TAG}"
     ports:
       - "1324:1323"
     depends_on:
