@@ -102,9 +102,7 @@ services:
     <<: *restart-policy
 
   migrate:
-    build:
-      context: .
-      target: bidon-migrate
+    image: "registry.digitalocean.com/bidon-io/bidon-migrate:${BIDON_MIGRATE_TAG}"
     command: up
     restart: on-failure
     environment:
@@ -112,9 +110,7 @@ services:
     logging: *default-logging
 
   bidon-admin:
-    build:
-      context: .
-      target: bidon-admin
+    image: "registry.digitalocean.com/bidon-io/bidon-admin:${BIDON_ADMIN_TAG}"
     ports:
       - "1323:1323"
       - "50051:50051"
@@ -154,9 +150,7 @@ services:
     <<: *restart-policy
 
   bidon-seed:
-    build:
-      context: .
-      target: bidon-seed
+    image: "registry.digitalocean.com/bidon-io/bidon-seed:${BIDON_SEED_TAG}"
     command: ["/bidon-seed", "--sample", "--reset"]
     depends_on:
       migrate:
