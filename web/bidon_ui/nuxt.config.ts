@@ -2,6 +2,8 @@
 const apiProxyTarget =
   process.env.NUXT_API_PROXY_TARGET || "http://localhost:1323";
 
+const apiBase = process.env.NUXT_PUBLIC_API_BASE || "";
+
 export default defineNuxtConfig({
   alias: {
     assets: "/<rootDir>/assets",
@@ -11,7 +13,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      copilotBase: "/api/copilot",
+      // Set NUXT_PUBLIC_API_BASE at build time to point at the API origin when
+      // the frontend is served from a separate domain (e.g. DO Spaces/CDN).
+      // Leave unset for local dev — the Nuxt dev-server proxy handles routing.
+      apiBase: "",
+      copilotBase: apiBase
+        ? `${apiBase.replace(/\/$/, "")}/api/copilot`
+        : "/api/copilot",
     },
   },
 

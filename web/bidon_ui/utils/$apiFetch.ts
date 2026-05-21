@@ -1,23 +1,23 @@
-import { API_URL } from "~/constants";
 import { camelizeKeys, decamelizeKeys } from "humps";
 import { $fetch } from "ofetch";
 
-const baseURL = `${API_URL}api`;
-
 export const $apiFetch = $fetch.create({
-  baseURL: baseURL,
   headers: {
     "X-Bidon-App": "web",
   },
   onRequest(context) {
-    // baseURL does not prepend if request matches it
-    // https://github.com/unjs/ufo/blob/496140d0abcc3c3636409eb403c4916fade58203/src/utils.ts#L231
+    const {
+      public: { apiBase },
+    } = useRuntimeConfig();
+    const base = apiBase
+      ? `${(apiBase as string).replace(/\/$/, "")}/api`
+      : "/api";
 
     if (
       typeof context.request === "string" &&
-      context.request.startsWith("/api_keys")
+      !context.request.startsWith("http")
     ) {
-      context.request = `${baseURL}${context.request}`;
+      context.request = `${base}${context.request.startsWith("/") ? "" : "/"}${context.request}`;
     }
 
     if (
