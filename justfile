@@ -3,7 +3,6 @@ registry := "registry.digitalocean.com/bidon-io"
 tag := `git rev-parse --short HEAD`
 
 # UI deploy — set in .env or export before running
-ui_api_base     := env('NUXT_PUBLIC_API_BASE', '')
 ui_bucket       := env('SPACES_STAGING_BUCKET', '')
 ui_region       := env('SPACES_REGION', 'ams3')
 do_access_key   := env('DO_ACCESS_KEY_ID', '')
@@ -56,16 +55,15 @@ build-all:
     just build-proxy
 
 # Build the Nuxt SPA and sync to the staging Spaces bucket.
-# Required env vars: NUXT_PUBLIC_API_BASE, SPACES_STAGING_BUCKET, DO_ACCESS_KEY_ID, DO_SECRET_ACCESS_KEY
+# Required env vars: SPACES_STAGING_BUCKET, DO_ACCESS_KEY_ID, DO_SECRET_ACCESS_KEY
 # Optional: SPACES_REGION (default: ams3)
 deploy-staging-ui:
     #!/usr/bin/env sh
     set -e
-    [ -z "{{ui_api_base}}" ]   && echo "NUXT_PUBLIC_API_BASE is required"  && exit 1
     [ -z "{{ui_bucket}}" ]     && echo "SPACES_STAGING_BUCKET is required" && exit 1
     [ -z "{{do_access_key}}" ] && echo "DO_ACCESS_KEY_ID is required"      && exit 1
     [ -z "{{do_secret_key}}" ] && echo "DO_SECRET_ACCESS_KEY is required"  && exit 1
-    cd web/bidon_ui && NUXT_PUBLIC_API_BASE="{{ui_api_base}}" yarn generate
+    cd web/bidon_ui && yarn generate
     AWS_ACCESS_KEY_ID="{{do_access_key}}" AWS_SECRET_ACCESS_KEY="{{do_secret_key}}" \
         aws s3 sync .output/public/ \
         "s3://{{ui_bucket}}/{{tag}}/" \

@@ -12,8 +12,8 @@ x-logging: &default-logging
 #   APP_SECRET          — random secret for session signing
 #   SUPERUSER_LOGIN     — initial admin username
 #   SUPERUSER_PASSWORD  — initial admin password
-#   CORS_ALLOWED_ORIGINS        — comma-separated list of allowed origins for the admin API (e.g. https://app.yourdomain.com)
 #   SPACES_FRONTEND_ORIGIN      — full Spaces URL to the active frontend build (e.g. https://<bucket>.ams3.digitaloceanspaces.com/<git-sha>)
+#   API_BACKEND_URL             — internal URL of the admin API for nginx proxy (e.g. http://bidon-admin:1323)
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
 #     Coolify: reference this var under redpanda-console.environment (below) so it is in the
@@ -130,7 +130,6 @@ services:
       APP_SECRET: ${APP_SECRET}
       SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
       SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     logging: *default-logging
     <<: *restart-policy
 
@@ -182,8 +181,11 @@ services:
     image: nginx:alpine
     ports:
       - "8888:80"
+    depends_on:
+      - bidon-admin
     environment:
       SPACES_FRONTEND_ORIGIN: ${SPACES_FRONTEND_ORIGIN}
+      API_BACKEND_URL: ${API_BACKEND_URL:-http://bidon-admin:1323}
     volumes:
       - ./docker/staging/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     logging: *default-logging
