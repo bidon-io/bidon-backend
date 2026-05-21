@@ -64,7 +64,7 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 		},
 	}))
 	g.Use(echojwt.WithConfig(echojwt.Config{
-		Skipper: skipIfAny(skipIfWebAppOrAuth("Basic"), skipIfAuthRoutes(), skipIfApiKey(), skipIfOpenAPISpec()),
+		Skipper: skipIfAny(skipIfOptions(), skipIfWebAppOrAuth("Basic"), skipIfAuthRoutes(), skipIfApiKey(), skipIfOpenAPISpec()),
 		SuccessHandler: func(c echo.Context) {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(*auth.JWTClaims)
@@ -352,6 +352,12 @@ func skipIfAuthRoutes() middleware.Skipper {
 func skipIfOpenAPISpec() middleware.Skipper {
 	return func(c echo.Context) bool {
 		return c.Path() == "/api/openapi.json"
+	}
+}
+
+func skipIfOptions() middleware.Skipper {
+	return func(c echo.Context) bool {
+		return c.Request().Method == http.MethodOptions
 	}
 }
 

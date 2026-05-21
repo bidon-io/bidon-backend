@@ -163,7 +163,7 @@ func main() {
 func configureCORS(e *echo.Echo) {
 	if origins := os.Getenv("CORS_ALLOWED_ORIGINS"); origins != "" {
 		allowedOrigins := strings.Split(origins, ",")
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		e.Pre(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins:     allowedOrigins,
 			AllowMethods:     []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
 			AllowHeaders:     []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Bidon-App", "X-Bidon-Api-Key"},
