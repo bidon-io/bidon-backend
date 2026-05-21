@@ -6,18 +6,11 @@ export const $apiFetch = $fetch.create({
     "X-Bidon-App": "web",
   },
   onRequest(context) {
-    const {
-      public: { apiBase },
-    } = useRuntimeConfig();
-    const base = apiBase
-      ? `${(apiBase as string).replace(/\/$/, "")}/api`
-      : "/api";
-
     if (
       typeof context.request === "string" &&
       !context.request.startsWith("http")
     ) {
-      context.request = `${base}${context.request.startsWith("/") ? "" : "/"}${context.request}`;
+      context.request = `/api${context.request.startsWith("/") ? "" : "/"}${context.request}`;
     }
 
     if (
