@@ -181,7 +181,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:80"
+      - "8888:80"
     environment:
       SPACES_FRONTEND_ORIGIN: ${SPACES_FRONTEND_ORIGIN}
     volumes:
