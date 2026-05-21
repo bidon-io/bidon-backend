@@ -39,6 +39,23 @@ resource "digitalocean_spaces_bucket" "frontend" {
   }
 }
 
+resource "digitalocean_spaces_bucket_policy" "frontend_public" {
+  count  = var.enable_frontend_bucket ? 1 : 0
+  region = var.spaces_region
+  bucket = digitalocean_spaces_bucket.frontend[0].name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "PublicReadGetObject"
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = ["s3:GetObject"]
+      Resource  = ["arn:aws:s3:::${digitalocean_spaces_bucket.frontend[0].name}/*"]
+    }]
+  })
+}
+
 resource "digitalocean_cdn" "frontend" {
   count  = var.enable_frontend_bucket ? 1 : 0
   origin = digitalocean_spaces_bucket.frontend[0].bucket_domain_name
