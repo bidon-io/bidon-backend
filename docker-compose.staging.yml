@@ -12,7 +12,8 @@ x-logging: &default-logging
 #   APP_SECRET          — random secret for session signing
 #   SUPERUSER_LOGIN     — initial admin username
 #   SUPERUSER_PASSWORD  — initial admin password
-#   CORS_ALLOWED_ORIGINS       — comma-separated list of allowed origins for the admin API (e.g. https://app.yourdomain.com)
+#   CORS_ALLOWED_ORIGINS        — comma-separated list of allowed origins for the admin API (e.g. https://app.yourdomain.com)
+#   SPACES_FRONTEND_ORIGIN      — full Spaces URL to the active frontend build (e.g. https://<bucket>.ams3.digitaloceanspaces.com/<git-sha>)
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
 #     Coolify: reference this var under redpanda-console.environment (below) so it is in the
@@ -176,6 +177,17 @@ services:
     command: sh /scripts/init-admin.sh
     restart: "no"
     logging: *default-logging
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    environment:
+      SPACES_FRONTEND_ORIGIN: ${SPACES_FRONTEND_ORIGIN}
+    volumes:
+      - ./docker/staging/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    logging: *default-logging
+    <<: *restart-policy
 
 volumes:
   redpanda-data:
