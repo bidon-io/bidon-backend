@@ -12,6 +12,7 @@ x-logging: &default-logging
 #   APP_SECRET          — random secret for session signing
 #   SUPERUSER_LOGIN     — initial admin username
 #   SUPERUSER_PASSWORD  — initial admin password
+#   CORS_ALLOWED_ORIGINS       — comma-separated list of allowed origins for the admin API (e.g. https://app.yourdomain.com)
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
 #     Coolify: reference this var under redpanda-console.environment (below) so it is in the
@@ -128,6 +129,7 @@ services:
       APP_SECRET: ${APP_SECRET}
       SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
       SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     logging: *default-logging
     <<: *restart-policy
 
