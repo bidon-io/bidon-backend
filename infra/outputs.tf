@@ -74,6 +74,21 @@ output "spaces_bucket_urn" {
   value       = module.phase1.spaces_bucket_urn
 }
 
+output "frontend_bucket_name" {
+  description = "Spaces bucket for staging frontend deployments (null if not provisioned)."
+  value       = module.phase1.frontend_bucket_name
+}
+
+output "frontend_bucket_origin" {
+  description = "Spaces origin hostname for nginx proxy_pass (null if not provisioned)."
+  value       = module.phase1.frontend_bucket_origin
+}
+
+output "frontend_cdn_endpoint" {
+  description = "CDN endpoint hostname for nginx proxy_pass or direct browser access (null if not provisioned)."
+  value       = module.phase1.frontend_cdn_endpoint
+}
+
 output "next_steps" {
   description = "Human-oriented handoff for Coolify and Redpanda (not applied by Terraform)."
   value       = module.phase1.next_steps

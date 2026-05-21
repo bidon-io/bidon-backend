@@ -75,6 +75,12 @@ variable "enable_spaces_bucket" {
   description = "Whether to create the Spaces bucket (requires Spaces API credentials on the aliased provider)."
 }
 
+variable "enable_frontend_bucket" {
+  type        = bool
+  description = "Create a public Spaces bucket + CDN for staging frontend deployments."
+  default     = false
+}
+
 variable "monitor_alert_email" {
   type        = string
   description = "If set, creates Droplet monitor alerts for CPU, memory, and disk utilization."

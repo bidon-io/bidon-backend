@@ -21,8 +21,9 @@ module "phase1" {
   postgres_size    = var.postgres_size
   postgres_db_name = var.postgres_db_name
 
-  spaces_region        = var.spaces_region
-  enable_spaces_bucket = var.enable_spaces_bucket
+  spaces_region          = var.spaces_region
+  enable_spaces_bucket   = var.enable_spaces_bucket
+  enable_frontend_bucket = var.enable_frontend_bucket
 
   monitor_alert_email = var.monitor_alert_email
   terraform_runner_ip = var.terraform_runner_ip

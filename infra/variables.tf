@@ -112,6 +112,12 @@ variable "enable_spaces_bucket" {
   default     = true
 }
 
+variable "enable_frontend_bucket" {
+  type        = bool
+  description = "Create a public Spaces bucket + CDN for staging frontend deployments."
+  default     = false
+}
+
 variable "monitor_alert_email" {
   type        = string
   description = "Email address for DigitalOcean Insights alerts on the Droplet (CPU/memory/disk). If null, monitor alerts are not created."

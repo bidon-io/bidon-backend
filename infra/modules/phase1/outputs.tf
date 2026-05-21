@@ -61,6 +61,21 @@ output "spaces_bucket_urn" {
   value = try(digitalocean_spaces_bucket.backups[0].urn, null)
 }
 
+output "frontend_bucket_name" {
+  description = "Spaces bucket name for staging frontend deployments (null if not provisioned)."
+  value       = try(digitalocean_spaces_bucket.frontend[0].name, null)
+}
+
+output "frontend_bucket_origin" {
+  description = "Spaces origin hostname — use in nginx proxy_pass (e.g. https://<origin>/current/)."
+  value       = try(digitalocean_spaces_bucket.frontend[0].bucket_domain_name, null)
+}
+
+output "frontend_cdn_endpoint" {
+  description = "CDN endpoint hostname — cached alternative to the Spaces origin for nginx proxy_pass."
+  value       = try(digitalocean_cdn.frontend[0].endpoint, null)
+}
+
 output "coolify_install" {
   description = "How Coolify was configured on the Droplet."
   value       = var.install_coolify ? "cloud-init first boot: https://cdn.coollabs.io/coolify/install.sh (log: /var/log/coolify-install.log on the server)" : "disabled in Terraform; install manually after SSH"

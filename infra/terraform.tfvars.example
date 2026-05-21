@@ -43,6 +43,7 @@ coolify_source_cidrs = [
 
 enable_weekly_droplet_backups = true
 enable_spaces_bucket          = true
+enable_frontend_bucket        = true
 
 # DO Insights email alerts (CPU / memory / disk). Leave unset to skip alert resources.
 # monitor_alert_email = "ops@example.com"
