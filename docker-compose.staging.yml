@@ -57,9 +57,6 @@ services:
       - --node-id 0
       - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
       - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
-    ports:
-      - "9092:9092"
-      - "29092:29092"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -79,8 +76,6 @@ services:
     depends_on:
       redpanda:
         condition: service_healthy
-    ports:
-      - "18080:8080"
     environment:
       KAFKA_BROKERS: redpanda:29092
       # Pass-through so Coolify/Compose picks up REDPANDA_CONSOLE_BA_USERS for label substitution (not used by the app).
@@ -93,8 +88,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -113,9 +106,9 @@ services:
 
   bidon-admin:
     image: "registry.digitalocean.com/bidon-io/bidon-admin:${BIDON_ADMIN_TAG}"
-    ports:
-      - "1323:1323"
-      - "50051:50051"
+    expose:
+      - "1323"
+      - "50051"
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -135,8 +128,8 @@ services:
 
   bidon-sdkapi:
     image: "registry.digitalocean.com/bidon-io/bidon-sdkapi:${BIDON_SDKAPI_TAG}"
-    ports:
-      - "1324:1323"
+    expose:
+      - "1323"
     depends_on:
       migrate:
         condition: service_completed_successfully
