@@ -172,8 +172,8 @@ services:
 
   nginx:
     image: nginx:alpine
-    ports:
-      - "8888:80"
+    expose:
+      - "80"
     depends_on:
       - bidon-admin
     environment:
