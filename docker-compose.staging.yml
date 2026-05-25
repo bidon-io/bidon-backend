@@ -12,8 +12,7 @@ x-logging: &default-logging
 #   APP_SECRET          — random secret for session signing
 #   SUPERUSER_LOGIN     — initial admin username
 #   SUPERUSER_PASSWORD  — initial admin password
-#   SPACES_FRONTEND_ORIGIN      — full Spaces URL to the active frontend build (e.g. https://<bucket>.ams3.digitaloceanspaces.com/<git-sha>)
-#   API_BACKEND_URL             — internal URL of the admin API for nginx proxy (e.g. http://bidon-admin:1323)
+#   BIDON_UI_TAG        — Docker image tag for bidon-ui (e.g. git SHA from CI)
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
 #     Coolify: reference this var under redpanda-console.environment (below) so it is in the
@@ -170,17 +169,14 @@ services:
     restart: "no"
     logging: *default-logging
 
-  nginx:
-    image: nginx:alpine
+  bidon-ui:
+    image: "registry.digitalocean.com/bidon-io/bidon-ui:${BIDON_UI_TAG}"
     expose:
-      - "80"
+      - "3000"
     depends_on:
       - bidon-admin
     environment:
-      SPACES_FRONTEND_ORIGIN: ${SPACES_FRONTEND_ORIGIN}
-      API_BACKEND_URL: ${API_BACKEND_URL:-http://bidon-admin:1323}
-    volumes:
-      - ./docker/staging/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      NUXT_API_PROXY_TARGET: http://bidon-admin:1323
     logging: *default-logging
     <<: *restart-policy
 

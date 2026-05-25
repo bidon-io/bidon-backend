@@ -1,7 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-const apiProxyTarget =
-  process.env.NUXT_API_PROXY_TARGET || "http://localhost:1323";
-
 export default defineNuxtConfig({
   alias: {
     assets: "/<rootDir>/assets",
@@ -10,6 +7,7 @@ export default defineNuxtConfig({
   ssr: false,
 
   runtimeConfig: {
+    apiProxyTarget: "http://localhost:1323",
     public: {
       copilotBase: "/api/copilot",
     },
@@ -81,11 +79,6 @@ export default defineNuxtConfig({
 
   build: {
     transpile: ["primevue"],
-  },
-
-  routeRules: {
-    "/auth/**": { proxy: `${apiProxyTarget}/auth/**` },
-    "/api/**": { proxy: `${apiProxyTarget}/api/**` },
   },
 
   compatibilityDate: "2024-10-31",
