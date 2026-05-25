@@ -1,6 +1,6 @@
 
 registry := "registry.digitalocean.com/bidon-io"
-tag := `git rev-parse --short HEAD`
+tag := `git rev-parse HEAD`
 
 # UI deploy — set in .env or export before running
 ui_bucket       := env('SPACES_STAGING_BUCKET', '')
