@@ -176,7 +176,7 @@ services:
     depends_on:
       - bidon-admin
     environment:
-      NUXT_API_PROXY_TARGET: http://bidon-admin:1323
+      NUXT_API_PROXY_TARGET: http://${SERVICE_NAME_BIDON_ADMIN:-bidon-admin}:1323
     logging: *default-logging
     <<: *restart-policy
 
