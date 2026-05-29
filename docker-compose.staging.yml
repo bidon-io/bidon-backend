@@ -16,6 +16,7 @@ x-logging: &default-logging
 #   BIDON_SDKAPI_TAG          — Docker image tag for bidon-sdkapi
 #   BIDON_MIGRATE_TAG         — Docker image tag for bidon-migrate
 #   BIDON_SEED_TAG            — Docker image tag for bidon-seed
+#   BIDON_UI_TAG              — Docker image tag for bidon-ui (e.g. git SHA from CI)
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
@@ -200,6 +201,17 @@ services:
     command: sh /scripts/init-admin.sh
     restart: "no"
     logging: *default-logging
+
+  bidon-ui:
+    image: "registry.digitalocean.com/bidon-io/bidon-ui:${BIDON_UI_TAG}"
+    expose:
+      - "3000"
+    depends_on:
+      - bidon-admin
+    environment:
+      NUXT_API_PROXY_TARGET: http://${SERVICE_NAME_BIDON_ADMIN:-bidon-admin}:1323
+    logging: *default-logging
+    <<: *restart-policy
 
 volumes:
   geodb:
