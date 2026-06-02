@@ -2,5 +2,5 @@
 	path = proto
 	url = git@github.com:bidon-io/bidon-protos.git
 	# TODO: remove update=none once a Coolify deploy key is added to bidon-protos (requires repo admin access).
-	# To pull the submodule locally: git submodule update --init proto
+	# To pull the submodule locally: git submodule update --init --recursive proto
 	update = none
