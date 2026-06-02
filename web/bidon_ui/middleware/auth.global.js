@@ -3,7 +3,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (authStore.isAuthorized && !authStore.currentUser) {
     try {
-      const currentUser = await $apiFetch("users/me");
+      const currentUser = await $apiFetch("/users/me");
       authStore.setCurrentUser(currentUser);
     } catch (e) {
       if (e.response.status === 401) {
