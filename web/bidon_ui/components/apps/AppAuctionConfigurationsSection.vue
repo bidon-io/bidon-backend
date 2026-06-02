@@ -362,6 +362,7 @@
 
 <script setup>
 import useDeleteResource from "@/composables/useDeleteResource";
+import { mergeResourcePermissions } from "@/utils/mergeResourcePermissions";
 import { useToast } from "primevue/usetoast";
 
 const props = defineProps({
@@ -373,16 +374,6 @@ const props = defineProps({
 const toast = useToast();
 const auctionConfigs = ref([...props.initialAuctionConfigs]);
 const allLineItems = ref([...props.initialLineItems]);
-
-/** PATCH/POST responses return bare records without `_permissions`; keep prior permissions so the delete footer stays visible. */
-function mergeAuctionConfigApiPayload(prev, data) {
-  if (!data) return data;
-  return {
-    ...data,
-    _permissions: data._permissions ??
-      prev?._permissions ?? { update: true, delete: true },
-  };
-}
 
 const configSearch = ref("");
 const configAdTypeFilter = ref(null);
@@ -468,7 +459,7 @@ function cloneAuctionConfig(config) {
 }
 
 function handleAuctionConfigCreated(newConfig) {
-  auctionConfigs.value.push(newConfig);
+  auctionConfigs.value.push(mergeResourcePermissions(undefined, newConfig));
   showInlineConfigForm.value = false;
   cloneSourceConfig.value = null;
 }
@@ -476,7 +467,7 @@ function handleAuctionConfigCreated(newConfig) {
 function handleAuctionConfigUpdated(updatedConfig) {
   const idx = auctionConfigs.value.findIndex((c) => c.id === updatedConfig.id);
   if (idx !== -1) {
-    auctionConfigs.value[idx] = mergeAuctionConfigApiPayload(
+    auctionConfigs.value[idx] = mergeResourcePermissions(
       auctionConfigs.value[idx],
       updatedConfig,
     );
@@ -550,7 +541,7 @@ async function handleLineItemCreated(newItem, configId) {
       method: "PATCH",
       body: { adUnitIds: updatedAdUnitIds },
     });
-    auctionConfigs.value[configIdx] = mergeAuctionConfigApiPayload(
+    auctionConfigs.value[configIdx] = mergeResourcePermissions(
       auctionConfigs.value[configIdx],
       data,
     );
@@ -598,7 +589,7 @@ async function handleLineItemDeleted(itemId) {
         (c) => c.id === config.id,
       );
       if (configIdx !== -1) {
-        auctionConfigs.value[configIdx] = mergeAuctionConfigApiPayload(
+        auctionConfigs.value[configIdx] = mergeResourcePermissions(
           auctionConfigs.value[configIdx],
           data,
         );

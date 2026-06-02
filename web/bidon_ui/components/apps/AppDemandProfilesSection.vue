@@ -210,6 +210,7 @@
 <script setup>
 import useDeleteResource from "@/composables/useDeleteResource";
 import { NETWORK_DEFS } from "@/constants/Networks.js";
+import { mergeResourcePermissions } from "@/utils/mergeResourcePermissions";
 
 const props = defineProps({
   demandProfiles: { type: Array, required: true },
@@ -256,7 +257,12 @@ function toggleEdit(profileId) {
 
 function onProfileUpdated(updated) {
   const idx = profiles.value.findIndex((p) => p.id === updated.id);
-  if (idx !== -1) profiles.value[idx] = updated;
+  if (idx !== -1) {
+    profiles.value[idx] = mergeResourcePermissions(
+      profiles.value[idx],
+      updated,
+    );
+  }
   editingId.value = null;
 }
 

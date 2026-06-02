@@ -89,6 +89,7 @@
 
 <script setup>
 import useDeleteResource from "@/composables/useDeleteResource";
+import { mergeResourcePermissions } from "@/utils/mergeResourcePermissions";
 
 const props = defineProps({
   resource: { type: Object, required: true },
@@ -96,27 +97,17 @@ const props = defineProps({
   resourcesPath: { type: String, required: true },
 });
 
-/** PATCH responses often omit `_permissions`; keep prior permissions so edit/delete controls stay correct. */
-function mergeAppResource(prev, data) {
-  if (!data) return data;
-  return {
-    ...data,
-    _permissions: data._permissions ??
-      prev?._permissions ?? { update: true, delete: true },
-  };
-}
-
-const mergedResource = ref(mergeAppResource(undefined, props.resource));
+const mergedResource = ref(mergeResourcePermissions(undefined, props.resource));
 
 watch(
   () => [props.id, props.resource],
   ([id, next], prevTuple) => {
     const prevId = prevTuple?.[0];
     if (prevTuple !== undefined && id !== prevId) {
-      mergedResource.value = mergeAppResource(undefined, next);
+      mergedResource.value = mergeResourcePermissions(undefined, next);
       return;
     }
-    mergedResource.value = mergeAppResource(mergedResource.value, next);
+    mergedResource.value = mergeResourcePermissions(mergedResource.value, next);
   },
 );
 
