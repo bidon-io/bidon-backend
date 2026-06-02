@@ -94,6 +94,8 @@ services:
   # https://coolify.io/docs/knowledge-base/proxy/traefik/basic-auth#docker-compose-and-services
   redpanda-console:
     image: redpandadata/console:latest
+    expose:
+      - "8080"
     depends_on:
       redpanda:
         condition: service_healthy
