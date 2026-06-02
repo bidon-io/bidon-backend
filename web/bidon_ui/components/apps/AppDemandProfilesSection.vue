@@ -267,7 +267,7 @@ function onProfileUpdated(updated) {
 }
 
 function onProfileCreated(created) {
-  profiles.value.push(created);
+  profiles.value.push(mergeResourcePermissions(undefined, created));
   showCreateForm.value = false;
 }
 
