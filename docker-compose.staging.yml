@@ -38,7 +38,7 @@ x-staging-bidon-app-env: &staging-bidon-app-env
 
 services:
   redpanda:
-    image: redpandadata/redpanda:latest
+    image: redpandadata/redpanda:v26.1.9
     command:
       - redpanda
       - start

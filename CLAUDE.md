@@ -15,7 +15,7 @@ Bidon is a **Go-based ad mediation and programmatic advertising platform** that 
 - Language: Go
 - Database: PostgreSQL (with GORM ORM)
 - Caching: Redis
-- Messaging: Kafka
+- Messaging: Redpanda (Kafka-compatible API)
 - APIs: REST (Echo framework) + gRPC
 - Protocol Buffers: For API definitions
 
@@ -224,7 +224,10 @@ func (h *Handler) HandleRequest(ctx context.Context, req *Request) (*Response, e
 # Initialize local environment
 make local-init
 
-# Start dependencies (Postgres, Redis, Kafka)
+# Full local stack (Postgres, Redis, Redpanda, APIs, UI)
+docker compose -f docker-compose.dev.yml up -d
+
+# Or start core dependencies only (Postgres, Redis)
 docker compose up -d
 ```
 
@@ -284,7 +287,7 @@ Resources are typically scoped to users:
 6. Handles win/loss notifications
 
 ### Event Logging
-Events are logged to Kafka for analytics:
+Events are logged to Redpanda for analytics:
 - Auction events
 - Impression events
 - Click events

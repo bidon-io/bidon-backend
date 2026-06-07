@@ -65,7 +65,7 @@ services:
     extra_hosts: *host-gateway-extra-hosts
 
   redpanda:
-    image: docker.redpanda.com/redpandadata/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.1.9
     command:
       - redpanda
       - start
@@ -89,7 +89,7 @@ services:
       start_period: 5s
 
   redpanda-console:
-    image: docker.redpanda.com/redpandadata/console:latest
+    image: docker.redpanda.com/redpandadata/console:v2.8.15
     ports:
       - '8080:8080'
     depends_on:
