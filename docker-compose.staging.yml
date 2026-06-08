@@ -93,7 +93,7 @@ services:
   # labels only on this service. Kafka brokers stay at redpanda:29092 without proxy auth — see Coolify docs:
   # https://coolify.io/docs/knowledge-base/proxy/traefik/basic-auth#docker-compose-and-services
   redpanda-console:
-    image: redpandadata/console:latest
+    image: redpandadata/console:v2.8.15
     expose:
       - "8080"
     depends_on:
@@ -101,8 +101,12 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BROKERS: redpanda:29092
-      # Pass-through so Coolify/Compose picks up REDPANDA_CONSOLE_BA_USERS for label substitution (not used by the app).
-      REDPANDA_CONSOLE_BA_USERS: ${REDPANDA_CONSOLE_BA_USERS:?}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     labels:
       - "traefik.http.middlewares.redpanda-console-ba.basicauth.users=${REDPANDA_CONSOLE_BA_USERS}"
       - "coolify.traefik.middlewares=redpanda-console-ba"
