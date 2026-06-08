@@ -78,6 +78,53 @@ go run ./cmd/bidon-sdkapi
 make test
 ```
 
+## Docker images
+
+Images are tagged with the current git SHA and named `registry.digitalocean.com/bidon-io/<service>:<sha>`.
+
+### Local builds (testing)
+
+Build images into your local Docker store for `docker run` or compose testing. No registry login or push:
+
+```shell
+just build-admin    # bidon-admin
+just build-sdkapi   # bidon-sdkapi
+just build-migrate  # bidon-migrate
+just build-seed     # bidon-seed
+just build-all      # all of the above
+```
+
+### CI / registry builds (staging and deploy)
+
+Build and push to the DigitalOcean Container Registry. Authenticate first:
+
+```shell
+just docker-login
+```
+
+Push a single service:
+
+```shell
+just ci-build-admin
+just ci-build-sdkapi
+just ci-build-migrate
+just ci-build-seed
+```
+
+Or push all services (logs in once):
+
+```shell
+just ci-build-all
+```
+
+### Staging deployment
+
+Staging runs in [Coolify](http://coolify.bidon.squads.com/).
+
+After pushing images with `just ci-build-*`, update the app configuration there — set each `BIDON_*_TAG` environment variable to the git SHA produced by the build. See `.env.staging.example` for the full list of required variables.
+
+For initial Coolify setup (Terraform provisioning, `bidon-coolify` CLI), see `infra/README.md`.
+
 ### Clean env
 ```shell
 docker compose down --volumes --rmi local --remove-orphans || true
