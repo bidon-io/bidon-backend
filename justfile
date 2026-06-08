@@ -37,10 +37,10 @@ build-seed:
     just _build bidon-seed
 
 build-all:
-    just _build bidon-admin
-    just _build bidon-sdkapi
-    just _build bidon-migrate
-    just _build bidon-seed
+    just build-admin
+    just build-sdkapi
+    just build-migrate
+    just build-seed
 
 # --- CI / registry image builds ---
 # Build and push images to the DigitalOcean Container Registry (--push).
@@ -66,7 +66,7 @@ ci-build-seed:
 
 ci-build-all:
     just docker-login
-    just _ci-build bidon-admin
-    just _ci-build bidon-sdkapi
-    just _ci-build bidon-migrate
-    just _ci-build bidon-seed
+    just ci-build-admin
+    just ci-build-sdkapi
+    just ci-build-migrate
+    just ci-build-seed
