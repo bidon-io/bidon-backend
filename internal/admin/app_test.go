@@ -63,7 +63,7 @@ func TestAppService_Create(t *testing.T) {
 		name     string
 		authCtx  admin.AuthContext
 		attrs    admin.AppAttrs
-		want     *admin.App
+		want     *admin.AppResource
 		checkErr func(error)
 	}{
 		{
@@ -72,13 +72,13 @@ func TestAppService_Create(t *testing.T) {
 			attrs: admin.AppAttrs{
 				UserID: users[0].ID,
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: 5,
 				AppAttrs: admin.AppAttrs{
 					UserID: users[0].ID,
 				},
 				User: users[0],
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -89,13 +89,13 @@ func TestAppService_Create(t *testing.T) {
 			name:    "admin creates app with no userID set",
 			authCtx: userContext{user: users[0]},
 			attrs:   admin.AppAttrs{},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: 5,
 				AppAttrs: admin.AppAttrs{
 					UserID: users[0].ID,
 				},
 				User: users[0],
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -108,13 +108,13 @@ func TestAppService_Create(t *testing.T) {
 			attrs: admin.AppAttrs{
 				UserID: users[1].ID,
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: 5,
 				AppAttrs: admin.AppAttrs{
 					UserID: users[1].ID,
 				},
 				User: users[1],
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -140,13 +140,13 @@ func TestAppService_Create(t *testing.T) {
 			attrs: admin.AppAttrs{
 				UserID: users[1].ID,
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: 5,
 				AppAttrs: admin.AppAttrs{
 					UserID: users[1].ID,
 				},
 				User: users[1],
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -157,13 +157,13 @@ func TestAppService_Create(t *testing.T) {
 			name:    "non-admin user creates app with no userID set",
 			authCtx: userContext{user: users[1]},
 			attrs:   admin.AppAttrs{},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: 5,
 				AppAttrs: admin.AppAttrs{
 					UserID: users[1].ID,
 				},
 				User: users[1],
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -283,7 +283,7 @@ func TestAppService_Update(t *testing.T) {
 		authCtx  admin.AuthContext
 		id       int64
 		attrs    admin.AppAttrs
-		want     *admin.App
+		want     *admin.AppResource
 		checkErr func(error)
 	}{
 		{
@@ -293,14 +293,14 @@ func TestAppService_Update(t *testing.T) {
 			attrs: admin.AppAttrs{
 				HumanName: "new name",
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: adminApps[0].ID,
 				AppAttrs: admin.AppAttrs{
 					UserID:    adminApps[0].UserID,
 					HumanName: "new name",
 				},
 				User: adminApps[0].User,
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Update() error = %v, wantErr %v", err, false)
@@ -314,14 +314,14 @@ func TestAppService_Update(t *testing.T) {
 			attrs: admin.AppAttrs{
 				HumanName: "new name",
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: nonAdminApps[0].ID,
 				AppAttrs: admin.AppAttrs{
 					UserID:    nonAdminApps[0].UserID,
 					HumanName: "new name",
 				},
 				User: nonAdminApps[0].User,
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Update() error = %v, wantErr %v", err, false)
@@ -335,13 +335,13 @@ func TestAppService_Update(t *testing.T) {
 			attrs: admin.AppAttrs{
 				UserID: nonAdminUser.ID,
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: adminApps[0].ID,
 				AppAttrs: admin.AppAttrs{
 					UserID: nonAdminUser.ID,
 				},
 				User: nonAdminUser,
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Create() error = %v, wantErr %v", err, false)
@@ -369,14 +369,14 @@ func TestAppService_Update(t *testing.T) {
 			attrs: admin.AppAttrs{
 				HumanName: "new name",
 			},
-			want: &admin.App{
+			want: appResource(&admin.App{
 				ID: nonAdminApps[0].ID,
 				AppAttrs: admin.AppAttrs{
 					UserID:    nonAdminApps[0].UserID,
 					HumanName: "new name",
 				},
 				User: nonAdminApps[0].User,
-			},
+			}),
 			checkErr: func(err error) {
 				if err != nil {
 					t.Errorf("Update() error = %v, wantErr %v", err, false)
@@ -422,6 +422,20 @@ func TestAppService_Update(t *testing.T) {
 				t.Errorf("Update() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func appResource(app *admin.App) *admin.AppResource {
+	if app == nil {
+		return nil
+	}
+
+	return &admin.AppResource{
+		App: app,
+		Permissions: admin.ResourceInstancePermissions{
+			Update: true,
+			Delete: true,
+		},
 	}
 }
 

@@ -146,10 +146,21 @@ func TestResourceService_Create(t *testing.T) {
 
 			return &testValidator{}
 		},
+		prepareResource: func(authCtx AuthContext, data *TestResourceData) TestResource {
+			return TestResource{
+				TestResourceData: data,
+				Permissions: ResourceInstancePermissions{
+					Update: true,
+					Delete: true,
+				},
+			}
+		},
 	}
 
+	wantResource := s.prepareResource(nil, want)
+
 	resource, _ := s.Create(context.Background(), nil, &want.TestResourceAttrs)
-	if diff := cmp.Diff(want, resource); diff != "" {
+	if diff := cmp.Diff(&wantResource, resource); diff != "" {
 		t.Errorf("Create() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -186,6 +197,39 @@ func TestResourceService_Create_validationError(t *testing.T) {
 
 	if calls := len(repoMock.CreateCalls()); calls != 0 {
 		t.Errorf("Create() got %d calls, want 0", calls)
+	}
+}
+
+func TestResourceService_Create_repoError(t *testing.T) {
+	repoErr := errors.New("create failed")
+	testResourceAttrs := &TestResourceAttrs{Name: "test1"}
+
+	s := ResourceService[TestResource, TestResourceData, TestResourceAttrs]{
+		repo: &ResourceManipulatorMock[TestResourceData, TestResourceAttrs]{
+			CreateFunc: func(ctx context.Context, attrs *TestResourceAttrs) (*TestResourceData, error) {
+				return nil, repoErr
+			},
+		},
+		policy: &resourcePolicyMock[TestResourceData, TestResourceAttrs]{
+			authorizeCreateFunc: func(ctx context.Context, authCtx AuthContext, attrs *TestResourceAttrs) error {
+				return nil
+			},
+		},
+		getValidator: func(attrs *TestResourceAttrs) v8n.ValidatableWithContext {
+			return &testValidator{}
+		},
+		prepareResource: func(authCtx AuthContext, data *TestResourceData) TestResource {
+			t.Fatal("prepareResource should not be called when repo.Create fails")
+			return TestResource{}
+		},
+	}
+
+	resource, err := s.Create(context.Background(), nil, testResourceAttrs)
+	if !errors.Is(err, repoErr) {
+		t.Fatalf("Create() error = %v, want %v", err, repoErr)
+	}
+	if resource != nil {
+		t.Fatalf("Create() resource = %v, want nil", resource)
 	}
 }
 
@@ -235,10 +279,21 @@ func TestResourceService_Update(t *testing.T) {
 
 			return &testValidator{}
 		},
+		prepareResource: func(authCtx AuthContext, data *TestResourceData) TestResource {
+			return TestResource{
+				TestResourceData: data,
+				Permissions: ResourceInstancePermissions{
+					Update: true,
+					Delete: true,
+				},
+			}
+		},
 	}
 
+	wantResource := s.prepareResource(nil, want)
+
 	resource, _ := s.Update(context.Background(), nil, want.ID, &want.TestResourceAttrs)
-	if diff := cmp.Diff(want, resource); diff != "" {
+	if diff := cmp.Diff(&wantResource, resource); diff != "" {
 		t.Errorf("Update() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -292,6 +347,49 @@ func TestResourceService_Update_validationError(t *testing.T) {
 
 	if calls := len(repoMock.UpdateCalls()); calls != 0 {
 		t.Errorf("Update() got %d calls, want 0", calls)
+	}
+}
+
+func TestResourceService_Update_repoError(t *testing.T) {
+	repoErr := errors.New("update failed")
+	want := &TestResourceData{
+		ID:                1,
+		TestResourceAttrs: TestResourceAttrs{Name: "test1"},
+	}
+
+	s := ResourceService[TestResource, TestResourceData, TestResourceAttrs]{
+		repo: &ResourceManipulatorMock[TestResourceData, TestResourceAttrs]{
+			UpdateFunc: func(ctx context.Context, id int64, attrs *TestResourceAttrs) (*TestResourceData, error) {
+				return nil, repoErr
+			},
+		},
+		policy: &resourcePolicyMock[TestResourceData, TestResourceAttrs]{
+			getManageScopeFunc: func(authCtx AuthContext) resourceScope[TestResourceData] {
+				return &resourceScopeMock[TestResourceData]{
+					findFunc: func(ctx context.Context, id int64) (*TestResourceData, error) {
+						return want, nil
+					},
+				}
+			},
+			authorizeUpdateFunc: func(ctx context.Context, authCtx AuthContext, resource *TestResourceData, attrs *TestResourceAttrs) error {
+				return nil
+			},
+		},
+		getValidator: func(attrs *TestResourceAttrs) v8n.ValidatableWithContext {
+			return &testValidator{}
+		},
+		prepareResource: func(authCtx AuthContext, data *TestResourceData) TestResource {
+			t.Fatal("prepareResource should not be called when repo.Update fails")
+			return TestResource{}
+		},
+	}
+
+	resource, err := s.Update(context.Background(), nil, want.ID, &want.TestResourceAttrs)
+	if !errors.Is(err, repoErr) {
+		t.Fatalf("Update() error = %v, want %v", err, repoErr)
+	}
+	if resource != nil {
+		t.Fatalf("Update() resource = %v, want nil", resource)
 	}
 }
 

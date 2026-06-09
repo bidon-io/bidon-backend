@@ -326,7 +326,7 @@ func (s *Server) GetLineItemsCollection(c echo.Context, _ api.GetLineItemsCollec
 }
 
 func (s *Server) CreateLineItem(c echo.Context) error {
-	return s.LineItemHandler.createWithStatus(c, func(resource *admin.LineItem) int {
+	return s.LineItemHandler.createWithStatus(c, func(resource *admin.LineItemResource) int {
 		if resource.AlreadyExists {
 			return http.StatusOK
 		}

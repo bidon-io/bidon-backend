@@ -115,7 +115,7 @@ func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Find(ctx contex
 	return &resource, nil
 }
 
-func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Create(ctx context.Context, authCtx AuthContext, attrs *ResourceAttrs) (*ResourceData, error) {
+func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Create(ctx context.Context, authCtx AuthContext, attrs *ResourceAttrs) (*Resource, error) {
 	if s.prepareCreateAttrs != nil {
 		s.prepareCreateAttrs(authCtx, attrs)
 	}
@@ -128,10 +128,17 @@ func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Create(ctx cont
 		return nil, err
 	}
 
-	return s.repo.Create(ctx, attrs)
+	data, err := s.repo.Create(ctx, attrs)
+	if err != nil {
+		return nil, err
+	}
+
+	resource := s.prepareResource(authCtx, data)
+
+	return &resource, nil
 }
 
-func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *ResourceAttrs) (*ResourceData, error) {
+func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *ResourceAttrs) (*Resource, error) {
 	scope := s.policy.getManageScope(authCtx)
 
 	resource, err := scope.find(ctx, id)
@@ -147,7 +154,14 @@ func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Update(ctx cont
 		return nil, err
 	}
 
-	return s.repo.Update(ctx, id, attrs)
+	data, err := s.repo.Update(ctx, id, attrs)
+	if err != nil {
+		return nil, err
+	}
+
+	prepared := s.prepareResource(authCtx, data)
+
+	return &prepared, nil
 }
 
 func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Delete(ctx context.Context, authCtx AuthContext, id int64) error {
