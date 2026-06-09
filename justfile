@@ -93,4 +93,4 @@ ci-build-all:
     just ci-build-sdkapi
     just ci-build-migrate
     just ci-build-seed
-    just ci-bidon-ui
+    just ci-build-ui
