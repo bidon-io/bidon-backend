@@ -10,11 +10,18 @@ services:
   geodb-maxmind:
     image: maxmindinc/geoipupdate:v4.7.1
     environment:
-      GEOIPUPDATE_ACCOUNT_ID: ${MAXMIND_ACCOUNT_ID}
-      GEOIPUPDATE_LICENSE_KEY: ${MAXMIND_LICENSE_KEY}
+      GEOIPUPDATE_ACCOUNT_ID: ${MAXMIND_GEOIP_ACCOUNT_ID}
+      GEOIPUPDATE_LICENSE_KEY: ${MAXMIND_GEOIP_LICENSE_KEY}
       GEOIPUPDATE_EDITION_IDS: GeoLite2-City
+      GEOIPUPDATE_FREQUENCY: 72
     volumes:
       - "geodb:/usr/share/GeoIP/"
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/share/GeoIP/GeoLite2-City.mmdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   postgres:
     image: postgres:17.2
