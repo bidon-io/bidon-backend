@@ -106,7 +106,7 @@ BEGIN
     (
         adikteev_account_id, adikteev_id, owner_id,
         'DemandSourceAccount::adikteev',
-        '{"endpoint": "rubicon-eu.dsp.adikteev.com", "seller_id":  "1"}'::jsonb,
+        '{}'::jsonb,
         true, false, NOW(), NOW(), 'Adikteev Audience Network', adikteev_account_id
     )
     ON CONFLICT (id) DO NOTHING;
@@ -168,7 +168,7 @@ BEGIN
      '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true),
     -- Tetris
     (4012, tetris_app_id, 'DemandSourceAccount::Adikteev', adikteev_account_id, adikteev_id,
-     '{"app_id": 195876}'::jsonb, NOW(), NOW(), 4012, true)
+     '{"sdk_instance_id": "sdk_instance_id"}'::jsonb, NOW(), NOW(), 4012, true)
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================================================
@@ -596,7 +596,15 @@ BEGIN
         created_at, updated_at, width, height, format, public_uid, bidding
     ) VALUES
     (5301, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id,
-     'Tetris Adikteev Banner [Bidding]', 0.01, 3, '{"placement_id": "4567822365_banner_bid"}'::jsonb, NOW(), NOW(), 320, 480, 'BANNER', 5301, true)
+     'Tetris Adikteev Banner [Bidding]', 0.01, 3, '{}'::jsonb, NOW(), NOW(), 320, 50, 'BANNER', 5301, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5302, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id,
+     'Tetris Adikteev MREC [Bidding]', 0.01, 3, '{}'::jsonb, NOW(), NOW(), 300, 250, 'MREC', 5302, true)
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO auction_configurations (
@@ -608,7 +616,47 @@ BEGIN
     NOW(), NOW(), NULL, false, 6050, 10000,
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
-    ARRAY[5301]::bigint[]
+    ARRAY[5301, 5302]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5303, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id,
+     'Tetris Adikteev Interstitial [Bidding]', 0.01, 1, '{}'::jsonb, NOW(), NOW(), 320, 480, '', 5303, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6051, 'Tetris Interstitial Auction', tetris_app_id, 1, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6051, 10000,
+    ARRAY['adikteev']::varchar[],
+    ARRAY['adikteev']::varchar[],
+    ARRAY[5303]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5304, tetris_app_id, 'DemandSourceAccount::adikteev', adikteev_account_id,
+     'Tetris Adikteev Rewarded [Bidding]', 0.01, 6, '{}'::jsonb, NOW(), NOW(), 0, 0, '', 5304, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6052, 'Tetris Rewarded Auction', tetris_app_id, 6, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6052, 10000,
+    ARRAY['adikteev']::varchar[],
+    ARRAY['adikteev']::varchar[],
+    ARRAY[5304]::bigint[]
     ) ON CONFLICT (id) DO NOTHING;
 
 END $$;
