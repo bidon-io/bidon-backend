@@ -21,9 +21,11 @@ import (
 )
 
 type AdikteevAdapter struct {
-	SellerID string
-	Endpoint string
 }
+
+//Loïc Anton: map sdk request ad types to ad formats
+//  banner => openrtb2.Banner with MRAID api
+//  interstitial and rewarded => openrtb2.banner with MRAID API + openrtb2.video
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat: {320, 50},
@@ -41,6 +43,7 @@ func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb
 			W:   &w,
 			H:   &h,
 			Pos: adcom1.PositionAboveFold.Ptr(),
+			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
 		},
 	}
 }
@@ -57,6 +60,14 @@ func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *o
 			W:   &w,
 			H:   &h,
 			Pos: adcom1.PositionFullScreen.Ptr(),
+			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
+		},
+		Video: &openrtb2.Video{
+			W:         w,
+			H:         h,
+			Pos:       adcom1.PositionFullScreen.Ptr(),
+			MIMEs:     []string{"video/mp4"},
+			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
 	}
 }
@@ -69,23 +80,31 @@ func (a *AdikteevAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openr
 	}
 	return &openrtb2.Imp{
 		Instl: 1,
-		//Banner: &openrtb2.Banner{
-		//	W:   &w,
-		//	H:   &h,
-		//	Pos: adcom1.PositionFullScreen.Ptr(),
-		//},
+		Banner: &openrtb2.Banner{
+			W:   &w,
+			H:   &h,
+			Pos: adcom1.PositionFullScreen.Ptr(),
+			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
+		},
 		Video: &openrtb2.Video{
 			W:         w,
 			H:         h,
 			Pos:       adcom1.PositionFullScreen.Ptr(),
-			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
+			MIMEs:     []string{"video/mp4"},
 			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
 	}
 }
 
+func (a *AdikteevAdapter) sdkInstanceId(auctionRequest *schema.AuctionRequest) []byte {
+	extStructure := map[string]interface{}{
+		"sdkinstanceid": auctionRequest.AdObject.Demands[adapter.AdikteevKey]["token"],
+	}
+	raw, _ := json.Marshal(extStructure)
+	return raw
+}
+
 func getEndpoint() string {
-	//return "http://rubicon-eu.dsp.adikteev.com"
 	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
 }
 
@@ -106,12 +125,12 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 
 	impId, _ := uuid.NewV4()
 	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.Adikteev)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.Adikteev].SDKVersion
+	imp.DisplayManager = string(adapter.AdikteevKey)
+	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.AdikteevKey].SDKVersion
 	imp.Secure = &secure
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 
-	request.App.Publisher.ID = a.SellerID
+	request.App.Ext = a.sdkInstanceId(auctionRequest)
 
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}
@@ -121,7 +140,7 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 
 func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
 	dr := &adapters.DemandResponse{
-		DemandID:  adapter.Adikteev,
+		DemandID:  adapter.AdikteevKey,
 		RequestID: request.ID,
 	}
 	requestBody, err := json.Marshal(request)
@@ -138,8 +157,6 @@ func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 		return dr
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
-
-	//filename := fmt.Sprintf("%s_%s_%s_bid_req", request.Device.OS, request.Imp[0].DisplayManager, )
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
@@ -182,7 +199,7 @@ func (a *AdikteevAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dema
 		ImpID:    bid.ImpID,
 		Price:    bid.Price,
 		Payload:  bid.AdM,
-		DemandID: adapter.Adikteev,
+		DemandID: adapter.AdikteevKey,
 		AdID:     bid.AdID,
 		SeatID:   seat.Seat,
 		LURL:     bid.LURL,
@@ -195,20 +212,7 @@ func (a *AdikteevAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dema
 
 // Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
-	bmCfg := cfg[adapter.Adikteev]
-	endpoint, ok := bmCfg["endpoint"].(string)
-	if !ok || endpoint == "" {
-		return nil, fmt.Errorf("missing endpoint param for Adikteev adapter")
-	}
-	sellerID, ok := bmCfg["seller_id"].(string)
-	if !ok || sellerID == "" {
-		return nil, fmt.Errorf("missing seller_id param for %s adapter", adapter.Adikteev)
-	}
-
-	adpt := &AdikteevAdapter{
-		Endpoint: endpoint,
-		SellerID: sellerID,
-	}
+	adpt := &AdikteevAdapter{}
 
 	bidder := &adapters.Bidder{
 		Adapter: adpt,

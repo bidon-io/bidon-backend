@@ -14,7 +14,7 @@ type Config struct {
 
 const (
 	// Sorted alphabetically
-	Adikteev      Key = "adikteev"
+	AdikteevKey   Key = "adikteev"
 	AdmobKey      Key = "admob"
 	AmazonKey     Key = "amazon"
 	ApplovinKey   Key = "applovin"
@@ -39,7 +39,7 @@ const (
 )
 
 var Keys = []Key{
-	Adikteev,
+	AdikteevKey,
 	AdmobKey,
 	AmazonKey,
 	ApplovinKey,

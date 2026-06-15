@@ -27,7 +27,7 @@ import (
 )
 
 var biddingAdapters = map[adapter.Key]adapters.Builder{
-	adapter.Adikteev:      adikteev.Builder,
+	adapter.AdikteevKey:   adikteev.Builder,
 	adapter.BidmachineKey: bidmachine.Builder,
 	adapter.BigoAdsKey:    bigoads.Builder,
 	adapter.InmobiKey:     inmobi.Builder,
@@ -108,9 +108,8 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		extra := profile.AccountExtra
 		appData := profile.AppData
 		switch key {
-		case adapter.Adikteev:
-			adaptersMap[key]["seller_id"] = extra["seller_id"]
-			adaptersMap[key]["endpoint"] = extra["endpoint"]
+		case adapter.AdikteevKey:
+			adaptersMap[key]["sdk_instance_id"] = extra["sdk_instance_id"]
 		case adapter.AmazonKey:
 			adaptersMap[key]["price_points_map"] = extra["price_points_map"]
 		case adapter.BidmachineKey:
