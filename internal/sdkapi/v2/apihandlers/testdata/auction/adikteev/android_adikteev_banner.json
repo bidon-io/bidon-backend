@@ -63,7 +63,7 @@
     "auction_pricefloor": 0.001,
     "demands": {
       "adikteev": {
-        "token": "token-is-needed"
+        "token": "sdk-instance-id"
       }
     },
     "id": "f2d0dc19-b43f-43c1-8ca0-ae895ec76970",
