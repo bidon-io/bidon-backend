@@ -96,7 +96,7 @@ func (a *AdikteevAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openr
 	}
 }
 
-func (a *AdikteevAdapter) sdkInstanceId(auctionRequest *schema.AuctionRequest) []byte {
+func (a *AdikteevAdapter) sdkInstanceID(auctionRequest *schema.AuctionRequest) []byte {
 	extStructure := map[string]interface{}{
 		"sdkinstanceid": auctionRequest.AdObject.Demands[adapter.AdikteevKey]["token"],
 	}
@@ -130,7 +130,7 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 	imp.Secure = &secure
 	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
 
-	request.App.Ext = a.sdkInstanceId(auctionRequest)
+	request.App.Ext = a.sdkInstanceID(auctionRequest)
 
 	request.Imp = []openrtb2.Imp{*imp}
 	request.Cur = []string{"USD"}

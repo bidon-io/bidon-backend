@@ -201,7 +201,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			setOrder:       false,
 			want: []sdkapi.AdapterInitConfig{
 				&sdkapi.AdkiteevInitConfig{
-					SdkInstanceId: "sdk_instance_id",
+					SdkInstanceID: "sdk_instance_id",
 					Order:         0,
 				},
 				&sdkapi.ChartboostInitConfig{
@@ -259,7 +259,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			setAmazonSlots: true,
 			setOrder:       true,
 			want: []sdkapi.AdapterInitConfig{
-				&sdkapi.AdkiteevInitConfig{SdkInstanceId: "sdk_instance_id"},
+				&sdkapi.AdkiteevInitConfig{SdkInstanceID: "sdk_instance_id"},
 				&sdkapi.ChartboostInitConfig{
 					AppID:        fmt.Sprintf("chartboost_app_%d", apps[1].ID),
 					AppSignature: "123",

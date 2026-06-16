@@ -77,7 +77,7 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 }
 
 type AdkiteevInitConfig struct {
-	SdkInstanceId string `json:"sdk_instance_id"`
+	SdkInstanceID string `json:"sdk_instance_id"`
 	Order         int    `json:"order"`
 }
 
