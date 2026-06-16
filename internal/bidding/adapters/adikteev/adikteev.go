@@ -179,6 +179,8 @@ func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 
 func (a *AdikteevAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
 	switch dr.Status {
+	case http.StatusNoContent:
+		return dr, nil
 	case http.StatusOK:
 		break
 	default:
