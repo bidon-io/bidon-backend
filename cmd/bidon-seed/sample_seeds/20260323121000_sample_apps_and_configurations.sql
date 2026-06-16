@@ -590,6 +590,8 @@ BEGIN
     --
     -- Auction strategy:
     --   Banner        — Adikteev bidding
+    --   Interstitial  — Adikteev bidding
+    --   Rewarded      — Adikteev bidding
     -- =========================================================
     INSERT INTO line_items (
         id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
