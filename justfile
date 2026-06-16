@@ -24,6 +24,9 @@ test-db:
 test:
     go test ./...
 
+precommit:
+    pre-commit run --all-files
+
 #
 
 [arg('env', pattern='local|test|staging|prod')]
