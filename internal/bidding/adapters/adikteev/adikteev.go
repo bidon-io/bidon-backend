@@ -32,9 +32,13 @@ var bannerFormats = map[ad.Format][2]int64{
 	ad.MRECFormat:   {300, 250},
 }
 
-func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := bannerFormats[auctionRequest.AdObject.Format()]
+var MRAIDAPI = []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20}
 
+func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
+	size, found := bannerFormats[auctionRequest.AdObject.Format()]
+	if !found {
+		return nil
+	}
 	w, h := size[0], size[1]
 
 	return &openrtb2.Imp{
@@ -43,13 +47,16 @@ func (a *AdikteevAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb
 			W:   &w,
 			H:   &h,
 			Pos: adcom1.PositionAboveFold.Ptr(),
-			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
+			API: MRAIDAPI,
 		},
 	}
 }
 
 func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	size, found := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
+	if !found {
+		return nil
+	}
 	w, h := size[0], size[1]
 	if !auctionRequest.AdObject.IsPortrait() {
 		w, h = h, w
@@ -60,7 +67,7 @@ func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *o
 			W:   &w,
 			H:   &h,
 			Pos: adcom1.PositionFullScreen.Ptr(),
-			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
+			API: MRAIDAPI,
 		},
 		Video: &openrtb2.Video{
 			W:         w,
@@ -73,27 +80,7 @@ func (a *AdikteevAdapter) interstitial(auctionRequest *schema.AuctionRequest) *o
 }
 
 func (a *AdikteevAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionFullScreen.Ptr(),
-			API: []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20},
-		},
-		Video: &openrtb2.Video{
-			W:         w,
-			H:         h,
-			Pos:       adcom1.PositionFullScreen.Ptr(),
-			MIMEs:     []string{"video/mp4"},
-			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-		},
-	}
+	return a.interstitial(auctionRequest)
 }
 
 func (a *AdikteevAdapter) sdkInstanceID(auctionRequest *schema.AuctionRequest) []byte {
