@@ -8,10 +8,14 @@ x-logging: &default-logging
   driver: json-file
 
 # Required env vars (set in .env or Coolify environment):
-#   DATABASE_URL          — from: terraform output -raw db_app_private_uri
-#   APP_SECRET            — random secret for session signing
-#   SUPERUSER_LOGIN       — initial admin username
-#   SUPERUSER_PASSWORD    — initial admin password
+#   DATABASE_URL              — from: terraform output -raw db_app_private_uri
+#   APP_SECRET                — random secret for session signing
+#   SUPERUSER_LOGIN           — initial admin username
+#   SUPERUSER_PASSWORD        — initial admin password
+#   BIDON_ADMIN_TAG           — Docker image tag for bidon-admin (e.g. git SHA from CI)
+#   BIDON_SDKAPI_TAG          — Docker image tag for bidon-sdkapi
+#   BIDON_MIGRATE_TAG         — Docker image tag for bidon-migrate
+#   BIDON_SEED_TAG            — Docker image tag for bidon-seed
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 
@@ -95,9 +99,7 @@ services:
     <<: *restart-policy
 
   migrate:
-    build:
-      context: .
-      target: bidon-migrate
+    image: "registry.digitalocean.com/bidon-io/bidon-migrate:${BIDON_MIGRATE_TAG}"
     command: up
     restart: on-failure
     environment:
@@ -105,9 +107,7 @@ services:
     logging: *default-logging
 
   bidon-admin:
-    build:
-      context: .
-      target: bidon-admin
+    image: "registry.digitalocean.com/bidon-io/bidon-admin:${BIDON_ADMIN_TAG}"
     ports:
       - "1323:1323"
       - "50051:50051"
@@ -129,9 +129,7 @@ services:
     <<: *restart-policy
 
   bidon-sdkapi:
-    build:
-      context: .
-      target: bidon-sdkapi
+    image: "registry.digitalocean.com/bidon-io/bidon-sdkapi:${BIDON_SDKAPI_TAG}"
     ports:
       - "1324:1323"
     depends_on:
@@ -153,9 +151,7 @@ services:
     <<: *restart-policy
 
   bidon-seed:
-    build:
-      context: .
-      target: bidon-seed
+    image: "registry.digitalocean.com/bidon-io/bidon-seed:${BIDON_SEED_TAG}"
     command: ["/bidon-seed", "--sample", "--reset"]
     depends_on:
       migrate:
