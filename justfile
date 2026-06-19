@@ -7,13 +7,29 @@ tag := `git rev-parse HEAD`
 dev:
     docker compose -f docker-compose.dev.yml up
 
+dev-down:
+    docker compose -f docker-compose.dev.yml down --remove-orphans
+
 seed:
-    go run ./cmd/bidon-seed -reset
+    go run ./cmd/bidon-seed -reset -sample
 
 sdk-api:
     go run ./cmd/bidon-sdkapi
 
-[arg('env', pattern='local|staging|prod')]
+#
+
+test-db:
+    docker compose up migrate-test
+
+test:
+    go test ./...
+
+precommit:
+    pre-commit run --all-files
+
+#
+
+[arg('env', pattern='local|test|staging|prod')]
 switch env:
     ln -sf .env.{{env}} .env
 

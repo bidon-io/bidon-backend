@@ -76,6 +76,8 @@ func ValidDemandSourceAccountExtra(t *testing.T, key adapter.Key) []byte {
 	t.Helper()
 
 	switch key {
+	case adapter.AdikteevKey:
+		return []byte(`{}`)
 	case adapter.AdmobKey:
 		return []byte(`{"foo": "bar"}`)
 	case adapter.ApplovinKey:

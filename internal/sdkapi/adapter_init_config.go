@@ -14,6 +14,8 @@ type AdapterInitConfig interface {
 func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, error) {
 	var config AdapterInitConfig
 	switch key {
+	case adapter.AdikteevKey:
+		config = new(AdkiteevInitConfig)
 	case adapter.AdmobKey:
 		config = new(AdmobInitConfig)
 	case adapter.ApplovinKey:
@@ -72,6 +74,19 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 	}
 
 	return config, nil
+}
+
+type AdkiteevInitConfig struct {
+	SdkInstanceID string `json:"sdk_instance_id"`
+	Order         int    `json:"order"`
+}
+
+func (a *AdkiteevInitConfig) Key() adapter.Key {
+	return adapter.AdikteevKey
+}
+
+func (a *AdkiteevInitConfig) SetDefaultOrder() {
+	a.Order = 0
 }
 
 type AdmobInitConfig struct {
