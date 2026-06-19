@@ -97,6 +97,12 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BROKERS: redpanda:9092
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   migrate:
     image: golang:1.24-alpine
