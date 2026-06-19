@@ -8,10 +8,12 @@ x-logging: &default-logging
   driver: json-file
 
 # Required env vars (set in .env or Coolify environment):
-#   DATABASE_URL        — from: terraform output -raw db_app_private_uri
-#   APP_SECRET          — random secret for session signing
-#   SUPERUSER_LOGIN     — initial admin username
-#   SUPERUSER_PASSWORD  — initial admin password
+#   DATABASE_URL          — from: terraform output -raw db_app_private_uri
+#   APP_SECRET            — random secret for session signing
+#   SUPERUSER_LOGIN       — initial admin username
+#   SUPERUSER_PASSWORD    — initial admin password
+#   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
+#   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 
 x-staging-db-env: &staging-db-env
   DATABASE_URL: ${DATABASE_URL}
@@ -33,10 +35,28 @@ x-staging-bidon-app-env: &staging-bidon-app-env
   <<: [*staging-kafka-env, *staging-redis-env]
   ENVIRONMENT: production
   USE_GEOCODING: "true"
-  MAXMIND_GEOIP_FILE_PATH: /GeoLite2-City.mmdb
+  MAXMIND_GEOIP_FILE_PATH: /public/system/GeoLite2-City.mmdb
   SNOWFLAKE_NODE_ID: 1
 
 services:
+  geodb-maxmind:
+    image: maxmindinc/geoipupdate:v4.7.1
+    environment:
+      GEOIPUPDATE_ACCOUNT_ID: ${MAXMIND_GEOIP_ACCOUNT_ID}
+      GEOIPUPDATE_LICENSE_KEY: ${MAXMIND_GEOIP_LICENSE_KEY}
+      GEOIPUPDATE_EDITION_IDS: GeoLite2-City
+      GEOIPUPDATE_FREQUENCY: 72
+    volumes:
+      - geodb:/usr/share/GeoIP
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/share/GeoIP/GeoLite2-City.mmdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+    <<: *restart-policy
+
   redpanda:
     image: redpandadata/redpanda:v26.1.9
     command:
@@ -115,6 +135,8 @@ services:
     ports:
       - "1324:1323"
     depends_on:
+      geodb-maxmind:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
       redis:
@@ -125,6 +147,8 @@ services:
       <<: [*staging-db-env, *staging-bidon-app-env]
       PORT: 1323
       APP_SECRET: ${APP_SECRET}
+    volumes:
+      - geodb:/public/system
     logging: *default-logging
     <<: *restart-policy
 
@@ -157,5 +181,6 @@ services:
     logging: *default-logging
 
 volumes:
+  geodb:
   redpanda-data:
   redis-data:

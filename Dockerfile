@@ -42,7 +42,6 @@ RUN go build -o /bidon-admin ./cmd/bidon-admin
 
 FROM base AS bidon-sdkapi-builder
 
-RUN wget -qO /GeoLite2-City.mmdb "https://git.io/GeoLite2-City.mmdb"
 RUN go build -o /bidon-sdkapi ./cmd/bidon-sdkapi
 
 FROM base AS bidon-migrate-builder
@@ -93,7 +92,6 @@ CMD [ "/bidon-admin" ]
 FROM deploy AS bidon-sdkapi
 
 COPY --from=bidon-sdkapi-builder --chown=deploy /bidon-sdkapi /bidon-sdkapi
-COPY --from=bidon-sdkapi-builder --chown=deploy /GeoLite2-City.mmdb /GeoLite2-City.mmdb
 
 CMD [ "/bidon-sdkapi" ]
 
