@@ -28,6 +28,7 @@
 .DS_Store
 
 public/system
+/GeoLite2-*.mmdb
 
 # Ignore files related to Rust.
 target

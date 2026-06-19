@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.CODECOV_BIDON_BACKEND_TOKEN }}
           url: ${{ secrets.CODECOV_URL }}
           directory: ./testcov/
-          fail_ci_if_error: true
+          fail_ci_if_error: false # TODO: this is failing, Could not verify signature. Please contact Codecov if problem continues
 
       - run: docker compose down --rmi local -v
         if: always()
