@@ -119,25 +119,25 @@ func UseAuthorization(g *echo.Group, authService *auth.Service) {
 	})
 }
 
-type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.App, admin.AppAttrs]
-type appDemandProfileServiceHandler = resourceServiceHandler[admin.AppDemandProfileResource, admin.AppDemandProfile, admin.AppDemandProfileAttrs]
-type auctionConfigurationServiceHandler = resourceServiceHandler[admin.AuctionConfigurationResource, admin.AuctionConfiguration, admin.AuctionConfigurationAttrs]
-type auctionConfigurationV2ServiceHandler = resourceServiceHandler[admin.AuctionConfigurationV2Resource, admin.AuctionConfigurationV2, admin.AuctionConfigurationV2Attrs]
-type countryServiceHandler = resourceServiceHandler[admin.CountryResource, admin.Country, admin.CountryAttrs]
-type demandSourceServiceHandler = resourceServiceHandler[admin.DemandSourceResource, admin.DemandSource, admin.DemandSourceAttrs]
-type demandSourceAccountServiceHandler = resourceServiceHandler[admin.DemandSourceAccountResource, admin.DemandSourceAccount, admin.DemandSourceAccountAttrs]
-type lineItemServiceHandler = resourceServiceHandler[admin.LineItemResource, admin.LineItem, admin.LineItemAttrs]
-type segmentServiceHandler = resourceServiceHandler[admin.SegmentResource, admin.Segment, admin.SegmentAttrs]
-type userServiceHandler = resourceServiceHandler[admin.UserResource, admin.User, admin.UserAttrs]
+type appServiceHandler = resourceServiceHandler[admin.AppResource, admin.AppAttrs]
+type appDemandProfileServiceHandler = resourceServiceHandler[admin.AppDemandProfileResource, admin.AppDemandProfileAttrs]
+type auctionConfigurationServiceHandler = resourceServiceHandler[admin.AuctionConfigurationResource, admin.AuctionConfigurationAttrs]
+type auctionConfigurationV2ServiceHandler = resourceServiceHandler[admin.AuctionConfigurationV2Resource, admin.AuctionConfigurationV2Attrs]
+type countryServiceHandler = resourceServiceHandler[admin.CountryResource, admin.CountryAttrs]
+type demandSourceServiceHandler = resourceServiceHandler[admin.DemandSourceResource, admin.DemandSourceAttrs]
+type demandSourceAccountServiceHandler = resourceServiceHandler[admin.DemandSourceAccountResource, admin.DemandSourceAccountAttrs]
+type lineItemServiceHandler = resourceServiceHandler[admin.LineItemResource, admin.LineItemAttrs]
+type segmentServiceHandler = resourceServiceHandler[admin.SegmentResource, admin.SegmentAttrs]
+type userServiceHandler = resourceServiceHandler[admin.UserResource, admin.UserAttrs]
 type settingsServiceHandler struct {
 	service *admin.SettingsService
 }
 
-type resourceServiceHandler[Resource, ResourceData, ResourceAttrs any] struct {
-	service resourceService[Resource, ResourceData, ResourceAttrs]
+type resourceServiceHandler[Resource, ResourceAttrs any] struct {
+	service resourceService[Resource, ResourceAttrs]
 }
 
-type resourceService[Resource, ResourceData, ResourceAttrs any] interface {
+type resourceService[Resource, ResourceAttrs any] interface {
 	List(ctx context.Context, authCtx admin.AuthContext, qParams map[string][]string) (*resource.Collection[Resource], error)
 	Find(ctx context.Context, authCtx admin.AuthContext, id int64) (*Resource, error)
 	Create(ctx context.Context, authCtx admin.AuthContext, attrs *ResourceAttrs) (*Resource, error)
@@ -156,7 +156,7 @@ func (s stubAuthContext) IsAdmin() bool {
 	return true
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) list(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) list(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) list(c e
 	return c.JSON(http.StatusOK, collection.Items)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) listCollection(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) listCollection(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
@@ -184,11 +184,11 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) listColl
 	return c.JSON(http.StatusOK, collection)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) create(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) create(c echo.Context) error {
 	return s.createWithStatus(c, nil)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) createWithStatus(
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) createWithStatus(
 	c echo.Context,
 	statusCode func(resource *Resource) int,
 ) error {
@@ -221,7 +221,7 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) createWi
 	return c.JSON(status, resource)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) get(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) get(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) get(c ec
 	return c.JSON(http.StatusOK, resource)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) update(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) update(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
@@ -269,7 +269,7 @@ func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) update(c
 	return c.JSON(http.StatusOK, resource)
 }
 
-func (s *resourceServiceHandler[Resource, ResourceData, ResourceAttrs]) delete(c echo.Context) error {
+func (s *resourceServiceHandler[Resource, ResourceAttrs]) delete(c echo.Context) error {
 	authCtx, err := getAuthContext(c)
 	if err != nil {
 		return err
