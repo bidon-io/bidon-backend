@@ -28,12 +28,16 @@ type ResourceCollection[Resource any] struct {
 }
 
 // ResourceService provides CRUD operations for managing a resource. It handles validation, authorization, and persistence.
+//
+// All API responses must include _permissions. Find, List, Create, and Update wrap repo data via prepareResource
+// before returning. Services that override Create or Update must call prepareResource on success as well.
 type ResourceService[Resource, ResourceData, ResourceAttrs any] struct {
 	resourceKey string
 
 	repo   ResourceManipulator[ResourceData, ResourceAttrs]
 	policy resourcePolicy[ResourceData, ResourceAttrs]
 
+	// prepareResource wraps raw repo data into the API Resource type, attaching _permissions from the policy.
 	prepareResource    func(authCtx AuthContext, data *ResourceData) Resource
 	prepareCreateAttrs func(authCtx AuthContext, attrs *ResourceAttrs)
 	getValidator       func(*ResourceAttrs) v8n.ValidatableWithContext
@@ -115,6 +119,7 @@ func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Find(ctx contex
 	return &resource, nil
 }
 
+// Create persists a new resource and returns it wrapped with _permissions via prepareResource.
 func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Create(ctx context.Context, authCtx AuthContext, attrs *ResourceAttrs) (*Resource, error) {
 	if s.prepareCreateAttrs != nil {
 		s.prepareCreateAttrs(authCtx, attrs)
@@ -138,6 +143,7 @@ func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Create(ctx cont
 	return &resource, nil
 }
 
+// Update persists changes and returns the resource wrapped with _permissions via prepareResource.
 func (s *ResourceService[Resource, ResourceData, ResourceAttrs]) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *ResourceAttrs) (*Resource, error) {
 	scope := s.policy.getManageScope(authCtx)
 

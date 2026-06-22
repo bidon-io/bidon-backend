@@ -9,6 +9,15 @@
     {
       "type": "object",
       "required": ["email"]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this user instance"
+        }
+      }
     }
   ]
 }

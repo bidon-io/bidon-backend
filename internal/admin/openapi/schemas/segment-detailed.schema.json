@@ -12,6 +12,10 @@
         "app": {
           "$ref": "app.schema.json",
           "description": "Details of the app associated with the segment"
+        },
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this segment instance"
         }
       }
     }

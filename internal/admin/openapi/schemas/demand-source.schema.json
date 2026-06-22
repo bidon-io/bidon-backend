@@ -9,6 +9,15 @@
     {
       "type": "object",
       "required": ["human_name", "api_key"]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this demand source instance"
+        }
+      }
     }
   ]
 }

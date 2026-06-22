@@ -831,6 +831,8 @@ func (p *lineItemPolicy) authorizeUpdate(ctx context.Context, authCtx AuthContex
 	return nil
 }
 
+// Update overrides ResourceService.Update to apply line-item-specific duplicate validation.
+// Must call prepareResource before returning so the response includes _permissions.
 func (s *LineItemService) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *LineItemAttrs) (*LineItemResource, error) {
 	scope := s.policy.getManageScope(authCtx)
 

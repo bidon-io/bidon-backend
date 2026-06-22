@@ -35,7 +35,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/auction-configuration.schema.json'
+                $ref: './schemas/auction-configuration-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/auction_configurations_collection:
@@ -97,7 +97,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/auction-configuration.schema.json'
+                $ref: './schemas/auction-configuration-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -142,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/auction-configuration-v2.schema.json'
+                $ref: './schemas/auction-configuration-v2-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/v2/auction_configurations_collection:
@@ -204,7 +204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/auction-configuration-v2.schema.json'
+                $ref: './schemas/auction-configuration-v2-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -251,7 +251,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/app.schema.json'
+                $ref: './schemas/app-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/apps/{id}:
@@ -288,7 +288,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/app.schema.json'
+                $ref: './schemas/app-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -331,12 +331,11 @@ paths:
               $ref: './schemas/app-demand-profile.schema.json'
       responses:
         '201':
-          AppDemandProfileResponse:
-            description: An app demand profile
-            content:
-              application/json:
-                schema:
-                  $ref: './schemas/app-demand-profile.schema.json'
+          description: An app demand profile
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app-demand-profile-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/app_demand_profiles_collection:
@@ -393,12 +392,11 @@ paths:
               $ref: './schemas/app-demand-profile-props.schema.json'
       responses:
         '200':
-          AppDemandProfileResponse:
-            description: An app demand profile
-            content:
-              application/json:
-                schema:
-                  $ref: './schemas/app-demand-profile.schema.json'
+          description: An app demand profile
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/app-demand-profile-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -613,7 +611,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/demand-source-account.schema.json'
+                $ref: './schemas/demand-source-account-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/demand_source_accounts/{id}:
@@ -704,13 +702,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/line-item.schema.json'
+                $ref: './schemas/line-item-detailed.schema.json'
         '201':
           description: A line item
           content:
             application/json:
               schema:
-                $ref: './schemas/line-item.schema.json'
+                $ref: './schemas/line-item-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/line_items/{id}:
@@ -747,7 +745,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/line-item.schema.json'
+                $ref: './schemas/line-item-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -820,7 +818,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/segment.schema.json'
+                $ref: './schemas/segment-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/segments/{id}:
@@ -857,7 +855,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/segment.schema.json'
+                $ref: './schemas/segment-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
