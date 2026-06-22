@@ -1,0 +1,69 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Programmatic Advertising RTB Data Flow\n(Millisecond-by-Millisecond Journey)
+
+actor       "User"              as USER
+participant "Publisher App"     as PUB
+participant "BidOn\nSSP / Ad Exchange" as Bidon
+participant "DSP"               as DSP
+database    "DMP / CDP"         as DMP
+participant "ML Engine"         as ML
+participant "Ad Server / CDN"   as ADSRV
+participant "Attribution /\nViewability" as ATTR
+participant "Analytics\n(Kafka / RedPanda)" as ANALYTICS
+
+== Step 1: User Activity & Initial Data Collection (1–2 ms) ==
+USER -> PUB ++ : Page / app load
+PUB -> PUB : Collect device, location,\nbrowser, contextual signals
+
+== Step 2: SSP Bid Request Assembly (2–5 ms) ==
+PUB -> Bidon ++ : Raw context data
+Bidon -> Bidon : Assemble OpenRTB\nbid request (JSON)\n+ publisher data
+
+== Step 3: Ad Exchange Routing & Distribution (3–7 ms) ==
+Bidon -> Bidon : Lookup eligible DSPs\n(targeting preference table)
+Bidon -> DSP ++ : HTTP / gRPC bid request\n(fan-out to N DSPs)
+
+== Step 4: DSP User Profile Retrieval & Enrichment (5–15 ms) ==
+DSP -> DMP ++ : Query by User ID
+DMP -> DSP -- : Audience segments,\nbehavioral & 3rd-party data\n(cache → DB fallback)
+
+== Step 5: DSP Bid Evaluation & Decision (10–25 ms) ==
+DSP -> ML ++ : Feature vector\n(user profile + opportunity)
+ML  -> DSP -- : Predicted conversion probability
+DSP -> DSP : Match targeting criteria,\ncheck budget & pacing,\ncalculate bid price,\nselect creative
+
+== Step 6: Ad Exchange Auction & Winner Selection (3–7 ms) ==
+DSP -> Bidon -- : Bid response\n(price + creative metadata)
+note over Bidon : Collects bids from all DSPs\nRuns 1st- or 2nd-price auction
+Bidon -> DSP : Win / loss notification (HTTP / gRPC)
+
+== Step 7: Ad Creative Delivery & Impression Logging (5–15 ms) ==
+Bidon -> PUB -- : Winning creative URL
+PUB -> ADSRV ++ : Fetch creative
+ADSRV -> PUB -- : HTTP 200 + creative payload (CDN)
+PUB -> ANALYTICS ++ : Impression event\n(Kafka / RedPanda)
+PUB -> USER -- : Render ad
+
+== Step 8: Attribution & Viewability Monitoring (ongoing) ==
+USER -> ATTR ++ : JS tags / tracking pixels\n(impression, viewability, click)
+USER -> ATTR : Conversion pixel fires\non advertiser site
+
+== Step 9: Data Feedback Loop to DMP/CDP (near real-time, ~1 min) ==
+ATTR -> DMP ++ : Aggregated impression,\nclick & conversion signals
+ANALYTICS -> DMP : Batch + streaming updates
+deactivate ANALYTICS
+DMP -> DMP : Update user profiles
+DMP -> DSP : Refreshed segments\n(next bidding cycle)
+deactivate DMP
+deactivate ATTR
+
+note over USER, ANALYTICS
+  Full round-trip target: ≤ 100 ms (hard cap: 300 ms)
+end note
+@enduml
