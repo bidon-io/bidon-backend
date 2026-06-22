@@ -14,27 +14,28 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/admin/resource"
 )
 
-type lineItemCreateServiceStub struct {
+type lineItemServiceStub struct {
 	create func(ctx context.Context, authCtx admin.AuthContext, attrs *admin.LineItemAttrs) (*admin.LineItemResource, error)
+	update func(ctx context.Context, authCtx admin.AuthContext, id int64, attrs *admin.LineItemAttrs) (*admin.LineItemResource, error)
 }
 
-func (s lineItemCreateServiceStub) List(context.Context, admin.AuthContext, map[string][]string) (*resource.Collection[admin.LineItemResource], error) {
+func (s lineItemServiceStub) List(context.Context, admin.AuthContext, map[string][]string) (*resource.Collection[admin.LineItemResource], error) {
 	panic("not implemented")
 }
 
-func (s lineItemCreateServiceStub) Find(context.Context, admin.AuthContext, int64) (*admin.LineItemResource, error) {
+func (s lineItemServiceStub) Find(context.Context, admin.AuthContext, int64) (*admin.LineItemResource, error) {
 	panic("not implemented")
 }
 
-func (s lineItemCreateServiceStub) Create(ctx context.Context, authCtx admin.AuthContext, attrs *admin.LineItemAttrs) (*admin.LineItemResource, error) {
+func (s lineItemServiceStub) Create(ctx context.Context, authCtx admin.AuthContext, attrs *admin.LineItemAttrs) (*admin.LineItemResource, error) {
 	return s.create(ctx, authCtx, attrs)
 }
 
-func (s lineItemCreateServiceStub) Update(context.Context, admin.AuthContext, int64, *admin.LineItemAttrs) (*admin.LineItemResource, error) {
-	panic("not implemented")
+func (s lineItemServiceStub) Update(ctx context.Context, authCtx admin.AuthContext, id int64, attrs *admin.LineItemAttrs) (*admin.LineItemResource, error) {
+	return s.update(ctx, authCtx, id, attrs)
 }
 
-func (s lineItemCreateServiceStub) Delete(context.Context, admin.AuthContext, int64) error {
+func (s lineItemServiceStub) Delete(context.Context, admin.AuthContext, int64) error {
 	panic("not implemented")
 }
 
@@ -69,7 +70,7 @@ func TestServer_CreateLineItem_statusCode(t *testing.T) {
 
 			server := &Server{
 				LineItemHandler: &lineItemServiceHandler{
-					service: lineItemCreateServiceStub{
+					service: lineItemServiceStub{
 						create: func(_ context.Context, _ admin.AuthContext, _ *admin.LineItemAttrs) (*admin.LineItemResource, error) {
 							return &admin.LineItemResource{
 								LineItem: &admin.LineItem{
@@ -112,5 +113,56 @@ func TestServer_CreateLineItem_statusCode(t *testing.T) {
 				t.Fatalf("_permissions = %#v, want update/delete true", permissions)
 			}
 		})
+	}
+}
+
+func TestServer_UpdateLineItem_includesPermissions(t *testing.T) {
+	t.Parallel()
+
+	server := &Server{
+		LineItemHandler: &lineItemServiceHandler{
+			service: lineItemServiceStub{
+				update: func(_ context.Context, _ admin.AuthContext, id int64, _ *admin.LineItemAttrs) (*admin.LineItemResource, error) {
+					return &admin.LineItemResource{
+						LineItem: &admin.LineItem{
+							ID: id,
+						},
+						Permissions: admin.ResourceInstancePermissions{
+							Update: true,
+							Delete: true,
+						},
+					}, nil
+				},
+			},
+		},
+	}
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPatch, "/api/line_items/42", strings.NewReader(`{"extra":{"ad_unit_id":"updated"}}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/line_items/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("42")
+	c.Set("authCtx", echoAuthContext{})
+
+	if err := server.UpdateLineItem(c, 42); err != nil {
+		t.Fatalf("UpdateLineItem() error = %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status code = %d, want %d", rec.Code, http.StatusOK)
+	}
+
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	permissions, ok := body["_permissions"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing _permissions: %#v", body)
+	}
+	if permissions["update"] != true || permissions["delete"] != true {
+		t.Fatalf("_permissions = %#v, want update/delete true", permissions)
 	}
 }
