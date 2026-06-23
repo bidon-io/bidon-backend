@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "dev-container": "rm -rf .nuxt node_modules/.cache && yarn install --frozen-lockfile && nuxt dev --hostname 0.0.0.0 --port 3010",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
