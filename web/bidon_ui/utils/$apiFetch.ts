@@ -10,7 +10,8 @@ export const $apiFetch = $fetch.create({
       typeof context.request === "string" &&
       !context.request.startsWith("http")
     ) {
-      context.request = `/api${context.request}`;
+      const path = context.request.startsWith("/") ? context.request : `/${context.request}`;
+      context.request = `/api${path}`;
     }
 
     if (
