@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "user": {
-      "$ref": "./user.schema.json"
+      "$ref": "./user-detailed.schema.json"
     },
     "access_token": {
       "type": "string",

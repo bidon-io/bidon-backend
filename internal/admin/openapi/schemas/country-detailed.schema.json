@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "country-detailed.schema.json",
+  "title": "CountryDetailed",
+  "allOf": [
+    {
+      "$ref": "country.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this country instance"
+        }
+      }
+    }
+  ]
+}

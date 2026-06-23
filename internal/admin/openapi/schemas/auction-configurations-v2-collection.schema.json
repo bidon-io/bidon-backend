@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "auction-configuration-v2-collection.schema.json",
-  "title": "Line Items Collection",
+  "$id": "auction-configurations-v2-collection.schema.json",
+  "title": "Auction Configurations V2 Collection",
   "type": "object",
   "properties": {
-    "data": {
+    "items": {
       "type": "array",
       "items": {
         "$ref": "auction-configuration-v2-detailed.schema.json"

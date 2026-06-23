@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api-key-detailed.schema.json",
+  "title": "ApiKeyDetailed",
+  "allOf": [
+    {
+      "$ref": "api-key.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this API key instance"
+        }
+      }
+    }
+  ]
+}

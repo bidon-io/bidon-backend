@@ -10,16 +10,12 @@
     },
     "value": {
       "type": "string",
-      "description": "The API key secret (returned on create, list, and detail)"
+      "description": "The API key secret (returned on create and detail only)"
     },
     "last_accessed_at": {
       "type": "string",
       "format": "date-time",
       "description": "The timestamp when the API key was last used"
-    },
-    "_permissions": {
-      "$ref": "resource-instance-permissions.schema.json",
-      "description": "Permissions for the current user on this API key instance"
     }
   },
   "required": ["id"]

@@ -18,6 +18,8 @@ paths:
                 type: array
                 items:
                   $ref: './schemas/auction-configuration-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
     post:
       operationId: createAuctionConfiguration
       summary: Create auction configuration
@@ -58,9 +60,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: './schemas/auction-configurations-collection.schema.json'
+                $ref: './schemas/auction-configurations-collection.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/auction_configurations/{id}:
@@ -125,6 +125,8 @@ paths:
                 type: array
                 items:
                   $ref: './schemas/auction-configuration-v2-detailed.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
     post:
       operationId: createAuctionConfigurationV2
       summary: Create auction configuration V2
@@ -165,9 +167,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: './schemas/auction-configurations-v2-collection.schema.json'
+                $ref: './schemas/auction-configurations-v2-collection.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/v2/auction_configurations/{id}:
@@ -357,9 +357,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: './schemas/app-demand-profiles-collection.schema.json'
+                $ref: './schemas/app-demand-profiles-collection.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/app_demand_profiles/{id}:
@@ -423,7 +421,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: './schemas/country.schema.json'
+                  $ref: './schemas/country-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -443,7 +441,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/country.schema.json'
+                $ref: './schemas/country-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/countries/{id}:
@@ -460,7 +458,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/country.schema.json'
+                $ref: './schemas/country-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -480,7 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/country.schema.json'
+                $ref: './schemas/country-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -507,7 +505,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: './schemas/demand-source.schema.json'
+                  $ref: './schemas/demand-source-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -527,7 +525,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/demand-source.schema.json'
+                $ref: './schemas/demand-source-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/demand_sources/{id}:
@@ -544,7 +542,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/demand-source.schema.json'
+                $ref: './schemas/demand-source-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -564,7 +562,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/demand-source.schema.json'
+                $ref: './schemas/demand-source-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -779,9 +777,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: './schemas/line-items-collection.schema.json'
+                $ref: './schemas/line-items-collection.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/segments:
@@ -882,7 +878,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: './schemas/user.schema.json'
+                  $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -902,7 +898,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/user.schema.json'
+                $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/users/{id}:
@@ -919,7 +915,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/user.schema.json'
+                $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     patch:
@@ -939,7 +935,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/user.schema.json'
+                $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
@@ -964,7 +960,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/user.schema.json'
+                $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/rest/resources:
@@ -1037,9 +1033,17 @@ paths:
       operationId: updatePassword
       tags:
         - Settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/password-update-request.schema.json'
       responses:
         '204':
           description: Password Update successful
+        default:
+          $ref: '#/components/responses/ErrorResponse'
   /api/api_keys:
     get:
       operationId: getApiKeys
@@ -1054,7 +1058,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: './schemas/api-key.schema.json'
+                  $ref: './schemas/api-key-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -1068,7 +1072,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/api-key.schema.json'
+                $ref: './schemas/api-key-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
   /api/api_keys/{uuid}:
@@ -1090,7 +1094,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './schemas/api-key.schema.json'
+                $ref: './schemas/api-key-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
     delete:
