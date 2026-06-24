@@ -56,12 +56,11 @@ USER -> ATTR : Conversion pixel fires\non advertiser site
 
 == Step 9: Data Feedback Loop to DMP/CDP (near real-time, ~1 min) ==
 ATTR -> DMP ++ : Aggregated impression,\nclick & conversion signals
+deactivate ATTR
 ANALYTICS -> DMP : Batch + streaming updates
 deactivate ANALYTICS
 DMP -> DMP : Update user profiles
-DMP -> DSP : Refreshed segments\n(next bidding cycle)
-deactivate DMP
-deactivate ATTR
+DMP -> DSP --: Refreshed segments\n(next bidding cycle)
 
 note over USER, ANALYTICS
   Full round-trip target: ≤ 100 ms (hard cap: 300 ms)
