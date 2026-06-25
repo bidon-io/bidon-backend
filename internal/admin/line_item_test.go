@@ -837,6 +837,65 @@ func TestLineItemService_Update_NoDuplicate(t *testing.T) {
 	if got == nil || got.ID != 123 {
 		t.Fatalf("Update() = %+v, want id 123", got)
 	}
+	if !got.Permissions.Update || !got.Permissions.Delete {
+		t.Fatalf("Update() permissions = %+v, want update/delete true", got.Permissions)
+	}
+}
+
+func TestLineItemService_Update_repoError(t *testing.T) {
+	t.Parallel()
+
+	repoErr := errors.New("update failed")
+	lineItemRepo := &lineItemRepoStub{
+		findOwnedByUserFn: func(_ context.Context, _ int64, id int64) (*LineItem, error) {
+			return &LineItem{
+				ID: id,
+				LineItemAttrs: LineItemAttrs{
+					AppID:       11,
+					AccountType: "DemandSourceAccount::admob",
+					AccountID:   22,
+					AdType:      ad.BannerType,
+					Format:      ptr(ad.BannerFormat),
+					Extra:       map[string]any{"ad_unit_id": "old"},
+				},
+			}, nil
+		},
+		findDuplicateFn: func(_ context.Context, _ *LineItemAttrs, _ int64) (int64, error) {
+			return 0, nil
+		},
+		updateFn: func(_ context.Context, _ int64, _ *LineItemAttrs) (*LineItem, error) {
+			return nil, repoErr
+		},
+	}
+
+	store := &StoreMock{
+		LineItemsFunc: func() LineItemRepo { return lineItemRepo },
+		DemandSourceAccountsFunc: func() DemandSourceAccountRepo {
+			return &DemandSourceAccountRepoMock{
+				FindFunc: func(_ context.Context, _ int64) (*DemandSourceAccount, error) {
+					return &DemandSourceAccount{
+						DemandSource: DemandSource{
+							DemandSourceAttrs: DemandSourceAttrs{ApiKey: string(adapter.AdmobKey)},
+						},
+					}, nil
+				},
+			}
+		},
+		AppsFunc:          func() AppRepo { return &AppRepoMock{} },
+		UsersFunc:         func() UserRepo { return &UserRepoMock{} },
+		DemandSourcesFunc: func() DemandSourceRepo { return &DemandSourceRepoMock{} },
+	}
+	service := NewLineItemService(store)
+
+	got, err := service.Update(context.Background(), lineItemTestAuthCtx{userID: 1, isAdmin: false}, 123, &LineItemAttrs{
+		Extra: map[string]any{"ad_unit_id": "new"},
+	})
+	if !errors.Is(err, repoErr) {
+		t.Fatalf("Update() error = %v, want %v", err, repoErr)
+	}
+	if got != nil {
+		t.Fatalf("Update() = %+v, want nil", got)
+	}
 }
 
 func TestLineItemService_Update_UsesMergedAttrsForDuplicateValidation(t *testing.T) {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "user-detailed.schema.json",
+  "title": "UserDetailed",
+  "allOf": [
+    {
+      "$ref": "user.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this user instance"
+        }
+      }
+    }
+  ]
+}

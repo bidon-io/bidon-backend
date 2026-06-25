@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "resource.schema.json",
+  "$id": "resources.schema.json",
   "title": "ResourcePermissions",
   "type": "object",
   "description": "Schema for resource permissions where the top-level key represents the resource name.",

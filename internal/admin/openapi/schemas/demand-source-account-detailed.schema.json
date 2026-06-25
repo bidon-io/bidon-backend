@@ -16,6 +16,10 @@
         "demand_source": {
           "$ref": "demand-source.schema.json",
           "description": "Details of the demand source associated with the account"
+        },
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this demand source account instance"
         }
       }
     }

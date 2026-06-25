@@ -4,7 +4,7 @@
   "title": "Line Items Collection",
   "type": "object",
   "properties": {
-    "data": {
+    "items": {
       "type": "array",
       "items": {
         "$ref": "line-item-detailed.schema.json"

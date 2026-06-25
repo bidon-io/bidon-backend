@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "id": {
-      "$ref": "./primary-id.schema.json",
+      "$ref": "./primary-id.schema.json"
     },
     "public_uid": {
       "$ref": "public-uid.schema.json"

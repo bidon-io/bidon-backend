@@ -10,7 +10,11 @@
       "type": "object",
       "properties": {
         "app": {
-          "$ref": "./app.schema.json",
+          "$ref": "./app.schema.json"
+        },
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this auction configuration instance"
         }
       }
     }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "demand-source-detailed.schema.json",
+  "title": "DemandSourceDetailed",
+  "allOf": [
+    {
+      "$ref": "demand-source.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "_permissions": {
+          "$ref": "resource-instance-permissions.schema.json",
+          "description": "Permissions for the current user on this demand source instance"
+        }
+      }
+    }
+  ]
+}

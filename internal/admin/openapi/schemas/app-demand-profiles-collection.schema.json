@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "app-demand-profiles-collection.schema.json",
-  "title": "Line Items Collection",
+  "title": "App Demand Profiles Collection",
   "type": "object",
   "properties": {
-    "data": {
+    "items": {
       "type": "array",
       "items": {
         "$ref": "app-demand-profile-detailed.schema.json"

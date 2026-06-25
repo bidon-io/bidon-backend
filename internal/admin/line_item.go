@@ -831,7 +831,9 @@ func (p *lineItemPolicy) authorizeUpdate(ctx context.Context, authCtx AuthContex
 	return nil
 }
 
-func (s *LineItemService) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *LineItemAttrs) (*LineItem, error) {
+// Update overrides ResourceService.Update to apply line-item-specific duplicate validation.
+// Must call prepareResource before returning so the response includes _permissions.
+func (s *LineItemService) Update(ctx context.Context, authCtx AuthContext, id int64, attrs *LineItemAttrs) (*LineItemResource, error) {
 	scope := s.policy.getManageScope(authCtx)
 
 	profile, err := scope.find(ctx, id)
@@ -848,7 +850,14 @@ func (s *LineItemService) Update(ctx context.Context, authCtx AuthContext, id in
 		return nil, err
 	}
 
-	return s.repo.Update(ctx, id, attrs)
+	data, err := s.repo.Update(ctx, id, attrs)
+	if err != nil {
+		return nil, err
+	}
+
+	resource := s.prepareResource(authCtx, data)
+
+	return &resource, nil
 }
 
 func mergeLineItemAttrsForKey(current *LineItem, update *LineItemAttrs) *LineItemAttrs {

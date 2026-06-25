@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "line-item-list-response.schema.json",
+  "$id": "collection-meta.schema.json",
   "title": "CollectionMeta",
   "type": "object",
   "properties": {
