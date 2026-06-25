@@ -47,15 +47,16 @@ services:
       DATABASE_REPLICA_URL: postgres://bidon:pass@postgres-test:5432/bidon_test
 
   go-pre-commit:
-    build:
-      context: .
-      target: pre-commit-deps
+    image: golang:1.24-alpine
     volumes:
       - .:/app
       - gomodcache-precommit:/go/pkg/mod
       - gocache-precommit:/root/.cache/go-build
+      - precommit-tools:/go/precommit-tools
     working_dir: /app
-    entrypoint: ["pre-commit", "run", "--all-files"]
+    entrypoint: ["/bin/sh", "/app/docker/pre-commit/entrypoint.sh"]
+    environment:
+      PRECOMMIT_TOOLS_DIR: /go/precommit-tools
     networks:
       - precommit-network
 
@@ -200,6 +201,7 @@ volumes:
   gocache:
   gomodcache-precommit:
   gocache-precommit:
+  precommit-tools:
   cargo-cache:
   target-cache:
   redis-data:

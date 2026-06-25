@@ -1,0 +1,308 @@
+@startuml Admin Domain Model
+
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) #x
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+title BidOn Admin Domain Model
+
+' ==================== CORE ENTITIES ====================
+
+class User {
+    + primary_key(ID): int64
+    + PublicUID: string
+    + Email: string
+    + IsAdmin: *bool
+    --
+    + Password: string (attrs)
+}
+
+class App {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + PlatformID: PlatformID
+    + HumanName: string
+    + PackageName: string
+    + foreign_key(UserID): int64
+    + AppKey: string
+    + StoreID: string
+    + StoreURL: string
+    + Categories: []string
+    + Badv, Bcat, Bapp: string
+}
+
+class DemandSource {
+    + primary_key(ID): int64
+    --
+    + HumanName: string
+    + ApiKey: string
+}
+
+class DemandSourceAccount {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + foreign_key(UserID): int64
+    + Label: string
+    + Type: string
+    + foreign_key(DemandSourceID): int64
+    + IsBidding: *bool
+    + Extra: map[string]any
+}
+
+class LineItem {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + HumanName: string
+    + foreign_key(AppID): int64
+    + BidFloor: *decimal.Decimal
+    + AdType: ad.Type
+    + Format: *ad.Format
+    + foreign_key(AccountID): int64
+    + AccountType: string
+    + IsBidding: *bool
+    + Extra: map[string]any
+}
+
+class Segment {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + Name: string
+    + Description: string
+    + Filters: []segment.Filter
+    + Enabled: *bool
+    + foreign_key(AppID): int64
+    + Priority: int32
+}
+
+class AuctionConfiguration {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + Name: string
+    + foreign_key(AppID): int64
+    + AdType: ad.Type
+    + AuctionKey: string
+    + Pricefloor: float64
+    + foreign_key(SegmentID): *int64
+    + ExternalWinNotifications: *bool
+}
+
+class AuctionConfigurationV2 {
+    + primary_key(ID): int64
+    + PublicUID: string
+    + AuctionKey: string
+    --
+    + Name: string
+    + foreign_key(AppID): int64
+    + AdType: ad.Type
+    + Pricefloor: float64
+    + foreign_key(SegmentID): *int64
+    + IsDefault: *bool
+    + ExternalWinNotifications: *bool
+    + Demands: []adapter.Key
+    + Bidding: []adapter.Key
+    + AdUnitIDs: []int64
+    + Timeout: int32
+    + Settings: map[string]any
+}
+
+class AppDemandProfile {
+    + primary_key(ID): int64
+    + PublicUID: string
+    --
+    + foreign_key(AppID): int64
+    + foreign_key(DemandSourceID): int64
+    + foreign_key(AccountID): int64
+    + Data: map[string]any
+    + AccountType: string
+    + Enabled: *bool
+}
+
+class Country {
+    + primary_key(ID): int64
+    --
+    + HumanName: string
+    + Alpha2Code: string
+    + Alpha3Code: string
+}
+
+class APIKey {
+    + primary_key(ID): string
+    --
+    + Value: string
+    + foreign_key(UserID): int64
+    + LastAccessedAt: *time.Time
+}
+
+' ==================== ENUMS ====================
+
+class PlatformID << (E,#LightBlue) >> {
+    IOS = "ios"
+    Android = "android"
+    Unknown = ""
+}
+
+class ResourcePermissions << (S,#LightGreen) >> {
+    + Read: bool
+    + Create: bool
+}
+
+class ResourceInstancePermissions << (S,#LightGreen) >> {
+    + Update: bool
+    + Delete: bool
+}
+
+' ==================== RESOURCE WRAPPERS ====================
+
+class UserResource << (W,#LightYellow) >> {
+    + *User
+    + Permissions: ResourceInstancePermissions
+}
+
+class AppResource << (W,#LightYellow) >> {
+    + *App
+    + Permissions: ResourceInstancePermissions
+}
+
+class DemandSourceResource << (W,#LightYellow) >> {
+    + *DemandSource
+    + Permissions: ResourceInstancePermissions
+}
+
+' ==================== RELATIONSHIPS ====================
+
+User "1" --> "0..*" App : owns
+User "1" --> "0..*" DemandSourceAccount : owns
+User "1" --> "0..*" APIKey : owns
+
+App "1" --> "0..*" LineItem : contains
+App "1" --> "0..*" Segment : contains
+App "1" --> "0..*" AuctionConfiguration : configures
+App "1" --> "0..*" AuctionConfigurationV2 : configures
+App "1" --> "0..*" AppDemandProfile : has
+
+DemandSource "1" --> "0..*" DemandSourceAccount : provides
+DemandSource "1" --> "0..*" AppDemandProfile : used by
+
+DemandSourceAccount "1" --> "0..*" LineItem : creates
+DemandSourceAccount "1" --> "0..*" AppDemandProfile : configures
+
+Segment "0..1" --> "0..*" AuctionConfiguration : targets
+Segment "0..1" --> "0..*" AuctionConfigurationV2 : targets
+
+' ==================== DOMAIN PATTERNS ====================
+
+package "Domain Patterns" #EEF {
+    class ResourceService << (S,#LightGreen) >> {
+        + resourceKey: string
+        + repo: ResourceManipulator
+        + policy: resourcePolicy
+        + prepareResource()
+        + prepareCreateAttrs()
+        + getValidator()
+        --
+        + Meta()
+        + List()
+        + Find()
+        + Create()
+        + Update()
+        + Delete()
+    }
+
+    class resourcePolicy << (I,#LightBlue) >> {
+        + getReadScope()
+        + getManageScope()
+        + authorizeCreate()
+        + authorizeUpdate()
+        + authorizeDelete()
+        + permissions()
+        + instancePermissions()
+    }
+
+    class resourceScope << (I,#LightBlue) >> {
+        + list()
+        + find()
+    }
+
+    class AuthContext << (I,#LightBlue) >> {
+        + UserID(): int64
+        + IsAdmin(): bool
+    }
+
+    ResourceService ..> resourcePolicy : uses
+    ResourceService ..> AuthContext : uses
+    resourcePolicy ..> resourceScope : creates
+}
+
+' ==================== SCOPE TYPES ====================
+
+package "Resource Scopes" #FEE {
+    class publicResourceScope << (C,#LightCyan) >> {
+        All users can read
+        (Countries, DemandSources)
+    }
+
+    class privateResourceScope << (C,#LightCoral) >> {
+        Only admins can access
+    }
+
+    class ownedResourceScope << (C,#LightGreen) >> {
+        Users access own resources
+        + admin sees all
+    }
+
+    class ownedOrSharedResourceScope << (C,#LightYellow) >> {
+        Users access own/shared
+        (DemandSourceAccounts)
+    }
+
+    resourceScope <|-- publicResourceScope
+    resourceScope <|-- privateResourceScope
+    resourceScope <|-- ownedResourceScope
+    resourceScope <|-- ownedOrSharedResourceScope
+}
+
+' ==================== NOTES ====================
+
+note right of User
+    **User Types:**
+    - Regular user: owns Apps,
+      DemandSourceAccounts
+    - Admin: manages all entities
+end note
+
+note right of LineItem
+    **CSV Import Supported:**
+    Admob, Applovin, BigoAds,
+    Chartboost, DTExchange, GAM,
+    Inmobi, Meta, Mintegral,
+    UnityAds, VKAds, Vungle,
+    Yandex, Zmaticoo, IronSource
+end note
+
+note bottom of AuctionConfigurationV2
+    **V2 Improvements:**
+    - Explicit Demands/Bidding lists
+    - AdUnitIDs reference
+    - Timeout configuration
+    - Flexible Settings map
+    - IsDefault flag
+end note
+
+note bottom of AppDemandProfile
+    **Per-App Configuration:**
+    Links App + DemandSource
+    + Account with custom Data
+end note
+
+@enduml

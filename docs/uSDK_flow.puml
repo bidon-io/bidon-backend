@@ -1,0 +1,94 @@
+@startuml uSDK Flow
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam BoxPadding 10
+skinparam ParticipantPadding 20
+
+title uSDK General Flow
+
+actor "Mobile App\n(SDK)" as SDK
+participant "Bidon SDK API\n(bidon-sdkapi)" as API
+participant "Adapters\n(Adikteev, BidMachine, etc.)" as Adapters
+
+== 1. /config — SDK Initialization ==
+
+SDK -> API : GET /config\n{app_key, bundle, device, format}
+activate API
+
+API -> API : filter adapters\n(SDK version, COPPA, chardonnay hack)
+
+API --> SDK : ConfigResponse\n{init_configs, token, segment_id, timeout}
+deactivate API
+
+== 2. SDK Collects Tokens ==
+
+SDK -> SDK : collect adapter tokens\nbased on config
+
+note over SDK
+  SDK loads ad networks (adapters)
+  and collects tokens from each.
+  Token = adapter credential for RTB.
+end note
+
+== 3. /auction — Server-Side Auction ==
+
+SDK -> API : POST /auction\n{auction_id, ad_object, adapters, device}
+activate API
+
+
+API -> Adapters : HoldAuction(result_units)
+activate Adapters
+
+Adapters -> API : return BidRespose
+deactivate Adapters
+
+API -> API : auction result (bids)
+
+API -> API : buildAdUnitsMap()
+
+API -> API : buildResponse()\nJSON with ad_units, no_bids, token, auction_id, price_floor
+
+API --> SDK : AuctionResponse\n{ad_units, token, auction_id, price_floor, timeout}
+deactivate API
+
+== 4. SDK Client-Side Fill ==
+
+SDK -> SDK : continue auction on client\nload units from most expensive to cheapest
+
+note over SDK
+  SDK tries to fill from:
+  1. RTB winning bid
+  2. Fall back to CPM line items (in order)
+  3. If none fill: no_ads fallback
+
+  line item = ad unit with fixed price (CPM)
+  bid = ad unit with RTB price (Bidding)
+end note
+
+== 5. /stats — Post-Auction Stats ==
+
+SDK -> API : POST /stats\n{ad_units[], statuses, prices}
+activate API
+
+API -> API : HandleStats(stats_data)
+
+alt status == SUCCESS
+    API -> API : compute first/second prices
+    API -> API : send NURL to winner
+    API -> API : send LURL to losers (reason: LostToHigherBid)
+else status == FAIL
+    API -> API : send LURL to all (reason: InternalError)
+else status == AUCTION_CANCELLED
+    API -> API : send LURL to all (reason: Expired)
+end
+
+loop for each notification
+    API -> API : EventSender.SendEvent(url)\nHTTP GET with macro substitution\n${AUCTION_PRICE}, ${AUCTION_LOSS}, etc.\nexponential backoff (3 retries)
+end
+
+API --> SDK : HTTP 200 OK
+deactivate API
+
+
+@enduml

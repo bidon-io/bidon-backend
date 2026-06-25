@@ -19,22 +19,6 @@ RUN go mod download
 
 COPY . .
 
-FROM base AS pre-commit-deps
-
-RUN apk add --no-cache python3 git pre-commit curl
-
-# Install buf at version 1.47.2
-ENV BIN="/usr/local/bin" \
-    VERSION="1.47.2"
-
-RUN curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-$(uname -s)-$(uname -m)" \
-    -o "${BIN}/buf" && \
-    chmod +x "${BIN}/buf"
-
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
-    | sh -s -- -b $(go env GOPATH)/bin
-
 FROM base AS bidon-admin-builder
 
 COPY --from=frontend-deps /app/.output/public ./cmd/bidon-admin/web/ui
