@@ -167,14 +167,18 @@ services:
   bidon-ui:
     image: node:22-alpine
     working_dir: /workspace/web/bidon_ui
-    # Clear Nuxt's generated cache (`.nuxt`) so it regenerates against the container's `node_modules`
-    # (important when `node_modules` is mounted via a Docker volume).
-    command: sh -c "rm -rf .nuxt node_modules/.cache && yarn install --frozen-lockfile && yarn dev --hostname 0.0.0.0 --port 3010"
+    command: yarn dev-container
     ports:
       - '3010:3010'
     depends_on:
       bidon-admin:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3010/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
     environment:
       NUXT_API_PROXY_TARGET: http://bidon-admin:1323
       # Force polling-based file watching so host file edits are reliably detected in Docker.

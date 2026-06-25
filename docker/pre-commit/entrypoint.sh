@@ -4,9 +4,10 @@ set -e
 TOOLS_DIR="${PRECOMMIT_TOOLS_DIR:-/go/precommit-tools}"
 export PATH="${TOOLS_DIR}/bin:${PATH}"
 
-if [ ! -f "${TOOLS_DIR}/.installed" ]; then
-	apk add --no-cache python3 git pre-commit curl
+# apk packages live in the container filesystem and are lost when the container exits.
+apk add --no-cache python3 git pre-commit curl
 
+if [ ! -f "${TOOLS_DIR}/.installed" ]; then
 	mkdir -p "${TOOLS_DIR}/bin"
 
 	BUF_VERSION=1.47.2

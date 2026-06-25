@@ -52,11 +52,15 @@ build-migrate:
 build-seed:
     just _build bidon-seed
 
+build-ui:
+    just _build bidon-ui
+
 build-all:
     just build-admin
     just build-sdkapi
     just build-migrate
     just build-seed
+    just build-ui
 
 # --- CI / registry image builds ---
 # Build and push images to the DigitalOcean Container Registry (--push).
@@ -80,9 +84,13 @@ ci-build-migrate:
 ci-build-seed:
     just _ci-build bidon-seed
 
+ci-build-ui:
+    just _ci-build bidon-ui
+
 ci-build-all:
     just docker-login
     just ci-build-admin
     just ci-build-sdkapi
     just ci-build-migrate
     just ci-build-seed
+    just ci-build-ui

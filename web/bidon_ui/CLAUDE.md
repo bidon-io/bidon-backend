@@ -11,7 +11,7 @@ This file provides context and guidelines for working with the Bidon admin web U
 - Segments, Users, API Keys
 - AI Copilot (admin-only)
 
-The app is statically generated (`yarn generate`) and served by the Go backend (`cmd/bidon-admin`). There is no Node.js runtime in production.
+The app is built with `yarn build` and deployed as a standalone Nuxt/Node.js container (`bidon-ui`). A Nitro server-side middleware proxies `/api/**` and `/auth/**` to the Go `bidon-admin` backend — no reverse proxy (nginx/caddy) needed between the browser and the API.
 
 ## Tech Stack
 
@@ -31,7 +31,7 @@ The app is statically generated (`yarn generate`) and served by the Go backend (
 
 **Routing:** File-based (Nuxt pages directory)
 **Mode:** SPA (`ssr: false`)
-**Build output:** `.output/public/` → copied to `../cmd/bidon-admin/web/ui`
+**Build output:** `.output/` — Nitro server entry at `.output/server/index.mjs`, static assets at `.output/public/`
 
 ## Project Structure
 
@@ -245,20 +245,27 @@ yarn lint
 yarn lintfix
 ```
 
-**Backend proxy:** `nuxt.config.ts` proxies `/auth/**` and `/api/**` to `http://localhost:1323`.
+**Backend proxy:** `server/middleware/proxy.ts` forwards `/api/**` and `/auth/**` to `NUXT_API_PROXY_TARGET` (defaults to `http://localhost:1323` in dev).
 
 ## Build & Deployment
 
+The UI runs as a standalone Nuxt/Node.js container (`bidon-ui`). A Nitro server-side middleware (`server/middleware/proxy.ts`) forwards `/api/**` and `/auth/**` requests to the Go `bidon-admin` backend, providing same-origin API access without an external reverse proxy.
+
 ```bash
-# Generate static files
-yarn generate
-# → .output/public/
+# Build for production (outputs Nitro server + static assets to .output/)
+yarn build
 
-# Copy to Go binary
-cp -rf .output/public/ ../cmd/bidon-admin/web/ui
-
-# The Go server serves the static files — no Node.js in production
+# Run the production server
+node .output/server/index.mjs
+# → http://localhost:3000
 ```
+
+**Required environment variable:**
+- `NUXT_API_PROXY_TARGET` — URL of the Go `bidon-admin` backend (e.g. `http://bidon-admin:1323`). A warning is logged at startup if unset; falls back to `http://localhost:1323`.
+
+**Docker target:** `bidon-ui` in the root `Dockerfile` (uses `yarn build`, runs Node.js).
+
+**Note:** The root `Dockerfile` also contains a `bidon-admin-builder` stage that still embeds static files (via `yarn generate`) into the Go binary for deployments that do not use the separate `bidon-ui` container.
 
 ## Testing
 

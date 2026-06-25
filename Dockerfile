@@ -10,6 +10,27 @@ ARG APP_ENV=production
 COPY web/bidon_ui .
 RUN VITE_APP_ENV=${APP_ENV} yarn generate
 
+FROM node:22-alpine AS bidon-ui-builder
+
+WORKDIR /app
+
+COPY web/bidon_ui/package.json web/bidon_ui/yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+ARG APP_ENV=production
+COPY web/bidon_ui .
+RUN VITE_APP_ENV=${APP_ENV} yarn build
+
+FROM node:22-alpine AS bidon-ui
+
+WORKDIR /app
+
+COPY --from=bidon-ui-builder /app/.output ./.output
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
+
 FROM golang:1.24-alpine AS base
 
 WORKDIR /app
