@@ -64,6 +64,12 @@ make test
 go test ./internal/auction/...
 ```
 
+### Staging / production (Coolify)
+
+Local dev (`docker-compose.dev.yml`) mounts source into `bidon-ui` and hot-reloads. **Coolify runs pre-built registry images** tagged via `BIDON_*_TAG` env vars — not the working tree.
+
+When debugging staging-only admin UI issues, **verify image tags in Coolify** match the commit you expect (especially `BIDON_UI_TAG`). Backend/seed can be newer than `bidon-ui` if only some images were rebuilt and redeployed. Rebuild with `just ci-build-ui` (or `just ci-build-all`) and redeploy with aligned tags. See README “Staging deployment”.
+
 ## Key Concepts
 
 - **Repository pattern** for all data access (`internal/*/store/*_repo.go`)
