@@ -16,6 +16,9 @@ seed:
 sdk-api:
     go run ./cmd/bidon-sdkapi
 
+dsp-simulator:
+    go run ./cmd/bidon-dspsimulator
+
 #
 
 test-db:
