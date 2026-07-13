@@ -21,8 +21,6 @@
             pkgs.buf
             pkgs.pre-commit
           ];
-
-          shellHook = '' [ ! -f .env ] && cp .env.sample .env.local && ln -s .env.local .env '';
         };
 
       }

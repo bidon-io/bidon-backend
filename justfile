@@ -4,10 +4,10 @@ tag := `git rev-parse HEAD`
 
 # --- Development ---
 
-dev:
+compose:
     docker compose -f docker-compose.dev.yml up
 
-dev-down:
+compose-down:
     docker compose -f docker-compose.dev.yml down --remove-orphans
 
 seed:
@@ -16,7 +16,7 @@ seed:
 sdk-api:
     go run ./cmd/bidon-sdkapi
 
-#
+# --- Testing ---
 
 test-db:
     docker compose up migrate-test
@@ -27,11 +27,38 @@ test:
 precommit:
     pre-commit run --all-files
 
-#
+# --- Config ---
 
-[arg('env', pattern='local|test|staging|prod')]
-switch env:
-    ln -sf .env.{{env}} .env
+# Ensures .env.local exists
+config-exists:
+    #!/usr/bin/env sh
+    if [ ! -f .env.local ]; then
+      cp .env.sample .env.local && echo "Copied .env.sample → .env.local"
+    fi
+
+# Prints keys defined in .env.sample that are missing from .env.local
+config-diff: config-exists
+    #!/usr/bin/env bash
+    EXAMPLE=".env.sample"
+    LOCAL=".env.local"
+
+    extract_keys() {
+        grep -E '^[A-Z0-9_]+=' "$1" | cut -d= -f1
+    }
+
+    missing=()
+    while IFS= read -r key; do
+        if ! grep -qE "^#?${key}=" "$LOCAL" 2>/dev/null; then
+            missing+=("$key")
+        fi
+    done < <(extract_keys "$EXAMPLE")
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo -e "\nWARNING: Keys in $EXAMPLE missing from $LOCAL:"
+        printf '  %s\n' "${missing[@]}"
+        echo -e "\n"
+    fi
+
 
 # --- Local image builds ---
 # Build images into the local Docker store (--load) for testing with docker run / compose.
