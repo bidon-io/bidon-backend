@@ -16,6 +16,8 @@ func NewAdapterInitConfig(key adapter.Key, setOrder bool) (AdapterInitConfig, er
 	switch key {
 	case adapter.AdikteevKey:
 		config = new(AdkiteevInitConfig)
+	case adapter.SmadexKey:
+		config = new(SmadexInitConfig)
 	case adapter.AdmobKey:
 		config = new(AdmobInitConfig)
 	case adapter.ApplovinKey:
@@ -86,6 +88,19 @@ func (a *AdkiteevInitConfig) Key() adapter.Key {
 }
 
 func (a *AdkiteevInitConfig) SetDefaultOrder() {
+	a.Order = 0
+}
+
+type SmadexInitConfig struct {
+	SdkInstanceID string `json:"sdk_instance_id"`
+	Order         int    `json:"order"`
+}
+
+func (a *SmadexInitConfig) Key() adapter.Key {
+	return adapter.SmadexKey
+}
+
+func (a *SmadexInitConfig) SetDefaultOrder() {
 	a.Order = 0
 }
 
