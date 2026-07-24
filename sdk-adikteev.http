@@ -4,7 +4,7 @@ POST {{sdkapiHost}}/v2/config
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
 
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/adikteev_config_request.json
+< ./internal/sdkapi/v2/apihandlers/testdata/config/adikteev_config_request.json
 
 
 
@@ -78,14 +78,3 @@ X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_rewarded.json
-
-
-
-### Auction banner PubRevPlus
-
-POST {{sdkapiHost}}/v2/auction/banner
-Content-Type: application/json
-X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
-
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/ios_pubrevplus.json
