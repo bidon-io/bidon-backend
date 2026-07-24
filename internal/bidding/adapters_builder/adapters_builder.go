@@ -17,6 +17,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mintegral"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/mobilefuse"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/moloco"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/smadex"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/startio"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/taurusx"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/vkads"
@@ -35,6 +36,7 @@ var biddingAdapters = map[adapter.Key]adapters.Builder{
 	adapter.MintegralKey:  mintegral.Builder,
 	adapter.MobileFuseKey: mobilefuse.Builder,
 	adapter.MolocoKey:     moloco.Builder,
+	adapter.SmadexKey:     smadex.Builder,
 	adapter.StartIOKey:    startio.Builder,
 	adapter.TaurusXKey:    taurusx.Builder,
 	adapter.VKAdsKey:      vkads.Builder,
@@ -109,6 +111,8 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		appData := profile.AppData
 		switch key {
 		case adapter.AdikteevKey:
+			adaptersMap[key]["sdk_instance_id"] = extra["sdk_instance_id"]
+		case adapter.SmadexKey:
 			adaptersMap[key]["sdk_instance_id"] = extra["sdk_instance_id"]
 		case adapter.AmazonKey:
 			adaptersMap[key]["price_points_map"] = extra["price_points_map"]

@@ -25,6 +25,7 @@ DECLARE
     unityads_id   BIGINT;
     meta_id       BIGINT;
     adikteev_id   BIGINT;
+    smadex_id   BIGINT;
 
     -- Owner: use the first existing admin user (e.g. from init-admin.sh),
     -- falling back to the demo admin user (1000) inserted above.
@@ -37,6 +38,7 @@ DECLARE
     wordpuzzle_app_id  BIGINT := 2003;
     spacerunner_app_id BIGINT := 2004;
     tetris_app_id      BIGINT := 2005;
+    snake_app_id       BIGINT := 2006;
 
     -- Demand source account IDs
     bidmachine_account_id BIGINT := 3000;
@@ -45,6 +47,7 @@ DECLARE
     unityads_account_id   BIGINT := 3003;
     meta_account_id       BIGINT := 3004;
     adikteev_account_id   BIGINT := 3005;
+    smadex_account_id     BIGINT := 3006;
 BEGIN
     -- Resolve owner: prefer an existing admin user, fall back to demo user 1000.
     SELECT id INTO owner_id FROM users WHERE is_admin = true ORDER BY id LIMIT 1;
@@ -59,6 +62,7 @@ BEGIN
     SELECT id INTO unityads_id   FROM demand_sources WHERE api_key = 'unityads';
     SELECT id INTO meta_id       FROM demand_sources WHERE api_key = 'meta';
     SELECT id INTO adikteev_id   FROM demand_sources WHERE api_key = 'adikteev';
+    SELECT id INTO smadex_id     FROM demand_sources WHERE api_key = 'smadex';
 
     IF bidmachine_id IS NULL THEN RAISE EXCEPTION 'BidMachine demand source not found. Run demand_sources seed first.'; END IF;
     IF applovin_id   IS NULL THEN RAISE EXCEPTION 'AppLovin demand source not found. Run demand_sources seed first.'; END IF;
@@ -66,6 +70,7 @@ BEGIN
     IF unityads_id   IS NULL THEN RAISE EXCEPTION 'Unity Ads demand source not found. Run demand_sources seed first.'; END IF;
     IF meta_id       IS NULL THEN RAISE EXCEPTION 'Meta demand source not found. Run demand_sources seed first.'; END IF;
     IF adikteev_id   IS NULL THEN RAISE EXCEPTION 'Adikteev demand source not found. Run demand_sources seed first.'; END IF;
+    IF smadex_id     IS NULL THEN RAISE EXCEPTION 'Smadex demand source not found. Run demand_sources seed first.'; END IF;
 
     -- =========================================================
     -- Demand Source Accounts (all owned by owner_id)
@@ -108,6 +113,12 @@ BEGIN
         'DemandSourceAccount::adikteev',
         '{}'::jsonb,
         true, false, NOW(), NOW(), 'Adikteev Audience Network', adikteev_account_id
+    ),
+    (
+        smadex_account_id, smadex_id, owner_id,
+        'DemandSourceAccount::smadex',
+        '{}'::jsonb,
+        true, false, NOW(), NOW(), 'Smadex Audience Network', smadex_account_id
     )
     ON CONFLICT (id) DO NOTHING;
 
@@ -122,7 +133,8 @@ BEGIN
     (trivial_app_id,     owner_id, 1, 'Trivial Pursuit Ultimate', 'com.demo.trivialpursuit', 'trivial_'     || trivial_app_id,     '{}'::jsonb, NOW(), NOW(), trivial_app_id),
     (wordpuzzle_app_id,  owner_id, 4, 'Word Puzzle Pro',         'com.demo.wordpuzzlepro',  'wordpuzzle_'  || wordpuzzle_app_id,  '{}'::jsonb, NOW(), NOW(), wordpuzzle_app_id),
     (spacerunner_app_id, owner_id, 1, 'Space Runner',            'com.demo.spacerunner',    'spacerunner_' || spacerunner_app_id, '{}'::jsonb, NOW(), NOW(), spacerunner_app_id),
-    (tetris_app_id,      owner_id, 1, 'Tetris',                  'com.demo.tetris',         'tetris_' || tetris_app_id,           '{}'::jsonb, NOW(), NOW(), tetris_app_id)
+    (tetris_app_id,      owner_id, 1, 'Tetris',                  'com.demo.tetris',         'tetris_' || tetris_app_id,           '{}'::jsonb, NOW(), NOW(), tetris_app_id),
+    (snake_app_id,       owner_id, 1, 'Snake',                   'com.demo.snake',          'snake_' || snake_app_id,             '{}'::jsonb, NOW(), NOW(), snake_app_id)
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================================================
@@ -133,6 +145,7 @@ BEGIN
     -- Word Puzzle:  Unity Ads, Meta
     -- Space Runner: Unity Ads, Meta
     -- Tetris:       Adikteev
+    -- Snake:        Smadex
     -- =========================================================
     INSERT INTO app_demand_profiles (
         id, app_id, account_type, account_id, demand_source_id, data, created_at, updated_at, public_uid, enabled
@@ -168,7 +181,10 @@ BEGIN
      '{"app_id": 876543210}'::jsonb, NOW(), NOW(), 4011, true),
     -- Tetris
     (4012, tetris_app_id, 'DemandSourceAccount::Adikteev', adikteev_account_id, adikteev_id,
-     '{"sdk_instance_id": "sdk_instance_id"}'::jsonb, NOW(), NOW(), 4012, true)
+     '{"sdk_instance_id": "sdk_instance_id"}'::jsonb, NOW(), NOW(), 4012, true),
+    -- Snake
+    (4013, snake_app_id, 'DemandSourceAccount::Smadex', smadex_account_id, smadex_id,
+     '{"sdk_instance_id": "sdk_instance_id"}'::jsonb, NOW(), NOW(), 4013, true)
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================================================
@@ -659,6 +675,82 @@ BEGIN
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
     ARRAY[5304]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    -- =========================================================
+    -- SNAKE
+    --
+    -- Auction strategy:
+    --   Banner        — Smadex bidding
+    --   Interstitial  — Smadex bidding
+    --   Rewarded      — Smadex bidding
+    -- =========================================================
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5401, snake_app_id, 'DemandSourceAccount::smadex', smadex_account_id,
+     'Snake Smadex Banner [Bidding]', 0.01, 3, '{}'::jsonb, NOW(), NOW(), 320, 50, 'BANNER', 5401, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5402, snake_app_id, 'DemandSourceAccount::smadex', smadex_account_id,
+     'Snake Smadex MREC [Bidding]', 0.01, 3, '{}'::jsonb, NOW(), NOW(), 300, 250, 'MREC', 5402, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6060, 'Snake Banner Auction', snake_app_id, 3, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6060, 10000,
+    ARRAY['smadex']::varchar[],
+    ARRAY['smadex']::varchar[],
+    ARRAY[5401, 5402]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5403, snake_app_id, 'DemandSourceAccount::smadex', smadex_account_id,
+     'Snake Smadex Interstitial [Bidding]', 0.01, 1, '{}'::jsonb, NOW(), NOW(), 320, 480, '', 5403, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6061, 'Snake Interstitial Auction', snake_app_id, 1, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6061, 10000,
+    ARRAY['smadex']::varchar[],
+    ARRAY['smadex']::varchar[],
+    ARRAY[5403]::bigint[]
+    ) ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO line_items (
+        id, app_id, account_type, account_id, human_name, bid_floor, ad_type, extra,
+        created_at, updated_at, width, height, format, public_uid, bidding
+    ) VALUES
+    (5404, snake_app_id, 'DemandSourceAccount::smadex', smadex_account_id,
+     'Snake Smadex Rewarded [Bidding]', 0.01, 6, '{}'::jsonb, NOW(), NOW(), 0, 0, '', 5404, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO auction_configurations (
+        id, name, app_id, ad_type, rounds, status, settings, pricefloor,
+        created_at, updated_at, segment_id, external_win_notifications, public_uid,
+        timeout, demands, bidding, ad_unit_ids
+    ) VALUES (
+    6062, 'Snake Rewarded Auction', snake_app_id, 6, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
+    NOW(), NOW(), NULL, false, 6062, 10000,
+    ARRAY['smadex']::varchar[],
+    ARRAY['smadex']::varchar[],
+    ARRAY[5404]::bigint[]
     ) ON CONFLICT (id) DO NOTHING;
 
 END $$;
