@@ -301,8 +301,6 @@ func TestInMobi_ParseBids(t *testing.T) {
 	assert.Equal(t, "6579ca7b-7e2c-48b6-8915-46efa6530fb5", response.Bid.ImpID)
 	assert.Equal(t, 1.5, response.Bid.Price)
 	assert.Equal(t, adapter.InmobiKey, response.Bid.DemandID)
-	assert.Nil(t, response.Bid.Rendering)
-	adapters.EnrichBid(response)
 	require.NotNil(t, response.Bid.Rendering)
 	assert.Equal(t, rendering.CreativeTypeStaticImage, response.Bid.Rendering.Creative.Type)
 }

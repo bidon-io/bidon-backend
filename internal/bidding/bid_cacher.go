@@ -126,9 +126,9 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 		EndTS:       cb.EndTS,
 		Token:       cb.Token,
 	}
-	// Cached bids keep Rendering; EnrichBid is a no-op when set.
+	// Cached bids keep Rendering; FillRendering is a no-op when set.
 	// Still call it so legacy cache entries without Rendering recover from Ext.
-	adapters.EnrichBid(&dr)
+	dr.FillRendering()
 	return dr
 }
 

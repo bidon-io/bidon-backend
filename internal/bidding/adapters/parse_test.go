@@ -12,6 +12,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -112,6 +113,9 @@ func TestParseDemandResponse_mapsOpenRTBBid(t *testing.T) {
 	if bid.Ext != nil {
 		t.Fatalf("expected nil Ext, got %s", string(bid.Ext))
 	}
+	if bid.Rendering == nil || bid.Rendering.Creative.Type != rendering.CreativeTypeStaticImage {
+		t.Fatalf("expected default rendering, got %+v", bid.Rendering)
+	}
 }
 
 func TestParseDemandResponse_extractsSignaldataAndPreservesBidExt(t *testing.T) {
@@ -136,6 +140,9 @@ func TestParseDemandResponse_extractsSignaldataAndPreservesBidExt(t *testing.T) 
 	}
 	if string(got.Bid.Ext) != string(ext) {
 		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
+	}
+	if got.Bid.Rendering == nil || got.Bid.Rendering.Creative.Type != rendering.CreativeTypeVAST {
+		t.Fatalf("expected vast rendering from Ext, got %+v", got.Bid.Rendering)
 	}
 }
 
@@ -306,4 +313,31 @@ func TestParseDemandResponse_customParser(t *testing.T) {
 	if got.Bid == nil || got.Bid.Payload != "custom" || got.Bid.Price != 1.23 {
 		t.Fatalf("unexpected custom bid: %+v", got.Bid)
 	}
+	if got.Bid.Rendering == nil || got.Bid.Rendering.Creative.Type != rendering.CreativeTypeStaticImage {
+		t.Fatalf("expected default rendering for custom parser, got %+v", got.Bid.Rendering)
+	}
+}
+
+func TestDemandResponse_FillRendering_skipsWhenAlreadySet(t *testing.T) {
+	existing := &rendering.Config{
+		Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeMRAID},
+	}
+	dr := &adapters.DemandResponse{
+		DemandID: adapter.VungleKey,
+		Bid: &adapters.DemandBid{
+			Ext:       json.RawMessage(`{"rendering":{"creative":{"type":"vast"}}}`),
+			Rendering: existing,
+		},
+	}
+
+	dr.FillRendering()
+
+	if dr.Bid.Rendering != existing {
+		t.Fatal("expected existing Rendering pointer to be kept")
+	}
+}
+
+func TestDemandResponse_FillRendering_noBidIsNoop(t *testing.T) {
+	(*adapters.DemandResponse)(nil).FillRendering()
+	(&adapters.DemandResponse{}).FillRendering()
 }
