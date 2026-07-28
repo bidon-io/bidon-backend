@@ -7,6 +7,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -101,7 +102,8 @@ type NormalizedBid struct {
 	NURL       string
 	BURL       string
 	// Ext is the raw OpenRTB seatbid.bid.ext (nil for non-OpenRTB demands).
-	Ext json.RawMessage
+	Ext       json.RawMessage
+	Rendering *rendering.Config
 }
 
 type Token struct {

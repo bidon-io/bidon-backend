@@ -12,6 +12,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	adcom "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1"
 	adcomctx "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/adcom/v1/context"
@@ -676,5 +677,55 @@ func TestParseAdObject(t *testing.T) {
 				t.Errorf("AdObject mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestAdUnitToBid_serializesRenderingAsJSON(t *testing.T) {
+	adUnit := &auction.AdUnit{
+		UID:      "uid",
+		Label:    "label",
+		DemandID: "demand",
+		BidType:  schema.RTBBidType,
+		Rendering: &rendering.Config{
+			Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+		},
+	}
+
+	bid, err := adUnitToBid(adUnit)
+	if err != nil {
+		t.Fatalf("adUnitToBid: %v", err)
+	}
+
+	bidExt, err := getMediationExtension[*mediation.BidExt](bid, mediation.E_BidExt)
+	if err != nil {
+		t.Fatalf("get BidExt: %v", err)
+	}
+	if bidExt.Rendering == nil {
+		t.Fatal("expected rendering on BidExt")
+	}
+	if !strings.Contains(*bidExt.Rendering, `"type":"vast"`) {
+		t.Fatalf("rendering JSON = %q, want vast creative type", *bidExt.Rendering)
+	}
+}
+
+func TestAdUnitToBid_omitsRenderingWhenNil(t *testing.T) {
+	adUnit := &auction.AdUnit{
+		UID:      "uid",
+		Label:    "label",
+		DemandID: "demand",
+		BidType:  schema.RTBBidType,
+	}
+
+	bid, err := adUnitToBid(adUnit)
+	if err != nil {
+		t.Fatalf("adUnitToBid: %v", err)
+	}
+
+	bidExt, err := getMediationExtension[*mediation.BidExt](bid, mediation.E_BidExt)
+	if err != nil {
+		t.Fatalf("get BidExt: %v", err)
+	}
+	if bidExt.Rendering != nil {
+		t.Fatalf("expected nil rendering, got %q", *bidExt.Rendering)
 	}
 }

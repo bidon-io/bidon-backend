@@ -337,7 +337,7 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 		ext[key] = value
 	}
 
-	return &AdUnit{
+	adUnit := &AdUnit{
 		DemandID:   string(demandResponse.DemandID),
 		UID:        storeAdUnit.UID,
 		Label:      storeAdUnit.Label,
@@ -346,6 +346,12 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 		Timeout:    storeAdUnit.Timeout,
 		Extra:      ext,
 	}
+	// If the demand response has a bid, set the ad unit rendering configuration
+	if demandResponse.IsBid() {
+		adUnit.Rendering = demandResponse.Bid.Rendering
+	}
+
+	return adUnit
 }
 
 func prepareAuctionRequestEvent(

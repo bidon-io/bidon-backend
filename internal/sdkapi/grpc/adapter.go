@@ -424,6 +424,13 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		Ext:     ext,
 		Timeout: proto.Int32(a.Timeout),
 	}
+	if a.Rendering != nil {
+		renderingJSON, err := json.Marshal(a.Rendering)
+		if err != nil {
+			return nil, fmt.Errorf("marshal rendering: %w", err)
+		}
+		bidExt.Rendering = proto.String(string(renderingJSON))
+	}
 	proto.SetExtension(bid, mediation.E_BidExt, bidExt)
 
 	return bid, nil
