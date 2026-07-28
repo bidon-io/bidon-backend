@@ -168,7 +168,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 					{
 						DemandID: "amazon",
 						SlotUUID: "uuid1",
-						Bid: &adapters.BidDemandResponse{
+						Bid: &adapters.NormalizedBid{
 							Price:    0.5,
 							ID:       "111",
 							ImpID:    "222",
@@ -177,7 +177,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 					},
 					{
 						DemandID: "meta",
-						Bid: &adapters.BidDemandResponse{
+						Bid: &adapters.NormalizedBid{
 							Payload:  "payload",
 							Price:    0.6,
 							ID:       "123",
@@ -187,7 +187,7 @@ func testHelperAuctionHandler() *apihandlers.AuctionHandler {
 					},
 					{
 						DemandID: "mobilefuse",
-						Bid: &adapters.BidDemandResponse{
+						Bid: &adapters.NormalizedBid{
 							Price:      0.7,
 							ID:         "333",
 							ImpID:      "444",

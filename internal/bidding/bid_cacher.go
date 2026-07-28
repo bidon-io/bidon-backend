@@ -63,6 +63,7 @@ type CachedBid struct {
 	LURL        string
 	NURL        string
 	BURL        string
+	Ext         json.RawMessage
 }
 
 func cachedBidFromDemandResponse(dr adapters.DemandResponse) CachedBid {
@@ -86,6 +87,7 @@ func cachedBidFromDemandResponse(dr adapters.DemandResponse) CachedBid {
 		LURL:        dr.Bid.LURL,
 		NURL:        dr.Bid.NURL,
 		BURL:        dr.Bid.BURL,
+		Ext:         dr.Bid.Ext,
 		Token:       dr.Token,
 	}
 }
@@ -97,7 +99,7 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 		RawRequest:  "",
 		RawResponse: "",
 		Status:      cb.Status,
-		Bid: &adapters.BidDemandResponse{
+		Bid: &adapters.NormalizedBid{
 			Payload:    cb.Payload,
 			Signaldata: cb.Signaldata,
 			ID:         cb.ID,
@@ -109,6 +111,7 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 			LURL:       cb.LURL,
 			NURL:       cb.NURL,
 			BURL:       cb.BURL,
+			Ext:        cb.Ext,
 		},
 		Error:       nil,
 		TagID:       cb.TagID,

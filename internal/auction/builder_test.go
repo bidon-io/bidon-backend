@@ -131,7 +131,7 @@ func TestBuilder_Build(t *testing.T) {
 					return bidding.AuctionResult{
 						RoundNumber: 0,
 						Bids: []adapters.DemandResponse{
-							{DemandID: "bidmachine", Bid: &adapters.BidDemandResponse{}},
+							{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
 						},
 					}, nil
 				},
@@ -178,7 +178,7 @@ func TestBuilder_Build(t *testing.T) {
 				},
 				BiddingAuctionResult: &bidding.AuctionResult{
 					Bids: []adapters.DemandResponse{
-						{DemandID: "bidmachine", Bid: &adapters.BidDemandResponse{}},
+						{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
 					},
 				},
 			},
@@ -206,7 +206,7 @@ func TestBuilder_Build(t *testing.T) {
 						HoldAuctionFunc: func(_ context.Context, _ *bidding.BuildParams) (bidding.AuctionResult, error) {
 							return bidding.AuctionResult{
 								Bids: []adapters.DemandResponse{
-									{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: 0.5}},
+									{DemandID: "meta", Bid: &adapters.NormalizedBid{Price: 0.5}},
 								},
 							}, nil
 						},
@@ -243,7 +243,7 @@ func TestBuilder_Build(t *testing.T) {
 				},
 				BiddingAuctionResult: &bidding.AuctionResult{
 					Bids: []adapters.DemandResponse{
-						{DemandID: "meta", Bid: &adapters.BidDemandResponse{Price: 0.5}},
+						{DemandID: "meta", Bid: &adapters.NormalizedBid{Price: 0.5}},
 					},
 				},
 			},
@@ -329,7 +329,7 @@ func TestBuilder_Build(t *testing.T) {
 						return bidding.AuctionResult{
 							RoundNumber: 0,
 							Bids: []adapters.DemandResponse{
-								{DemandID: "bidmachine", Bid: &adapters.BidDemandResponse{}},
+								{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
 							},
 						}, nil
 					},
@@ -358,7 +358,7 @@ func TestBuilder_Build(t *testing.T) {
 					return bidding.AuctionResult{
 						RoundNumber: 0,
 						Bids: []adapters.DemandResponse{
-							{DemandID: "bidmachine", Bid: &adapters.BidDemandResponse{}},
+							{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
 						},
 					}, nil
 				},
@@ -415,7 +415,7 @@ func TestBuilder_Build(t *testing.T) {
 				},
 				BiddingAuctionResult: &bidding.AuctionResult{
 					Bids: []adapters.DemandResponse{
-						{DemandID: "bidmachine", Bid: &adapters.BidDemandResponse{}},
+						{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
 					},
 				},
 			},
@@ -490,7 +490,7 @@ func TestAuctionResult_GetMaxBidPrice(t *testing.T) {
 			name: "single bid",
 			bids: []adapters.DemandResponse{
 				{
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						Price: 1.5,
 					},
 				},
@@ -501,13 +501,13 @@ func TestAuctionResult_GetMaxBidPrice(t *testing.T) {
 			name: "multiple bids",
 			bids: []adapters.DemandResponse{
 				{
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						Price: 1.5,
 					},
 				},
 				{},
 				{
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						Price: 1,
 					},
 				},

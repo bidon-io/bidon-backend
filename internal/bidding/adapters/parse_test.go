@@ -45,7 +45,7 @@ type customParserAdapter struct {
 }
 
 func (customParserAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	dr.Bid = &adapters.BidDemandResponse{
+	dr.Bid = &adapters.NormalizedBid{
 		DemandID: adapter.ZmaticooKey,
 		Payload:  "custom",
 		Price:    1.23,
@@ -93,6 +93,31 @@ func TestParseDemandResponse_mapsOpenRTBBid(t *testing.T) {
 	}
 	if bid.LURL != "https://l" || bid.NURL != "https://n" || bid.BURL != "https://b" {
 		t.Fatalf("unexpected urls: %+v", bid)
+	}
+	if bid.Ext != nil {
+		t.Fatalf("expected nil Ext, got %s", string(bid.Ext))
+	}
+}
+
+func TestParseDemandResponse_preservesBidExt(t *testing.T) {
+	ext := json.RawMessage(`{"signaldata":"x","rendering":{"creative":{"type":"vast"}}}`)
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1, Ext: ext}},
+		}},
+	})
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.AdikteevKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(got.Bid.Ext) != string(ext) {
+		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
 	}
 }
 

@@ -16,7 +16,7 @@ type CustomBidParser interface {
 }
 
 // OpenRTBBidEnricher is implemented by OpenRTB adapters that need extra
-// extraction after the default BidDemandResponse mapping.
+// extraction after the default NormalizedBid mapping.
 type OpenRTBBidEnricher interface {
 	EnrichOpenRTBBid(
 		dr *DemandResponse,
@@ -65,7 +65,7 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	seat := bidResponse.SeatBid[0]
 	bid := seat.Bid[0]
 
-	dr.Bid = &BidDemandResponse{
+	dr.Bid = &NormalizedBid{
 		ID:       bid.ID,
 		ImpID:    bid.ImpID,
 		Price:    bid.Price,
@@ -76,6 +76,7 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 		LURL:     bid.LURL,
 		NURL:     bid.NURL,
 		BURL:     bid.BURL,
+		Ext:      bid.Ext,
 	}
 
 	if e, ok := adapter.(OpenRTBBidEnricher); ok {

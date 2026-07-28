@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -362,7 +363,7 @@ func TestMeta_ParseBids(t *testing.T) {
 					DemandID:    "meta",
 					Status:      200,
 					RawResponse: rawResponse,
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
 						Price:    1.5,
@@ -419,7 +420,7 @@ func TestMeta_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
