@@ -10,7 +10,7 @@
 
 ## Summary
 
-OpenRTB demand adapters each implement nearly identical `ParseBids` logic: HTTP status handling, unmarshalling the raw response, taking the first seat/bid, and mapping standard fields into `BidDemandResponse`. Only a few networks add custom extraction (e.g. signaldata, alternate payload source). Proprietary adapters (non-OpenRTB) need a full custom parse path.
+OpenRTB demand adapters each implement nearly identical `ParseBids` logic: HTTP status handling, unmarshalling the raw response, taking the first seat/bid, and mapping standard fields into `NormalizedBid`. Only a few networks add custom extraction (e.g. signaldata, alternate payload source). Proprietary adapters (non-OpenRTB) need a full custom parse path.
 
 This work moves the common OpenRTB parse to the **bidding builder call site**, so most networks no longer define `ParseBids` at all. Networks only opt in when they need enrichment or a fully custom parser.
 
@@ -71,7 +71,7 @@ Most OpenRTB adapters implement **neither**.
 - Standard HTTP status handling (align on the common 204 / auth-style failures / 200 set).
 - Unmarshal raw response to OpenRTB bid response.
 - Empty seat/bid policy — **default: treat as no-bid** (also fixes unchecked indexing). Decide whether moloco/startio keep an error policy via enricher/custom path or adopt no-bid.
-- Map standard fields into `BidDemandResponse` (ids, price, adm payload, seat, notice URLs, raw bid ext for later enrichment).
+- Map standard fields into `NormalizedBid` (ids, price, adm payload, seat, notice URLs, raw bid ext for later enrichment).
 - Use `DemandResponse.DemandID` already set by execute; do not hardcode demand keys in the mapper.
 - Invoke optional OpenRTB enricher when present.
 

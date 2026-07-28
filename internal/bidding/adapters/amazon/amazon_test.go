@@ -74,7 +74,7 @@ func TestAdapter_FetchBids(t *testing.T) {
 				{
 					DemandID: adapter.AmazonKey,
 					SlotUUID: "slot_uuid_1",
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						DemandID: adapter.AmazonKey,
 						Price:    1.0,
 					},
@@ -82,7 +82,7 @@ func TestAdapter_FetchBids(t *testing.T) {
 				{
 					DemandID: adapter.AmazonKey,
 					SlotUUID: "slot_uuid_2",
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						DemandID: adapter.AmazonKey,
 						Price:    2.0,
 					},

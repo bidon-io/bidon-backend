@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -259,7 +260,7 @@ func TestMobileFuse_CreateRequest(t *testing.T) {
 			Request: request,
 			Err:     err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.AuctionRequest, diff)
 		}
 	}
@@ -445,7 +446,7 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 					DemandID:    "mobilefuse",
 					Status:      200,
 					RawResponse: rawResponse,
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.NormalizedBid{
 						ID:         "9f21299b7b7b6ad7fe30226748c57abf_banner",
 						ImpID:      "1",
 						Price:      1.904,
@@ -503,7 +504,7 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}

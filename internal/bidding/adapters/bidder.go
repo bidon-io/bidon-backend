@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -32,7 +33,7 @@ type DemandResponse struct {
 	RawRequest  string
 	RawResponse string
 	Status      int
-	Bid         *BidDemandResponse
+	Bid         *NormalizedBid
 	Error       error
 	ImpID       string
 	TagID       string
@@ -85,7 +86,9 @@ func (dr *DemandResponse) CanCache() bool {
 	return true
 }
 
-type BidDemandResponse struct {
+// NormalizedBid is the DSP-agnostic bid after network response parsing.
+// OpenRTB adapters fill Ext from seatbid.bid.ext; proprietary adapters leave it nil.
+type NormalizedBid struct {
 	Payload    string
 	Signaldata string
 	ID         string
@@ -97,6 +100,8 @@ type BidDemandResponse struct {
 	LURL       string
 	NURL       string
 	BURL       string
+	// Ext is the raw OpenRTB seatbid.bid.ext (nil for non-OpenRTB demands).
+	Ext json.RawMessage
 }
 
 type Token struct {
