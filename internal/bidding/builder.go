@@ -228,7 +228,7 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	demandResponse, err = bidder.Adapter.ParseBids(demandResponse)
+	demandResponse, err = adapters.ParseDemandResponse(bidder.Adapter, demandResponse)
 	demandResponse.Error = err
 
 	bids <- *demandResponse

@@ -116,7 +116,7 @@ func TestZmaticooAdapter_ParseBids_Success(t *testing.T) {
 		}`,
 	}
 
-	result, err := zmaticooAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -159,7 +159,7 @@ func TestZmaticooAdapter_ParseBids_NoContent(t *testing.T) {
 		Status: http.StatusNoContent,
 	}
 
-	result, err := zmaticooAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -177,7 +177,7 @@ func TestZmaticooAdapter_ParseBids_ErrorStatus(t *testing.T) {
 		Status: http.StatusBadRequest,
 	}
 
-	_, err := zmaticooAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for bad request status")
 	}
@@ -191,7 +191,7 @@ func TestZmaticooAdapter_ParseBids_FailedCode(t *testing.T) {
 		RawResponse: `{"code":1002,"msg":"Invalid token"}`,
 	}
 
-	_, err := zmaticooAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for failed code response")
 		return
@@ -210,7 +210,7 @@ func TestZmaticooAdapter_ParseBids_MissingBidResult(t *testing.T) {
 		RawResponse: `{"code":1,"msg":"bid success"}`,
 	}
 
-	_, err := zmaticooAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for missing bid_result")
 	}
@@ -253,12 +253,21 @@ func TestZmaticooAdapter_ExecuteRequest_Success(t *testing.T) {
 		t.Fatalf("Expected RawRequest/RawResponse to be set")
 	}
 
-	if dr.Bid == nil {
+	if dr.Bid != nil {
+		t.Fatalf("ExecuteRequest should not parse bids")
+	}
+
+	parsed, err := adapters.ParseDemandResponse(zmaticooAdapter, dr)
+	if err != nil {
+		t.Fatalf("ParseDemandResponse() error = %v", err)
+	}
+
+	if parsed.Bid == nil {
 		t.Fatalf("Expected bid to be present")
 	}
 
-	if dr.Bid.ImpID != "imp-1" {
-		t.Fatalf("Expected ImpID 'imp-1', got '%s'", dr.Bid.ImpID)
+	if parsed.Bid.ImpID != "imp-1" {
+		t.Fatalf("Expected ImpID 'imp-1', got '%s'", parsed.Bid.ImpID)
 	}
 
 	if !gotContentType || !gotOpenRTBVersion {

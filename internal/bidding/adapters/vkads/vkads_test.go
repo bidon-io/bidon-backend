@@ -366,18 +366,21 @@ func TestVKAds_ParseBids(t *testing.T) {
 			name: "ParseBids Success",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      200,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      200,
 					RawResponse: rawResponse,
 					Bid: &adapters.BidDemandResponse{
 						ID:       "2:1::669e29a737559894",
 						ImpID:    "7703af66-0ec1-475f-b5a8-eda9d65c44e6",
 						Price:    1.5,
+						Payload:  "adm",
 						DemandID: "vkads",
 						AdID:     "162456424",
 						LURL:     "https://rs.mail.ru",
@@ -391,12 +394,14 @@ func TestVKAds_ParseBids(t *testing.T) {
 			name: "ParseBids Bad Request",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      400,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      400,
 					RawResponse: rawResponse,
 				},
@@ -407,12 +412,14 @@ func TestVKAds_ParseBids(t *testing.T) {
 			name: "ParseBids No Content",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      204,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    adapter.VKAdsKey,
 					Status:      204,
 					RawResponse: rawResponse,
 				},
@@ -421,13 +428,13 @@ func TestVKAds_ParseBids(t *testing.T) {
 		},
 	}
 	for _, tC := range testCases {
-		response, err := a.ParseBids(&tC.params.DemandsResponse)
+		response, err := adapters.ParseDemandResponse(&a, &tC.params.DemandsResponse)
 		got := ParseBidsTestOutput{
 			DemandResponse: *response,
 			Err:            err,
 		}
 		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
-			t.Errorf("%s: a.ParseBids(ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
+			t.Errorf("%s: adapters.ParseDemandResponse(&a, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
 }

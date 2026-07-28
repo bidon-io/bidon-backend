@@ -435,12 +435,14 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 			name: "ParseBids Success",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      200,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      200,
 					RawResponse: rawResponse,
 					Bid: &adapters.BidDemandResponse{
@@ -462,12 +464,14 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 			name: "ParseBids Bad Request",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      400,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      400,
 					RawResponse: rawResponse,
 				},
@@ -478,12 +482,14 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 			name: "ParseBids No Conten",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      204,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "mobilefuse",
 					Status:      204,
 					RawResponse: rawResponse,
 				},
@@ -492,13 +498,13 @@ func TestMobileFuse_ParseBids(t *testing.T) {
 		},
 	}
 	for _, tC := range testCases {
-		response, err := adapter.ParseBids(&tC.params.DemandsResponse)
+		response, err := adapters.ParseDemandResponse(&adapter, &tC.params.DemandsResponse)
 		got := ParseBidsTestOutput{
 			DemandResponse: *response,
 			Err:            err,
 		}
 		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
-			t.Errorf("%s: adapter.ParseBids(ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
+			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
 }

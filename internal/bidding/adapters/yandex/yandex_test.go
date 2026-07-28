@@ -344,7 +344,7 @@ func TestYandex_ParseBids_Success(t *testing.T) {
 		Status:      http.StatusOK,
 	}
 
-	result, err := adpt.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(&adpt, dr)
 	if err != nil {
 		t.Fatalf("ParseBids() error = %v", err)
 	}
@@ -379,7 +379,7 @@ func TestYandex_ParseBids_NoContent(t *testing.T) {
 		Status:    http.StatusNoContent,
 	}
 
-	result, err := adpt.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(&adpt, dr)
 	if err != nil {
 		t.Fatalf("ParseBids() error = %v", err)
 	}
@@ -407,7 +407,7 @@ func TestYandex_ParseBids_ErrorStatuses(t *testing.T) {
 				Status:    status,
 			}
 
-			_, err := adpt.ParseBids(dr)
+			_, err := adapters.ParseDemandResponse(&adpt, dr)
 			if err == nil {
 				t.Errorf("Expected error for status %d, got nil", status)
 			}
@@ -433,7 +433,7 @@ func TestYandex_ParseBids_EmptySeatBid(t *testing.T) {
 		Status:      http.StatusOK,
 	}
 
-	result, err := adpt.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(&adpt, dr)
 	if err != nil {
 		t.Fatalf("ParseBids() error = %v", err)
 	}
@@ -453,7 +453,7 @@ func TestYandex_ParseBids_InvalidJSON(t *testing.T) {
 		Status:      http.StatusOK,
 	}
 
-	_, err := adpt.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(&adpt, dr)
 	if err == nil {
 		t.Error("Expected error for invalid JSON, got nil")
 	}
