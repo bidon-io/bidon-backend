@@ -29,6 +29,11 @@
       "type": "object",
       "description": "Additional properties for the ad unit",
       "additionalProperties": true
+    },
+    "rendering": {
+      "type": "object",
+      "description": "DSP-controlled rendering configuration for the uSDK renderer",
+      "additionalProperties": true
     }
   },
   "required": [

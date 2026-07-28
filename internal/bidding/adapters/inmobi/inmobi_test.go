@@ -8,12 +8,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/inmobi"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -263,4 +266,43 @@ func TestInMobiAdapter_Builder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInMobi_ParseBids(t *testing.T) {
+	rawResponse := `{
+		"id": "47611e59-e05b-4e1e-9074-5a65eb4501e4",
+		"seatbid": [
+			{
+				"bid": [
+					{
+						"id": "0",
+						"impid": "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
+						"price": 1.5,
+						"nurl": "https://api.gov-static.tech/Ad/AdxEvent?sid=0&sslot=10182906-10163778&adtype=4",
+						"lurl": "https://api.gov-static.tech/Ad/AdxEvent?sid=0&sslot=10182906-10163778",
+						"adm": "0692d0a0efdbd5bd470dafea742cef6a1f6b840c5c83240e165bc33a038b3d5487e25a52",
+						"adid": "InMobiad5e0471131b8a4e3c",
+						"crid": "e2d42134881d5b45134f3cf77989dec7"
+					}
+				]
+			}
+		]
+	}`
+	adpt := buildAdapter()
+
+	response, err := adapters.ParseDemandResponse(&adpt, &adapters.DemandResponse{
+		DemandID:    adapter.InmobiKey,
+		Status:      200,
+		RawResponse: rawResponse,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, response.Bid)
+	assert.Equal(t, "0", response.Bid.ID)
+	assert.Equal(t, "6579ca7b-7e2c-48b6-8915-46efa6530fb5", response.Bid.ImpID)
+	assert.Equal(t, 1.5, response.Bid.Price)
+	assert.Equal(t, adapter.InmobiKey, response.Bid.DemandID)
+	assert.Nil(t, response.Bid.Rendering)
+	adapters.EnrichBid(response)
+	require.NotNil(t, response.Bid.Rendering)
+	assert.Equal(t, rendering.CreativeTypeStaticImage, response.Bid.Rendering.Creative.Type)
 }
