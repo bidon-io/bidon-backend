@@ -253,7 +253,7 @@ func TestVKAds_CreateRequest(t *testing.T) {
 			Request: request,
 			Err:     err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext", "Rendering")); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.AuctionRequest, diff)
 		}
 	}
@@ -434,7 +434,7 @@ func TestVKAds_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext", "Rendering")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&a, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}

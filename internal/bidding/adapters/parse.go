@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
+
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 )
 
 // CustomBidParser is implemented by non-OpenRTB adapters that fully own
@@ -30,17 +32,36 @@ type OpenRTBBidEnricher interface {
 
 // ParseDemandResponse unpacks a demand HTTP response into a bid DTO.
 // Custom parsers take precedence; otherwise the shared OpenRTB path runs,
-// optionally followed by an OpenRTB enricher.
+// optionally followed by an OpenRTB enricher. On success, Rendering is
+// derived from Bid.Ext (documented defaults when Ext is absent).
 func ParseDemandResponse(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
 	if dr == nil {
 		return nil, fmt.Errorf("nil demand response")
 	}
 
+	var err error
 	if p, ok := adapter.(CustomBidParser); ok {
-		return p.ParseBids(dr)
+		dr, err = p.ParseBids(dr)
+	} else {
+		dr, err = parseOpenRTBBids(adapter, dr)
 	}
+	if err == nil {
+		dr.FillRendering()
+	}
+	return dr, err
+}
 
-	return parseOpenRTBBids(adapter, dr)
+// FillRendering derives Bid.Rendering from Bid.Ext when unset.
+// Used by ParseDemandResponse and non-parse bid paths (Amazon, bid cache).
+func (dr *DemandResponse) FillRendering() {
+	if dr == nil || !dr.IsBid() || dr.Bid.Rendering != nil {
+		return
+	}
+	demandID := dr.DemandID
+	if demandID == "" {
+		demandID = dr.Bid.DemandID
+	}
+	dr.Bid.Rendering = rendering.ParseFromBidExt(dr.Bid.Ext, demandID)
 }
 
 func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {

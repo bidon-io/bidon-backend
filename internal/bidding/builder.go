@@ -198,7 +198,7 @@ func (b *Builder) processAdapter(
 			demandResponse.StartTS = params.StartTS
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
-			adapters.EnrichBid(demandResponse)
+			demandResponse.FillRendering()
 
 			bids <- *demandResponse
 		}
@@ -231,7 +231,6 @@ func (b *Builder) processAdapter(
 
 	demandResponse, err = adapters.ParseDemandResponse(bidder.Adapter, demandResponse)
 	demandResponse.Error = err
-	adapters.EnrichBid(demandResponse)
 
 	bids <- *demandResponse
 }
