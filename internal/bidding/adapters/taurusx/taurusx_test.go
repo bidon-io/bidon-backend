@@ -89,7 +89,7 @@ func TestTaurusXAdapter_ParseBids_Success(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adid":"test-ad","nurl":"http://win.url","lurl":"http://loss.url"}],"seat":"test-seat"}],"ext":{"payload":"<html>test ad</html>"}}`,
 	}
 
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -124,7 +124,7 @@ func TestTaurusXAdapter_ParseBids_NoContent(t *testing.T) {
 		Status: http.StatusNoContent,
 	}
 
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -142,7 +142,7 @@ func TestTaurusXAdapter_ParseBids_Error(t *testing.T) {
 		Status: http.StatusBadRequest,
 	}
 
-	_, err := taurusxAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for bad request status")
 	}
@@ -156,7 +156,7 @@ func TestTaurusXAdapter_ParseBids_WithoutPayload(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adid":"test-ad","nurl":"http://win.url","lurl":"http://loss.url"}],"seat":"test-seat"}]}`,
 	}
 
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -181,7 +181,7 @@ func TestTaurusXAdapter_ParseBids_InvalidExtJSON(t *testing.T) {
 	}
 
 	// This should work fine since the ext JSON is valid, just doesn't have payload
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -206,7 +206,7 @@ func TestTaurusXAdapter_ParseBids_MalformedBidResponseJSON(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adid":"test-ad"}],"seat":"test-seat"}],"ext":{"malformed":json}}`,
 	}
 
-	_, err := taurusxAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for malformed JSON")
 		return
@@ -225,7 +225,7 @@ func TestTaurusXAdapter_ParseBids_MalformedExtJSON(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adid":"test-ad"}],"seat":"test-seat"}],"ext":"{\"malformed\":json}"}`,
 	}
 
-	_, err := taurusxAdapter.ParseBids(dr)
+	_, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err == nil {
 		t.Error("Expected error for malformed ext JSON")
 		return
@@ -244,7 +244,7 @@ func TestTaurusXAdapter_ParseBids_PayloadNotString(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adid":"test-ad"}],"seat":"test-seat"}],"ext":{"payload":123}}`,
 	}
 
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return
@@ -299,7 +299,7 @@ func TestTaurusXAdapter_ParseBids_RealTaurusXResponse(t *testing.T) {
 		}`,
 	}
 
-	result, err := taurusxAdapter.ParseBids(dr)
+	result, err := adapters.ParseDemandResponse(taurusxAdapter, dr)
 	if err != nil {
 		t.Errorf("ParseBids() error = %v", err)
 		return

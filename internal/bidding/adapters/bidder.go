@@ -14,10 +14,9 @@ type BidderInterface interface {
 	CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error)
 
 	// ExecuteRequest sends request to bidder endpoint.
+	// It must only populate Status / RawResponse (and transport errors);
+	// bid parsing is done by ParseDemandResponse at the builder call site.
 	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
-
-	// ParseBids unpacks the server's response into Bids.
-	ParseBids(*DemandResponse) (*DemandResponse, error)
 }
 
 type Bidder struct {

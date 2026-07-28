@@ -288,9 +288,9 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	demandResponse, err = bidder.Adapter.ParseBids(demandResponse)
+	demandResponse, err = adapters.ParseDemandResponse(bidder.Adapter, demandResponse)
 	if err != nil {
-		childLogger.Error("parse bids", zap.Error(err))
+		childLogger.Error("parse demand response", zap.Error(err))
 	}
 	demandResponse.Error = err
 

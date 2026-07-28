@@ -5,10 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -186,42 +184,12 @@ func (a *YandexAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	return dr
 }
 
-func (a *YandexAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	switch dr.Status {
-	case http.StatusNoContent:
-		return dr, nil
-	case http.StatusServiceUnavailable:
-		fallthrough
-	case http.StatusBadRequest:
-		fallthrough
-	case http.StatusUnauthorized:
-		fallthrough
-	case http.StatusForbidden:
-		return dr, fmt.Errorf("unauthorized request: %s", strconv.Itoa(dr.Status))
-	case http.StatusOK:
-		break
-	default:
-		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
-	}
-
-	var bidResponse openrtb2.BidResponse
-	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
-	if err != nil {
-		return dr, err
-	}
-
-	if bidResponse.SeatBid == nil || len(bidResponse.SeatBid) == 0 {
-		return dr, nil
-	}
-
-	seat := bidResponse.SeatBid[0]
-	if len(seat.Bid) == 0 {
-		return dr, nil
-	}
-
-	bid := seat.Bid[0]
-
-	// Extract signaldata from bid.ext
+func (a *YandexAdapter) EnrichOpenRTBBid(
+	dr *adapters.DemandResponse,
+	_ *openrtb2.BidResponse,
+	_ openrtb2.SeatBid,
+	bid openrtb2.Bid,
+) error {
 	type BidExt struct {
 		SignalData string `json:"signaldata"`
 	}
@@ -229,25 +197,11 @@ func (a *YandexAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Demand
 	var bidExt BidExt
 	if bid.Ext != nil {
 		if err := json.Unmarshal(bid.Ext, &bidExt); err != nil {
-			return dr, err
+			return err
 		}
 	}
-
-	dr.Bid = &adapters.BidDemandResponse{
-		ID:         bid.ID,
-		ImpID:      bid.ImpID,
-		Price:      bid.Price,
-		Payload:    bid.AdM,
-		Signaldata: bidExt.SignalData,
-		DemandID:   adapter.YandexKey,
-		AdID:       bid.AdID,
-		SeatID:     seat.Seat,
-		LURL:       bid.LURL,
-		NURL:       bid.NURL,
-		BURL:       bid.BURL,
-	}
-
-	return dr, nil
+	dr.Bid.Signaldata = bidExt.SignalData
+	return nil
 }
 
 // Builder builds a new instance of the Yandex adapter for the given bidder with the given config.

@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -251,53 +250,6 @@ func (a *Adapter) ExecuteRequest(ctx context.Context, client *http.Client, reque
 	dr.Status = httpResp.StatusCode
 
 	return dr
-}
-
-// ParseBids implements the BidderInterface.ParseBids method.
-func (a *Adapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	switch dr.Status {
-	case http.StatusNoContent:
-		return dr, nil
-	case http.StatusServiceUnavailable:
-		fallthrough
-	case http.StatusBadRequest:
-		fallthrough
-	case http.StatusUnauthorized:
-		fallthrough
-	case http.StatusForbidden:
-		return dr, fmt.Errorf("unauthorized request: %s", strconv.Itoa(dr.Status))
-	case http.StatusOK:
-		// proceed
-	default:
-		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
-	}
-
-	var bidResponse openrtb2.BidResponse
-	if err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse); err != nil {
-		return dr, err
-	}
-
-	if len(bidResponse.SeatBid) == 0 || len(bidResponse.SeatBid[0].Bid) == 0 {
-		return dr, errors.New("no seatbid or bid in response")
-	}
-
-	seat := bidResponse.SeatBid[0]
-	bid := seat.Bid[0]
-
-	dr.Bid = &adapters.BidDemandResponse{
-		ID:       bid.ID,
-		ImpID:    bid.ImpID,
-		Price:    bid.Price,
-		Payload:  bid.AdM,
-		DemandID: adapter.StartIOKey,
-		AdID:     bid.AdID,
-		SeatID:   seat.Seat,
-		LURL:     bid.LURL,
-		NURL:     bid.NURL,
-		BURL:     bid.BURL,
-	}
-
-	return dr, nil
 }
 
 // Builder constructs a bidder for Start.io based on processed configuration.

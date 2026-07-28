@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -208,50 +207,20 @@ func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 	}
 	dr.RawResponse = string(respBody)
 
-	parsedDr, err := a.ParseBids(dr)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	return parsedDr
+	return dr
 }
 
-func (a *TaurusXAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	switch dr.Status {
-	case http.StatusNoContent:
-		return dr, nil
-	case http.StatusServiceUnavailable:
-		fallthrough
-	case http.StatusBadRequest:
-		fallthrough
-	case http.StatusUnauthorized:
-		fallthrough
-	case http.StatusForbidden:
-		return dr, fmt.Errorf("unauthorized request: %s", strconv.Itoa(dr.Status))
-	case http.StatusOK:
-		break
-	default:
-		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
-	}
-
-	var bidResponse openrtb2.BidResponse
-	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
-	if err != nil {
-		return dr, err
-	}
-
-	if len(bidResponse.SeatBid) == 0 || len(bidResponse.SeatBid[0].Bid) == 0 {
-		return dr, nil
-	}
-
-	seat := bidResponse.SeatBid[0]
-	bid := seat.Bid[0]
-
+func (a *TaurusXAdapter) EnrichOpenRTBBid(
+	dr *adapters.DemandResponse,
+	bidResp *openrtb2.BidResponse,
+	_ openrtb2.SeatBid,
+	_ openrtb2.Bid,
+) error {
 	payload := ""
-	if bidResponse.Ext != nil {
+	if bidResp.Ext != nil {
 		var extData map[string]interface{}
-		if err := json.Unmarshal(bidResponse.Ext, &extData); err != nil {
-			return dr, fmt.Errorf("failed to unmarshal bid response ext: %v", err)
+		if err := json.Unmarshal(bidResp.Ext, &extData); err != nil {
+			return fmt.Errorf("failed to unmarshal bid response ext: %v", err)
 		}
 		if payloadValue, exists := extData["payload"]; exists {
 			if payloadStr, ok := payloadValue.(string); ok {
@@ -259,21 +228,8 @@ func (a *TaurusXAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Deman
 			}
 		}
 	}
-
-	dr.Bid = &adapters.BidDemandResponse{
-		ID:       bid.ID,
-		ImpID:    bid.ImpID,
-		Price:    bid.Price,
-		Payload:  payload,
-		DemandID: adapter.TaurusXKey,
-		AdID:     bid.AdID,
-		SeatID:   seat.Seat,
-		LURL:     bid.LURL,
-		NURL:     bid.NURL,
-		BURL:     bid.BURL,
-	}
-
-	return dr, nil
+	dr.Bid.Payload = payload
+	return nil
 }
 
 // Builder builds a new instance of the TaurusX adapter for the given bidder with the given config.
