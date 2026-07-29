@@ -103,7 +103,9 @@ type NormalizedBid struct {
 	NURL       string
 	BURL       string
 	// Ext is the raw OpenRTB seatbid.bid.ext (nil for non-OpenRTB demands).
-	Ext       json.RawMessage
+	Ext json.RawMessage
+	// Rendering is extracted from seatbid.bid.ext.rendering by the shared OpenRTB
+	// parser (documented defaults when absent). FillRendering covers other paths.
 	Rendering *rendering.Config
 }
 

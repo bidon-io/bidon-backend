@@ -174,6 +174,28 @@ func TestApplyDefaults_fillsMissingFields(t *testing.T) {
 	assert.Equal(t, rendering.CloseButtonStyleIconX, cfg.CloseButton.Style)
 }
 
+func TestDecodeBidExt_extractsSignaldataAndRendering(t *testing.T) {
+	t.Parallel()
+
+	bidExt := []byte(`{
+		"signaldata": "abc",
+		"rendering": {
+			"creative": { "type": "vast" },
+			"container": { "format": "interstitial" }
+		}
+	}`)
+
+	signaldata, got, err := rendering.DecodeBidExt(bidExt, testDemandID)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", signaldata)
+	require.NotNil(t, got)
+	require.NotNil(t, got.Creative)
+	assert.Equal(t, rendering.CreativeTypeVAST, got.Creative.Type)
+	assert.Equal(t, rendering.CreativeVASTVersionV42, got.Creative.VASTVersion)
+	require.NotNil(t, got.Container)
+	assert.Equal(t, rendering.ContainerFormatInterstitial, got.Container.Format)
+}
+
 func TestParseFromBidExt_validRendering(t *testing.T) {
 	t.Parallel()
 
