@@ -36,7 +36,7 @@ func (a *enricherAdapter) EnrichOpenRTBBid(
 	_ openrtb2.Bid,
 ) error {
 	a.called = true
-	dr.Bid.Signaldata = "enriched"
+	dr.Bid.Payload = "enriched"
 	return nil
 }
 
@@ -99,7 +99,7 @@ func TestParseDemandResponse_mapsOpenRTBBid(t *testing.T) {
 	}
 }
 
-func TestParseDemandResponse_preservesBidExt(t *testing.T) {
+func TestParseDemandResponse_extractsSignaldataAndPreservesBidExt(t *testing.T) {
 	ext := json.RawMessage(`{"signaldata":"x","rendering":{"creative":{"type":"vast"}}}`)
 	raw, _ := json.Marshal(openrtb2.BidResponse{
 		SeatBid: []openrtb2.SeatBid{{
@@ -115,6 +115,9 @@ func TestParseDemandResponse_preservesBidExt(t *testing.T) {
 	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid.Signaldata != "x" {
+		t.Fatalf("expected Signaldata %q, got %q", "x", got.Bid.Signaldata)
 	}
 	if string(got.Bid.Ext) != string(ext) {
 		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
@@ -188,8 +191,8 @@ func TestParseDemandResponse_callsEnricher(t *testing.T) {
 	if !enricher.called {
 		t.Fatal("expected enricher to be called")
 	}
-	if got.Bid.Signaldata != "enriched" {
-		t.Fatalf("expected enriched signaldata, got %q", got.Bid.Signaldata)
+	if got.Bid.Payload != "enriched" {
+		t.Fatalf("expected enriched payload, got %q", got.Bid.Payload)
 	}
 }
 

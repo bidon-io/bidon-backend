@@ -30,7 +30,7 @@ This work moves the common OpenRTB parse to the **bidding builder call site**, s
 | Pattern | Adapters |
 |--------|----------|
 | Standard OpenRTB map only | adikteev, bidmachine, bigoads, meta, vkads, vungle, inmobi, mintegral, moloco, startio |
-| Extra: signaldata from bid ext | yandex, mobilefuse |
+| signaldata from bid ext | shared OpenRTB parser (was yandex, mobilefuse enrichers) |
 | Extra: payload from bid response ext (not adm) | taurusx |
 | Empty seatbid → no bid | inmobi, mintegral, yandex, taurusx |
 | Empty seatbid → error | moloco, startio |
@@ -62,7 +62,7 @@ Pipeline order:
 ### Optional capabilities (type-asserted at the call site)
 
 1. **Custom bid parser** — proprietary / non-OpenRTB networks (zmaticoo). Full ownership of parsing the raw response into `DemandResponse`.
-2. **OpenRTB bid enricher** — networks that need extra fields after the default OpenRTB map (yandex, mobilefuse, taurusx). Receives the demand response plus the parsed OpenRTB bid response / seat / bid and mutates the DTO.
+2. **OpenRTB bid enricher** — networks that need extra fields after the default OpenRTB map (taurusx). Receives the demand response plus the parsed OpenRTB bid response / seat / bid and mutates the DTO. `signaldata` is extracted by the shared parser.
 
 Most OpenRTB adapters implement **neither**.
 
@@ -71,7 +71,7 @@ Most OpenRTB adapters implement **neither**.
 - Standard HTTP status handling (align on the common 204 / auth-style failures / 200 set).
 - Unmarshal raw response to OpenRTB bid response.
 - Empty seat/bid policy — **default: treat as no-bid** (also fixes unchecked indexing). Decide whether moloco/startio keep an error policy via enricher/custom path or adopt no-bid.
-- Map standard fields into `NormalizedBid` (ids, price, adm payload, seat, notice URLs, raw bid ext for later enrichment).
+- Map standard fields into `NormalizedBid` (ids, price, adm payload, signaldata from bid.ext, seat, notice URLs, raw bid ext for later enrichment such as BAC-19 rendering).
 - Use `DemandResponse.DemandID` already set by execute; do not hardcode demand keys in the mapper.
 - Invoke optional OpenRTB enricher when present.
 
@@ -80,7 +80,7 @@ Most OpenRTB adapters implement **neither**.
 | Network | After change |
 |--------|----------------|
 | Most OpenRTB adapters | No parse-related methods |
-| yandex, mobilefuse | OpenRTB enricher for signaldata |
+| yandex, mobilefuse | No parse-related methods; signaldata via shared parser |
 | taurusx | OpenRTB enricher for payload-from-response-ext; stop parsing in `ExecuteRequest` |
 | zmaticoo | Custom bid parser; stop parsing in `ExecuteRequest` |
 | amazon | Unchanged (`FetchBids` bypass) |

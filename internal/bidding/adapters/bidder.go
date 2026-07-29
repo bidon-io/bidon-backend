@@ -89,7 +89,8 @@ func (dr *DemandResponse) CanCache() bool {
 // NormalizedBid is the DSP-agnostic bid after network response parsing.
 // OpenRTB adapters fill Ext from seatbid.bid.ext; proprietary adapters leave it nil.
 type NormalizedBid struct {
-	Payload    string
+	Payload string
+	// Signaldata is extracted from seatbid.bid.ext.signaldata by the shared OpenRTB parser.
 	Signaldata string
 	ID         string
 	ImpID      string
