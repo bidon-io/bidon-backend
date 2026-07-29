@@ -1,23 +1,23 @@
 # Onboard a new network
 
-Those are the steps to onboard a new network:
+This guide covers every change needed to onboard a new demand source / RTB bidding adapter.
 
-- RTB adapter integration:
-    - new adapter in `internal/adapter/adapter.go`
-    - adapter implementation in `internal/bidding/adapters/` implementing:
-        - bid requests
-        - parses responses
-        - manages DSP connections
-        - delivers rendering configs
-        - and fires callbacks
-- add it as a new constant to the Admin UI in those files located under `web/bidon_ui/constants/`
-    - `DemandSourceOptions.js`
-    - `Networks.js`
-- create sample seed data (app, auctions, line items)
+The changes fall into five layers:
 
-Questions:
+| Layer                                    | Purpose                                         |
+|------------------------------------------|-------------------------------------------------|
+| **Adapter key**                          | Declare the network identity (`adapter.Key`)    |
+| **Bidding adapter + builder**            | OpenRTB request/response handling               |
+| **SDK init config**                      | Configuration sent to the mobile SDK at startup |
+| **Test factories + test expectations**   | Database test fixtures                          |
+| **Seeds, UI constants, HTTP test files** | Sample data, admin UI, and API test helpers     |
 
+See [the implementation details](network_impl.md) for a step by step guide.
+
+
+### Questions
+
+- do they have protobuf spec for bid request?
+- how to map sdk request ad types to ad formats?
 - how to deliver the creative, are we proxying?
-- hot to map sdk request ad types to ad formats?
 - how to render ad - creative rendering configuration (close/container/endcard/type)
-- protobuf spec for bid request?

@@ -10,7 +10,7 @@ X-Bidon-Version: 0.6.0
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_banner.json
 
@@ -19,7 +19,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_banner.json
 
@@ -28,7 +28,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_banner_mrec.json
 
@@ -37,7 +37,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_banner_mrec.json
 
@@ -46,7 +46,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_interstitial.json
 
@@ -55,7 +55,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_interstitial.json
 
@@ -64,7 +64,7 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_rewarded.json
 
@@ -73,6 +73,6 @@ X-Forwarded-For: 94.24.105.28
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
+X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_rewarded.json
