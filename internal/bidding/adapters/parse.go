@@ -16,7 +16,9 @@ type CustomBidParser interface {
 }
 
 // OpenRTBBidEnricher is implemented by OpenRTB adapters that need extra
-// extraction after the default NormalizedBid mapping.
+// extraction after the default NormalizedBid mapping (e.g. TaurusX payload
+// from BidResponse.ext). Common bid.ext fields like signaldata are handled
+// by the shared parser.
 type OpenRTBBidEnricher interface {
 	EnrichOpenRTBBid(
 		dr *DemandResponse,
@@ -65,18 +67,24 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	seat := bidResponse.SeatBid[0]
 	bid := seat.Bid[0]
 
+	signaldata, err := signaldataFromBidExt(bid.Ext)
+	if err != nil {
+		return dr, err
+	}
+
 	dr.Bid = &NormalizedBid{
-		ID:       bid.ID,
-		ImpID:    bid.ImpID,
-		Price:    bid.Price,
-		Payload:  bid.AdM,
-		DemandID: dr.DemandID,
-		AdID:     bid.AdID,
-		SeatID:   seat.Seat,
-		LURL:     bid.LURL,
-		NURL:     bid.NURL,
-		BURL:     bid.BURL,
-		Ext:      bid.Ext,
+		ID:         bid.ID,
+		ImpID:      bid.ImpID,
+		Price:      bid.Price,
+		Payload:    bid.AdM,
+		Signaldata: signaldata,
+		DemandID:   dr.DemandID,
+		AdID:       bid.AdID,
+		SeatID:     seat.Seat,
+		LURL:       bid.LURL,
+		NURL:       bid.NURL,
+		BURL:       bid.BURL,
+		Ext:        bid.Ext,
 	}
 
 	if e, ok := adapter.(OpenRTBBidEnricher); ok {
@@ -86,4 +94,17 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	}
 
 	return dr, nil
+}
+
+func signaldataFromBidExt(ext json.RawMessage) (string, error) {
+	if len(ext) == 0 {
+		return "", nil
+	}
+	var bidExt struct {
+		Signaldata string `json:"signaldata"`
+	}
+	if err := json.Unmarshal(ext, &bidExt); err != nil {
+		return "", err
+	}
+	return bidExt.Signaldata, nil
 }

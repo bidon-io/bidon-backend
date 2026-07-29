@@ -184,26 +184,6 @@ func (a *YandexAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	return dr
 }
 
-func (a *YandexAdapter) EnrichOpenRTBBid(
-	dr *adapters.DemandResponse,
-	_ *openrtb2.BidResponse,
-	_ openrtb2.SeatBid,
-	bid openrtb2.Bid,
-) error {
-	type BidExt struct {
-		SignalData string `json:"signaldata"`
-	}
-
-	var bidExt BidExt
-	if bid.Ext != nil {
-		if err := json.Unmarshal(bid.Ext, &bidExt); err != nil {
-			return err
-		}
-	}
-	dr.Bid.Signaldata = bidExt.SignalData
-	return nil
-}
-
 // Builder builds a new instance of the Yandex adapter for the given bidder with the given config.
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
 	yandexCfg := cfg[adapter.YandexKey]

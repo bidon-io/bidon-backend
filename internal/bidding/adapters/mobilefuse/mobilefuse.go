@@ -182,25 +182,6 @@ func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 	return dr
 }
 
-func (a *MobileFuseAdapter) EnrichOpenRTBBid(
-	dr *adapters.DemandResponse,
-	_ *openrtb2.BidResponse,
-	_ openrtb2.SeatBid,
-	bid openrtb2.Bid,
-) error {
-	if bid.Ext == nil {
-		return nil
-	}
-	var extParam map[string]any
-	if err := json.Unmarshal(bid.Ext, &extParam); err != nil {
-		return err
-	}
-	if signaldata, ok := extParam["signaldata"].(string); ok {
-		dr.Bid.Signaldata = signaldata
-	}
-	return nil
-}
-
 // Builder builds a new instance of the MobileFuse adapter for the given bidder with the given config.
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
 	mobileFuseCfg := cfg[adapter.MobileFuseKey]
