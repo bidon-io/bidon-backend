@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -100,21 +99,18 @@ func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest 
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.TagID
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
+	// VK Ads historically omits DisplayManager and Secure; keep those defaults off.
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.VKAdsKey, imp, adapters.RTBRequestOptions{
+		TagID:              a.TagID,
+		AppID:              a.AppID,
+		OmitSecure:         true,
+		OmitDisplayManager: true,
+	})
 
 	request.User = &openrtb.User{
 		ID:  auctionRequest.User.IDG,
 		Ext: json.RawMessage(fmt.Sprintf(`{"buyeruid": "%s"}`, token)),
 	}
-
-	request.App.ID = a.AppID
 	request.Ext = json.RawMessage(`{"pid":111}`)
 
 	return request, nil
