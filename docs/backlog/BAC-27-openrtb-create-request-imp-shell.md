@@ -73,7 +73,7 @@ This work extracts a **shared request + impression shell** so adapters supply on
 
 ### Shared builder / options
 
-Introduce something like `adapters.BuildOpenRTBRequest` (name TBD) that:
+Shared API: `adapters.BuildRTBRequest` with `adapters.RTBRequestOptions`.
 
 1. Takes the base `openrtb.BidRequest`, auction request, demand key, and an already-built creative `Imp` (or empty Imp for BAC-28 later).
 2. Applies the common shell: UUID ID, secure, bidfloor (+ currency), display manager + version, `Imp` slice, `Cur`.
@@ -93,7 +93,7 @@ Adapters keep ownership of:
 
 ### Do not force one path
 
-If a demand is highly custom (amazon today; possibly vkads if defaults would change behavior), leave an explicit full `CreateRequest` or opt-out flags. Prefer “shell + mutate” over a rigid DSL.
+If a demand is highly custom (amazon today; possibly vkads if defaults would change behavior), leave an explicit full `CreateRequest` or opt-out flags. Prefer `BuildRTBRequest` + mutate over a rigid DSL.
 
 ### Relationship to BAC-28
 
@@ -113,22 +113,23 @@ BAC-28 owns shared banner / interstitial / rewarded creative builders. This tick
 ## Implementation steps (Linear children)
 
 1. [BAC-29](https://linear.app/bidon/issue/BAC-29/inventory-createrequest-scaffolding-across-openrtb-adapters) — Inventory freeze; confirm migration tiers A/B/C/D and BidFloorCur / Secure / DisplayManager inconsistencies.
-2. [BAC-30](https://linear.app/bidon/issue/BAC-30/introduce-shared-openrtb-createrequest-impression-shell-api) — Introduce shared shell API (options + builder) with isolated unit tests.
-3. [BAC-31](https://linear.app/bidon/issue/BAC-31/migrate-tier-a-adapters-onto-createrequest-shell) — Migrate tier A: adikteev, inmobi, moloco, startio, mobilefuse.
-4. [BAC-32](https://linear.app/bidon/issue/BAC-32/migrate-tier-b-adapters-onto-createrequest-shell) — Migrate tier B: bigoads, mintegral, meta, vungle, yandex, taurusx, zmaticoo, bidmachine.
-5. [BAC-33](https://linear.app/bidon/issue/BAC-33/decide-vkads-shell-defaults-vs-opt-out) — Decide vkads shell defaults vs opt-out; migrate accordingly.
+2. [BAC-30](https://linear.app/bidon/issue/BAC-30/introduce-shared-openrtb-createrequest-impression-shell-api) — Introduce `BuildRTBRequest` + `RTBRequestOptions` with isolated unit tests.
+3. [BAC-31](https://linear.app/bidon/issue/BAC-31/migrate-tier-a-adapters-onto-createrequest-shell) — Migrate tier A onto `BuildRTBRequest`: adikteev, inmobi, moloco, startio, mobilefuse.
+4. [BAC-32](https://linear.app/bidon/issue/BAC-32/migrate-tier-b-adapters-onto-createrequest-shell) — Migrate tier B onto `BuildRTBRequest`: bigoads, mintegral, meta, vungle, yandex, taurusx, zmaticoo, bidmachine.
+5. [BAC-33](https://linear.app/bidon/issue/BAC-33/decide-vkads-shell-defaults-vs-opt-out) — Decide vkads defaults vs opt-out; migrate onto `BuildRTBRequest`.
 6. **Sweep** — Ensure amazon untouched; leave creative construction for BAC-28.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] Common CreateRequest scaffolding lives in one shared helper/builder.
-- [ ] Migrated adapters only set network-specific differences (token, tag/app IDs, ext, validation).
-- [ ] Existing CreateRequest tests still pass (or are updated to assert against the shared shell).
-- [ ] amazon / non-standard paths are not forced onto the shell.
-- [ ] Creative banner/interstitial/rewarded construction remains adapter-local (BAC-28).
-- [ ] Branch: `feature/BAC-27/openrtb-create-request-imp-shell` from `feature/BAC-26/openrtb-parse-bids-dto`.
+- [x] Common CreateRequest scaffolding lives in `adapters.BuildRTBRequest`.
+- [x] Migrated adapters only set network-specific differences (token, tag/app IDs, ext, validation).
+- [x] Existing CreateRequest tests still pass (or are updated to assert against `BuildRTBRequest`).
+- [x] amazon / non-standard paths are not forced onto `BuildRTBRequest`.
+- [x] Creative banner/interstitial/rewarded construction remains adapter-local (BAC-28).
+- [x] Branch: `feature/BAC-27/openrtb-create-request-imp-shell` from `feature/BAC-26/openrtb-parse-bids-dto`.
+- [x] vkads keeps Secure / DisplayManager omitted via `RTBRequestOptions` opt-outs.
 
 ---
 
