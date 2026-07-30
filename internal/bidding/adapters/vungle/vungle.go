@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -86,7 +85,9 @@ func (a *VungleAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 }
 
 func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
+	if a.TagID == "" {
+		return request, errors.New("TagID is empty")
+	}
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -100,20 +101,6 @@ func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-
-	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
-	}
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.VungleKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.VungleKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
 	vungleData := make(map[string]interface{})
 	vungleData["bid_token"] = auctionRequest.AdObject.Demands[adapter.VungleKey]["token"]
 
@@ -123,13 +110,11 @@ func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	raw, _ := json.Marshal(extStructure)
 	imp.Ext = raw
 
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	request.App.Publisher.ID = a.SellerID
-	request.App.ID = a.AppID
-
-	return request, nil
+	return adapters.BuildRTBRequest(request, auctionRequest, adapter.VungleKey, imp, adapters.RTBRequestOptions{
+		TagID:       a.TagID,
+		AppID:       a.AppID,
+		PublisherID: a.SellerID,
+	}), nil
 }
 
 func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

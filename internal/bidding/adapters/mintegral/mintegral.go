@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -88,7 +87,9 @@ func (a *MintegralAdapter) rewarded(auctionRequest *schema.AuctionRequest) *open
 }
 
 func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
+	if a.TagID == "" {
+		return request, errors.New("TagID is empty")
+	}
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -102,27 +103,16 @@ func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequ
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-
-	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+	opts := adapters.RTBRequestOptions{
+		TagID:       a.TagID,
+		AppID:       a.AppID,
+		PublisherID: a.SellerID,
 	}
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.MintegralKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MintegralKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-	request.User = &openrtb.User{
-		BuyerUID: auctionRequest.AdObject.Demands[adapter.MintegralKey]["token"].(string),
+	if token, ok := auctionRequest.AdObject.Demands[adapter.MintegralKey]["token"].(string); ok {
+		opts.BuyerUID = token
 	}
-	request.App.Publisher.ID = a.SellerID
-	request.App.ID = a.AppID
+
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.MintegralKey, imp, opts)
 
 	appExtStructure := &map[string]interface{}{}
 	if auctionRequest.AdObject.IsPortrait() {

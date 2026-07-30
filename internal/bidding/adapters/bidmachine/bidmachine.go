@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -105,8 +104,6 @@ func (a *BidmachineAdapter) rewarded(auctionRequest *schema.AuctionRequest) *ope
 }
 
 func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
-
 	x := ExtraParams(auctionRequest)
 	ext, _ := json.Marshal(x)
 	request.Ext = ext
@@ -123,28 +120,16 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.BidmachineKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.BidmachineKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-
-	request.App.Publisher.ID = a.SellerID
-
 	extStructure := &map[string]interface{}{}
 	_ = json.Unmarshal(imp.Ext, extStructure)
-
 	(*extStructure)["bid_token"] = auctionRequest.AdObject.Demands[adapter.BidmachineKey]["token"]
-
 	raw, _ := json.Marshal(extStructure)
-
 	imp.Ext = raw
 
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	return request, nil
+	return adapters.BuildRTBRequest(request, auctionRequest, adapter.BidmachineKey, imp, adapters.RTBRequestOptions{
+		PublisherID:     a.SellerID,
+		OmitBidFloorCur: true,
+	}), nil
 }
 
 func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
