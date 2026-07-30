@@ -26,20 +26,13 @@ type YandexAdapter struct {
 
 var _ adapters.BidderInterface = (*YandexAdapter)(nil)
 
-var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat:      {320, 50},
-	ad.LeaderboardFormat: {728, 90},
-	ad.MRECFormat:        {300, 250},
-	ad.AdaptiveFormat:    {320, 50},
-	ad.EmptyFormat:       {320, 50}, // Default
-}
-
 func (a *YandexAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := bannerFormats[auctionRequest.AdObject.Format()]
-
-	if auctionRequest.AdObject.IsAdaptive() && auctionRequest.Device.IsTablet() {
-		size = bannerFormats[ad.LeaderboardFormat]
-	}
+	size, _ := adapters.ResolveBannerSize(
+		auctionRequest.AdObject.Format(),
+		auctionRequest.AdObject.IsAdaptive(),
+		auctionRequest.Device.IsTablet(),
+		adapters.BannerSizeOptions{},
+	)
 
 	w, h := size[0], size[1]
 

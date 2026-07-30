@@ -1,10 +1,10 @@
 # Backlog: Shared OpenRTB banner / interstitial / rewarded creative builders
 
-**Status:** Backlog  
+**Status:** In Progress  
 **Linear:** [BAC-28](https://linear.app/bidon/issue/BAC-28/shared-openrtb-banner-interstitial-rewarded-creative-builders)  
 **Branch:** `feature/BAC-28/openrtb-shared-creative-builders`  
 **Base:** `feature/BAC-27/openrtb-create-request-imp-shell` (after `BuildRTBRequest` shell)  
-**Blocked by:** BAC-27  
+**Blocked by:** BAC-27 (done)  
 **Related:** BAC-26 (parse), BAC-27 (`BuildRTBRequest`), BAC-19 (rendering)
 
 ---
@@ -33,6 +33,7 @@ This work centralizes **shared size maps and optional creative helpers** for the
 | Helper | Location | Used by |
 |--------|----------|---------|
 | `FullscreenFormats` (`PHONE` 320×480, `TABLET` 768×1024) | `adapters/helpers.go` | Most interstitial/rewarded paths (moloco, meta, mintegral, vungle, startio, inmobi, taurusx, zmaticoo, bidmachine, adikteev, …) |
+| `BannerFormats` + `ResolveBannerSize` | `adapters/helpers.go` | Tier A banner paths (moloco, meta†, mintegral, vungle, startio, inmobi, bidmachine, mobilefuse, yandex, vkads, taurusx, zmaticoo). †meta keeps adaptive phone width `0` override. |
 
 ### Repeated per adapter
 
@@ -95,9 +96,9 @@ creative Imp  →  BuildRTBRequest(shell)  →  network overrides (token/ext)
 
 ## Implementation steps (Linear children)
 
-1. [BAC-34](https://linear.app/bidon/issue/BAC-34/inventory-openrtb-creative-size-maps-and-impression-shapes) — Inventory freeze; confirm size maps / creative shape tiers.
-2. [BAC-35](https://linear.app/bidon/issue/BAC-35/introduce-shared-bannerformats-map-and-size-resolve-helper) — Shared `BannerFormats` map + resolve helper with unit tests.
-3. [BAC-36](https://linear.app/bidon/issue/BAC-36/migrate-adapters-onto-shared-banner-size-map) — Migrate adapters onto shared banner sizes; delete duplicate maps.
+1. [BAC-34](https://linear.app/bidon/issue/BAC-34/inventory-openrtb-creative-size-maps-and-impression-shapes) — Inventory freeze; confirm size maps / creative shape tiers. **Done**
+2. [BAC-35](https://linear.app/bidon/issue/BAC-35/introduce-shared-bannerformats-map-and-size-resolve-helper) — Shared `BannerFormats` map + resolve helper with unit tests. **Done**
+3. [BAC-36](https://linear.app/bidon/issue/BAC-36/migrate-adapters-onto-shared-banner-size-map) — Migrate adapters onto shared banner sizes; delete duplicate maps. **Done** (adikteev / bigoads kept custom)
 4. [BAC-37](https://linear.app/bidon/issue/BAC-37/introduce-optional-bannerinterstitialrewarded-creative-helpers) — Optional banner / interstitial / rewarded creative helpers.
 5. [BAC-38](https://linear.app/bidon/issue/BAC-38/migrate-common-adapters-onto-creative-helpers-keep-divergent-custom) — Migrate common adapters; keep divergent custom.
 6. **Sweep** — amazon untouched; CreateRequest tests green.
@@ -106,12 +107,12 @@ creative Imp  →  BuildRTBRequest(shell)  →  network overrides (token/ext)
 
 ## Acceptance criteria
 
-- [ ] Repeated banner/fullscreen size tables are shared instead of copy-pasted per adapter.
+- [x] Repeated banner/fullscreen size tables are shared instead of copy-pasted per adapter.
 - [ ] Common creative defaults have one home; network-specific creatives remain in adapters.
-- [ ] No forced single builder for every demand.
-- [ ] Existing CreateRequest / creative adapter tests still pass.
-- [ ] Branch: `feature/BAC-28/openrtb-shared-creative-builders` from `feature/BAC-27/openrtb-create-request-imp-shell`.
-- [ ] Complements `BuildRTBRequest` (BAC-27); creative builders do not re-implement shell fields.
+- [x] No forced single builder for every demand.
+- [x] Existing CreateRequest / creative adapter tests still pass.
+- [x] Branch: `feature/BAC-28/openrtb-shared-creative-builders` from `feature/BAC-27/openrtb-create-request-imp-shell`.
+- [x] Complements `BuildRTBRequest` (BAC-27); creative builders do not re-implement shell fields.
 
 ---
 

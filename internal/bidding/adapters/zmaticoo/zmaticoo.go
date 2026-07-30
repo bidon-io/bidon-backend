@@ -34,24 +34,13 @@ type ZmaticooAdapter struct {
 
 var _ adapters.BidderInterface = (*ZmaticooAdapter)(nil)
 
-var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat:      {320, 50},
-	ad.LeaderboardFormat: {728, 90},
-	ad.MRECFormat:        {300, 250},
-	ad.AdaptiveFormat:    {320, 50},
-	ad.EmptyFormat:       {320, 50}, // Default
-}
-
 func (a *ZmaticooAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, ok := bannerFormats[auctionRequest.AdObject.Format()]
-	if !ok {
-		size = bannerFormats[ad.EmptyFormat] // Use default
-	}
-
-	// Handle adaptive format for tablets
-	if auctionRequest.AdObject.IsAdaptive() && auctionRequest.Device.IsTablet() {
-		size = [2]int64{728, 90} // Leaderboard format
-	}
+	size, _ := adapters.ResolveBannerSize(
+		auctionRequest.AdObject.Format(),
+		auctionRequest.AdObject.IsAdaptive(),
+		auctionRequest.Device.IsTablet(),
+		adapters.BannerSizeOptions{},
+	)
 
 	w, h := size[0], size[1]
 
