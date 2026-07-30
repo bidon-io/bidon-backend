@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -98,9 +97,7 @@ func (a *InMobiAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		return request, errors.New("PlacementID is empty")
 	}
 
-	secure := int8(1)
 	var imp *openrtb2.Imp
-
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
 		imp = a.banner(auctionRequest)
@@ -112,29 +109,17 @@ func (a *InMobiAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.PlacementID
-	imp.DisplayManager = string(adapter.InmobiKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.InmobiKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	// Set user with bidding token
+	opts := adapters.RTBRequestOptions{
+		TagID: a.PlacementID,
+		AppID: a.AppID,
+	}
 	if token, exists := auctionRequest.AdObject.Demands[adapter.InmobiKey]["token"]; exists {
-		request.User = &openrtb.User{
-			BuyerUID: token.(string),
+		if tokenStr, ok := token.(string); ok {
+			opts.BuyerUID = tokenStr
 		}
 	}
 
-	// Set app ID
-	request.App.ID = a.AppID
-
-	return request, nil
+	return adapters.BuildRTBRequest(request, auctionRequest, adapter.InmobiKey, imp, opts), nil
 }
 
 func (a *InMobiAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
