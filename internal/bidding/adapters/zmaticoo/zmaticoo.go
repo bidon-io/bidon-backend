@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/geo"
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -97,7 +96,6 @@ func (a *ZmaticooAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 		return request, errors.New("PlacementID is empty")
 	}
 
-	secure := int8(1)
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -110,22 +108,14 @@ func (a *ZmaticooAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 		return request, errors.New("unknown impression type")
 	}
 
-	impID, _ := uuid.NewV4()
-	imp.ID = impID.String()
-	imp.TagID = a.PlacementID
-
-	imp.DisplayManager = string(adapter.ZmaticooKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.ZmaticooKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	if request.App != nil {
-		request.App.ID = a.AppID
+	opts := adapters.RTBRequestOptions{
+		TagID: a.PlacementID,
 	}
+	if request.App != nil {
+		opts.AppID = a.AppID
+	}
+
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.ZmaticooKey, imp, opts)
 
 	extJSON, err := a.buildRequestExt(auctionRequest)
 	if err != nil {

@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -72,7 +71,15 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		return request, errors.New("AdUnitID is empty")
 	}
 
-	secure := int8(1)
+	demandData, ok := auctionRequest.AdObject.Demands[adapter.YandexKey]
+	if !ok {
+		return request, errors.New("yandex demand data is missing")
+	}
+
+	token, ok := demandData["token"].(string)
+	if !ok || token == "" {
+		return request, errors.New("yandex bidder token is empty")
+	}
 
 	var imp *openrtb2.Imp
 	var adTypeString string
@@ -95,12 +102,7 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.AdUnitID
 	imp.Rwdd = rwdd
-
-	// Set imp.ext.ad_type
 	impExt, err := json.Marshal(map[string]any{
 		"ad_type": adTypeString,
 	})
@@ -109,25 +111,9 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	}
 	imp.Ext = impExt
 
-	imp.DisplayManager = string(adapter.YandexKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.YandexKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	// Extract bidder token from auction request
-	demandData, ok := auctionRequest.AdObject.Demands[adapter.YandexKey]
-	if !ok {
-		return request, errors.New("yandex demand data is missing")
-	}
-
-	token, ok := demandData["token"].(string)
-	if !ok || token == "" {
-		return request, errors.New("yandex bidder token is empty")
-	}
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.YandexKey, imp, adapters.RTBRequestOptions{
+		TagID: a.AdUnitID,
+	})
 
 	request.User = &openrtb.User{
 		Data: []openrtb.Data{

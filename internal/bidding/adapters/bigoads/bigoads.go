@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -75,8 +74,6 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		return request, errors.New("TagID is empty")
 	}
 
-	secure := int8(1)
-
 	var imp *openrtb2.Imp
 	var impAdType int
 	switch auctionRequest.AdObject.Type() {
@@ -97,10 +94,6 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.TagID
-
 	impExt, err := json.Marshal(map[string]any{
 		"adtype": impAdType,
 		"networkid": map[string]any{
@@ -111,22 +104,19 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	if err != nil {
 		return request, err
 	}
-
 	imp.Ext = impExt
 
-	imp.DisplayManager = string(adapter.BigoAdsKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.BigoAdsKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-	request.User = &openrtb.User{
-		BuyerUID: auctionRequest.AdObject.Demands[adapter.BigoAdsKey]["token"].(string),
+	opts := adapters.RTBRequestOptions{
+		TagID:           a.TagID,
+		AppID:           a.AppID,
+		PublisherID:     a.SellerID,
+		OmitBidFloorCur: true,
 	}
-	request.App.Publisher.ID = a.SellerID
-	request.App.ID = a.AppID
+	if token, ok := auctionRequest.AdObject.Demands[adapter.BigoAdsKey]["token"].(string); ok {
+		opts.BuyerUID = token
+	}
 
-	return request, nil
+	return adapters.BuildRTBRequest(request, auctionRequest, adapter.BigoAdsKey, imp, opts), nil
 }
 
 func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
