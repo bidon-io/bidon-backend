@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -102,8 +101,6 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 		return request, newUnsupportedRegionError(country)
 	}
 
-	secure := int8(1)
-
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -116,23 +113,18 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.TagID
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.MobileFuseKey, imp, adapters.RTBRequestOptions{
+		TagID:           a.TagID,
+		OmitBidFloorCur: true,
+	})
 
-	imp.DisplayManager = string(adapter.MobileFuseKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MobileFuseKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
+	token, _ := auctionRequest.AdObject.Demands[adapter.MobileFuseKey]["token"].(string)
 	request.User = &openrtb.User{
 		Data: []openrtb.Data{
 			{
 				Segment: []openrtb.Segment{
 					{
-						Signal: auctionRequest.AdObject.Demands[adapter.MobileFuseKey]["token"].(string),
+						Signal: token,
 					},
 				},
 			},

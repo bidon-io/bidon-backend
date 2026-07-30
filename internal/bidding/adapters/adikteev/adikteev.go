@@ -13,7 +13,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
@@ -94,8 +93,6 @@ func getEndpoint() string {
 }
 
 func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
-
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -108,17 +105,10 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 		return request, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.AdikteevKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.AdikteevKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-
+	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.AdikteevKey, imp, adapters.RTBRequestOptions{
+		OmitBidFloorCur: true,
+	})
 	request.App.Ext = a.sdkInstanceID(auctionRequest)
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
 
 	return request, nil
 }
