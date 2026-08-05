@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/geo"
-	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -35,51 +34,20 @@ type ZmaticooAdapter struct {
 var _ adapters.BidderInterface = (*ZmaticooAdapter)(nil)
 
 func (a *ZmaticooAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, _ := adapters.ResolveBannerSize(
-		auctionRequest.AdObject.Format(),
-		auctionRequest.AdObject.IsAdaptive(),
-		auctionRequest.Device.IsTablet(),
-		adapters.BannerSizeOptions{},
-	)
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
 func (a *ZmaticooAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionFullScreen.Ptr(),
-		},
-	}
+	return adapters.BuildInterstitialImp(auctionRequest, adapters.InterstitialImpOptions{
+		DisableOrientationSwap: true,
+	})
 }
 
 func (a *ZmaticooAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	return &openrtb2.Imp{
-		Instl: 1,
-		Video: &openrtb2.Video{
-			W:         w,
-			H:         h,
-			Pos:       adcom1.PositionFullScreen.Ptr(),
-			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
-			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-		},
-	}
+	return adapters.BuildRewardedImp(auctionRequest, adapters.RewardedImpOptions{
+		DisableOrientationSwap: true,
+	})
 }
 
 func (a *ZmaticooAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {

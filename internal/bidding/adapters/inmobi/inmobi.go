@@ -27,49 +27,25 @@ type InMobiAdapter struct {
 var _ adapters.BidderInterface = (*InMobiAdapter)(nil)
 
 func (a *InMobiAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, _ := adapters.ResolveBannerSize(
-		auctionRequest.AdObject.Format(),
-		auctionRequest.AdObject.IsAdaptive(),
-		auctionRequest.Device.IsTablet(),
-		adapters.BannerSizeOptions{},
-	)
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-			API: []adcom1.APIFramework{3, 5}, // MRAID 1.0, MRAID 2.0
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{
+		API: []adcom1.APIFramework{3, 5}, // MRAID 1.0, MRAID 2.0
+	})
+	return imp
 }
 
 func (a *InMobiAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionFullScreen.Ptr(),
-			API: []adcom1.APIFramework{3, 5}, // MRAID 1.0, MRAID 2.0
-		},
-	}
+	return adapters.BuildInterstitialImp(auctionRequest, adapters.InterstitialImpOptions{
+		BannerAPI: []adcom1.APIFramework{3, 5}, // MRAID 1.0, MRAID 2.0
+	})
 }
 
+// rewarded stays custom: rich VAST constraints + AboveFold Pos + is_rewarded Ext.
 func (a *InMobiAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
+	w, h := adapters.ResolveFullscreenSize(
+		string(auctionRequest.Device.Type),
+		auctionRequest.AdObject.IsPortrait(),
+		true,
+	)
 	return &openrtb2.Imp{
 		Instl: 0,
 		Video: &openrtb2.Video{

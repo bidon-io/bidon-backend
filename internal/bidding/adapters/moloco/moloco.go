@@ -29,78 +29,27 @@ var _ adapters.BidderInterface = (*MolocoAdapter)(nil)
 
 // banner creates a banner impression for the bid request
 func (a *MolocoAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, _ := adapters.ResolveBannerSize(
-		auctionRequest.AdObject.Format(),
-		auctionRequest.AdObject.IsAdaptive(),
-		auctionRequest.Device.IsTablet(),
-		adapters.BannerSizeOptions{},
-	)
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
 // interstitial creates an interstitial impression for the bid request
 func (a *MolocoAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-		},
-		Video: &openrtb2.Video{
-			W:     w,
-			H:     h,
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-			MIMEs: []string{"video/mp4", "video/3gpp", "video/3gpp2", "video/x-m4v", "video/quicktime"},
-		},
-	}
+	return adapters.BuildInterstitialImp(auctionRequest, adapters.InterstitialImpOptions{
+		IncludeVideo: true,
+	})
 }
 
 // rewarded creates a rewarded video impression for the bid request
 func (a *MolocoAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
 	skip := int8(1)
-	return &openrtb2.Imp{
-		Instl: 1,
-		Rwdd:  1,
-		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{16},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-		},
-		Video: &openrtb2.Video{
-			W:         w,
-			H:         h,
-			BAttr:     []adcom1.CreativeAttribute{1, 2, 5, 8, 9, 14, 17},
-			Pos:       adcom1.PositionFullScreen.Ptr(),
-			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
-			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-			Skip:      &skip,
-		},
-	}
+	return adapters.BuildRewardedImp(auctionRequest, adapters.RewardedImpOptions{
+		IncludeBanner: true,
+		Rwdd:          1,
+		Skip:          &skip,
+		BannerBAttr:   []adcom1.CreativeAttribute{16},
+		VideoBAttr:    []adcom1.CreativeAttribute{1, 2, 5, 8, 9, 14, 17},
+	})
 }
 
 func (a *MolocoAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {

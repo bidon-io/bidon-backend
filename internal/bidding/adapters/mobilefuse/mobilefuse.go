@@ -45,25 +45,11 @@ type MobileFuseAdapter struct {
 var _ adapters.BidderInterface = (*MobileFuseAdapter)(nil)
 
 func (a *MobileFuseAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, _ := adapters.ResolveBannerSize(
-		auctionRequest.AdObject.Format(),
-		auctionRequest.AdObject.IsAdaptive(),
-		auctionRequest.Device.IsTablet(),
-		adapters.BannerSizeOptions{},
-	)
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
+// interstitial stays custom: Pos-only fullscreen Banner without W/H.
 func (a *MobileFuseAdapter) interstitial() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 1,
@@ -73,6 +59,7 @@ func (a *MobileFuseAdapter) interstitial() *openrtb2.Imp {
 	}
 }
 
+// rewarded stays custom: minimal mp4 Video without sized fullscreen defaults.
 func (a *MobileFuseAdapter) rewarded() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 0,
