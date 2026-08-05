@@ -1,0 +1,31 @@
+{
+  "auction_configuration_id": 6050,
+  "auction_configuration_uid": "6050",
+  "external_win_notifications": false,
+  "ad_units": [
+    {
+      "demand_id": "adikteev",
+      "uid": "5302",
+      "label": "Tetris Adikteev MREC [Bidding]",
+      "pricefloor": 24.027732,
+      "bid_type": "RTB",
+      "timeout": 6000,
+      "ext": {
+        "payload": "<script type=\"text/javascript\">window.trackClick = function(clickTrackingUrl) { (new Image()).src = clickTrackingUrl; };</script><a href=\"https://www.adikteev.com?cr=495836\" onclick=\"javascript:trackClick('https://click-geo.adikteev.com/v1/click?deviceId=358ac6431c1f96bd8033d6368cc7aaaf600cb2ea&creativeGroupId=171278&user_id=&bidrequest_id=019fd42d-8429-73fe-bc3d-24e683fc5847&impression_id=s4kYZHm_Hgq3gyex-3f5ZS&campaign=52214&supplier=344&creativeId=525748&expires=1786115180&signature=u_iMlqB_sycRSVMvs41aiph4RGFymUrp7ASU6kqVoJs&noredirect=1&user_agent=TW96aWxsYS81LjAgKGlQaG9uZTsgQ1BVIGlQaG9uZSBPUyAxNl8wIGxpa2UgTWFjIE9TIFgpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNi4wIE1vYmlsZS8xNUUxNDggU2FmYXJpLzYwNC4x&algorithm=&country_a2=NZ&device_type=4&h=250&idfa_plain=F40EF78F-01DD-4053-A657-061EC2DB55CC&ak_protocol_version=ak_bidder&os=ios&adSession=0bdzhLLxCHSwg86H0HYP0x&ch=mobile&click_id=H1MSvsiCZwjFMdAjUb7fq6&device_model=iPhone14%2C2&os_raw=ios&osv=16.0&retina=0&zip=1010&bid_on=0&ip_addr=122.63.68.174&publisherAppId=com.demo.tetris&s2s=1&idfa=358ac6431c1f96bd8033d6368cc7aaaf600cb2ea&country=NZL&crAlgorithm=&supplier_name=appodeal&city=auckland&creativeName=495836&creativeType=creative_banner&w=300&creativeGroupName=Auto_Test_CreativeGroup')\" target=\"_new\"><div style=\"height: 100%; width: 100%;\"><img src=\"https://cdn-creatives.adikteev.com/banner/350702/495836.jpeg\" width=\"300\" height=\"250\"/></div></a><img src=\"https://impression-eu.adikteev.com/3.0?campaign=52214&supplier=344&bidrequest_id=019fd42d-8429-73fe-bc3d-24e683fc5847&deviceId=358ac6431c1f96bd8033d6368cc7aaaf600cb2ea&impression_id=s4kYZHm_Hgq3gyex-3f5ZS&user_id=&creativeGroupId=171278&creativeId=525748&expires=1786115180&signature=0C8McaLiQJFCw8VW3RN3E5Nl9jIeNSLp1rjs2FiC68w&device_name=Apple+iPhone14%2C2&fm=0&h=250&idfa=358ac6431c1f96bd8033d6368cc7aaaf600cb2ea&osv=16.0&bid_on=0&ch=mobile&crAlgorithm=&device_model=iPhone14%2C2&retina=0&zip=1010&af_ad_type=banner&click_id=H1MSvsiCZwjFMdAjUb7fq6&ts=1785971180&country_a2=NZ&creativeName=495836&creativeType=creative_banner&publisherAppId=com.demo.tetris&client_cpm_usd=2B0CF2ED19ADDCEE12E38688D8C97449&country=NZL&device_type=4&engaged_view_id=NK4vXhRZrIrCpd7z68HE0c&os_raw=ios&supplier_name=appodeal&creativeGroupName=Auto_Test_CreativeGroup&ak_protocol_version=ak_bidder&connection_type=wifi&deviceFamily=iphone&os=ios&rbm=1.02&w=300&af_ad_format=image&algorithm=&idfa_plain=F40EF78F-01DD-4053-A657-061EC2DB55CC&ip_addr=122.63.68.174&s2s=1&user_agent=TW96aWxsYS81LjAgKGlQaG9uZTsgQ1BVIGlQaG9uZSBPUyAxNl8wIGxpa2UgTWFjIE9TIFgpIEFwcGxlV2ViS2l0LzYwNS4xLjE1IChLSFRNTCwgbGlrZSBHZWNrbykgVmVyc2lvbi8xNi4wIE1vYmlsZS8xNUUxNDggU2FmYXJpLzYwNC4x&adSession=0bdzhLLxCHSwg86H0HYP0x&city=auckland&cpm=${AUCTION_PRICE}\" style=\"display:none;\"/>"
+      },
+      "rendering": {
+        "container": { "format": "banner" },
+        "creative": { "type": "html" }
+      }
+    }
+  ],
+  "no_bids": [],
+  "segment": {
+    "id": "",
+    "uid": ""
+  },
+  "token": "{}",
+  "auction_pricefloor": 0.15,
+  "auction_timeout": 10000,
+  "auction_id": "6050"
+}
