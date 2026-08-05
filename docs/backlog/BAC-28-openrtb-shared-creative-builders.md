@@ -68,10 +68,11 @@ This work centralizes **shared size maps and optional creative helpers** for the
 
 ### Optional creative builders (after maps)
 
-Something like `BuildBannerImp` / `BuildInterstitialImp` / `BuildRewardedImp` (names TBD) that:
+`BuildBannerImp` / `BuildInterstitialImp` / `BuildRewardedImp` in `adapters/creative.go`:
 
 - Produce an `*openrtb2.Imp` creative body only (no TagID / bidfloor / display manager — those stay in `BuildRTBRequest`).
-- Accept options for API frameworks, video MIME lists, Instl overrides, skip, ext blobs.
+- Accept options for API frameworks, video MIME lists, orientation swap, dual Banner+Video, skip, ext blobs.
+- `ResolveFullscreenSize` centralizes FullscreenFormats lookup + optional landscape swap.
 - Return Imp suitable to pass into `BuildRTBRequest`.
 
 Adapters that do not fit call custom local builders and still use `BuildRTBRequest` for the shell.
@@ -99,7 +100,7 @@ creative Imp  →  BuildRTBRequest(shell)  →  network overrides (token/ext)
 1. [BAC-34](https://linear.app/bidon/issue/BAC-34/inventory-openrtb-creative-size-maps-and-impression-shapes) — Inventory freeze; confirm size maps / creative shape tiers. **Done**
 2. [BAC-35](https://linear.app/bidon/issue/BAC-35/introduce-shared-bannerformats-map-and-size-resolve-helper) — Shared `BannerFormats` map + resolve helper with unit tests. **Done**
 3. [BAC-36](https://linear.app/bidon/issue/BAC-36/migrate-adapters-onto-shared-banner-size-map) — Migrate adapters onto shared banner sizes; delete duplicate maps. **Done** (adikteev / bigoads kept custom)
-4. [BAC-37](https://linear.app/bidon/issue/BAC-37/introduce-optional-bannerinterstitialrewarded-creative-helpers) — Optional banner / interstitial / rewarded creative helpers.
+4. [BAC-37](https://linear.app/bidon/issue/BAC-37/introduce-optional-bannerinterstitialrewarded-creative-helpers) — Optional banner / interstitial / rewarded creative helpers. **Done**
 5. [BAC-38](https://linear.app/bidon/issue/BAC-38/migrate-common-adapters-onto-creative-helpers-keep-divergent-custom) — Migrate common adapters; keep divergent custom.
 6. **Sweep** — amazon untouched; CreateRequest tests green.
 
