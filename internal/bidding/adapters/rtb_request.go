@@ -75,8 +75,7 @@ func BuildDemandRequest(
 // BuildRTBRequest applies the common OpenRTB impression shell around an
 // adapter-built creative Imp. Imp is required; callers must not pass a
 // zero-value placeholder in place of a real creative. Shared size helpers
-// live in helpers.go; full banner/interstitial/rewarded Imp builders remain
-// optional follow-ups.
+// live in helpers.go; optional creative Imp builders live in creative.go.
 func BuildRTBRequest(
 	request openrtb.BidRequest,
 	auctionRequest *schema.AuctionRequest,
