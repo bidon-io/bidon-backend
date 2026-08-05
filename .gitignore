@@ -5,6 +5,7 @@
 #   git config --global core.excludesfile '~/.gitignore_global'
 .idea
 .direnv
+.cursor
 
 # Ignore all logfiles and tempfiles.
 /**/log/*

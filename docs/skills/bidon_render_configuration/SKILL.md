@@ -1,6 +1,6 @@
 ---
 name: bidon_render_configuration
-metadata.version: "0.0.1"
+metadata.version: "0.0.2"
 description: >-
   Author and validate the JSON rendering configuration DSPs place at
   seatbid.bid.ext.rendering in an OpenRTB bid response to the Bidon ad
@@ -10,7 +10,8 @@ description: >-
   debugging a Bidon rendering config; when a user asks "how do I
   configure the close button / endcard / store overlay for Bidon"; or
   when a Bidon integration's creative isn't rendering as expected and
-  the cause may be a malformed rendering config.
+  the cause may be a malformed rendering config. Prefer guiding users
+  toward format-appropriate fields over silently applying no-op overrides.
 ---
 
 # Bidon Render Configuration
@@ -23,6 +24,10 @@ it. Every field is optional and defaults sensibly, but a single invalid
 field can silently take an entire section back to its defaults with no
 error reported anywhere. Read "Defaulting rules" before writing any
 config.
+
+On the Bidon auction/SDK response path the same object may appear as
+`ad_units[].rendering` (REST) or a JSON string on the gRPC bid ext — the
+schema is identical either way.
 
 ## Defaulting rules (read this first)
 
@@ -62,24 +67,74 @@ These rules decide what actually reaches the renderer.
    load-bearing, because there is no runtime signal telling you when
    you've broken one.
 
+## Agent policy: guide, then apply
+
+Field tables below describe what is **schema-valid**. Many valid fields are
+**no-ops** for a given format/creative pairing. Agents must not treat the
+user's shopping list as authoritative without checking applicability.
+
+Three tiers — only the first is a hard stop:
+
+| Tier | Meaning | Agent behavior |
+|------|---------|----------------|
+| **Invalid** | Fails enum/range/cross-field validation → section silently resets to defaults | Refuse or fix before emitting; never ship as-is |
+| **Ineffective** | Schema-valid, but has no effect for the inferred format/creative | Warn briefly, omit by default; include only if the user explicitly insists after the challenge |
+| **Unusual** | Valid and may work, but uncommon for the pairing | One-line note; proceed unless clearly wrong |
+
+Rules of thumb:
+
+- **Playback fields** (`mute_on_start`, `max_duration_seconds`,
+  `skip_offset_seconds`, VAST/VPAID knobs) require a video (or
+  media-playing) creative — typically `creative.type: "vast"`.
+- **Chrome fields** (`close_button`, `endcards`) require a full-screen
+  surface — typically `container.format` of `interstitial` or `rewarded`.
+  Banner/MREC usually ignore them.
+- Prefer **omission** over cargo-cult defaults. If a field has no effect
+  for this pairing, leave it out rather than setting it "to be safe."
+- There is **no `autoplay` field**. Map that intent to real knobs
+  (`mute_on_start`, `preload_strategy`) only when a video creative is in
+  play; otherwise explain the gap.
+
 ## Workflow
 
-1. Identify which of the five top-level sections the request actually
-   wants to customize: `close_button`, `endcards`, `container`,
-   `creative`, `store_kit`. Only include a section if you're overriding
-   at least one of its fields — omitting it entirely gets you the same
-   defaults as sending `{}`, so there's never a reason to send an empty
-   section on purpose.
-2. Within a section you do include, set only the fields the request is
-   overriding; everything else in that section still defaults.
-3. Fill in fields using the tables below. Check "Cross-field dependencies"
-   for any field you touch that has one.
-4. Run the self-check list before finalizing.
-5. Emit only `seatbid.bid.ext.rendering` — do not wrap it in anything
-   else.
+1. **Infer context first** from the request and any sample payload /
+   `adm` / `ad_units[].ext.payload`:
+   - `container.format` (banner / mrec / interstitial / rewarded / native)
+   - `creative.type` from the markup (static image, html, vast, mraid, …)
+   State both before writing JSON.
+2. **Propose a sensible minimal config** for that pairing — only fields
+   that actually affect rendering for this format/creative.
+3. **Map user intent** onto effective fields. Challenge Ineffective or
+   Unusual requests (see Applicability). Do not silently apply no-op
+   fields.
+4. **Hard-block only Invalid** values. Ineffective fields may be included
+   after the user confirms.
+5. Within each section you do include, set only the fields being
+   overridden; everything else still defaults. Omit sections you are not
+   customizing.
+6. Fill fields using the tables below. Check cross-field dependencies for
+   anything you touch.
+7. Run the validation self-check **and** the sense-check before
+   finalizing.
+8. Emit `seatbid.bid.ext.rendering` (OpenRTB) or `ad_units[].rendering`
+   (auction fixture) — do not wrap the object in anything else.
 
-See [examples.md](examples.md) for complete worked payloads, including a
-before/after pair showing rule 3 in action.
+See [reference.md](reference.md) for the full format × field effect
+matrix, and [examples.md](examples.md) for worked payloads including a
+user-correction example and the section-level fallback rule.
+
+## Applicability (short)
+
+| Field / section | banner / mrec | interstitial | rewarded | When it actually matters |
+|-----------------|---------------|--------------|----------|--------------------------|
+| `close_button.*` | usually no-op | primary | gated by reward | Full-screen skip/dismiss chrome |
+| `endcards.*` | usually no-op | common | common | Post-creative surface; carousel needs assets + `auto_advance_seconds` > 0 |
+| `mute_on_start`, `max_duration_seconds`, `skip_offset_seconds` | no-op unless video | video | video | Video / media playback (`vast`, or HTML/MRAID that plays media) |
+| `container.impression_tracking` | useful | less critical | less critical | Inline viewability-driven billing |
+| `store_kit` | optional | optional | optional | Real `app_store_id`; `on_endcard` is weak without endcards |
+| `creative.type` | `static_image` / `html` / `mraid` | often `html` / `vast` / `mraid` | usually `vast` | **Must match markup** — mismatch mis-renders, does not fail validation |
+
+Full matrix and pairing notes: [reference.md](reference.md).
 
 ## Close Button
 
@@ -102,6 +157,9 @@ set a valid `custom_asset_url`, or the entire `close_button` section is
 rejected and falls back to defaults (which is `style: icon_x`, silently
 discarding the "custom" intent).
 
+**Applicability**: primarily interstitial/rewarded. On banner/mrec this is
+usually Ineffective — challenge before including.
+
 ## Endcards
 
 | Field                              | Type    | Values / Constraint                     | Default     |
@@ -122,6 +180,10 @@ own CDN or to a Bidon-hosted CDN (DSPs without asset infrastructure can
 upload via Bidon's creative asset API/dashboard and reference the
 returned URL) — the schema is identical either way.
 
+**Applicability**: primarily interstitial/rewarded after the main creative.
+On banner/mrec usually Ineffective. Enabling carousel with an empty
+`assets` array validates but advances nothing — warn if assets are missing.
+
 ## Container (format & playback behavior)
 
 | Field                                              | Type    | Values / Constraint                          | Default      |
@@ -140,6 +202,11 @@ returned URL) — the schema is identical either way.
 its defaults the same as any other section (see defaulting rule 2), so
 only include it if you're overriding `min_viewable_pct` or
 `min_viewable_seconds`.
+
+**Applicability**: always set `format` to match the slot. Playback fields
+(`mute_on_start`, duration, skip offset) are Ineffective for static
+image / non-media HTML banners — challenge video-oriented requests on
+those creatives. `impression_tracking` is the banner/mrec-leaning knob.
 
 ## Creative (how the markup is interpreted)
 
@@ -179,6 +246,8 @@ regardless of this field.
 
 ## Self-check before finalizing
 
+### Validation (Invalid tier — hard fail)
+
 - [ ] Every enum value used is from that field's allow-list above (exact
       string match — these are strict `oneof` checks).
 - [ ] Every hex color is `#` + 3 or 6 hex digits.
@@ -189,14 +258,28 @@ regardless of this field.
 - [ ] If `store_kit.enabled == true`, `app_store_id` is set.
 - [ ] Every `endcards.assets[].url` is an absolute http(s) URL.
 - [ ] `creative.type` is set explicitly and matches what `seatbid.bid.adm`
-      / `nurl` actually contains.
-- [ ] Sections the request doesn't ask to customize are left out entirely
-      rather than sent as `{}` or with guessed values — omission already
-      gets full defaults (rule 1).
+      / `nurl` / auction `payload` actually contains.
+- [ ] Sections the request doesn't need are left out entirely rather than
+      sent as `{}` or with guessed values — omission already gets full
+      defaults (rule 1).
+
+### Sense-check (Ineffective / Unusual — guide the user)
+
+- [ ] Inferred `container.format` and `creative.type` from context/payload
+      and stated them before writing config.
+- [ ] Challenged any requested field that is no-op or unusual for that
+      pairing (unless the user already confirmed after a warning).
+- [ ] Did not invent non-schema fields (e.g. `autoplay`); mapped intent
+      onto real knobs or explained the gap.
+- [ ] Omitted ineffective overrides rather than setting them "to be safe."
+- [ ] If endcards carousel is enabled, assets exist — or warned that an
+      empty `assets` array means nothing to advance.
 
 ## More detail
 
 - [reference.md](reference.md) — ad format ↔ creative type pairings,
-  endcard asset hosting, store kit platform notes.
-- [examples.md](examples.md) — complete worked JSON payloads, including
-  a before/after pair demonstrating the section-level fallback rule.
+  format × field applicability matrix, endcard asset hosting, store kit
+  platform notes.
+- [examples.md](examples.md) — complete worked JSON payloads, including a
+  user-correction example and a before/after pair demonstrating the
+  section-level fallback rule.
