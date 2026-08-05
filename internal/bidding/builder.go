@@ -198,6 +198,7 @@ func (b *Builder) processAdapter(
 			demandResponse.StartTS = params.StartTS
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
+			demandResponse.FillRendering()
 
 			bids <- *demandResponse
 		}

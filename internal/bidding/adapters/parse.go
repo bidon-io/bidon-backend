@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
+
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 )
 
 // CustomBidParser is implemented by non-OpenRTB adapters that fully own
@@ -17,8 +19,8 @@ type CustomBidParser interface {
 
 // OpenRTBBidEnricher is implemented by OpenRTB adapters that need extra
 // extraction after the default NormalizedBid mapping (e.g. TaurusX payload
-// from BidResponse.ext). Common bid.ext fields like signaldata are handled
-// by the shared parser.
+// from BidResponse.ext). Common bid.ext fields (signaldata, rendering) are
+// handled by the shared parser.
 type OpenRTBBidEnricher interface {
 	EnrichOpenRTBBid(
 		dr *DemandResponse,
@@ -30,17 +32,37 @@ type OpenRTBBidEnricher interface {
 
 // ParseDemandResponse unpacks a demand HTTP response into a bid DTO.
 // Custom parsers take precedence; otherwise the shared OpenRTB path runs,
-// optionally followed by an OpenRTB enricher.
+// optionally followed by an OpenRTB enricher. On success, Rendering is
+// filled when still unset (custom parsers / paths that skip OpenRTB mapping).
 func ParseDemandResponse(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
 	if dr == nil {
 		return nil, fmt.Errorf("nil demand response")
 	}
 
+	var err error
 	if p, ok := adapter.(CustomBidParser); ok {
-		return p.ParseBids(dr)
+		dr, err = p.ParseBids(dr)
+	} else {
+		dr, err = parseOpenRTBBids(adapter, dr)
 	}
+	if err == nil {
+		dr.FillRendering()
+	}
+	return dr, err
+}
 
-	return parseOpenRTBBids(adapter, dr)
+// FillRendering derives Bid.Rendering from Bid.Ext when unset.
+// Used by ParseDemandResponse and non-parse bid paths (Amazon, bid cache).
+// OpenRTB parse already sets Rendering via rendering.DecodeBidExt.
+func (dr *DemandResponse) FillRendering() {
+	if dr == nil || !dr.IsBid() || dr.Bid.Rendering != nil {
+		return
+	}
+	demandID := dr.DemandID
+	if demandID == "" {
+		demandID = dr.Bid.DemandID
+	}
+	dr.Bid.Rendering = rendering.ParseFromBidExt(dr.Bid.Ext, demandID)
 }
 
 func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
@@ -67,7 +89,7 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	seat := bidResponse.SeatBid[0]
 	bid := seat.Bid[0]
 
-	signaldata, err := signaldataFromBidExt(bid.Ext)
+	signaldata, rend, err := rendering.DecodeBidExt(bid.Ext, dr.DemandID)
 	if err != nil {
 		return dr, err
 	}
@@ -85,6 +107,7 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 		NURL:       bid.NURL,
 		BURL:       bid.BURL,
 		Ext:        bid.Ext,
+		Rendering:  rend,
 	}
 
 	if e, ok := adapter.(OpenRTBBidEnricher); ok {
@@ -94,17 +117,4 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	}
 
 	return dr, nil
-}
-
-func signaldataFromBidExt(ext json.RawMessage) (string, error) {
-	if len(ext) == 0 {
-		return "", nil
-	}
-	var bidExt struct {
-		Signaldata string `json:"signaldata"`
-	}
-	if err := json.Unmarshal(ext, &bidExt); err != nil {
-		return "", err
-	}
-	return bidExt.Signaldata, nil
 }

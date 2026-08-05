@@ -1,0 +1,79 @@
+{
+  "auction_configuration_id": 6050,
+  "auction_configuration_uid": "6050",
+  "external_win_notifications": false,
+  "ad_units": [
+    {
+      "demand_id": "adikteev",
+      "uid": "5301",
+      "label": "Tetris Adikteev Banner [Bidding]",
+      "pricefloor": 11.817,
+      "bid_type": "RTB",
+      "timeout": 6000,
+      "ext": {
+        "payload": "<a href=\"{PAYLOAD_URL}\" target=\"_new\"><div style=\"height: 100%; width: 100%;\"><img src=\"{IMAGE_SRC}\" width=\"320\" height=\"50\"/></div></a><img src=\"{IMAGE_2_SRC}\" style=\"display:none;\"/><img src=\"\" style=\"display:none;\"/>"
+      },
+      "rendering": {
+        "close_button": {
+          "visible": true,
+          "delay_seconds": 5,
+          "countdown_visible": true,
+          "style": "icon_x",
+          "size_dp": 30,
+          "position": "top_right",
+          "color": "#FFFFFF",
+          "opacity": 0.9,
+          "padding_dp": 12
+        },
+        "endcards": {
+          "enabled": false,
+          "count": 1,
+          "layout": "single",
+          "auto_advance_seconds": 0,
+          "cta_text": "Install Now",
+          "cta_color": "#007AFF",
+          "dismiss_on_background_tap": true
+        },
+        "container": {
+          "format": "interstitial",
+          "orientation": "responsive",
+          "background_color": "#000000",
+          "background_blur": false,
+          "max_duration_seconds": 30,
+          "skip_offset_seconds": 15,
+          "mute_on_start": true,
+          "impression_tracking": {
+            "min_viewable_pct": 50,
+            "min_viewable_seconds": 1
+          }
+        },
+        "creative": {
+          "type": "static_image",
+          "source": "seatbid.bid.adm",
+          "mraid_version": "3.0",
+          "vast_version": "4.2",
+          "vpaid_enabled": false,
+          "html_sandbox_policy": "allow-scripts",
+          "preload_strategy": "eager"
+        },
+        "store_kit": {
+          "enabled": false,
+          "trigger": "on_endcard",
+          "delay_seconds": 0,
+          "user_dismissable": false,
+          "dismiss_on_close": true,
+          "position": "bottom"
+        }
+      }
+    }
+  ],
+  "no_bids": [],
+  "segment": {
+    "id": "",
+    "uid": ""
+  },
+  "token": "{}",
+  "auction_pricefloor": 0.15,
+  "auction_timeout": 10000,
+  "auction_id": "6050"
+}

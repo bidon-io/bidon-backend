@@ -240,7 +240,10 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 
 			got := bidCache.ApplyBidCache(ctx, auctionRequest, aucResult)
 
-			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreFields(adapters.DemandResponse{}, "Error"), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+			if diff := cmp.Diff(tt.want, got,
+				cmpopts.IgnoreFields(adapters.DemandResponse{}, "Error"),
+				cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext", "Rendering"),
+			); diff != "" {
 				t.Errorf("Create() mismatch (-want +got):\n%s", diff)
 			}
 

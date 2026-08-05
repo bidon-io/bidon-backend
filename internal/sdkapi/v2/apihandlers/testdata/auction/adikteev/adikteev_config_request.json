@@ -1,0 +1,54 @@
+{
+  "device": {
+    "connection_type": "WIFI",
+    "model": "Google Pixel 3",
+    "hwv": "blueline",
+    "h": 2028,
+    "js": 1,
+    "language": "en_US",
+    "make": "Google",
+    "os": "android",
+    "osv": "12",
+    "ppi": 440,
+    "pxratio": 3.0,
+    "type": "PHONE",
+    "ua": "Mozilla/5.0 (Linux; Android 12; Pixel 3 Build/SP1A.210812.016.C1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/114.0.5735.131 Mobile Safari/537.36",
+    "w": 1080
+  },
+  "test": false,
+  "app": {
+    "bundle": "com.demo.tetris",
+    "key": "tetris_2005",
+    "framework": "native",
+    "version": "1.0"
+  },
+  "ext": "{}",
+  "adapters": {
+    "adikteev": {
+      "version": "1",
+      "sdk_version": "11.8.2"
+    }
+  },
+  "session": {
+    "battery": 100,
+    "cpu_usage": 0.7714286,
+    "id": "d0b9ec0e-60e9-4501-bcbc-67712562dab9",
+    "launch_monotonic_ts": 68406545,
+    "launch_ts": 1687863971253,
+    "memory_warnings_monotonic_ts": [],
+    "memory_warnings_ts": [],
+    "start_monotonic_ts": 68406545,
+    "monotonic_ts": 68471084,
+    "ram_size": 3753299968,
+    "ram_used": 413565952,
+    "start_ts": 1687863971253,
+    "storage_free": 30742986752,
+    "storage_used": 24636485632,
+    "ts": 1687864035792
+  },
+  "user": {
+    "idg": "8020a0a6-5e55-4b8f-af9a-7b01a9aad4fc",
+    "idfa": "013b8c47-8beb-41b4-aefe-60fe466f9fd8",
+    "tracking_authorization_status": "AUTHORIZED"
+  }
+}

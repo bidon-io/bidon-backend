@@ -12,6 +12,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/pkg/clock"
 )
@@ -64,6 +65,7 @@ type CachedBid struct {
 	NURL        string
 	BURL        string
 	Ext         json.RawMessage
+	Rendering   *rendering.Config
 }
 
 func cachedBidFromDemandResponse(dr adapters.DemandResponse) CachedBid {
@@ -89,11 +91,12 @@ func cachedBidFromDemandResponse(dr adapters.DemandResponse) CachedBid {
 		BURL:        dr.Bid.BURL,
 		Ext:         dr.Bid.Ext,
 		Token:       dr.Token,
+		Rendering:   dr.Bid.Rendering,
 	}
 }
 
 func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
-	return adapters.DemandResponse{
+	dr := adapters.DemandResponse{
 		DemandID:    cb.DemandID,
 		RequestID:   cb.RequestID,
 		RawRequest:  "",
@@ -112,6 +115,7 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 			NURL:       cb.NURL,
 			BURL:       cb.BURL,
 			Ext:        cb.Ext,
+			Rendering:  cb.Rendering,
 		},
 		Error:       nil,
 		TagID:       cb.TagID,
@@ -122,6 +126,10 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 		EndTS:       cb.EndTS,
 		Token:       cb.Token,
 	}
+	// Cached bids keep Rendering; FillRendering is a no-op when set.
+	// Still call it so legacy cache entries without Rendering recover from Ext.
+	dr.FillRendering()
+	return dr
 }
 
 // ApplyBidCache gets the auction result, stores it in the cache and enhances response with the cache data if available
