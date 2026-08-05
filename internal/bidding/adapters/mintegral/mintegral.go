@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -29,47 +28,21 @@ type MintegralAdapter struct {
 var _ adapters.BidderInterface = (*MintegralAdapter)(nil)
 
 func (a *MintegralAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size, _ := adapters.ResolveBannerSize(
-		auctionRequest.AdObject.Format(),
-		auctionRequest.AdObject.IsAdaptive(),
-		auctionRequest.Device.IsTablet(),
-		adapters.BannerSizeOptions{},
-	)
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
 func (a *MintegralAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionFullScreen.Ptr(),
-		},
-	}
+	return adapters.BuildInterstitialImp(auctionRequest, adapters.InterstitialImpOptions{})
 }
 
+// rewarded stays custom: Instl=0 + Imp.Ext is_rewarded (not the shared dual/fullscreen shape).
 func (a *MintegralAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
+	w, h := adapters.ResolveFullscreenSize(
+		string(auctionRequest.Device.Type),
+		auctionRequest.AdObject.IsPortrait(),
+		true,
+	)
 	return &openrtb2.Imp{
 		Instl: 0,
 		Video: &openrtb2.Video{
