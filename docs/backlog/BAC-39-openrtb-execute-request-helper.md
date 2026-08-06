@@ -1,6 +1,6 @@
 # Backlog: Shared OpenRTB ExecuteRequest HTTP helper
 
-**Status:** In Progress (inventory frozen)  
+**Status:** Done  
 **Linear:** [BAC-39](https://linear.app/bidon/issue/BAC-39/shared-openrtb-executerequest-http-helper)  
 **Branch:** `feature/BAC-39/openrtb-execute-request-helper`  
 **Base:** Current OpenRTB stack tip (after BAC-26 / BAC-27 / BAC-28 work)  
@@ -135,12 +135,12 @@ CreateRequest (BAC-27/28) → ExecuteRequest (BAC-39) → ParseBids (BAC-26)
 
 ## Acceptance criteria
 
-- [ ] Common ExecuteRequest HTTP transport lives in `adapters.ExecuteRTBRequest`.
-- [ ] Migrated adapters only set network-specific differences (URL, headers, hooks, DR metadata).
-- [ ] Existing ExecuteRequest tests still pass (or are updated against the shared helper).
-- [ ] amazon / non-standard paths are not forced onto `ExecuteRTBRequest`.
-- [ ] Branch: `feature/BAC-39/openrtb-execute-request-helper` from the current OpenRTB stack tip.
-- [ ] Complements BAC-26 (parse) and BAC-27 (`BuildRTBRequest`); does not re-implement CreateRequest or bid parsing.
+- [x] Common ExecuteRequest HTTP transport lives in `adapters.ExecuteRTBRequest`.
+- [x] Migrated adapters only set network-specific differences (URL, headers, hooks, DR metadata).
+- [x] Existing ExecuteRequest tests still pass (or are updated against the shared helper).
+- [x] amazon / non-standard paths are not forced onto `ExecuteRTBRequest`.
+- [x] Branch: `feature/BAC-39/openrtb-execute-request-helper` from the current OpenRTB stack tip.
+- [x] Complements BAC-26 (parse) and BAC-27 (`BuildRTBRequest`); does not re-implement CreateRequest or bid parsing.
 
 ---
 
