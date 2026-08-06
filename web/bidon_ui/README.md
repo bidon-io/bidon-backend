@@ -1,4 +1,4 @@
-# Nuxt 3 Minimal Starter
+# Bidon Admin UI (Nuxt 3)
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
@@ -12,34 +12,38 @@ yarn install
 
 ## Development Server
 
-Start the development server on `http://localhost:3000`
+Start the development server on `http://localhost:3000`:
 
 ```bash
 yarn dev
 ```
 
-## Local api
+The Nitro middleware (`server/middleware/proxy.ts`) proxies `/api/**` and `/auth/**` to the Go `bidon-admin` backend (`NUXT_API_PROXY_TARGET`, defaults to `http://localhost:1323`).
+
+With the full local stack (`docker compose -f docker-compose.dev.yml up`), the UI is available at `http://localhost:3010`.
+
+## Local API
 
 ```bash
-go run cmd/bidon-admin/main.go
+go run ./cmd/bidon-admin
 ```
 
-## Static build locally
+## Production build
 
-Frontend can be built statically, and that's how the production version works: frontend is built and then resulting files embedded into the backend, which serves them as-is. Node is not running, only the backend written in Go programming language, which also serves pre-built frontend HTML and JS and CSS files.
-
-Run `yarn generate` inside `./web/bidon_ui/`
-
-Copy static files to embed them into Go binary
+The UI runs as a standalone Nuxt/Node.js container (`bidon-ui`).
 
 ```bash
-cp -rf web/bidon_ui/.output/public/ cmd/bidon-admin/web/ui # assume you are in the root dir
+# Build (outputs Nitro server + static assets to .output/)
+yarn build
+
+# Run the production server
+NUXT_API_PROXY_TARGET=http://localhost:1323 node .output/server/index.mjs
+# → http://localhost:3000
 ```
 
-Run backend
+**Required environment variable:**
+- `NUXT_API_PROXY_TARGET` — URL of the Go `bidon-admin` backend (e.g. `http://bidon-admin:1323`)
 
-```bash
-go run cmd/bidon-admin/main.go
-```
+**Docker:** build the `bidon-ui` target in the root `Dockerfile` (`just build-ui` / `just ci-build-ui`).
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
