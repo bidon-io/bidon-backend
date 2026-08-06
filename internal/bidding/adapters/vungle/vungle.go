@@ -1,12 +1,10 @@
 package vungle
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
@@ -86,44 +84,12 @@ func (a *VungleAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *sc
 }
 
 func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.VungleKey,
-		RequestID: request.ID,
-		TagID:     a.TagID,
-	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	url := "https://rtb.ads.vungle.com/bid/t/8ea3e9a"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
+		DemandID: adapter.VungleKey,
+		URL:      "https://rtb.ads.vungle.com/bid/t/8ea3e9a",
+		TagID:    a.TagID,
+		Headers:  http.Header{"X-OpenRTB-Version": {"2.5"}},
+	})
 }
 
 // Builder builds a new instance of the Vungle adapter for the given bidder with the given config.

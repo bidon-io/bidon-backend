@@ -1,12 +1,10 @@
 package mintegral
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
@@ -99,45 +97,13 @@ func (a *MintegralAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auc
 }
 
 func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
 		DemandID:    adapter.MintegralKey,
-		RequestID:   request.ID,
+		URL:         "http://hb.rayjump.com/bid",
 		TagID:       a.TagID,
 		PlacementID: a.PlacementID,
-	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	url := "http://hb.rayjump.com/bid"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("openrtb", "2.5")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+		Headers:     http.Header{"openrtb": {"2.5"}},
+	})
 }
 
 // Builder builds a new instance of the Mintegral adapter for the given bidder with the given config.
