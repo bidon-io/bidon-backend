@@ -1,11 +1,8 @@
 package moloco
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -85,63 +82,30 @@ func (a *MolocoAdapter) BuildImpression(request openrtb.BidRequest, auctionReque
 
 // ExecuteRequest implements the BidderInterface.ExecuteRequest method
 func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.MolocoKey,
-		RequestID: request.ID,
-		TagID:     a.TagID,
-	}
-
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	// Get country code for geographic routing
-	alpha3 := ""
-	if request.Device != nil && request.Device.Geo != nil {
-		alpha3 = request.Device.Geo.Country
-	}
-
-	// Use geographic endpoint selection or configured endpoint
-	url := getEndpoint(alpha3)
+	url := getEndpoint(adapters.CountryFromRequest(request))
 	if url == "" {
-		dr.Error = errors.New("moloco endpoint is empty")
-		return dr
+		return &adapters.DemandResponse{
+			DemandID:  adapter.MolocoKey,
+			RequestID: request.ID,
+			TagID:     a.TagID,
+			Error:     errors.New("moloco endpoint is empty"),
+		}
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-	//httpReq.Header.Add("Accept-Encoding", "gzip")
-
-	// Add Authorization header with API key
 	if a.APIKey == "" {
-		dr.Error = errors.New("moloco API key is empty")
-		return dr
-	}
-	httpReq.Header.Add("Authorization", a.APIKey)
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
+		return &adapters.DemandResponse{
+			DemandID:  adapter.MolocoKey,
+			RequestID: request.ID,
+			TagID:     a.TagID,
+			Error:     errors.New("moloco API key is empty"),
+		}
 	}
 
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
+		DemandID: adapter.MolocoKey,
+		URL:      url,
+		TagID:    a.TagID,
+		Headers:  http.Header{"Authorization": {a.APIKey}},
+	})
 }
 
 // Builder builds a new instance of the Moloco adapter for the given bidder with the given config.
