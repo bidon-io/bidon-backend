@@ -1,12 +1,10 @@
 package zmaticoo
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -87,57 +85,20 @@ func (a *ZmaticooAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auct
 }
 
 func (a *ZmaticooAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:    adapter.ZmaticooKey,
-		RequestID:   request.ID,
-		TagID:       a.PlacementID,
-		PlacementID: a.PlacementID,
-	}
-
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
+	impID := ""
 	// Zmaticoo response is not OpenRTB, so we store imp ID for fallback in ParseBids.
 	if len(request.Imp) > 0 {
-		dr.ImpID = request.Imp[0].ID
+		impID = request.Imp[0].ID
 	}
 
-	// Get country code for geographic routing
-	alpha3 := ""
-	if request.Device != nil && request.Device.Geo != nil {
-		alpha3 = request.Device.Geo.Country
-	}
-
-	url := getEndpoint(alpha3)
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	dr.Status = httpResp.StatusCode
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawResponse = string(respBody)
-
-	return dr
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
+		DemandID:    adapter.ZmaticooKey,
+		URL:         getEndpoint(adapters.CountryFromRequest(request)),
+		TagID:       a.PlacementID,
+		PlacementID: a.PlacementID,
+		ImpID:       impID,
+		Headers:     http.Header{"X-OpenRTB-Version": {"2.5"}},
+	})
 }
 
 func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
