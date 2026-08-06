@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -25,7 +24,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/bidon-io/bidon-backend/cmd/bidon-admin/web"
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/api"
@@ -116,25 +114,6 @@ func main() {
 
 	oapiWebServer := http.FileServer(http.FS(openapi.FS))
 	e.GET("/docs/*", echo.WrapHandler(http.StripPrefix("/docs/", oapiWebServer)))
-
-	uiFileSystem, _ := fs.Sub(web.FS, "ui")
-	uiWebServer := echo.WrapHandler(http.FileServer(http.FS(uiFileSystem)))
-	e.GET("/", uiWebServer)
-	e.GET("/*", uiWebServer, func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			file, err := uiFileSystem.Open(strings.TrimPrefix(c.Request().URL.Path, "/"))
-			if err != nil {
-				c.Request().URL.Path = "/"
-				return next(c)
-			}
-			err = file.Close()
-			if err != nil {
-				c.Logger().Warnf("Web server file.Close(): %v", err)
-			}
-
-			return next(c)
-		}
-	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
