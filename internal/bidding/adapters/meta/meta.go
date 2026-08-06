@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -9,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
@@ -106,47 +104,17 @@ func (a *MetaAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, _ *schem
 }
 
 func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
 		DemandID:   adapter.MetaKey,
-		RequestID:  request.ID,
-		TimeoutURL: a.timeoutURL(a.PlatformID),
+		URL:        "https://an.facebook.com/" + a.PlatformID + "/placementbid.ortb",
 		TagID:      a.TagID,
-	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	url := "https://an.facebook.com/" + a.PlatformID + "/placementbid.ortb"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-	if dr.Status == http.StatusBadRequest {
-		dr.Error = errors.New(httpResp.Header.Get("X-Fb-An-Errors"))
-	}
-
-	return dr
+		TimeoutURL: a.timeoutURL(a.PlatformID),
+		AfterDo: func(resp *http.Response, dr *adapters.DemandResponse) {
+			if dr.Status == http.StatusBadRequest {
+				dr.Error = errors.New(resp.Header.Get("X-Fb-An-Errors"))
+			}
+		},
+	})
 }
 
 // Builder builds a new instance of the Meta adapter for the given bidder with the given config.

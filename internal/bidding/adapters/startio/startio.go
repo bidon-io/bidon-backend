@@ -1,12 +1,9 @@
 package startio
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
@@ -113,69 +110,35 @@ func (a *Adapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionReque
 
 // ExecuteRequest implements the BidderInterface.ExecuteRequest method.
 func (a *Adapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.StartIOKey,
-		RequestID: request.ID,
-		TagID:     a.TagID,
-	}
-
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawRequest = string(requestBody)
-
-	alpha3 := ""
-	if request.Device != nil && request.Device.Geo != nil {
-		alpha3 = request.Device.Geo.Country
-	}
-
-	endpoint := endpointByRegion(alpha3)
+	endpoint := endpointByRegion(adapters.CountryFromRequest(request))
 	if endpoint == "" {
-		dr.Error = errors.New("startio endpoint is empty")
-		return dr
+		return &adapters.DemandResponse{
+			DemandID:  adapter.StartIOKey,
+			RequestID: request.ID,
+			TagID:     a.TagID,
+			Error:     errors.New("startio endpoint is empty"),
+		}
 	}
 
-	parsedURL, err := url.Parse(endpoint)
-	if err != nil {
-		dr.Error = fmt.Errorf("parse endpoint: %w", err)
-		return dr
-	}
+	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
+		DemandID: adapter.StartIOKey,
+		URL:      endpoint,
+		TagID:    a.TagID,
+		PrepareURL: func(base string, req openrtb.BidRequest) (string, error) {
+			parsedURL, err := url.Parse(base)
+			if err != nil {
+				return "", fmt.Errorf("parse endpoint: %w", err)
+			}
 
-	query := parsedURL.Query()
-	query.Set("account", a.Account)
-	if request.Test == 1 {
-		query.Set("testAdsEnabled", "true")
-	}
-	parsedURL.RawQuery = query.Encode()
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, parsedURL.String(), bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	httpReq.Header.Add("Content-Type", "application/json")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+			query := parsedURL.Query()
+			query.Set("account", a.Account)
+			if req.Test == 1 {
+				query.Set("testAdsEnabled", "true")
+			}
+			parsedURL.RawQuery = query.Encode()
+			return parsedURL.String(), nil
+		},
+	})
 }
 
 // Builder constructs a bidder for Start.io based on processed configuration.
