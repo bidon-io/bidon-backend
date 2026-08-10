@@ -1,6 +1,6 @@
 # Backlog: Single network registry across runtime, admin, and UI
 
-**Status:** In Progress (inventory frozen)  
+**Status:** Done  
 **Linear:** [BAC-45](https://linear.app/bidon/issue/BAC-45/single-network-registry-across-runtime-admin-and-ui)  
 **Branch:** `feature/BAC-45/network-registry`  
 **Base:** `new-main`  
@@ -113,12 +113,12 @@ Exact field set is finalized in BAC-46; the important contract is: **one table d
 
 ## Acceptance criteria
 
-- [ ] Adding a network primarily means registering it once (plus adapter implementation / seeds).
-- [ ] Standard account/app/ad-unit field remaps are data-driven from the Go registry (no unbounded switch for ordinary cases).
-- [ ] UI network / account-type dropdowns are not maintained as duplicate static lists.
-- [ ] Admin catalog API exposes registry data for the UI.
-- [ ] `docs/network.md` reflects the post-registry onboarding path.
-- [ ] Branch: `feature/BAC-45/network-registry` from `new-main`.
+- [x] Adding a network primarily means registering it once (plus adapter implementation / seeds).
+- [x] Standard account/app/ad-unit field remaps are data-driven from the Go registry (no unbounded switch for ordinary cases).
+- [x] UI network / account-type dropdowns are not maintained as duplicate static lists.
+- [x] Admin catalog API exposes registry data for the UI.
+- [x] `docs/network.md` reflects the post-registry onboarding path.
+- [x] Branch: `feature/BAC-45/network-registry` from `new-main`.
 
 ---
 
