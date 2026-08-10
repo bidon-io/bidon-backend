@@ -156,10 +156,10 @@
 <script setup>
 import * as yup from "yup";
 import { useToast } from "primevue/usetoast";
-import { NETWORK_ACCOUNT_TYPE_BY_KEY } from "@/constants/Networks.js";
 import { $apiFetch } from "~/utils/$apiFetch";
 
 const toast = useToast();
+const networks = useNetworks();
 
 const props = defineProps({
   appId: { type: [Number, String], required: true },
@@ -174,7 +174,7 @@ const emit = defineEmits(["created", "updated", "cancel"]);
 const isEditMode = computed(() => !!props.initialItem);
 
 const accountType = computed(
-  () => NETWORK_ACCOUNT_TYPE_BY_KEY[props.networkKey] ?? props.networkKey,
+  () => networks.accountTypeFor(props.networkKey) ?? props.networkKey,
 );
 
 const bannerFormatOptions = [

@@ -15,7 +15,6 @@
 
 <script setup>
 import { computed } from "vue";
-import { DEMAND_SOURCE_OPTIONS } from "@/constants/DemandSourceOptions";
 
 const props = defineProps({
   error: {
@@ -49,5 +48,7 @@ const value = computed({
     emit("update:modelValue", value);
   },
 });
-const options = ref(DEMAND_SOURCE_OPTIONS);
+
+const networks = useNetworks();
+const options = computed(() => networks.demandSourceOptions);
 </script>
