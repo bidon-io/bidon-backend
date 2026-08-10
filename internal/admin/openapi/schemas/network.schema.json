@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "network.schema.json",
+  "title": "Network",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "label",
+    "account_type",
+    "supports_bidding",
+    "supports_waterfall"
+  ],
+  "properties": {
+    "key": {
+      "$ref": "./adapter-key.schema.json"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable network name"
+    },
+    "account_type": {
+      "type": "string",
+      "description": "Demand source account STI type string"
+    },
+    "supports_bidding": {
+      "type": "boolean"
+    },
+    "supports_waterfall": {
+      "type": "boolean"
+    }
+  }
+}
