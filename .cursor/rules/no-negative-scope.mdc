@@ -1,0 +1,29 @@
+---
+description: Do not pad docs or answers with what is out of scope or not being done
+alwaysApply: true
+---
+
+# No negative-scope padding
+
+Do not mention what work is **not** being done, unless the user explicitly asks for out-of-scope / boundaries.
+
+## Avoid
+
+- “Does not rework X”
+- “Complements Y (which is separate / already done)” as throat-clearing
+- Long “Out of scope” / “Non-goals” lists that only name unrelated or finished work
+- Restating other tickets just to say this one excludes them
+
+## Prefer
+
+- State what **is** in scope and what to do
+- Put deferred work under **Follow-ups** only when it is a real next step for *this* effort
+- Link related tickets in a short **Related** list without explaining what they are not
+
+```markdown
+<!-- BAD -->
+Complements BAC-21. Does not rework OpenRTB Create/Execute/Parse helpers.
+
+<!-- GOOD -->
+Typed demand context stays in BAC-21.
+```

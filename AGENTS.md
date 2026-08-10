@@ -160,6 +160,12 @@ bidding) → parallel bidding round → ranked ad units → win/loss notificatio
 `.env.sample` → `.env.local` · `config/` · auction configs in the
 `auction_configurations` table
 
+## Docs and communication
+
+- State what **is** in scope and what to do. Do not pad backlog docs, tickets, or replies with what is **not** being done (“does not rework X”, long non-goals that only name unrelated work).
+- Put deferred next steps under Follow-ups. Link related tickets briefly without explaining what they exclude.
+- See `.cursor/rules/no-negative-scope.mdc`.
+
 ## Verification Checklist
 
 - Run targeted tests in changed packages
