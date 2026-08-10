@@ -120,19 +120,19 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 
 		cfg := adaptersMap[key]
 		network.ApplyProcessedConfig(cfg, profile.AccountExtra, profile.AppData, adUnitExtra)
-
-		switch network.EnvSecret {
-		case adapter.EnvSecretMeta:
-			if b.DemandConfig != nil {
-				cfg["app_secret"] = b.DemandConfig.MetaAppSecret
-				cfg["platform_id"] = b.DemandConfig.MetaPlatformID
-			}
-		case adapter.EnvSecretMoloco:
-			if b.DemandConfig != nil {
-				cfg["api_key"] = b.DemandConfig.MolocoAPIKey
-			}
-		}
+		network.ApplyEnvSecrets(cfg, demandEnvSecrets(b.DemandConfig))
 	}
 
 	return adaptersMap, nil
+}
+
+func demandEnvSecrets(cfg *config.DemandConfig) *adapter.DemandEnvSecrets {
+	if cfg == nil {
+		return nil
+	}
+	return &adapter.DemandEnvSecrets{
+		MetaAppSecret:  cfg.MetaAppSecret,
+		MetaPlatformID: cfg.MetaPlatformID,
+		MolocoAPIKey:   cfg.MolocoAPIKey,
+	}
 }
