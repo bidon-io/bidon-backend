@@ -17,14 +17,16 @@ func RenameKey(sourceKey, targetKey string) FieldMap {
 	return FieldMap{SourceKey: sourceKey, TargetKey: targetKey}
 }
 
-// EnvSecret identifies demand secrets injected from process env / DemandConfig.
-type EnvSecret int
+// DemandEnvSecrets holds env-backed demand secrets available at config-build time.
+type DemandEnvSecrets struct {
+	MetaAppSecret  string
+	MetaPlatformID string
+	MolocoAPIKey   string
+}
 
-const (
-	EnvSecretNone EnvSecret = iota
-	EnvSecretMeta
-	EnvSecretMoloco
-)
+// EnvSecretInjector writes env-backed secrets into a processed config.
+// A nil injector means the network has no env secrets.
+type EnvSecretInjector func(dest map[string]any, secrets DemandEnvSecrets)
 
 // Network is the canonical registration entry for a demand network.
 type Network struct {
@@ -38,7 +40,8 @@ type Network struct {
 	AppData      []FieldMap
 	AdUnitExtra  []FieldMap
 
-	EnvSecret EnvSecret
+	// InjectEnvSecrets is nil for networks that do not read demand env secrets.
+	InjectEnvSecrets EnvSecretInjector
 }
 
 // HasProcessedConfigMaps reports whether this network uses declarative field
@@ -63,8 +66,25 @@ func (n Network) ApplyProcessedConfig(
 	applyFieldMaps(dest, adUnitExtra, n.AdUnitExtra)
 }
 
+// ApplyEnvSecrets runs InjectEnvSecrets when both the injector and secrets are present.
+func (n Network) ApplyEnvSecrets(dest map[string]any, secrets *DemandEnvSecrets) {
+	if n.InjectEnvSecrets == nil || secrets == nil {
+		return
+	}
+	n.InjectEnvSecrets(dest, *secrets)
+}
+
 func applyFieldMaps(dest, source map[string]any, maps []FieldMap) {
 	for _, m := range maps {
 		dest[m.TargetKey] = source[m.SourceKey]
 	}
+}
+
+func injectMetaEnvSecrets(dest map[string]any, secrets DemandEnvSecrets) {
+	dest["app_secret"] = secrets.MetaAppSecret
+	dest["platform_id"] = secrets.MetaPlatformID
+}
+
+func injectMolocoEnvSecrets(dest map[string]any, secrets DemandEnvSecrets) {
+	dest["api_key"] = secrets.MolocoAPIKey
 }

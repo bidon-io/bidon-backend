@@ -49,12 +49,57 @@ func TestNetworkByKey(t *testing.T) {
 	if !n.SupportsBidding || n.SupportsWaterfall {
 		t.Fatalf("moloco bidding/waterfall flags = %v/%v", n.SupportsBidding, n.SupportsWaterfall)
 	}
-	if n.EnvSecret != adapter.EnvSecretMoloco {
-		t.Fatalf("EnvSecret = %v, want Moloco", n.EnvSecret)
+	if n.InjectEnvSecrets == nil {
+		t.Fatal("moloco should inject env secrets")
 	}
 
 	if _, ok := adapter.NetworkByKey(adapter.Key("missing")); ok {
 		t.Fatal("expected missing key lookup to fail")
+	}
+}
+
+func TestApplyEnvSecrets(t *testing.T) {
+	t.Parallel()
+
+	meta, ok := adapter.NetworkByKey(adapter.MetaKey)
+	if !ok || meta.InjectEnvSecrets == nil {
+		t.Fatal("meta missing env secret injector")
+	}
+	dest := map[string]any{}
+	meta.ApplyEnvSecrets(dest, &adapter.DemandEnvSecrets{
+		MetaAppSecret:  "secret",
+		MetaPlatformID: "platform",
+	})
+	if dest["app_secret"] != "secret" || dest["platform_id"] != "platform" {
+		t.Fatalf("meta secrets = %#v", dest)
+	}
+
+	moloco, ok := adapter.NetworkByKey(adapter.MolocoKey)
+	if !ok || moloco.InjectEnvSecrets == nil {
+		t.Fatal("moloco missing env secret injector")
+	}
+	dest = map[string]any{}
+	moloco.ApplyEnvSecrets(dest, &adapter.DemandEnvSecrets{MolocoAPIKey: "key"})
+	if dest["api_key"] != "key" {
+		t.Fatalf("moloco secrets = %#v", dest)
+	}
+
+	admob, ok := adapter.NetworkByKey(adapter.AdmobKey)
+	if !ok {
+		t.Fatal("admob missing")
+	}
+	if admob.InjectEnvSecrets != nil {
+		t.Fatal("admob should not inject env secrets")
+	}
+	dest = map[string]any{"keep": true}
+	admob.ApplyEnvSecrets(dest, &adapter.DemandEnvSecrets{MolocoAPIKey: "key"})
+	if len(dest) != 1 || dest["keep"] != true {
+		t.Fatalf("nil injector should be a no-op: %#v", dest)
+	}
+
+	meta.ApplyEnvSecrets(dest, nil)
+	if len(dest) != 1 {
+		t.Fatalf("nil secrets should be a no-op: %#v", dest)
 	}
 }
 
