@@ -8,7 +8,12 @@ x-logging: &default-logging
   driver: json-file
 
 # Required env vars (set in .env or Coolify environment):
-#   DATABASE_URL              — from: terraform output -raw db_app_private_uri
+#   DATABASE_URL              — optional toggle; unset = in-compose postgres service.
+#     Local (default / Coolify previews): omit or use
+#       postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable
+#     Hosted staging: set to managed URI (terraform output -raw db_app_private_uri).
+#     The postgres container always runs; DATABASE_URL only chooses where apps connect.
+#   PG_PASSWORD               — password for the in-compose postgres (default: password)
 #   APP_SECRET                — random secret for session signing
 #   SUPERUSER_LOGIN           — initial admin username
 #   SUPERUSER_PASSWORD        — initial admin password
@@ -27,8 +32,8 @@ x-logging: &default-logging
 #     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 
 x-staging-db-env: &staging-db-env
-  DATABASE_URL: ${DATABASE_URL}
-  DATABASE_REPLICA_URL: ${DATABASE_URL}
+  DATABASE_URL: ${DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
+  DATABASE_REPLICA_URL: ${DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
 
 x-staging-kafka-env: &staging-kafka-env
   USE_KAFKA: "true"
@@ -50,6 +55,24 @@ x-staging-bidon-app-env: &staging-bidon-app-env
   SNOWFLAKE_NODE_ID: 1
 
 services:
+  # Always runs. Apps use it when DATABASE_URL is unset; override DATABASE_URL for managed Postgres.
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bidon
+      POSTGRES_USER: bidon
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bidon -d bidon"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    logging: *default-logging
+    <<: *restart-policy
+
   geodb-maxmind:
     image: maxmindinc/geoipupdate:v4.7.1
     environment:
@@ -128,6 +151,9 @@ services:
     image: "registry.digitalocean.com/bidon-io/bidon-migrate:${BIDON_MIGRATE_TAG}"
     command: up
     restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       <<: [*staging-db-env, *staging-bidon-app-env]
     logging: *default-logging
@@ -221,5 +247,6 @@ services:
 
 volumes:
   geodb:
+  postgres-data:
   redpanda-data:
   redis-data:
