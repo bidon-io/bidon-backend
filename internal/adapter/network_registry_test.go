@@ -92,6 +92,20 @@ func TestBiddingAndWaterfallKeys(t *testing.T) {
 	}
 }
 
+func TestCopyKeyAndRenameKey(t *testing.T) {
+	t.Parallel()
+
+	copy := adapter.CopyKey("app_id")
+	if copy.SourceKey != "app_id" || copy.TargetKey != "app_id" {
+		t.Fatalf("CopyKey = %+v", copy)
+	}
+
+	rename := adapter.RenameKey("publisher_id", "seller_id")
+	if rename.SourceKey != "publisher_id" || rename.TargetKey != "seller_id" {
+		t.Fatalf("RenameKey = %+v", rename)
+	}
+}
+
 func TestApplyProcessedConfig(t *testing.T) {
 	t.Parallel()
 

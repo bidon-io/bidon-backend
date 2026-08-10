@@ -8,7 +8,7 @@ Canonical registration lives in the Go network registry. Admin UI network lists 
 2. **Network registry** — add a `Network` entry in `internal/adapter/network_registry.go`:
    - `Key`, `Label`, `AccountType` (`DemandSourceAccount::<Name>`)
    - `SupportsBidding` / `SupportsWaterfall`
-   - Standard remaps: `AccountExtra`, `AppData`, `AdUnitExtra`
+   - Field projections: `AccountExtra` / `AppData` / `AdUnitExtra` via `CopyKey` (same name) or `RenameKey`
    - `EnvSecret` when demand secrets come from env (Meta, Moloco pattern)
 3. **OpenAPI adapter key** — add the key to `internal/admin/openapi/schemas/adapter-key.schema.json` (and regenerate admin API if needed).
 4. **RTB adapter** (bidding networks) — implement under `internal/bidding/adapters/` and register the builder in `biddingAdapters` (`internal/bidding/adapters_builder/adapters_builder.go`). Proprietary paths (e.g. Amazon `FetchBids`) stay explicit beside the registry.

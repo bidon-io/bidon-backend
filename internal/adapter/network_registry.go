@@ -1,14 +1,14 @@
 package adapter
 
 // networks is the canonical network catalog (key, label, account type, auction
-// membership, and processed-config remaps).
+// membership, and processed-config field projections).
 var networks = []Network{
 	{
 		Key:             AdikteevKey,
 		Label:           "Adikteev",
 		AccountType:     "DemandSourceAccount::Adikteev",
 		SupportsBidding: true,
-		AccountExtra:    []FieldMap{{From: "sdk_instance_id", To: "sdk_instance_id"}},
+		AccountExtra:    []FieldMap{CopyKey("sdk_instance_id")},
 	},
 	{
 		Key:               AdmobKey,
@@ -21,7 +21,7 @@ var networks = []Network{
 		Label:           "Amazon",
 		AccountType:     "DemandSourceAccount::Amazon",
 		SupportsBidding: true,
-		AccountExtra:    []FieldMap{{From: "price_points_map", To: "price_points_map"}},
+		AccountExtra:    []FieldMap{CopyKey("price_points_map")},
 	},
 	{
 		Key:               ApplovinKey,
@@ -36,9 +36,9 @@ var networks = []Network{
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
 		AccountExtra: []FieldMap{
-			{From: "seller_id", To: "seller_id"},
-			{From: "endpoint", To: "endpoint"},
-			{From: "mediation_config", To: "mediation_config"},
+			CopyKey("seller_id"),
+			CopyKey("endpoint"),
+			CopyKey("mediation_config"),
 		},
 	},
 	{
@@ -47,11 +47,11 @@ var networks = []Network{
 		AccountType:       "DemandSourceAccount::BigoAds",
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
-		AccountExtra:      []FieldMap{{From: "publisher_id", To: "seller_id"}},
-		AppData:           []FieldMap{{From: "app_id", To: "app_id"}},
+		AccountExtra:      []FieldMap{RenameKey("publisher_id", "seller_id")},
+		AppData:           []FieldMap{CopyKey("app_id")},
 		AdUnitExtra: []FieldMap{
-			{From: "slot_id", To: "tag_id"},
-			{From: "placement_id", To: "placement_id"},
+			RenameKey("slot_id", "tag_id"),
+			CopyKey("placement_id"),
 		},
 	},
 	{
@@ -77,8 +77,8 @@ var networks = []Network{
 		Label:           "InMobi",
 		AccountType:     "DemandSourceAccount::Inmobi",
 		SupportsBidding: true,
-		AppData:         []FieldMap{{From: "app_key", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "placement_id", To: "placement_id"}},
+		AppData:         []FieldMap{RenameKey("app_key", "app_id")},
+		AdUnitExtra:     []FieldMap{CopyKey("placement_id")},
 	},
 	{
 		Key:               IronSourceKey,
@@ -91,8 +91,8 @@ var networks = []Network{
 		Label:           "Meta",
 		AccountType:     "DemandSourceAccount::Meta",
 		SupportsBidding: true,
-		AppData:         []FieldMap{{From: "app_id", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "placement_id", To: "tag_id"}},
+		AppData:         []FieldMap{CopyKey("app_id")},
+		AdUnitExtra:     []FieldMap{RenameKey("placement_id", "tag_id")},
 		EnvSecret:       EnvSecretMeta,
 	},
 	{
@@ -101,11 +101,11 @@ var networks = []Network{
 		AccountType:       "DemandSourceAccount::Mintegral",
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
-		AccountExtra:      []FieldMap{{From: "publisher_id", To: "seller_id"}},
-		AppData:           []FieldMap{{From: "app_id", To: "app_id"}},
+		AccountExtra:      []FieldMap{RenameKey("publisher_id", "seller_id")},
+		AppData:           []FieldMap{CopyKey("app_id")},
 		AdUnitExtra: []FieldMap{
-			{From: "unit_id", To: "tag_id"},
-			{From: "placement_id", To: "placement_id"},
+			RenameKey("unit_id", "tag_id"),
+			CopyKey("placement_id"),
 		},
 	},
 	{
@@ -113,15 +113,15 @@ var networks = []Network{
 		Label:           "MobileFuse",
 		AccountType:     "DemandSourceAccount::MobileFuse",
 		SupportsBidding: true,
-		AdUnitExtra:     []FieldMap{{From: "placement_id", To: "tag_id"}},
+		AdUnitExtra:     []FieldMap{RenameKey("placement_id", "tag_id")},
 	},
 	{
 		Key:             MolocoKey,
 		Label:           "Moloco",
 		AccountType:     "DemandSourceAccount::Moloco",
 		SupportsBidding: true,
-		AppData:         []FieldMap{{From: "app_key", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "ad_unit_id", To: "tag_id"}},
+		AppData:         []FieldMap{RenameKey("app_key", "app_id")},
+		AdUnitExtra:     []FieldMap{RenameKey("ad_unit_id", "tag_id")},
 		EnvSecret:       EnvSecretMoloco,
 	},
 	{
@@ -129,17 +129,17 @@ var networks = []Network{
 		Label:           "Start.io",
 		AccountType:     "DemandSourceAccount::StartIO",
 		SupportsBidding: true,
-		AccountExtra:    []FieldMap{{From: "account", To: "account"}},
-		AppData:         []FieldMap{{From: "app_id", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "tag_id", To: "tag_id"}},
+		AccountExtra:    []FieldMap{CopyKey("account")},
+		AppData:         []FieldMap{CopyKey("app_id")},
+		AdUnitExtra:     []FieldMap{CopyKey("tag_id")},
 	},
 	{
 		Key:             TaurusXKey,
 		Label:           "TaurusX",
 		AccountType:     "DemandSourceAccount::TaurusX",
 		SupportsBidding: true,
-		AppData:         []FieldMap{{From: "app_id", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "placement_id", To: "tag_id"}},
+		AppData:         []FieldMap{CopyKey("app_id")},
+		AdUnitExtra:     []FieldMap{RenameKey("placement_id", "tag_id")},
 	},
 	{
 		Key:               UnityAdsKey,
@@ -153,8 +153,8 @@ var networks = []Network{
 		AccountType:       "DemandSourceAccount::VKAds",
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
-		AppData:           []FieldMap{{From: "app_id", To: "app_id"}},
-		AdUnitExtra:       []FieldMap{{From: "slot_id", To: "tag_id"}},
+		AppData:           []FieldMap{CopyKey("app_id")},
+		AdUnitExtra:       []FieldMap{RenameKey("slot_id", "tag_id")},
 	},
 	{
 		Key:               VungleKey,
@@ -162,9 +162,9 @@ var networks = []Network{
 		AccountType:       "DemandSourceAccount::Vungle",
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
-		AccountExtra:      []FieldMap{{From: "account_id", To: "seller_id"}},
-		AppData:           []FieldMap{{From: "app_id", To: "app_id"}},
-		AdUnitExtra:       []FieldMap{{From: "placement_id", To: "tag_id"}},
+		AccountExtra:      []FieldMap{RenameKey("account_id", "seller_id")},
+		AppData:           []FieldMap{CopyKey("app_id")},
+		AdUnitExtra:       []FieldMap{RenameKey("placement_id", "tag_id")},
 	},
 	{
 		Key:               YandexKey,
@@ -172,15 +172,15 @@ var networks = []Network{
 		AccountType:       "DemandSourceAccount::Yandex",
 		SupportsBidding:   true,
 		SupportsWaterfall: true,
-		AdUnitExtra:       []FieldMap{{From: "ad_unit_id", To: "ad_unit_id"}},
+		AdUnitExtra:       []FieldMap{CopyKey("ad_unit_id")},
 	},
 	{
 		Key:             ZmaticooKey,
 		Label:           "Zmaticoo",
 		AccountType:     "DemandSourceAccount::Zmaticoo",
 		SupportsBidding: true,
-		AppData:         []FieldMap{{From: "app_key", To: "app_id"}},
-		AdUnitExtra:     []FieldMap{{From: "placement_id", To: "placement_id"}},
+		AppData:         []FieldMap{RenameKey("app_key", "app_id")},
+		AdUnitExtra:     []FieldMap{CopyKey("placement_id")},
 	},
 }
 

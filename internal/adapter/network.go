@@ -1,9 +1,20 @@
 package adapter
 
-// FieldMap maps a source JSON/config key onto a processed config key.
+// FieldMap projects one source config key onto a processed-config key.
+// Prefer CopyKey / RenameKey constructors over literal structs.
 type FieldMap struct {
-	From string
-	To   string
+	SourceKey string
+	TargetKey string
+}
+
+// CopyKey allowlists a field onto the processed config under the same name.
+func CopyKey(key string) FieldMap {
+	return FieldMap{SourceKey: key, TargetKey: key}
+}
+
+// RenameKey copies a source field onto a differently named processed-config key.
+func RenameKey(sourceKey, targetKey string) FieldMap {
+	return FieldMap{SourceKey: sourceKey, TargetKey: targetKey}
 }
 
 // EnvSecret identifies demand secrets injected from process env / DemandConfig.
@@ -30,13 +41,13 @@ type Network struct {
 	EnvSecret EnvSecret
 }
 
-// HasProcessedConfigMaps reports whether this network uses declarative remaps
-// instead of passthrough account extra.
+// HasProcessedConfigMaps reports whether this network uses declarative field
+// projections instead of passthrough account extra.
 func (n Network) HasProcessedConfigMaps() bool {
 	return len(n.AccountExtra) > 0 || len(n.AppData) > 0 || len(n.AdUnitExtra) > 0
 }
 
-// ApplyProcessedConfig writes remapped fields into dest.
+// ApplyProcessedConfig writes projected fields into dest.
 // AdUnitExtra is applied only when adUnitExtra is non-nil (RTB ad unit present).
 func (n Network) ApplyProcessedConfig(
 	dest map[string]any,
@@ -44,16 +55,16 @@ func (n Network) ApplyProcessedConfig(
 	appData map[string]any,
 	adUnitExtra map[string]any,
 ) {
-	for _, m := range n.AccountExtra {
-		dest[m.To] = accountExtra[m.From]
-	}
-	for _, m := range n.AppData {
-		dest[m.To] = appData[m.From]
-	}
+	applyFieldMaps(dest, accountExtra, n.AccountExtra)
+	applyFieldMaps(dest, appData, n.AppData)
 	if adUnitExtra == nil {
 		return
 	}
-	for _, m := range n.AdUnitExtra {
-		dest[m.To] = adUnitExtra[m.From]
+	applyFieldMaps(dest, adUnitExtra, n.AdUnitExtra)
+}
+
+func applyFieldMaps(dest, source map[string]any, maps []FieldMap) {
+	for _, m := range maps {
+		dest[m.TargetKey] = source[m.SourceKey]
 	}
 }
