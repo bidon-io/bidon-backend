@@ -35,7 +35,7 @@
       @cancel="showCreateForm = false"
     />
 
-    <!-- Configured profiles — iterated directly from profiles, not filtered through NETWORK_DEFS -->
+    <!-- Configured profiles — iterated directly from profiles -->
     <div
       v-if="profiles.length"
       class="grid grid-cols-1 gap-3 md:grid-cols-2 mb-6 items-stretch"
@@ -209,7 +209,8 @@
 
 <script setup>
 import useDeleteResource from "@/composables/useDeleteResource";
-import { NETWORK_DEFS } from "@/constants/Networks.js";
+
+const networks = useNetworks();
 
 const props = defineProps({
   demandProfiles: { type: Array, required: true },
@@ -227,16 +228,16 @@ const editingId = ref(null);
 const showCreateForm = ref(false);
 
 const accountTypeToNetworkKey = (accountType) =>
-  NETWORK_DEFS.find((n) => n.accountType === accountType)?.key ?? accountType;
+  networks.keyForAccountType(accountType);
 
 function profileLabel(profile) {
+  const accountType = profile.accountType ?? profile.account?.type;
   return (
     profile.demandSource?.humanName ??
-    NETWORK_DEFS.find(
-      (n) => n.accountType === (profile.accountType ?? profile.account?.type),
-    )?.label ??
-    profile.accountType ??
-    profile.account?.type ??
+    (accountType
+      ? networks.labelFor(networks.keyForAccountType(accountType))
+      : null) ??
+    accountType ??
     "Unknown"
   );
 }

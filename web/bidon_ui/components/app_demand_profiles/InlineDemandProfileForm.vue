@@ -120,13 +120,9 @@
 <script setup>
 import * as yup from "yup";
 import { useToast } from "primevue/usetoast";
-import {
-  NETWORK_DEFS,
-  NETWORK_ACCOUNT_TYPE_BY_KEY,
-  NETWORK_LABEL_BY_KEY,
-} from "@/constants/Networks.js";
 
 const toast = useToast();
+const networks = useNetworks();
 
 const props = defineProps({
   appId: { type: [Number, String], required: true },
@@ -146,21 +142,21 @@ const activeNetworkKey = computed(
 );
 
 const activeNetworkLabel = computed(() =>
-  activeNetworkKey.value
-    ? (NETWORK_LABEL_BY_KEY[activeNetworkKey.value] ?? activeNetworkKey.value)
-    : null,
+  activeNetworkKey.value ? networks.labelFor(activeNetworkKey.value) : null,
 );
 const activeAccountType = computed(() =>
   activeNetworkKey.value
-    ? (NETWORK_ACCOUNT_TYPE_BY_KEY[activeNetworkKey.value] ??
+    ? (networks.accountTypeFor(activeNetworkKey.value) ??
       activeNetworkKey.value)
     : null,
 );
 
-const networkOptions = NETWORK_DEFS.map((n) => ({
-  key: n.key,
-  label: n.label,
-}));
+const networkOptions = computed(() =>
+  networks.state.map((n) => ({
+    key: n.key,
+    label: n.label,
+  })),
+);
 
 const dataSchema = ref(yup.object());
 

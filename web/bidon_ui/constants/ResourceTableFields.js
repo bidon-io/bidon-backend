@@ -1,6 +1,6 @@
 import { FilterMatchMode } from "primevue/api";
 import { AdTypeEnum } from "~/types";
-import { DEMAND_SOURCE_OPTIONS } from "./DemandSourceOptions";
+import { useNetworks } from "~/composables/useNetworks";
 
 /**
  * Utility function to get a formatted label for ad type and format combinations
@@ -282,7 +282,11 @@ export const ResourceTableFields = {
       type: "select",
       matchMode: FilterMatchMode.EQUALS,
       placeholder: "Demand Source",
-      loadOptions: async () => DEMAND_SOURCE_OPTIONS,
+      loadOptions: async () => {
+        const networks = useNetworks();
+        await networks.ensureLoaded();
+        return networks.demandSourceOptions;
+      },
       extractOptions: (records) => [
         ...new Map(
           records.map(({ accountType }) => [
