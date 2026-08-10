@@ -84,6 +84,12 @@ When debugging staging-only admin UI issues, **verify image tags in Coolify** ma
 - Context as first parameter; explicit error handling (no panics in production)
 - Generate mocks with `go generate ./...` (moq)
 
+## Docs and communication
+
+- State what **is** in scope and what to do. Do not pad backlog docs, tickets, or replies with what is **not** being done (“does not rework X”, long non-goals that only name unrelated work).
+- Put deferred next steps under Follow-ups. Link related tickets briefly without explaining what they exclude.
+- See `.cursor/rules/no-negative-scope.mdc`.
+
 ## Verification Checklist
 
 - Run targeted tests in changed packages
