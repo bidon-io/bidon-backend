@@ -216,6 +216,8 @@ services:
     restart: "no"
     logging: *default-logging
 
+  # Inline script (keep in sync with scripts/init-admin.sh). Coolify preview deployments
+  # rewrite bind mounts to ./scripts-pr-N, so mounting ./scripts fails with "No such file".
   init-admin:
     image: curlimages/curl:latest
     depends_on:
@@ -225,9 +227,43 @@ services:
       SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
       SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
       BIDON_ADMIN_URL: http://${SERVICE_NAME_BIDON_ADMIN:-bidon-admin}:1323
-    volumes:
-      - ./scripts:/scripts:ro
-    command: sh /scripts/init-admin.sh
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if [ -z "$${SUPERUSER_LOGIN:-}" ] || [ -z "$${SUPERUSER_PASSWORD:-}" ]; then
+          echo "Error: SUPERUSER_LOGIN and SUPERUSER_PASSWORD environment variables are required but not set."
+          exit 1
+        fi
+        ADMIN_EMAIL="$${SUPERUSER_LOGIN}@example.com"
+        ADMIN_PASSWORD="$${SUPERUSER_PASSWORD}"
+        API_URL="$${BIDON_ADMIN_URL:-http://localhost:3200}"
+        AUTH_HEADER=$$(printf "%s:%s" "$$SUPERUSER_LOGIN" "$$SUPERUSER_PASSWORD" | base64)
+        echo "Waiting for bidon-admin API ($$API_URL) to be ready..."
+        while ! curl -s "$$API_URL/health_checks" | grep -i 'OK' > /dev/null; do
+          echo "Waiting for bidon-admin API ..."
+          sleep 5
+        done
+        echo "Checking if admin user exists..."
+        ADMIN_EXISTS=$$(curl -s -H "Authorization: Basic $$AUTH_HEADER" "$$API_URL/api/users" | grep "$$ADMIN_EMAIL" || true)
+        if [ -z "$$ADMIN_EXISTS" ]; then
+          echo "Creating admin user..."
+          HTTP_CODE=$$(curl -s -w "%{http_code}" -o /tmp/curl_response -X POST \
+            "$$API_URL/api/users" \
+            -H "Authorization: Basic $$AUTH_HEADER" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$$ADMIN_EMAIL\",\"password\":\"$$ADMIN_PASSWORD\",\"is_admin\":true}")
+          if [ "$$HTTP_CODE" -eq 201 ]; then
+            echo "Admin user created successfully."
+          else
+            echo "Failed to create admin user. Server responded with HTTP $$HTTP_CODE."
+            echo "Response body:"
+            cat /tmp/curl_response
+            exit 1
+          fi
+        else
+          echo "Admin user already exists. Skipping initialization."
+        fi
     restart: "no"
     logging: *default-logging
 
