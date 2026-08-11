@@ -1,6 +1,6 @@
 # Onboard a new network
 
-Canonical registration lives in the Go network registry. Admin UI network lists and account-type dropdowns come from `GET /api/networks` (no static UI maps to update).
+Canonical registration lives in the Go network registry. Admin UI network lists and account-type dropdowns come from `GET /api/networks`.
 
 ## Checklist
 
