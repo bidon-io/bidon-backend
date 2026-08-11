@@ -59,7 +59,7 @@ export TF_VAR_do_token="dop_v1_..."
 # Public IP (Coolify dashboard, DNS target)
 terraform output droplet_ipv4
 
-# Application DB connection URI (use in DATABASE_URL env vars)
+# Application DB connection URI (use in STAGING_DATABASE_URL env vars)
 terraform output -raw db_app_private_uri
 
 # Spaces bucket name (for backup tooling)
@@ -128,7 +128,7 @@ go run ./cmd/bidon-coolify create-app \
 # Set environment variables
 go run ./cmd/bidon-coolify configure-app-env \
   --app-uuid <application_uuid> \
-  --env DATABASE_URL="$(terraform output -raw db_app_private_uri)" \
+  --env STAGING_DATABASE_URL="$(terraform output -raw db_app_private_uri)" \
   --env-file .env.coolify
 ```
 

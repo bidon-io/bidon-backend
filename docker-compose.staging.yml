@@ -8,11 +8,13 @@ x-logging: &default-logging
   driver: json-file
 
 # Required env vars (set in .env or Coolify environment):
-#   DATABASE_URL              — optional toggle; unset = in-compose postgres service.
+#   STAGING_DATABASE_URL      — optional toggle; unset = in-compose postgres service.
 #     Local (default / Coolify previews): omit or use
 #       postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable
 #     Hosted staging: set to managed URI (terraform output -raw db_app_private_uri).
-#     The postgres container always runs; DATABASE_URL only chooses where apps connect.
+#     Interpolated into DATABASE_URL / DATABASE_REPLICA_URL (avoids Coolify baking
+#     self-referential ${DATABASE_URL:-…} to the production value on PR previews).
+#     The postgres container always runs; STAGING_DATABASE_URL only chooses where apps connect.
 #   PG_PASSWORD               — password for the in-compose postgres (default: password)
 #   APP_SECRET                — random secret for session signing
 #   SUPERUSER_LOGIN           — initial admin username
@@ -32,8 +34,8 @@ x-logging: &default-logging
 #     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 
 x-staging-db-env: &staging-db-env
-  DATABASE_URL: ${DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
-  DATABASE_REPLICA_URL: ${DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
+  DATABASE_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
+  DATABASE_REPLICA_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
 
 x-staging-kafka-env: &staging-kafka-env
   USE_KAFKA: "true"
@@ -55,7 +57,7 @@ x-staging-bidon-app-env: &staging-bidon-app-env
   SNOWFLAKE_NODE_ID: 1
 
 services:
-  # Always runs. Apps use it when DATABASE_URL is unset; override DATABASE_URL for managed Postgres.
+  # Always runs. Apps use it when STAGING_DATABASE_URL is unset; override STAGING_DATABASE_URL for managed Postgres.
   postgres:
     image: postgres:17-alpine
     volumes:

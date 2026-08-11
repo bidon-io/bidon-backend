@@ -54,7 +54,7 @@ Inline:
 ```bash
 go run ./cmd/bidon-coolify configure-app-env \
   --app-uuid <application_uuid> \
-  --env DATABASE_URL=postgres://... \
+  --env STAGING_DATABASE_URL=postgres://... \
   --env REDIS_URL=redis://...
 ```
 
