@@ -9,8 +9,9 @@ x-logging: &default-logging
 
 # Required env vars (set in .env or Coolify environment):
 #   STAGING_DATABASE_URL      — optional toggle; unset = in-compose postgres service.
-#     Local (default / Coolify previews): omit or use
-#       postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable
+#     Coolify previews: omit this var so the default below uses ${SERVICE_NAME_POSTGRES}
+#       (Coolify renames services to *-pr-N; a hardcoded @postgres host will not resolve).
+#     Local: omit or use postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable
 #     Hosted staging: set to managed URI (terraform output -raw db_app_private_uri).
 #     Interpolated into DATABASE_URL / DATABASE_REPLICA_URL (avoids Coolify baking
 #     self-referential ${DATABASE_URL:-…} to the production value on PR previews).
@@ -34,20 +35,20 @@ x-logging: &default-logging
 #     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 
 x-staging-db-env: &staging-db-env
-  DATABASE_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
-  DATABASE_REPLICA_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon?sslmode=disable}
+  DATABASE_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@${SERVICE_NAME_POSTGRES:-postgres}:5432/bidon?sslmode=disable}
+  DATABASE_REPLICA_URL: ${STAGING_DATABASE_URL:-postgres://bidon:${PG_PASSWORD:-password}@${SERVICE_NAME_POSTGRES:-postgres}:5432/bidon?sslmode=disable}
 
 x-staging-kafka-env: &staging-kafka-env
   USE_KAFKA: "true"
-  KAFKA_BROKERS_LIST: redpanda:29092
+  KAFKA_BROKERS_LIST: ${SERVICE_NAME_REDPANDA:-redpanda}:29092
   KAFKA_CLIENT_ID: bidon_staging
   KAFKA_DELIVERY_INTERVAL: 5
   KAFKA_AD_EVENTS_TOPIC: ad-events
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
 
 x-staging-redis-env: &staging-redis-env
-  REDIS_URL: redis://redis:6379/0
-  REDIS_CLUSTER: redis://redis:6379/0
+  REDIS_URL: redis://${SERVICE_NAME_REDIS:-redis}:6379/0
+  REDIS_CLUSTER: redis://${SERVICE_NAME_REDIS:-redis}:6379/0
 
 x-staging-bidon-app-env: &staging-bidon-app-env
   <<: [*staging-kafka-env, *staging-redis-env]
@@ -126,7 +127,7 @@ services:
       redpanda:
         condition: service_healthy
     environment:
-      KAFKA_BROKERS: redpanda:29092
+      KAFKA_BROKERS: ${SERVICE_NAME_REDPANDA:-redpanda}:29092
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
       interval: 15s
@@ -223,7 +224,7 @@ services:
     environment:
       SUPERUSER_LOGIN: ${SUPERUSER_LOGIN}
       SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
-      BIDON_ADMIN_URL: http://bidon-admin:1323
+      BIDON_ADMIN_URL: http://${SERVICE_NAME_BIDON_ADMIN:-bidon-admin}:1323
     volumes:
       - ./scripts:/scripts:ro
     command: sh /scripts/init-admin.sh
