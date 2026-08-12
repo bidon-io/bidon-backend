@@ -276,6 +276,9 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 const networks = useNetworks();
+onMounted(() => {
+  void networks.ensureLoaded();
+});
 
 const props = defineProps({
   isBidding: { type: Boolean, required: true },
