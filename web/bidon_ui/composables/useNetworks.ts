@@ -11,15 +11,28 @@ export interface NetworkCatalogItem {
 
 /** Fetches and caches the admin network catalog from GET /api/networks. */
 export const useNetworks = defineStore("networks", () => {
+  // Pass a factory so execute() can retry after a failed fetch.
   const { state, isReady, isLoading, error, execute } = useAsyncState(
-    $apiFetch<NetworkCatalogItem[]>("/networks"),
+    () => $apiFetch<NetworkCatalogItem[]>("/networks"),
     [] as NetworkCatalogItem[],
   );
 
   async function ensureLoaded() {
-    if (!isReady.value) {
-      await until(isReady).toBe(true);
+    if (isLoading.value) {
+      await until(isLoading).toBe(false);
     }
+
+    // On failure VueUse leaves isReady=false; retry until success or throw.
+    if (!isReady.value) {
+      await execute();
+    }
+
+    if (error.value != null) {
+      throw error.value instanceof Error
+        ? error.value
+        : new Error(String(error.value));
+    }
+
     return state.value;
   }
 

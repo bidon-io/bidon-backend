@@ -51,4 +51,8 @@ const value = computed({
 
 const networks = useNetworks();
 const options = computed(() => networks.demandSourceOptions);
+
+onMounted(() => {
+  void networks.ensureLoaded();
+});
 </script>
