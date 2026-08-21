@@ -3,6 +3,7 @@ package adapters
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -67,17 +68,12 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	seat := bidResponse.SeatBid[0]
 	bid := seat.Bid[0]
 
-	signaldata, err := signaldataFromBidExt(bid.Ext)
-	if err != nil {
-		return dr, err
-	}
-
 	dr.Bid = &NormalizedBid{
 		ID:         bid.ID,
 		ImpID:      bid.ImpID,
 		Price:      bid.Price,
 		Payload:    bid.AdM,
-		Signaldata: signaldata,
+		Signaldata: signaldataFromBidExt(bid.Ext),
 		DemandID:   dr.DemandID,
 		AdID:       bid.AdID,
 		SeatID:     seat.Seat,
@@ -96,15 +92,16 @@ func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandRespo
 	return dr, nil
 }
 
-func signaldataFromBidExt(ext json.RawMessage) (string, error) {
+func signaldataFromBidExt(ext json.RawMessage) string {
 	if len(ext) == 0 {
-		return "", nil
+		return ""
 	}
 	var bidExt struct {
 		Signaldata string `json:"signaldata"`
 	}
 	if err := json.Unmarshal(ext, &bidExt); err != nil {
-		return "", err
+		log.Printf("failed to extract signaldata from bid.ext: %v", err)
+		return ""
 	}
-	return bidExt.Signaldata, nil
+	return bidExt.Signaldata
 }
