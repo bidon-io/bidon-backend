@@ -192,6 +192,20 @@ func TestParseDemandResponse_unauthorizedStatuses(t *testing.T) {
 	}
 }
 
+func TestParseDemandResponse_unexpectedStatus(t *testing.T) {
+	dr := &adapters.DemandResponse{Status: http.StatusInternalServerError}
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if err.Error() != "unexpected status code: 500" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != dr {
+		t.Fatalf("expected demand response to be returned, got %+v", got)
+	}
+}
+
 func TestParseDemandResponse_invalidJSON(t *testing.T) {
 	_, err := adapters.ParseDemandResponse(stubAdapter{}, &adapters.DemandResponse{
 		Status:      http.StatusOK,
