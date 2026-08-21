@@ -32,16 +32,16 @@ type OpenRTBBidEnricher interface {
 // ParseDemandResponse unpacks a demand HTTP response into a bid DTO.
 // Custom parsers take precedence; otherwise the shared OpenRTB path runs,
 // optionally followed by an OpenRTB enricher.
-func ParseDemandResponse(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
+func ParseDemandResponse(bidder BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
 	if dr == nil {
 		return nil, fmt.Errorf("nil demand response")
 	}
 
-	if p, ok := adapter.(CustomBidParser); ok {
+	if p, ok := bidder.(CustomBidParser); ok {
 		return p.ParseBids(dr)
 	}
 
-	return parseOpenRTBBids(adapter, dr)
+	return parseOpenRTBBids(bidder, dr)
 }
 
 func parseOpenRTBBids(adapter BidderInterface, dr *DemandResponse) (*DemandResponse, error) {
