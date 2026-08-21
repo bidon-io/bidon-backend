@@ -12,6 +12,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -28,6 +29,15 @@ type Builder struct {
 	AdaptersBuilder     AdaptersBuilder
 	NotificationHandler NotificationHandler
 	BidCacher           BidCacher
+	Logger              *zap.Logger
+}
+
+// log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
+func (b *Builder) log() *zap.Logger {
+	if b.Logger == nil {
+		return zap.NewNop()
+	}
+	return b.Logger
 }
 
 var ErrNoAdaptersMatched = errors.New("no adapters matched")
@@ -90,6 +100,11 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		return emptyResponse, fmt.Errorf("cannot generate Bid UUID: %s", err)
 	}
 
+	logger := b.log().With(
+		zap.String("auction_id", auctionRequest.AdObject.AuctionID),
+		zap.String("bid_id", bidID.String()),
+	)
+
 	var adapterKeys []adapter.Key
 	roundNumber := 0
 	filteredDemands := make(map[adapter.Key]map[string]any)
@@ -107,8 +122,22 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	)
 
 	if len(adapterKeys) == 0 {
+		logger.Debug("no adapters matched",
+			zap.Strings("bidding_adapters", keyStrings(params.BiddingAdapters)),
+			zap.Strings("request_adapters", keyStrings(auctionRequest.Adapters.Keys())),
+			zap.Strings("demands_with_token", keyStrings(maps.Keys(filteredDemands))),
+			zap.Strings("configured_adapters", keyStrings(maps.Keys(params.AdapterConfigs))),
+		)
 		return emptyResponse, ErrNoAdaptersMatched
 	}
+
+	logger.Debug("matched bidding adapters",
+		zap.Strings("adapter_keys", keyStrings(adapterKeys)),
+		zap.String("ad_type", string(auctionRequest.AdType)),
+		zap.String("bundle", auctionRequest.App.Bundle),
+		zap.Float64("bid_floor", auctionRequest.AdObject.GetBidFloorForBidding()),
+		zap.String("device", auctionRequest.Device.OS),
+	)
 
 	auctionResult := AuctionResult{
 		RoundNumber: roundNumber,
@@ -137,13 +166,34 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	}()
 
 	for bid := range bids {
+		logger.Debug("received demand response",
+			zap.String("demand_id", string(bid.DemandID)),
+			zap.Bool("is_bid", bid.IsBid()),
+			zap.Float64("price", bid.Price()),
+			zap.Int("status", bid.Status),
+			zap.String("error_message", bid.ErrorMessage()),
+			zap.Int64("latency_ms", bid.EndTS-bid.StartTS),
+		)
 		auctionResult.Bids = append(auctionResult.Bids, bid)
 	}
 
 	// Cache Bids
 	auctionResult.Bids = b.BidCacher.ApplyBidCache(ctx, &auctionRequest, &auctionResult)
 
-	b.NotificationHandler.HandleBiddingRound(ctx, &auctionRequest.AdObject, auctionResult, auctionRequest.App.Bundle, string(auctionRequest.AdType)) //nolint:errcheck
+	if err := b.NotificationHandler.HandleBiddingRound(ctx, &auctionRequest.AdObject, auctionResult, auctionRequest.App.Bundle, string(auctionRequest.AdType)); err != nil {
+		logger.Error("handle bidding round",
+			zap.String("bundle", auctionRequest.App.Bundle),
+			zap.String("ad_type", string(auctionRequest.AdType)),
+			zap.Int("bids", len(auctionResult.Bids)),
+			zap.Error(err),
+		)
+	}
+
+	logger.Debug("auction completed",
+		zap.Int("bids", len(auctionResult.Bids)),
+		zap.Float64("max_bid_price", auctionResult.GetMaxBidPrice()),
+		zap.Int64("duration_ms", time.Now().UnixMilli()-params.StartTS),
+	)
 
 	return auctionResult, nil
 }
@@ -183,9 +233,16 @@ func (b *Builder) processAdapter(
 ) {
 	defer wg.Done()
 
+	logger := b.log().With(
+		zap.String("auction_id", auctionRequest.AdObject.AuctionID),
+		zap.String("bid_id", bidID),
+		zap.String("demand_id", string(adapterKey)),
+	)
+
 	if adapterKey == adapter.AmazonKey {
 		bidder, err := amazon.Builder(params.AdapterConfigs)
 		if err != nil {
+			logger.Debug("build amazon bidder", zap.Error(err))
 			handleError(adapterKey, err)
 			return
 		}
@@ -209,12 +266,14 @@ func (b *Builder) processAdapter(
 
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
+		logger.Debug("build bidder", zap.Error(err))
 		handleError(adapterKey, err)
 		return
 	}
 
 	bidRequest, err := bidder.Adapter.CreateRequest(baseBidRequest, &auctionRequest)
 	if err != nil {
+		logger.Debug("create bid request", zap.Error(err))
 		handleError(adapterKey, err)
 		return
 	}
@@ -224,11 +283,15 @@ func (b *Builder) processAdapter(
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
+		logger.Debug("execute bid request", zap.Error(demandResponse.Error))
 		bids <- *demandResponse
 		return
 	}
 
 	demandResponse, err = bidder.Adapter.ParseBids(demandResponse)
+	if err != nil {
+		logger.Debug("parse bids", zap.Error(err))
+	}
 	demandResponse.Error = err
 
 	bids <- *demandResponse
@@ -316,6 +379,14 @@ func (b *Builder) setTokenResponse(demandResponse *adapters.DemandResponse, auct
 	if tokenFinishTS, ok := demandData["token_finish_ts"].(float64); ok {
 		demandResponse.Token.EndTS = int64(tokenFinishTS)
 	}
+}
+
+func keyStrings(keys []adapter.Key) []string {
+	strs := make([]string, len(keys))
+	for i, key := range keys {
+		strs[i] = string(key)
+	}
+	return strs
 }
 
 func bool2int(b bool) *int8 {
