@@ -202,6 +202,19 @@ func TestParseDemandResponse_invalidJSON(t *testing.T) {
 	}
 }
 
+func TestParseDemandResponse_nilDemandResponse(t *testing.T) {
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, nil)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if err.Error() != "nil demand response" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("expected nil result, got %+v", got)
+	}
+}
+
 func TestParseDemandResponse_callsEnricher(t *testing.T) {
 	raw, _ := json.Marshal(openrtb2.BidResponse{
 		SeatBid: []openrtb2.SeatBid{{
