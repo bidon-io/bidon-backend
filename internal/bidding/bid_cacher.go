@@ -99,7 +99,7 @@ func (cb CachedBid) toDemandResponse() adapters.DemandResponse {
 		RawRequest:  "",
 		RawResponse: "",
 		Status:      cb.Status,
-		Bid: &adapters.NormalizedBid{
+		Bid: &adapters.DemandBid{
 			Payload:    cb.Payload,
 			Signaldata: cb.Signaldata,
 			ID:         cb.ID,

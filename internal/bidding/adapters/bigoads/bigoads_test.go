@@ -258,7 +258,7 @@ func TestBigoAds_CreateRequest(t *testing.T) {
 			Request: request,
 			Err:     err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.AuctionRequest, diff)
 		}
 	}
@@ -356,7 +356,7 @@ func TestBigoAds_ParseBids(t *testing.T) {
 					DemandID:    "bigoads",
 					Status:      200,
 					RawResponse: rawResponse,
-					Bid: &adapters.NormalizedBid{
+					Bid: &adapters.DemandBid{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
 						Price:    1.5,
@@ -413,7 +413,7 @@ func TestBigoAds_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
