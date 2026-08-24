@@ -3,6 +3,7 @@ package adapters_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -38,6 +39,20 @@ func (a *enricherAdapter) EnrichOpenRTBBid(
 	a.called = true
 	dr.Bid.Payload = "enriched"
 	return nil
+}
+
+type failingEnricherAdapter struct {
+	stubAdapter
+	err error
+}
+
+func (a *failingEnricherAdapter) EnrichOpenRTBBid(
+	*adapters.DemandResponse,
+	*openrtb2.BidResponse,
+	openrtb2.SeatBid,
+	openrtb2.Bid,
+) error {
+	return a.err
 }
 
 type customParserAdapter struct {
@@ -251,6 +266,34 @@ func TestParseDemandResponse_callsEnricher(t *testing.T) {
 	}
 	if got.Bid.Payload != "enriched" {
 		t.Fatalf("expected enriched payload, got %q", got.Bid.Payload)
+	}
+}
+
+func TestParseDemandResponse_enricherError(t *testing.T) {
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1, AdM: "<ad>"}},
+		}},
+	})
+	enrichErr := errors.New("enrich failed")
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.TaurusXKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(&failingEnricherAdapter{err: enrichErr}, dr)
+	if err == nil {
+		t.Fatal("expected enricher error")
+	}
+	if !errors.Is(err, enrichErr) {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != dr {
+		t.Fatalf("expected demand response to be returned, got %+v", got)
+	}
+	if got.Bid == nil {
+		t.Fatal("expected bid to be populated before enricher failure")
 	}
 }
 
