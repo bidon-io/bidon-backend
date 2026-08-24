@@ -210,6 +210,9 @@ func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client
 	return dr
 }
 
+// EnrichOpenRTBBid replaces Payload with BidResponse.ext.payload.
+// TaurusX delivers the creative only there; bid.adm (already set by the
+// shared parser) is deliberately ignored.
 func (a *TaurusXAdapter) EnrichOpenRTBBid(
 	dr *adapters.DemandResponse,
 	bidResp *openrtb2.BidResponse,
