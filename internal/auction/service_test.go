@@ -110,7 +110,7 @@ func TestService_Run(t *testing.T) {
 				},
 				BiddingAuctionResult: &bidding.AuctionResult{
 					Bids: []adapters.DemandResponse{
-						{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
+						{DemandID: "bidmachine", Bid: &adapters.DemandBid{}},
 					},
 				},
 			}, nil
@@ -431,7 +431,7 @@ func TestService_Run(t *testing.T) {
 			},
 			BiddingAuctionResult: &bidding.AuctionResult{
 				Bids: []adapters.DemandResponse{
-					{DemandID: "bidmachine", Bid: &adapters.NormalizedBid{}},
+					{DemandID: "bidmachine", Bid: &adapters.DemandBid{}},
 				},
 			},
 		}
@@ -678,7 +678,7 @@ func TestService_Run_BiddingWithDemandExt(t *testing.T) {
 					Bids: []adapters.DemandResponse{
 						{
 							DemandID: adapter.BidmachineKey,
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:      "bid123",
 								ImpID:   "imp123",
 								Price:   0.15,
@@ -794,7 +794,7 @@ func TestService_Run_BidmachineWithMediatorInBidding(t *testing.T) {
 					Bids: []adapters.DemandResponse{
 						{
 							DemandID: adapter.BidmachineKey,
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:      "bid123",
 								ImpID:   "imp123",
 								Price:   0.15,
@@ -968,7 +968,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 						{
 							DemandID: adapter.AmazonKey,
 							SlotUUID: "amazon_slot",
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:      "amazon_bid",
 								ImpID:   "amazon_imp",
 								Price:   0.12,
@@ -977,7 +977,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 						},
 						{
 							DemandID: adapter.MobileFuseKey,
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:         "mobilefuse_bid",
 								ImpID:      "mobilefuse_imp",
 								Price:      0.13,
@@ -987,7 +987,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 						},
 						{
 							DemandID: adapter.YandexKey,
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:         "yandex_bid",
 								ImpID:      "yandex_imp",
 								Price:      0.15,
@@ -997,7 +997,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 						},
 						{
 							DemandID: adapter.VKAdsKey,
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:      "vkads_bid_123",
 								ImpID:   "vkads_imp",
 								Price:   0.14,
@@ -1006,7 +1006,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 						},
 						{
 							DemandID: "unknown_adapter",
-							Bid: &adapters.NormalizedBid{
+							Bid: &adapters.DemandBid{
 								ID:      "unknown_bid",
 								ImpID:   "unknown_imp",
 								Price:   0.11,
@@ -1163,7 +1163,7 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 					Bids: []adapters.DemandResponse{
 						{
 							DemandID: adapter.BidmachineKey,
-							Bid:      &adapters.NormalizedBid{Payload: "test_payload", Price: 0.15}, // Higher than price floor
+							Bid:      &adapters.DemandBid{Payload: "test_payload", Price: 0.15}, // Higher than price floor
 						},
 					},
 				},

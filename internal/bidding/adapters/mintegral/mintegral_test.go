@@ -369,7 +369,7 @@ func TestMintegral_ParseBids(t *testing.T) {
 					DemandID:    "mintegral",
 					Status:      200,
 					RawResponse: rawResponse,
-					Bid: &adapters.NormalizedBid{
+					Bid: &adapters.DemandBid{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
 						Price:    1.5,
@@ -426,7 +426,7 @@ func TestMintegral_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.NormalizedBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}

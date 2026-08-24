@@ -33,7 +33,7 @@ type DemandResponse struct {
 	RawRequest  string
 	RawResponse string
 	Status      int
-	Bid         *NormalizedBid
+	Bid         *DemandBid
 	Error       error
 	ImpID       string
 	TagID       string
@@ -86,9 +86,9 @@ func (dr *DemandResponse) CanCache() bool {
 	return true
 }
 
-// NormalizedBid is the DSP-agnostic bid after network response parsing.
+// DemandBid is the DSP-agnostic bid after network response parsing.
 // OpenRTB adapters fill Ext from seatbid.bid.ext; proprietary adapters leave it nil.
-type NormalizedBid struct {
+type DemandBid struct {
 	Payload string
 	// Signaldata is extracted from seatbid.bid.ext.signaldata by the shared OpenRTB parser.
 	Signaldata string

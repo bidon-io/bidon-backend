@@ -60,7 +60,7 @@ type customParserAdapter struct {
 }
 
 func (customParserAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	dr.Bid = &adapters.NormalizedBid{
+	dr.Bid = &adapters.DemandBid{
 		DemandID: adapter.ZmaticooKey,
 		Payload:  "custom",
 		Price:    1.23,

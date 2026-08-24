@@ -229,7 +229,7 @@ func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dema
 		impID = dr.ImpID
 	}
 
-	dr.Bid = &adapters.NormalizedBid{
+	dr.Bid = &adapters.DemandBid{
 		ID:       br.RequestID,
 		ImpID:    impID, // Zmaticoo response is not OpenRTB, so we get it from request
 		Price:    br.ECPM,

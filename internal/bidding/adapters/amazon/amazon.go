@@ -46,7 +46,7 @@ func (a *Adapter) FetchBids(auctionRequest *schema.AuctionRequest) ([]*adapters.
 			demandResponse := adapters.DemandResponse{
 				DemandID: adapter.AmazonKey,
 				SlotUUID: slot.SlotUUID,
-				Bid: &adapters.NormalizedBid{
+				Bid: &adapters.DemandBid{
 					DemandID: adapter.AmazonKey,
 					ID:       ID.String(),
 					ImpID:    impID.String(),
