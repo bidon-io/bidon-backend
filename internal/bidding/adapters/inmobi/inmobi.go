@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -24,6 +23,8 @@ type InMobiAdapter struct {
 	AppID       string
 	PlacementID string
 }
+
+var _ adapters.BidderInterface = (*InMobiAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -93,14 +94,12 @@ func (a *InMobiAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 	}
 }
 
-func (a *InMobiAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *InMobiAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.PlacementID == "" {
-		return request, errors.New("PlacementID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("PlacementID is empty")
 	}
 
-	secure := int8(1)
 	var imp *openrtb2.Imp
-
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
 		imp = a.banner(auctionRequest)
@@ -109,32 +108,20 @@ func (a *InMobiAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.PlacementID
-	imp.DisplayManager = string(adapter.InmobiKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.InmobiKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	// Set user with bidding token
+	opts := adapters.RTBRequestOptions{
+		TagID: a.PlacementID,
+		AppID: a.AppID,
+	}
 	if token, exists := auctionRequest.AdObject.Demands[adapter.InmobiKey]["token"]; exists {
-		request.User = &openrtb.User{
-			BuyerUID: token.(string),
+		if tokenStr, ok := token.(string); ok {
+			opts.BuyerUID = tokenStr
 		}
 	}
 
-	// Set app ID
-	request.App.ID = a.AppID
-
-	return request, nil
+	return imp, opts, nil
 }
 
 func (a *InMobiAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

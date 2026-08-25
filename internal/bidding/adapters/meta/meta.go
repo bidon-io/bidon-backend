@@ -12,7 +12,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -29,6 +28,8 @@ type MetaAdapter struct {
 	PlatformID string
 	TagID      string
 }
+
+var _ adapters.BidderInterface = (*MetaAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -92,8 +93,10 @@ func (a *MetaAdapter) timeoutURL(platformID string) string {
 	return "https://www.facebook.com/audiencenetwork/nurl/?partner=" + platformID + "&app=" + a.AppID + "&auction=${AUCTION_ID}&ortb_loss_code=2"
 }
 
-func (a *MetaAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
+func (a *MetaAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	if a.TagID == "" {
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
+	}
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -104,42 +107,30 @@ func (a *MetaAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-
-	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+	opts := adapters.RTBRequestOptions{
+		TagID:       a.TagID,
+		PublisherID: a.AppID,
 	}
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.MetaKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MetaKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.User = &openrtb.User{
-		BuyerUID: auctionRequest.AdObject.Demands[adapter.MetaKey]["token"].(string),
+	if token, ok := auctionRequest.AdObject.Demands[adapter.MetaKey]["token"].(string); ok {
+		opts.BuyerUID = token
 	}
-	request.Cur = []string{"USD"}
 
-	request.App.Publisher.ID = a.AppID
+	return imp, opts, nil
+}
 
+func (a *MetaAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, _ *schema.AuctionRequest) error {
 	ext, err := json.Marshal(map[string]any{
 		"platformid":        a.PlatformID,
 		"authentication_id": calculateHMACSHA256(request.ID, a.AppSecret),
 	})
 	if err != nil {
-		return request, err
+		return err
 	}
-
 	request.Ext = ext
-
-	return request, nil
+	return nil
 }
 
 func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

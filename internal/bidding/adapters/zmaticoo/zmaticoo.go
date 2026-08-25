@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/geo"
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -32,6 +31,8 @@ type ZmaticooAdapter struct {
 	AppID       string
 	PlacementID string
 }
+
+var _ adapters.BidderInterface = (*ZmaticooAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -92,12 +93,11 @@ func (a *ZmaticooAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openr
 	}
 }
 
-func (a *ZmaticooAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *ZmaticooAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.PlacementID == "" {
-		return request, errors.New("PlacementID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("PlacementID is empty")
 	}
 
-	secure := int8(1)
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -107,33 +107,26 @@ func (a *ZmaticooAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impID, _ := uuid.NewV4()
-	imp.ID = impID.String()
-	imp.TagID = a.PlacementID
-
-	imp.DisplayManager = string(adapter.ZmaticooKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.ZmaticooKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
+	opts := adapters.RTBRequestOptions{
+		TagID: a.PlacementID,
+	}
 	if request.App != nil {
-		request.App.ID = a.AppID
+		opts.AppID = a.AppID
 	}
 
+	return imp, opts, nil
+}
+
+func (a *ZmaticooAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	extJSON, err := a.buildRequestExt(auctionRequest)
 	if err != nil {
-		return request, err
+		return err
 	}
 	request.Ext = extJSON
-
-	return request, nil
+	return nil
 }
 
 func (a *ZmaticooAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

@@ -213,7 +213,7 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	bidRequest, err := bidder.Adapter.CreateRequest(baseBidRequest, &auctionRequest)
+	bidRequest, err := adapters.BuildDemandRequest(bidder.Adapter, baseBidRequest, &auctionRequest, adapterKey)
 	if err != nil {
 		handleError(adapterKey, err)
 		return

@@ -17,8 +17,8 @@ import (
 
 type stubAdapter struct{}
 
-func (stubAdapter) CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	return openrtb.BidRequest{}, nil
+func (stubAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return &openrtb2.Imp{}, adapters.RTBRequestOptions{}, nil
 }
 
 func (stubAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {

@@ -5,18 +5,26 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/prebid/openrtb/v19/openrtb2"
+
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
+// BidderInterface is the required surface for a demand adapter on the shared
+// bidding path: build impression, execute HTTP, then parse at the call site.
+// Optional extras are type-asserted: OpenRTBRequestEnricher, OpenRTBBidEnricher,
+// CustomBidParser, CustomRequestBuilder.
 type BidderInterface interface {
-	// CreateRequest makes the HTTP requests which should be made to fetch bids.
-	CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error)
+	// BuildImpression supplies the OpenRTB impression, shell options, and
+	// request validation. BidRequest is the base request so adapters can
+	// validate against it (geo, existing App, etc.).
+	BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, RTBRequestOptions, error)
 
-	// ExecuteRequest sends request to bidder endpoint.
-	// It must only populate Status / RawResponse (and transport errors);
-	// bid parsing is done by ParseDemandResponse at the builder call site.
+	// ExecuteRequest sends the request to the bidder endpoint.
+	// It must only populate Status / RawResponse (and transport errors).
+	// Bid parsing is done by ParseDemandResponse at the builder call site.
 	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
 }
 

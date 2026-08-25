@@ -13,13 +13,14 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
 type AdikteevAdapter struct {
 }
+
+var _ adapters.BidderInterface = (*AdikteevAdapter)(nil)
 
 //Loïc Anton: map sdk request ad types to ad formats
 //  banner => openrtb2.Banner with MRAID api
@@ -93,9 +94,7 @@ func getEndpoint() string {
 	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
 }
 
-func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
-
+func (a *AdikteevAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -105,22 +104,18 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
+	}
+	if imp == nil {
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.AdikteevKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.AdikteevKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
+	return imp, adapters.RTBRequestOptions{OmitBidFloorCur: true}, nil
+}
 
+func (a *AdikteevAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	request.App.Ext = a.sdkInstanceID(auctionRequest)
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	return request, nil
+	return nil
 }
 
 func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -42,6 +41,8 @@ func newUnsupportedRegionError(received string) error {
 type MobileFuseAdapter struct {
 	TagID string
 }
+
+var _ adapters.BidderInterface = (*MobileFuseAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -88,9 +89,9 @@ func (a *MobileFuseAdapter) rewarded() *openrtb2.Imp {
 	}
 }
 
-func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *MobileFuseAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	country := ""
@@ -99,10 +100,8 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	}
 
 	if !slices.Contains(supportedCountries, country) {
-		return request, newUnsupportedRegionError(country)
+		return nil, adapters.RTBRequestOptions{}, newUnsupportedRegionError(country)
 	}
-
-	secure := int8(1)
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -113,33 +112,29 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	case ad.RewardedType:
 		imp = a.rewarded()
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.TagID = a.TagID
+	return imp, adapters.RTBRequestOptions{
+		TagID:           a.TagID,
+		OmitBidFloorCur: true,
+	}, nil
+}
 
-	imp.DisplayManager = string(adapter.MobileFuseKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MobileFuseKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
+func (a *MobileFuseAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	token, _ := auctionRequest.AdObject.Demands[adapter.MobileFuseKey]["token"].(string)
 	request.User = &openrtb.User{
 		Data: []openrtb.Data{
 			{
 				Segment: []openrtb.Segment{
 					{
-						Signal: auctionRequest.AdObject.Demands[adapter.MobileFuseKey]["token"].(string),
+						Signal: token,
 					},
 				},
 			},
 		},
 	}
-
-	return request, nil
+	return nil
 }
 
 func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
