@@ -20,6 +20,8 @@ import (
 type AdikteevAdapter struct {
 }
 
+var _ adapters.BidderInterface = (*AdikteevAdapter)(nil)
+
 //Loïc Anton: map sdk request ad types to ad formats
 //  banner => openrtb2.Banner with MRAID api
 //  interstitial and rewarded => openrtb2.banner with MRAID API + openrtb2.video
@@ -92,7 +94,7 @@ func getEndpoint() string {
 	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
 }
 
-func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *AdikteevAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -102,15 +104,18 @@ func (a *AdikteevAdapter) CreateRequest(request openrtb.BidRequest, auctionReque
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
+	}
+	if imp == nil {
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.AdikteevKey, imp, adapters.RTBRequestOptions{
-		OmitBidFloorCur: true,
-	})
-	request.App.Ext = a.sdkInstanceID(auctionRequest)
+	return imp, adapters.RTBRequestOptions{OmitBidFloorCur: true}, nil
+}
 
-	return request, nil
+func (a *AdikteevAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	request.App.Ext = a.sdkInstanceID(auctionRequest)
+	return nil
 }
 
 func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

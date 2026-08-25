@@ -26,6 +26,8 @@ type BigoAdsAdapter struct {
 	PlacementID string
 }
 
+var _ adapters.BidderInterface = (*BigoAdsAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:   {320, 50},
 	ad.MRECFormat:     {300, 250},
@@ -69,9 +71,9 @@ func (a *BigoAdsAdapter) rewarded() *openrtb2.Imp {
 	}
 }
 
-func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *BigoAdsAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -80,7 +82,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	case ad.BannerType:
 		bannerImp, err := a.banner(auctionRequest)
 		if err != nil {
-			return request, err
+			return nil, adapters.RTBRequestOptions{}, err
 		}
 		imp = bannerImp
 		impAdType = 2
@@ -91,7 +93,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		imp = a.rewarded()
 		impAdType = 4
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	impExt, err := json.Marshal(map[string]any{
@@ -102,7 +104,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		},
 	})
 	if err != nil {
-		return request, err
+		return nil, adapters.RTBRequestOptions{}, err
 	}
 	imp.Ext = impExt
 
@@ -116,7 +118,7 @@ func (a *BigoAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		opts.BuyerUID = token
 	}
 
-	return adapters.BuildRTBRequest(request, auctionRequest, adapter.BigoAdsKey, imp, opts), nil
+	return imp, opts, nil
 }
 
 func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

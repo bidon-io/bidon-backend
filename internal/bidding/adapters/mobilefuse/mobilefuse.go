@@ -42,6 +42,8 @@ type MobileFuseAdapter struct {
 	TagID string
 }
 
+var _ adapters.BidderInterface = (*MobileFuseAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -87,9 +89,9 @@ func (a *MobileFuseAdapter) rewarded() *openrtb2.Imp {
 	}
 }
 
-func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *MobileFuseAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	country := ""
@@ -98,7 +100,7 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	}
 
 	if !slices.Contains(supportedCountries, country) {
-		return request, newUnsupportedRegionError(country)
+		return nil, adapters.RTBRequestOptions{}, newUnsupportedRegionError(country)
 	}
 
 	var imp *openrtb2.Imp
@@ -110,14 +112,16 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	case ad.RewardedType:
 		imp = a.rewarded()
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.MobileFuseKey, imp, adapters.RTBRequestOptions{
+	return imp, adapters.RTBRequestOptions{
 		TagID:           a.TagID,
 		OmitBidFloorCur: true,
-	})
+	}, nil
+}
 
+func (a *MobileFuseAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	token, _ := auctionRequest.AdObject.Demands[adapter.MobileFuseKey]["token"].(string)
 	request.User = &openrtb.User{
 		Data: []openrtb.Data{
@@ -130,8 +134,7 @@ func (a *MobileFuseAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 			},
 		},
 	}
-
-	return request, nil
+	return nil
 }
 
 func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

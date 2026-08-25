@@ -25,6 +25,8 @@ type MolocoAdapter struct { //nolint:revive
 	APIKey string
 }
 
+var _ adapters.BidderInterface = (*MolocoAdapter)(nil)
+
 // bannerFormats defines the supported banner formats and their dimensions
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -109,10 +111,9 @@ func (a *MolocoAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 	}
 }
 
-// CreateRequest implements the BidderInterface.CreateRequest method
-func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *MolocoAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("moloco AdUnitID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("moloco AdUnitID is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -124,7 +125,7 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	opts := adapters.RTBRequestOptions{
@@ -138,7 +139,7 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		opts.BuyerUID = token
 	}
 
-	return adapters.BuildRTBRequest(request, auctionRequest, adapter.MolocoKey, imp, opts), nil
+	return imp, opts, nil
 }
 
 // ExecuteRequest implements the BidderInterface.ExecuteRequest method

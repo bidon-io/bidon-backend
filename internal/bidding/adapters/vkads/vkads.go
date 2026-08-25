@@ -24,6 +24,8 @@ type VKAdsAdapter struct {
 	AppID string
 }
 
+var _ adapters.BidderInterface = (*VKAdsAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -75,16 +77,16 @@ func (a *VKAdsAdapter) rewarded() *openrtb2.Imp {
 	}
 }
 
-func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *VKAdsAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.AppID == "" {
-		return request, errors.New("AppID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("AppID is empty")
 	}
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 	token, ok := auctionRequest.AdObject.Demands[adapter.VKAdsKey]["token"].(string)
 	if !ok || token == "" {
-		return request, errors.New("token is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("token is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -96,24 +98,26 @@ func (a *VKAdsAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest 
 	case ad.RewardedType:
 		imp = a.rewarded()
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	// VK Ads historically omits DisplayManager and Secure; keep those defaults off.
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.VKAdsKey, imp, adapters.RTBRequestOptions{
+	return imp, adapters.RTBRequestOptions{
 		TagID:              a.TagID,
 		AppID:              a.AppID,
 		OmitSecure:         true,
 		OmitDisplayManager: true,
-	})
+	}, nil
+}
 
+func (a *VKAdsAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	token, _ := auctionRequest.AdObject.Demands[adapter.VKAdsKey]["token"].(string)
 	request.User = &openrtb.User{
 		ID:  auctionRequest.User.IDG,
 		Ext: json.RawMessage(fmt.Sprintf(`{"buyeruid": "%s"}`, token)),
 	}
 	request.Ext = json.RawMessage(`{"pid":111}`)
-
-	return request, nil
+	return nil
 }
 
 func (a *VKAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

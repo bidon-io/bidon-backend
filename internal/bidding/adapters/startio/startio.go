@@ -28,6 +28,8 @@ type Adapter struct {
 	Account string
 }
 
+var _ adapters.BidderInterface = (*Adapter)(nil)
+
 // bannerFormats defines the supported banner formats and their dimensions.
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -115,28 +117,27 @@ func (a *Adapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp 
 	}
 }
 
-// CreateRequest implements the BidderInterface.CreateRequest method.
-func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *Adapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("startio tag ID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("startio tag ID is empty")
 	}
 
 	if a.Account == "" {
-		return request, errors.New("startio account is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("startio account is empty")
 	}
 
 	if a.AppID == "" {
-		return request, errors.New("startio app ID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("startio app ID is empty")
 	}
 
 	demandData, ok := auctionRequest.AdObject.Demands[adapter.StartIOKey]
 	if !ok {
-		return request, errors.New("startio demand data missing")
+		return nil, adapters.RTBRequestOptions{}, errors.New("startio demand data missing")
 	}
 
 	token, ok := demandData["token"].(string)
 	if !ok || token == "" {
-		return request, errors.New("startio token is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("startio token is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -148,15 +149,17 @@ func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *sche
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.StartIOKey, imp, adapters.RTBRequestOptions{
+	return imp, adapters.RTBRequestOptions{
 		TagID:    a.TagID,
 		AppID:    a.AppID,
 		BuyerUID: token,
-	})
+	}, nil
+}
 
+func (a *Adapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	if auctionRequest.Test {
 		request.Test = 1
 	}
@@ -167,7 +170,7 @@ func (a *Adapter) CreateRequest(request openrtb.BidRequest, auctionRequest *sche
 	}
 	request.App.Publisher = &openrtb2.Publisher{}
 
-	return request, nil
+	return nil
 }
 
 // ExecuteRequest implements the BidderInterface.ExecuteRequest method.

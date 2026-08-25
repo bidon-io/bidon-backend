@@ -129,7 +129,7 @@ func TestYandex_CreateRequest_Banner(t *testing.T) {
 			baseReq := buildBaseBidRequest()
 			auctionReq := buildAuctionRequest(ad.BannerType, tt.format)
 
-			got, err := adapter.CreateRequest(baseReq, auctionReq)
+			got, err := adapters.BuildDemandRequest(&adapter, baseReq, auctionReq, "yandex")
 			if err != nil {
 				t.Fatalf("CreateRequest() error = %v", err)
 			}
@@ -197,7 +197,7 @@ func TestYandex_CreateRequest_Interstitial(t *testing.T) {
 	baseReq := buildBaseBidRequest()
 	auctionReq := buildAuctionRequest(ad.InterstitialType, ad.EmptyFormat)
 
-	got, err := adapter.CreateRequest(baseReq, auctionReq)
+	got, err := adapters.BuildDemandRequest(&adapter, baseReq, auctionReq, "yandex")
 	if err != nil {
 		t.Fatalf("CreateRequest() error = %v", err)
 	}
@@ -227,7 +227,7 @@ func TestYandex_CreateRequest_Rewarded(t *testing.T) {
 	baseReq := buildBaseBidRequest()
 	auctionReq := buildAuctionRequest(ad.RewardedType, ad.EmptyFormat)
 
-	got, err := adapter.CreateRequest(baseReq, auctionReq)
+	got, err := adapters.BuildDemandRequest(&adapter, baseReq, auctionReq, "yandex")
 	if err != nil {
 		t.Fatalf("CreateRequest() error = %v", err)
 	}
@@ -261,7 +261,7 @@ func TestYandex_CreateRequest_EmptyAdUnitID(t *testing.T) {
 	baseReq := buildBaseBidRequest()
 	auctionReq := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 
-	_, err := adapter.CreateRequest(baseReq, auctionReq)
+	_, err := adapters.BuildDemandRequest(&adapter, baseReq, auctionReq, "yandex")
 	if err == nil {
 		t.Error("Expected error for empty AdUnitID, got nil")
 	}
@@ -273,7 +273,7 @@ func TestYandex_CreateRequest_MissingToken(t *testing.T) {
 	auctionReq := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 	auctionReq.AdObject.Demands[adapter.YandexKey] = map[string]any{}
 
-	_, err := adpt.CreateRequest(baseReq, auctionReq)
+	_, err := adapters.BuildDemandRequest(&adpt, baseReq, auctionReq, adapter.YandexKey)
 	if err == nil {
 		t.Error("Expected error for missing token, got nil")
 	}

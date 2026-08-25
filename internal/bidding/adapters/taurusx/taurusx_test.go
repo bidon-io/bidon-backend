@@ -43,7 +43,7 @@ func TestTaurusXAdapter_CreateRequest(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(taurusxAdapter, baseRequest, auctionRequest, adapter.TaurusXKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return
@@ -426,7 +426,7 @@ func TestTaurusXAdapter_CreateRequest_Interstitial(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(taurusxAdapter, baseRequest, auctionRequest, adapter.TaurusXKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return
@@ -468,7 +468,7 @@ func TestTaurusXAdapter_CreateRequest_Rewarded(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(taurusxAdapter, baseRequest, auctionRequest, adapter.TaurusXKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return
@@ -514,7 +514,7 @@ func TestTaurusXAdapter_CreateRequest_WithoutToken(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(taurusxAdapter, baseRequest, auctionRequest, adapter.TaurusXKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return
@@ -692,7 +692,7 @@ func TestTaurusXAdapter_CreateRequest_WithPlacementTokenNotFound(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := taurusxAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(taurusxAdapter, baseRequest, auctionRequest, adapter.TaurusXKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return

@@ -25,6 +25,8 @@ type BidmachineAdapter struct {
 	Endpoint string
 }
 
+var _ adapters.BidderInterface = (*BidmachineAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -103,11 +105,7 @@ func (a *BidmachineAdapter) rewarded(auctionRequest *schema.AuctionRequest) *ope
 	}
 }
 
-func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	x := ExtraParams(auctionRequest)
-	ext, _ := json.Marshal(x)
-	request.Ext = ext
-
+func (a *BidmachineAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -117,7 +115,7 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	extStructure := &map[string]interface{}{}
@@ -126,10 +124,19 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	raw, _ := json.Marshal(extStructure)
 	imp.Ext = raw
 
-	return adapters.BuildRTBRequest(request, auctionRequest, adapter.BidmachineKey, imp, adapters.RTBRequestOptions{
+	return imp, adapters.RTBRequestOptions{
 		PublisherID:     a.SellerID,
 		OmitBidFloorCur: true,
-	}), nil
+	}, nil
+}
+
+func (a *BidmachineAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	ext, err := json.Marshal(ExtraParams(auctionRequest))
+	if err != nil {
+		return err
+	}
+	request.Ext = ext
+	return nil
 }
 
 func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

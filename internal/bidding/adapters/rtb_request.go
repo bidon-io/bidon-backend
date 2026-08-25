@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"fmt"
+
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -9,8 +11,21 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
+// CustomRequestBuilder is implemented by non-OpenRTB adapters that fully own
+// request construction. Type-asserted by BuildDemandRequest. Amazon uses
+// FetchBids and never reaches this path.
+type CustomRequestBuilder interface {
+	CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error)
+}
+
+// OpenRTBRequestEnricher is implemented by OpenRTB adapters that need to
+// mutate the request after the shared shell (token placement, ext, user).
+type OpenRTBRequestEnricher interface {
+	EnrichOpenRTBRequest(*openrtb.BidRequest, *schema.AuctionRequest) error
+}
+
 // RTBRequestOptions configures optional CreateRequest fields applied by BuildRTBRequest.
-// Network-specific token placement and ext shapes stay in adapters (mutate after the build).
+// Network-specific token placement and ext shapes stay in adapters (enrich after the build).
 type RTBRequestOptions struct {
 	TagID       string
 	AppID       string
@@ -25,20 +40,49 @@ type RTBRequestOptions struct {
 	OmitDisplayManager bool
 }
 
-// BuildRTBRequest applies the common OpenRTB CreateRequest impression shell around
-// an adapter-built creative Imp. Creative construction (banner/interstitial/rewarded)
-// remains adapter-owned until BAC-28.
+// BuildDemandRequest constructs the outbound OpenRTB request at the builder
+// call site. Custom builders take precedence; otherwise the shared shell
+// runs around BidderInterface.BuildImpression, optionally followed by an enricher.
+func BuildDemandRequest(
+	bidder BidderInterface,
+	request openrtb.BidRequest,
+	auctionRequest *schema.AuctionRequest,
+	demandKey adapter.Key,
+) (openrtb.BidRequest, error) {
+	if c, ok := bidder.(CustomRequestBuilder); ok {
+		return c.CreateRequest(request, auctionRequest)
+	}
+
+	imp, opts, err := bidder.BuildImpression(request, auctionRequest)
+	if err != nil {
+		return request, err
+	}
+	if imp == nil {
+		return request, fmt.Errorf("nil impression")
+	}
+
+	request = BuildRTBRequest(request, auctionRequest, demandKey, *imp, opts)
+
+	if e, ok := bidder.(OpenRTBRequestEnricher); ok {
+		if err := e.EnrichOpenRTBRequest(&request, auctionRequest); err != nil {
+			return request, err
+		}
+	}
+
+	return request, nil
+}
+
+// BuildRTBRequest applies the common OpenRTB impression shell around an
+// adapter-built creative Imp. Imp is required; callers must not pass a
+// zero-value placeholder in place of a real creative. Creative construction
+// (banner/interstitial/rewarded) remains adapter-owned until BAC-28.
 func BuildRTBRequest(
 	request openrtb.BidRequest,
 	auctionRequest *schema.AuctionRequest,
 	demandKey adapter.Key,
-	imp *openrtb2.Imp,
+	imp openrtb2.Imp,
 	opts RTBRequestOptions,
 ) openrtb.BidRequest {
-	if imp == nil {
-		return request
-	}
-
 	impID, _ := uuid.NewV4()
 	imp.ID = impID.String()
 
@@ -65,7 +109,7 @@ func BuildRTBRequest(
 		imp.BidFloorCur = "USD"
 	}
 
-	request.Imp = []openrtb2.Imp{*imp}
+	request.Imp = []openrtb2.Imp{imp}
 	request.Cur = []string{"USD"}
 
 	if opts.AppID != "" || opts.PublisherID != "" {
