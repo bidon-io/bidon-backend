@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -103,9 +102,8 @@ func (a *MetaAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, _ *schem
 	return nil
 }
 
-func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID:   adapter.MetaKey,
+func (a *MetaAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
 		URL:        "https://an.facebook.com/" + a.PlatformID + "/placementbid.ortb",
 		TagID:      a.TagID,
 		TimeoutURL: a.timeoutURL(a.PlatformID),
@@ -114,7 +112,7 @@ func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, r
 				dr.Error = errors.New(resp.Header.Get("X-Fb-An-Errors"))
 			}
 		},
-	})
+	}, nil
 }
 
 // Builder builds a new instance of the Meta adapter for the given bidder with the given config.

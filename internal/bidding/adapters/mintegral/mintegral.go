@@ -1,7 +1,6 @@
 package mintegral
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -96,14 +95,13 @@ func (a *MintegralAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auc
 	return nil
 }
 
-func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID:    adapter.MintegralKey,
+func (a *MintegralAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
 		URL:         "http://hb.rayjump.com/bid",
 		TagID:       a.TagID,
 		PlacementID: a.PlacementID,
 		Headers:     http.Header{"openrtb": {"2.5"}},
-	})
+	}, nil
 }
 
 // Builder builds a new instance of the Mintegral adapter for the given bidder with the given config.

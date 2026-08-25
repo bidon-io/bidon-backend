@@ -1,7 +1,6 @@
 package mobilefuse
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -114,12 +113,11 @@ func (a *MobileFuseAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, au
 	return nil
 }
 
-func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.MobileFuseKey,
-		URL:      "https://mfx.mobilefuse.com/openrtb?ssp=bidon",
-		TagID:    a.TagID,
-	})
+func (a *MobileFuseAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL:   "https://mfx.mobilefuse.com/openrtb?ssp=bidon",
+		TagID: a.TagID,
+	}, nil
 }
 
 // Builder builds a new instance of the MobileFuse adapter for the given bidder with the given config.

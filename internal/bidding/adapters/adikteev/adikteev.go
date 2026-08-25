@@ -1,7 +1,6 @@
 package adikteev
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -117,11 +116,10 @@ func (a *AdikteevAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auct
 	return nil
 }
 
-func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.AdikteevKey,
-		URL:      getEndpoint(),
-	})
+func (a *AdikteevAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL: getEndpoint(),
+	}, nil
 }
 
 // Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.

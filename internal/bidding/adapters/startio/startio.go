@@ -1,7 +1,6 @@
 package startio
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -108,37 +107,31 @@ func (a *Adapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionReque
 	return nil
 }
 
-// ExecuteRequest implements the BidderInterface.ExecuteRequest method.
-func (a *Adapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
+func (a *Adapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	opts := adapters.ExecuteRTBOptions{
+		TagID: a.TagID,
+	}
 	endpoint := endpointByRegion(adapters.CountryFromRequest(request))
 	if endpoint == "" {
-		return &adapters.DemandResponse{
-			DemandID:  adapter.StartIOKey,
-			RequestID: request.ID,
-			TagID:     a.TagID,
-			Error:     errors.New("startio endpoint is empty"),
-		}
+		return opts, errors.New("startio endpoint is empty")
 	}
 
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.StartIOKey,
-		URL:      endpoint,
-		TagID:    a.TagID,
-		PrepareURL: func(base string, req openrtb.BidRequest) (string, error) {
-			parsedURL, err := url.Parse(base)
-			if err != nil {
-				return "", fmt.Errorf("parse endpoint: %w", err)
-			}
+	opts.URL = endpoint
+	opts.PrepareURL = func(base string, req openrtb.BidRequest) (string, error) {
+		parsedURL, err := url.Parse(base)
+		if err != nil {
+			return "", fmt.Errorf("parse endpoint: %w", err)
+		}
 
-			query := parsedURL.Query()
-			query.Set("account", a.Account)
-			if req.Test == 1 {
-				query.Set("testAdsEnabled", "true")
-			}
-			parsedURL.RawQuery = query.Encode()
-			return parsedURL.String(), nil
-		},
-	})
+		query := parsedURL.Query()
+		query.Set("account", a.Account)
+		if req.Test == 1 {
+			query.Set("testAdsEnabled", "true")
+		}
+		parsedURL.RawQuery = query.Encode()
+		return parsedURL.String(), nil
+	}
+	return opts, nil
 }
 
 // Builder constructs a bidder for Start.io based on processed configuration.

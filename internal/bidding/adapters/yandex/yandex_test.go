@@ -298,7 +298,7 @@ func TestYandex_ExecuteRequest(t *testing.T) {
 		}
 	})
 
-	dr := adapter.ExecuteRequest(context.Background(), testClient, baseReq)
+	dr := adapters.ExecuteDemandRequest(context.Background(), testClient, &adapter, baseReq, "yandex")
 
 	if dr.Error != nil {
 		t.Errorf("ExecuteRequest() error = %v", dr.Error)

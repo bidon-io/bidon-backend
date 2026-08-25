@@ -1,7 +1,6 @@
 package bidmachine
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -79,11 +78,10 @@ func (a *BidmachineAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, au
 	return nil
 }
 
-func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.BidmachineKey,
-		URL:      getEndpoint(adapters.CountryFromRequest(request)),
-	})
+func (a *BidmachineAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL: getEndpoint(adapters.CountryFromRequest(request)),
+	}, nil
 }
 
 // Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.

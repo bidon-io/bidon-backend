@@ -299,7 +299,7 @@ func TestAdikteevAdapter_ExecuteRequest(t *testing.T) {
 		ID: "test-request-id",
 	}
 
-	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+	response := adapters.ExecuteDemandRequest(context.Background(), customClient, &networkAdapter, request, adapter.AdikteevKey)
 
 	if response.DemandID != adapter.AdikteevKey {
 		t.Errorf("Expected DemandID %v, but got %v", adapter.AdikteevKey, response.DemandID)
