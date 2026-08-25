@@ -1,7 +1,8 @@
 # Product events: Parquet on S3, SQL when needed, Iceberg when ready
 
 **Scope:** grain A only ([telemetry-requirements.md](./telemetry-requirements.md) §2.A). Grain B: [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces from day 1). Grain C: [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics from day 1).  
-**Decision:** JSON → OSS Redpanda → **Parquet on object storage** → **DuckDB** (or Athena/Trino) when you query. **Iceberg** is the table format to adopt when an OSS writer + REST catalog are in place — not Redpanda Enterprise, not Connect’s licensed `iceberg` output. **ClickHouse** later reads the **same** lake.
+**Decision:** JSON → OSS Redpanda → **Parquet on object storage** → **DuckDB** (or Athena/Trino) when you query. **Iceberg** is the table format to adopt when an OSS writer + REST catalog are in place — not Redpanda Enterprise, not Connect’s licensed `iceberg` output. **ClickHouse** later reads the **same** lake.  
+**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
 These are **phased**. Each phase keeps the wire format and `/v2/show` → Redpanda produce path.
 

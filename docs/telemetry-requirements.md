@@ -8,7 +8,7 @@
 
 Vendor notes from earlier discussion are *not* requirements. This document is what a store (or stores) must satisfy.
 
-**Settled (choice):** grain A = Parquet/Iceberg lake; grain B = VictoriaTraces; grain C = VictoriaMetrics. Three stores because alerts cannot wait on lake lag, and a trace is a point-get, not funnel SQL. Unified ClickHouse is rejected ([telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) is history only).
+**Settled (choice):** grain A = Parquet/Iceberg lake; grain B = VictoriaTraces; grain C = VictoriaMetrics. Three stores because alerts cannot wait on lake lag, and a trace is a point-get, not funnel SQL. Unified ClickHouse is rejected ([telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) is history only). Per-ad bytes and aggregation windows: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
 ---
 
@@ -97,7 +97,7 @@ Today `GET /metrics` **exposes** Prometheus text. Nothing in this repo **stores*
 - Self-hosted (Coolify / Compose). Small team. Cost-sensitive: **SaaS OLAP meters** are the expensive thing; a single extra box is in play.
 - Redpanda already exists and must keep receiving the old topics (G4).
 - No Prometheus *server* today. No trace store today (Sentry only).
-- Volume unmeasured; PRD 20–40× events/impression is a hypothesis to *measure*, not a capacity spec.
+- Volume unmeasured; PRD 20–40× events/impression is a hypothesis to *measure*, not a capacity spec. Planning model (1 DAU × 1 served ad, then scale): [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 - Open source / public SDK: collection story must stay minimal and gated (PRD).
 
 ---
@@ -154,7 +154,7 @@ Anything that only answers 3 (classic PromQL TSDB) or only answers 2 (VictoriaTr
 - Impression definition vs OM (meaning of `ad_impression`).  
 - Legal retention for G3.
 
-Until those, capacity and monthly $ stay ranges, not a bill.
+Until those, capacity and monthly $ stay ranges from [telemetry-storage-sizing.md](./telemetry-storage-sizing.md), not a bill.
 
 ---
 

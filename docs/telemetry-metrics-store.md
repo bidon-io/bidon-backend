@@ -2,7 +2,8 @@
 
 **Scope:** grain C only ([telemetry-requirements.md](./telemetry-requirements.md) §2.C). Grain A: [telemetry-events-store.md](./telemetry-events-store.md). Grain B: [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces from day 1). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5.
 
-**Decision:** scrape existing `GET /metrics` (and later the OTel Prometheus exporter) into **single-node VictoriaMetrics**. **vmalert** evaluates rules; **Alertmanager** pages. Grafana uses the Prometheus datasource pointed at VM. **`vmbackup` to S3** when local retention is not enough. **VM cluster** only if scrape volume hurts.
+**Decision:** scrape existing `GET /metrics` (and later the OTel Prometheus exporter) into **single-node VictoriaMetrics**. **vmalert** evaluates rules; **Alertmanager** pages. Grafana uses the Prometheus datasource pointed at VM. **`vmbackup` to S3** when local retention is not enough. **VM cluster** only if scrape volume hurts.  
+**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) — bytes track **series × scrape**, not ads served.
 
 These are **phased**. Each phase keeps the produce path: in-process Prometheus *client* on `/metrics`. We are not running a Prometheus *server*.
 

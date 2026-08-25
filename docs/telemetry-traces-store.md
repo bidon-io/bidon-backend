@@ -2,7 +2,8 @@
 
 **Scope:** grain B only ([telemetry-requirements.md](./telemetry-requirements.md) §2.B). Grain A: [telemetry-events-store.md](./telemetry-events-store.md). Grain C: [telemetry-metrics-store.md](./telemetry-metrics-store.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5.
 
-**Decision:** export OTLP from `bidon-sdkapi` via **otelcol-contrib** into **single-node VictoriaTraces**. GET the tree by `trace_id` (Jaeger API; Tempo HTTP API when useful). Grafana later, optional. **Spanmetrics → VictoriaMetrics** for unbiased p95 and paging. **Sentry stays exceptions only.** Cluster VT only if one node hurts. Backup/`vmbackup`-style copy to S3 when local disk is not enough — VT is not a live Parquet lake.
+**Decision:** export OTLP from `bidon-sdkapi` via **otelcol-contrib** into **single-node VictoriaTraces**. GET the tree by `trace_id` (Jaeger API; Tempo HTTP API when useful). Grafana later, optional. **Spanmetrics → VictoriaMetrics** for unbiased p95 and paging. **Sentry stays exceptions only.** Cluster VT only if one node hurts. Backup/`vmbackup`-style copy to S3 when local disk is not enough — VT is not a live Parquet lake.  
+**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) — one tree ≈ `2+D` spans; disk is `s_trace ×` that.
 
 These are **phased**. Each phase keeps the produce path: OTel SDK, never await from the ad path.
 

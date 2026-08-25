@@ -6,6 +6,7 @@
 **Requirements:** [telemetry-requirements.md](./telemetry-requirements.md)  
 **Infrastructure spec:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md)  
 **Settled stores:** events (A) [telemetry-events-store.md](./telemetry-events-store.md) · traces (B) [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces) · metrics (C) [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics)  
+**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md)  
 **Historical (superseded):** [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) (unified ClickHouse; do not implement)  
 **Linear initiative:** [Telemetry M0/M1 foundations](https://linear.app/bidon/initiative/telemetry-m0m1-foundations-validate-assumptions-and-size-the-build-2d2f5f28ed90) (read-only; this spike does not file or comment there)
 

@@ -10,6 +10,8 @@
 | B traces | VictoriaTraces from day 1 | [telemetry-traces-store.md](./telemetry-traces-store.md) |
 | C metrics | VictoriaMetrics from day 1 | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
 
+Per-ad bytes and retention windows (validates the split): [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+
 Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5. TRD: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) §6.
 
 **Date of this historical note:** 2026-08-20 (settled-isolation note: 2026-08-21)  
