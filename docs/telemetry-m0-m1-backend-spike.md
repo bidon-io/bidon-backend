@@ -1,13 +1,14 @@
 # Telemetry M0/M1 backend spike
 
 **Status:** Draft (backend audit + ticket list; no production instrumentation)  
-**Date:** 2026-08-21  
+**Date:** 2026-08-26  
+**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
 **Source PRD:** [PRD_BidOn_Telemetry - v1.pdf](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
 **Requirements:** [telemetry-requirements.md](./telemetry-requirements.md)  
 **Infrastructure spec:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md)  
 **Settled stores:** events (A) [telemetry-events-store.md](./telemetry-events-store.md) · traces (B) [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces) · metrics (C) [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics)  
 **Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md)  
-**Historical (superseded):** [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) (unified ClickHouse; do not implement)  
+**Option we declined:** [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) (unified ClickHouse)  
 **Linear initiative:** [Telemetry M0/M1 foundations](https://linear.app/bidon/initiative/telemetry-m0m1-foundations-validate-assumptions-and-size-the-build-2d2f5f28ed90) (read-only; this spike does not file or comment there)
 
 This document answers the backend-owned spike questions, inventories the event stream that already exists, maps it onto the PRD catalog, and lists M0/M1 backend tickets. SDK envelope/transport review stays with BID-46 / BID-47 / BID-54.
@@ -120,6 +121,35 @@ Missing versus the PRD envelope: `event_id`, `event_name`, `schema_version`, `ho
 
 Retries: exponential backoff, max 3, in `EventSender.SendEvent`. Failure is a log line plus `Error` on the event; there is no `notice_delivery_failed` event.
 
+**Sharper than "no `http_status` field": the HTTP outcome is never examined.**
+
+```52:60:internal/notification/event_sender.go
+	err = backoff.Retry(func() error {
+		httpResp, err := es.HttpClient.Get(u.String())
+		if err != nil {
+			log.Printf("SendNotificationEvent: send failed: %v", err)
+			return err
+		}
+		defer httpResp.Body.Close()
+
+		return nil
+	}, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3))
+```
+
+The closure returns `nil` for **any** HTTP response. Only transport errors are retried or recorded. A 500 from a DSP's BURL endpoint is indistinguishable from a 200.
+
+So the gap is not "the field list is incomplete" — it is that **Bidon cannot currently tell whether a billing notice was accepted.** J4 and PRD Goal 3 (reconcile with mediator reporting within an agreed tolerance) are unachievable until BE-M1-3 lands. That reprioritises BE-M1-3 to the front of M1; see [Suggested sequence](#suggested-sequence).
+
+**Separately: the bid selected for billing is matched by float price equality.**
+
+```233:236:internal/notification/handler.go
+	for _, bid := range auctionResult.Bids {
+		if bid.Price == impression.GetPrice() {
+			go h.Sender.SendEvent(ctx, Params{
+```
+
+Float equality across a client round-trip, first match wins when two DSPs bid identically. The billing notice can be attributed to the wrong demand. This is a pre-existing defect, not telemetry work — but it sits directly on the reconciliation path the PRD is built around, and instrumenting that path will surface it. Better fixed deliberately than discovered during certification.
+
 ### 1.3 PII on the current stream
 
 The PRD forbids PII on telemetry. Today's `AdEvent` includes:
@@ -196,7 +226,7 @@ Billing is coupled to `/show` succeeding, not to Kafka. The PRD exception is: ke
 
 Warehouse `ad_impression` should be emitted from `/show` onto the new topic, with `event_id` dedupe if the SDK also sends `ad_impression` for reconciliation. Server copy from `/show` is source of truth for `billing_notice_sent`.
 
-Gap: `EventSender` does not record HTTP status, latency, or retry count, so `billing_notice_sent` cannot yet satisfy the PRD field list.
+Gap: `EventSender` does not record HTTP status, latency, or retry count — and does not even *observe* the HTTP status (see §1.2). `billing_notice_sent` cannot satisfy the PRD field list, and delivery rate cannot be computed at all, until BE-M1-3.
 
 ### Q10. Reusable network client for telemetry ingest?
 
@@ -332,9 +362,9 @@ Waterfall/stats work is listed separately (highest remaining uncertainty on the 
 | ID | Ticket | Days | Notes |
 | --- | --- | --- | --- |
 | BE-M0-1 | Shared envelope types + `schema_version` in a new `internal/telemetry` package (do not extend `AdEvent`) | TBC | Blocked on BID-46. Include `event_id`, host/auction_owner/integration_mode, sampling_rate |
-| BE-M0-2 | `telemetry-events` Kafka topic + logger engine next to `internal/sdkapi/event` | TBC | Env var `KAFKA_TELEMETRY_EVENTS_TOPIC`; compose/dev/staging wiring |
-| BE-M0-3 | `POST /v2/telemetry` ingest: batch parse, app-key auth, schema validation, `event_id` dedupe, MaxMind `country`, reject 4xx vs drop 5xx policy | TBC | See TRD ingest. Never sample errors |
-| BE-M0-4 | `/v2/config` `telemetry` block: per-event sampling rates, publisher kill switch | TBC | Storage: app settings or dedicated config table. Per-auction kill switch **not** in this ticket |
+| BE-M0-2 | `telemetry-events` Kafka topic + logger engine next to `internal/sdkapi/event` | TBC | Env var `KAFKA_TELEMETRY_EVENTS_TOPIC`; compose/dev/staging wiring. **Create the topic explicitly** — `config/kafka.go:30` has `AllowAutoTopicCreation`, so auto-creation would give one partition. Set partitions, retention, and **zstd** compression at creation |
+| BE-M0-3 | `POST /v2/telemetry` ingest: batch parse, app-key auth, allow-list validation, `event_id` dedupe (client events only, `(app_id, event_id)`), MaxMind `country` | TBC | See TRD ingest. Never sample errors; never reject on `schema_version`; fail open if Redis is down |
+| BE-M0-4 | `/v2/config` `telemetry` block: single `auction_sample_rate`, publisher kill switch | TBC | Storage: app settings or dedicated config table. Default `1.0` at current scale. Per-auction kill switch **not** in this ticket |
 | BE-M0-5 | Privacy enforcement on the new stream: no IP/IFA/IDFV/city; COPPA reduced field set; scrub `error_message`; do not copy `raw_request`/`raw_response` | TBC | Old topics stay as they are during dual-emission |
 | BE-M0-6 | OTel auction trace skeleton: span in `Service.Run`, child per DSP, exemplar-friendly | TBC | Export **otelcol → VictoriaTraces**. Sentry exceptions only. Spanmetrics → VictoriaMetrics (no `auction_id` labels). No new business events in this ticket |
 
@@ -344,22 +374,38 @@ Waterfall/stats work is listed separately (highest remaining uncertainty on the 
 | --- | --- | --- | --- |
 | BE-M1-1 | DSP fan-out events: `dsp_request_sent` at send time; `dsp_response_received` with outcome enum; `dsp_response_rejected` with reason | TBC | Highest server uncertainty: map HTTP/timeout/parse/below-floor onto PRD outcomes; capture `nbr`/`creative_id`/`crtype`/`supports_omid` where adapters already parse them (many do not) |
 | BE-M1-2 | `auction_request_received` at request accept + `auction_completed` at bidding-round end | TBC | Distinct from fill. Include winner_demand_source, clearing_price, participant_count, total_latency_ms |
-| BE-M1-3 | Notice events: success, http_status, retry_count, latency_ms on win/billing/loss; add `notice_delivery_failed` | TBC | Requires `EventSender` to observe the HTTP response instead of swallowing it |
+| BE-M1-3 | Notice events: success, http_status, retry_count, latency_ms on win/billing/loss; add `notice_delivery_failed` | TBC | **Sequence first in M1.** `EventSender` currently returns `nil` for any HTTP response (§1.2), so notice delivery rate is not merely unreported — it is unobserved. Unblocks J4 / Goal 3. Retry on 5xx while here; consider the float-equality bid match in `handler.go:234` as a companion fix |
 | BE-M1-4 | `/v2/show` emits `ad_impression` + `billing_notice_sent` onto `telemetry-events`; keep BURL behaviour | TBC | Delivery guarantee = the `/show` HTTP call. Dedupe key documented in TRD |
 | BE-M1-5 | Dual-write: existing `AdEvent`/`NotificationEvent` unchanged alongside new events | TBC | Feature-flag off-switch for the new topic only |
 | BE-M1-6 | **Waterfall / fill (listed separately):** derive `waterfall_position` / `attempts_made` from `/v2/stats` **or** accept explicit SDK fields; emit data needed for fill rate / time to fill / per-source load rate | TBC | Confirm with SDK before scheduling (stats order vs payload change). Not a server waterfall rewrite |
 
 ### Suggested sequence
 
-1. BE-M0-1, BE-M0-2 (schema + bus)
-2. BE-M0-5 then BE-M0-3 (privacy before ingest goes live)
-3. BE-M0-4 (config must ship before SDK sampling is useful)
-4. BE-M0-6 (can parallelise with 3)
-5. BE-M1-5 flag plumbing, then BE-M1-1 and BE-M1-2 (instrument auction path once)
-6. BE-M1-3, BE-M1-4 (notices + impression)
-7. BE-M1-6 only after SDK confirms stats ordering
+**Server-side first.** The PRD's strategic drivers are certification reconciliation (Goal 3) and per-DSP delivery evidence (Goal 4). Both are server-owned and have **zero SDK dependency**. The client ingest endpoint and sampling config are blocked on BID-46 and produce nothing until an SDK ships and publishers upgrade — which PRD rationale 6 says takes quarters.
 
-Do not emit M1 events before M0 ingest/schema exist, or dual-emission will invent a third schema.
+Ordering M0 by ticket number would front-load BE-M0-3 and BE-M0-4 — the SDK-coupled work — and leave the business-case work until last. The phases below deliberately do not.
+
+**Phase A — foundation (no SDK dependency)**
+
+1. BE-M0-1 envelope types, BE-M0-2 topic + logger engine
+2. BE-M0-5 privacy enforcement (before anything is written)
+3. BE-M1-5 dual-write flag plumbing
+
+**Phase B — server events (still no SDK dependency; this is the demo)**
+
+4. BE-M1-3 **notice outcomes** — `EventSender` observes the HTTP response. Unblocks J4 and Goal 3, and is the smallest ticket with the largest business payoff
+5. BE-M1-1 DSP fan-out outcomes, BE-M1-2 `auction_request_received` / `auction_completed` — instrument the auction path once
+6. BE-M1-4 `/v2/show` emits `ad_impression` + `billing_notice_sent`
+7. BE-M0-6 OTel spans (parallelisable with 5–6)
+
+At the end of Phase B, with Go changes only, Bidon can answer: per-DSP bid / nobid / timeout rate, notice delivery rate, clearing price vs floor, and where the auction latency budget goes. No client transport, no ingest endpoint, no publisher upgrade cycle.
+
+**Phase C — client ingest (gated on BID-46 / BID-47)**
+
+8. BE-M0-3 `POST /v2/telemetry`, BE-M0-4 `/v2/config` telemetry block
+9. BE-M1-6 waterfall / fill, only after SDK confirms stats ordering
+
+Do not emit M1 events before BE-M0-1/2 exist, or dual-emission will invent a third schema. Phases B and C are otherwise independent and can run in parallel if there is capacity.
 
 ### Explicitly not ticketed here
 

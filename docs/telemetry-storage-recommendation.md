@@ -1,8 +1,8 @@
-# Telemetry storage recommendation (historical)
+# Telemetry storage — the unified-ClickHouse option we declined
 
-**Status:** SUPERSEDED as a decision. **Do not implement the unified-ClickHouse path below.** Kept for option history.
+**Status:** Option analysis. **Not the plan** — do not implement the path below. Kept because the counter-argument is worth having in writing when the choice is questioned.
 
-**Current architecture:**
+**What we chose instead:**
 
 | Grain | Store | Doc |
 | --- | --- | --- |
@@ -10,18 +10,25 @@
 | B traces | VictoriaTraces from day 1 | [telemetry-traces-store.md](./telemetry-traces-store.md) |
 | C metrics | VictoriaMetrics from day 1 | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
 
-Per-ad bytes and retention windows (validates the split): [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+Per-unit bytes and retention windows: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
 Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5. TRD: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) §6.
 
-**Date of this historical note:** 2026-08-20 (settled-isolation note: 2026-08-21)  
+**Date:** 2026-08-26  
+**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
 **PRD:** [PRD_BidOn_Telemetry v1](./PRD_BidOn_Telemetry%20-%20v1.pdf)
 
 ---
 
-## Why isolation was accepted
+## Why we chose the split anyway
 
-The rest of this file argues that one self-hosted ClickHouse is *good enough at all three grains* and cheaper in *people* than three products. That is still true as a capability claim. It was **not** adopted. Isolation was a grain decision, not a claim that three stores use less CPU or are simpler to run.
+The second half of this file argues that one self-hosted ClickHouse is *good enough at all three grains* and cheaper in *people* than three products. That argument is sound as a capability claim, and we still declined it. Isolation is a grain decision, not a claim that three stores use less CPU or are simpler to run.
+
+**Read this before presenting the decision.** The requirements document's own criteria ([§6 and §7](./telemetry-requirements.md#6-what-a-solution-has-to-be)) do not eliminate ClickHouse — a single self-hosted node passes the funnel test, the point-get test, and all six sniff-test questions. The tiebreaker actually available, "alerts cannot wait on lake lag," rules out a *lake-only* design; it does not rule out CH, which pairs with Grafana alerting or a small VM.
+
+So the honest framing is: **we preferred the split, we did not derive it.** Present it that way. Anyone who reads these documents carefully will find this section, and "we chose grain fit and blast-radius isolation, here is what we gave up" is a much stronger position than a claim of necessity that the next question dismantles.
+
+The reversal path is cheap and written down: ClickHouse reading the **same** Parquet files is events Phase 4, not a redesign. Nothing about choosing the split now forecloses it.
 
 **Facts**
 
@@ -45,15 +52,15 @@ The rest of this file argues that one self-hosted ClickHouse is *good enough at 
 
 Multiple failure domains are **both** a pro (blast radius) and a con (more to operate). That was accepted, not an accident of picking Victoria.
 
-Do not read the historical sections below as “isolation was the worse option.” They are the case for unification, which we declined.
+Read the sections below as the strongest version of the case we declined — not as a verdict against the split.
 
 ---
 
-## Historical recommendation (rejected)
+## The case for one ClickHouse (declined)
 
 **Self-hosted ClickHouse (one node) is the store.** One SQL engine for product events, metric rollups, and traces. `otelcol-contrib` writes traces (and OTel metrics) into it; Redpanda `telemetry-events` lands in the same cluster (Kafka engine or a small consumer). Grafana optional. Sentry stays exceptions-only.
 
-ClickHouse **Cloud** is what is expensive. A single Coolify/Compose instance is not in the same cost class. The earlier three-store design (Parquet + VictoriaMetrics + VictoriaTraces) was an answer to “do not buy a warehouse SaaS,” not to “ClickHouse cannot query this.” If cost was the objection, self-host one node.
+ClickHouse **Cloud** is what is expensive. A single Coolify/Compose instance is not in the same cost class. A three-store design (Parquet + VictoriaMetrics + VictoriaTraces) answers “do not buy a warehouse SaaS,” not “ClickHouse cannot query this.” If cost is the objection, self-host one node.
 
 Redpanda stays the ingest buffer and dual-emission path. It is not the query store.
 
@@ -138,13 +145,13 @@ Recommend **(1)** for a small team that did not want three stores. `/metrics` ca
 - A bad query can saturate the same node that is ingesting live auctions — isolate later (replicas) if that happens.
 - You still need Redpanda (have it) and the collector (exporter target = CH).
 
-## What you are not missing by skipping VM/VT (historical view)
+## What you are not missing by skipping VM/VT
 
-This section is the **rejected** unification case. We did start with VM/VT: PromQL paging and a dedicated trace GET were chosen, not left in a back pocket.
+This section is the unification case. We did start with VM/VT: PromQL paging and a dedicated trace GET were chosen, not left in a back pocket.
 
-VM/VT is a **vendor-shaped split**, not a requirement of the PRD. The historical argument: it is data-driven only if you already wanted PromQL and a dedicated trace TSDB; you do not have a Prometheus server today; one query surface points at CH. **We did want PromQL and a trace GET**, so that argument no longer applies.
+VM/VT is a **vendor-shaped split**, not a requirement of the PRD. The argument runs: it is data-driven only if you already wanted PromQL and a dedicated trace TSDB; there is no Prometheus server today; one query surface points at CH. **We did want PromQL and a trace GET**, which is where this argument stops biting.
 
-Historical close: “Keep Victoria in the back pocket if SQL alerts fail you. Do not start there to avoid CH Cloud.” We started there for grain fit, not to dodge a CH licence.
+The option's own close was: “Keep Victoria in the back pocket if SQL alerts fail you. Do not start there to avoid CH Cloud.” We start there for grain fit, not to dodge a CH licence.
 
 ## What Redpanda’s family actually covers
 
@@ -165,13 +172,13 @@ Still required outside the family: **OTLP collector + a trace (and metric) store
 
 **Least resistance with what you have:** keep Redpanda as ingest; use **Connect → ClickHouse** (or Iceberg later) for events; collector → same ClickHouse for traces. That is “more Redpanda” where it is good (pipeline), one database where you query.
 
-## Path (historical — do not follow)
+## Path this option would have taken (not the plan)
 
 1. **M0:** One ClickHouse; otelcol-contrib → CH traces (sampled); `telemetry-events` → CH; dual-emit old Kafka topics; Sentry traces off the auction path. No Cloud. No VM/VT. No Parquet sink unless you want a second copy for safety.
 2. **Alerts:** Grafana (or CH `system.query_log` + a cron) on DSP p95 / ingest failures. Add `/metrics` scrape into CH only if process metrics are not already in OTel.
 3. **M1:** Same tables, more event names. Auction/DSP spans (BE-M0-6) make the trace table match the TRD tree.
 4. **Scale tripwire:** disk merge pressure, query vs ingest contention, or multi-month retention at tens of millions of rows/day → replica or Cloud. Schema stays.
 
-## Stability (historical)
+## Where this option would have landed
 
-The rejected M0 was: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Settled M0 is the three-grain architecture** in the spike §5 / TRD §6 (not implemented in this repo yet).
+This option's M0 would have been: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Our M0 is the three-grain architecture** in the spike §5 / TRD §6.

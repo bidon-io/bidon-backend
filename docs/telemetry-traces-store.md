@@ -54,7 +54,19 @@ bidon-sdkapi (OTel SDK) → otelcol-contrib
 | `auction.dsp.{demand_id}` | `auction.run` | `demand_id`, `http.status`, `outcome` |
 | `notification.send` | `auction.run` or `/v2/show` | `notice_type`, `demand_id`, `http.status` |
 
-Head-sample at a **known** rate (or errors + a fraction of successes). Record the rate. Tail sampling (“keep only slow”) is allowed for extra debug volume; then **do not** use this store for p95.
+**Keep 100% of traces at current scale.** A trace tree is ~10 spans ≈ 1.5 KiB; at the first-iteration design point that is 59 MiB/day and **820 MiB at 14 days**, and at 100k DAU still only 7.8 GiB ([sizing §5](./telemetry-storage-sizing.md#5-volume)). There is nothing to save by sampling.
+
+The instinct with traces is to sample hard, because that is what large deployments do. At 1% the auction a partner escalates is **absent 99% of the time**, which defeats the only reason this store exists. Sampling schedule:
+
+| Tier | Head sample |
+| --- | --- |
+| ~10k DAU (design point) | **1.0** |
+| ~100k DAU | 1.0, or 0.5 if disk is tight |
+| ~1M DAU | ~0.1, errors always kept (~16 GiB at 14 d) |
+
+Record the rate whatever it is. Tail sampling ("keep only slow") is allowed for extra debug volume; then **do not** use this store for p95 — that lives in grain C.
+
+`trace_id` is carried on the **telemetry event envelope** as well as the span. Without it, going from an interesting lake row to its tree is a tag search rather than a point-get, which is the capability this store was chosen for.
 
 Collector is a pipe. No exporter destination ⇒ spans are dropped (G9).
 
@@ -72,7 +84,7 @@ otelcol → VictoriaTraces (single)
             → Grafana later (Jaeger or Tempo datasource → VT)
 ```
 
-- Compose/Coolify sidecar. Local disk. Retention sized to sampled auction trees, not every span forever.
+- Compose/Coolify sidecar. Local disk. Retention **14 d** — sized to auction trees at the keep rate above, not every span forever.
 - Query: Jaeger JSON API from day one. Tempo HTTP API is experimental on VT — fine for Grafana later, not a blocker.
 - Prove B: load auction X’s tree via `trace_id` (and `auction_id` as a tag/attribute filter). No UI required.
 
@@ -97,7 +109,7 @@ Not Tempo S3 blocks. Not Iceberg of spans. Not spans on `telemetry-events`.
 | Spans on `telemetry-events` / DuckDB `WHERE trace_id` | Wrong grain; full scan |
 | Grafana Cloud Tempo / Honeycomb / Datadog | Metered SaaS |
 | Jaeger + Elasticsearch / Cassandra | Index database you do not want to run |
-| ClickHouse traces table | Unified-CH was rejected for A and C |
+| ClickHouse traces table | We declined unified CH for A and C; a CH-for-traces exception would undo that |
 | Tempo metrics-generator **and** collector spanmetrics | One rollup into VM; collector spanmetrics is enough |
 | High-cardinality Prom labels | `auction_id` stays a span attribute |
 | Tail-sample-only traces used as p95 | Biased; p95 lives in VM |
@@ -126,6 +138,9 @@ Three grains can share **one Grafana**. Events share a bucket with optional VT b
 | Scale-up | VT cluster, not CH-for-traces, not Tempo |
 | Not the event topic | Do not write spans to `telemetry-events` |
 | Not Sentry | Exceptions only |
-| Sample | Known head rate; tail-sample only for extra debug volume |
+| Sample | **1.0 at current scale**; step down per the table above. Tail-sample only for extra debug volume |
+| Correlation | `trace_id` on the event envelope; `auction_id` as a span attribute |
 
-Owners still needed: who runs the VT instance, head-sample policy, and Sentry config so auction trees stop going there.
+**Maturity note.** VictoriaTraces is a young product relative to VictoriaMetrics. That is an accepted risk, mitigated by the fact that OTLP is the wire format — if VT disappoints, the collector re-points at a different exporter and no application code changes. Confirm current cluster-mode availability before relying on Phase 3.
+
+Owners still needed: who runs the VT instance, and Sentry config so auction trees stop going there.
