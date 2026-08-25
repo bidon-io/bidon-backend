@@ -26,6 +26,8 @@ type MintegralAdapter struct {
 	PlacementID string
 }
 
+var _ adapters.BidderInterface = (*MintegralAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -86,9 +88,9 @@ func (a *MintegralAdapter) rewarded(auctionRequest *schema.AuctionRequest) *open
 	}
 }
 
-func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *MintegralAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -100,7 +102,7 @@ func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequ
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	opts := adapters.RTBRequestOptions{
@@ -112,18 +114,22 @@ func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequ
 		opts.BuyerUID = token
 	}
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.MintegralKey, imp, opts)
+	return imp, opts, nil
+}
 
+func (a *MintegralAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	appExtStructure := &map[string]interface{}{}
 	if auctionRequest.AdObject.IsPortrait() {
 		(*appExtStructure)["orientation"] = 1
 	} else {
 		(*appExtStructure)["orientation"] = 2
 	}
-	raw, _ := json.Marshal(appExtStructure)
+	raw, err := json.Marshal(appExtStructure)
+	if err != nil {
+		return err
+	}
 	request.App.Ext = raw
-
-	return request, nil
+	return nil
 }
 
 func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

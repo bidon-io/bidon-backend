@@ -52,7 +52,7 @@ func TestZmaticooAdapter_CreateRequest(t *testing.T) {
 		App: &openrtb2.App{},
 	}
 
-	request, err := zmaticooAdapter.CreateRequest(baseRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(zmaticooAdapter, baseRequest, auctionRequest, adapter.ZmaticooKey)
 	if err != nil {
 		t.Errorf("CreateRequest() error = %v", err)
 		return

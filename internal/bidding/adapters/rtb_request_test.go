@@ -1,6 +1,7 @@
 package adapters_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
@@ -19,7 +20,7 @@ func TestBuildRTBRequest_Defaults(t *testing.T) {
 		adapter.MolocoKey: {SDKVersion: "1.2.3"},
 	}
 
-	imp := &openrtb2.Imp{
+	imp := openrtb2.Imp{
 		Banner: &openrtb2.Banner{W: ptrInt64(320), H: ptrInt64(50)},
 	}
 	request := openrtb.BidRequest{
@@ -68,7 +69,7 @@ func TestBuildRTBRequest_OptionalOverrides(t *testing.T) {
 		adapter.InmobiKey: {SDKVersion: "9.9.9"},
 	}
 
-	imp := &openrtb2.Imp{}
+	imp := openrtb2.Imp{}
 	request := openrtb.BidRequest{ID: "req-2"}
 
 	got := adapters.BuildRTBRequest(request, auctionRequest, adapter.InmobiKey, imp, adapters.RTBRequestOptions{
@@ -103,7 +104,7 @@ func TestBuildRTBRequest_OptOuts(t *testing.T) {
 		adapter.VKAdsKey: {SDKVersion: "3.0.0"},
 	}
 
-	imp := &openrtb2.Imp{TagID: "keep-me"}
+	imp := openrtb2.Imp{TagID: "keep-me"}
 	request := openrtb.BidRequest{ID: "req-3"}
 
 	got := adapters.BuildRTBRequest(request, auctionRequest, adapter.VKAdsKey, imp, adapters.RTBRequestOptions{
@@ -132,15 +133,97 @@ func TestBuildRTBRequest_OptOuts(t *testing.T) {
 	}
 }
 
-func TestBuildRTBRequest_NilImp(t *testing.T) {
+func TestBuildDemandRequest_customBuilder(t *testing.T) {
 	t.Parallel()
 
-	request := openrtb.BidRequest{ID: "req-4", Cur: []string{"EUR"}}
-	got := adapters.BuildRTBRequest(request, &schema.AuctionRequest{}, adapter.MetaKey, nil, adapters.RTBRequestOptions{})
-
-	if got.ID != request.ID || len(got.Cur) != 1 || got.Cur[0] != "EUR" {
-		t.Fatalf("nil imp should leave request unchanged, got %+v", got)
+	want := openrtb.BidRequest{ID: "custom"}
+	got, err := adapters.BuildDemandRequest(customRequestAdapter{request: want}, openrtb.BidRequest{ID: "base"}, &schema.AuctionRequest{}, adapter.AmazonKey)
+	if err != nil {
+		t.Fatalf("BuildDemandRequest() error = %v", err)
 	}
+	if got.ID != want.ID {
+		t.Fatalf("ID = %q, want %q", got.ID, want.ID)
+	}
+}
+
+func TestBuildDemandRequest_nilImp(t *testing.T) {
+	t.Parallel()
+
+	_, err := adapters.BuildDemandRequest(nilImpAdapter{}, openrtb.BidRequest{}, &schema.AuctionRequest{}, adapter.MetaKey)
+	if err == nil || err.Error() != "nil impression" {
+		t.Fatalf("error = %v, want nil impression", err)
+	}
+}
+
+func TestBuildDemandRequest_enricher(t *testing.T) {
+	t.Parallel()
+
+	a := &requestEnricherAdapter{}
+	got, err := adapters.BuildDemandRequest(a, openrtb.BidRequest{ID: "req"}, &schema.AuctionRequest{}, adapter.MetaKey)
+	if err != nil {
+		t.Fatalf("BuildDemandRequest() error = %v", err)
+	}
+	if !a.called {
+		t.Fatal("expected enricher to be called")
+	}
+	if string(got.Ext) != `"enriched"` {
+		t.Fatalf("Ext = %s, want \"enriched\"", got.Ext)
+	}
+}
+
+func TestBuildDemandRequest_enricherError(t *testing.T) {
+	t.Parallel()
+
+	enrichErr := errors.New("enrich failed")
+	_, err := adapters.BuildDemandRequest(&failingRequestEnricherAdapter{err: enrichErr}, openrtb.BidRequest{}, &schema.AuctionRequest{}, adapter.MetaKey)
+	if !errors.Is(err, enrichErr) {
+		t.Fatalf("error = %v, want %v", err, enrichErr)
+	}
+}
+
+type customRequestAdapter struct {
+	stubAdapter
+	request openrtb.BidRequest
+}
+
+func (a customRequestAdapter) CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error) {
+	return a.request, nil
+}
+
+type nilImpAdapter struct {
+	stubAdapter
+}
+
+func (nilImpAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return nil, adapters.RTBRequestOptions{}, nil
+}
+
+type requestEnricherAdapter struct {
+	stubAdapter
+	called bool
+}
+
+func (requestEnricherAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return &openrtb2.Imp{}, adapters.RTBRequestOptions{}, nil
+}
+
+func (a *requestEnricherAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, _ *schema.AuctionRequest) error {
+	a.called = true
+	request.Ext = []byte(`"enriched"`)
+	return nil
+}
+
+type failingRequestEnricherAdapter struct {
+	stubAdapter
+	err error
+}
+
+func (failingRequestEnricherAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return &openrtb2.Imp{}, adapters.RTBRequestOptions{}, nil
+}
+
+func (a *failingRequestEnricherAdapter) EnrichOpenRTBRequest(*openrtb.BidRequest, *schema.AuctionRequest) error {
+	return a.err
 }
 
 func ptrInt64(v int64) *int64 {

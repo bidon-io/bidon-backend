@@ -198,7 +198,7 @@ func TestInMobiAdapter_CreateRequest(t *testing.T) {
 				adapter.PlacementID = ""
 			}
 
-			got, err := adapter.CreateRequest(tt.params.BaseBidRequest, tt.params.AuctionRequest)
+			got, err := adapters.BuildDemandRequest(&adapter, tt.params.BaseBidRequest, tt.params.AuctionRequest, "inmobi")
 
 			if !compareErrors(tt.want.Err, err) {
 				t.Errorf("CreateRequest() error = %v, wantErr %v", err, tt.want.Err)

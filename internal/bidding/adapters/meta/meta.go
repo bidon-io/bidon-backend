@@ -29,6 +29,8 @@ type MetaAdapter struct {
 	TagID      string
 }
 
+var _ adapters.BidderInterface = (*MetaAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -91,9 +93,9 @@ func (a *MetaAdapter) timeoutURL(platformID string) string {
 	return "https://www.facebook.com/audiencenetwork/nurl/?partner=" + platformID + "&app=" + a.AppID + "&auction=${AUCTION_ID}&ortb_loss_code=2"
 }
 
-func (a *MetaAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *MetaAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -105,7 +107,7 @@ func (a *MetaAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	opts := adapters.RTBRequestOptions{
@@ -116,18 +118,19 @@ func (a *MetaAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *
 		opts.BuyerUID = token
 	}
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.MetaKey, imp, opts)
+	return imp, opts, nil
+}
 
+func (a *MetaAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, _ *schema.AuctionRequest) error {
 	ext, err := json.Marshal(map[string]any{
 		"platformid":        a.PlatformID,
 		"authentication_id": calculateHMACSHA256(request.ID, a.AppSecret),
 	})
 	if err != nil {
-		return request, err
+		return err
 	}
 	request.Ext = ext
-
-	return request, nil
+	return nil
 }
 
 func (a *MetaAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

@@ -24,6 +24,8 @@ type YandexAdapter struct {
 	AdUnitID string
 }
 
+var _ adapters.BidderInterface = (*YandexAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -66,19 +68,19 @@ func (a *YandexAdapter) rewarded() *openrtb2.Imp {
 	}
 }
 
-func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *YandexAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.AdUnitID == "" {
-		return request, errors.New("AdUnitID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("AdUnitID is empty")
 	}
 
 	demandData, ok := auctionRequest.AdObject.Demands[adapter.YandexKey]
 	if !ok {
-		return request, errors.New("yandex demand data is missing")
+		return nil, adapters.RTBRequestOptions{}, errors.New("yandex demand data is missing")
 	}
 
 	token, ok := demandData["token"].(string)
 	if !ok || token == "" {
-		return request, errors.New("yandex bidder token is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("yandex bidder token is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -99,7 +101,7 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		adTypeString = "rewarded"
 		rwdd = 1
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	imp.Rwdd = rwdd
@@ -107,14 +109,15 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 		"ad_type": adTypeString,
 	})
 	if err != nil {
-		return request, err
+		return nil, adapters.RTBRequestOptions{}, err
 	}
 	imp.Ext = impExt
 
-	request = adapters.BuildRTBRequest(request, auctionRequest, adapter.YandexKey, imp, adapters.RTBRequestOptions{
-		TagID: a.AdUnitID,
-	})
+	return imp, adapters.RTBRequestOptions{TagID: a.AdUnitID}, nil
+}
 
+func (a *YandexAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	token, _ := auctionRequest.AdObject.Demands[adapter.YandexKey]["token"].(string)
 	request.User = &openrtb.User{
 		Data: []openrtb.Data{
 			{
@@ -126,8 +129,7 @@ func (a *YandexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 			},
 		},
 	}
-
-	return request, nil
+	return nil
 }
 
 func (a *YandexAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

@@ -330,7 +330,7 @@ func TestBidmachine_CreateRequest(t *testing.T) {
 
 	adapter := buildAdapter()
 	for _, tC := range testCases {
-		request, err := adapter.CreateRequest(tC.params.BaseBidRequest, tC.params.AuctionRequest)
+		request, err := adapters.BuildDemandRequest(&adapter, tC.params.BaseBidRequest, tC.params.AuctionRequest, "bidmachine")
 		if err == nil {
 			request.Imp[0].ID = "1" // ommit random uuid
 		}

@@ -25,6 +25,8 @@ type VungleAdapter struct {
 	TagID    string
 }
 
+var _ adapters.BidderInterface = (*VungleAdapter)(nil)
+
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
 	ad.LeaderboardFormat: {728, 90},
@@ -84,9 +86,9 @@ func (a *VungleAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 	}
 }
 
-func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *VungleAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
 
 	var imp *openrtb2.Imp
@@ -98,7 +100,7 @@ func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
 	vungleData := make(map[string]interface{})
@@ -110,11 +112,11 @@ func (a *VungleAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	raw, _ := json.Marshal(extStructure)
 	imp.Ext = raw
 
-	return adapters.BuildRTBRequest(request, auctionRequest, adapter.VungleKey, imp, adapters.RTBRequestOptions{
+	return imp, adapters.RTBRequestOptions{
 		TagID:       a.TagID,
 		AppID:       a.AppID,
 		PublisherID: a.SellerID,
-	}), nil
+	}, nil
 }
 
 func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
