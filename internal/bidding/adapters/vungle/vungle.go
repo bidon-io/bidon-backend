@@ -1,7 +1,6 @@
 package vungle
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -83,13 +82,12 @@ func (a *VungleAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *sc
 	}, nil
 }
 
-func (a *VungleAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.VungleKey,
-		URL:      "https://rtb.ads.vungle.com/bid/t/8ea3e9a",
-		TagID:    a.TagID,
-		Headers:  http.Header{"X-OpenRTB-Version": {"2.5"}},
-	})
+func (a *VungleAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL:     "https://rtb.ads.vungle.com/bid/t/8ea3e9a",
+		TagID:   a.TagID,
+		Headers: http.Header{"X-OpenRTB-Version": {"2.5"}},
+	}, nil
 }
 
 // Builder builds a new instance of the Vungle adapter for the given bidder with the given config.

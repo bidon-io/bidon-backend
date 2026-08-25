@@ -1,7 +1,6 @@
 package moloco
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -80,32 +79,21 @@ func (a *MolocoAdapter) BuildImpression(request openrtb.BidRequest, auctionReque
 	return imp, opts, nil
 }
 
-// ExecuteRequest implements the BidderInterface.ExecuteRequest method
-func (a *MolocoAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
+func (a *MolocoAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	opts := adapters.ExecuteRTBOptions{
+		TagID: a.TagID,
+	}
 	url := getEndpoint(adapters.CountryFromRequest(request))
 	if url == "" {
-		return &adapters.DemandResponse{
-			DemandID:  adapter.MolocoKey,
-			RequestID: request.ID,
-			TagID:     a.TagID,
-			Error:     errors.New("moloco endpoint is empty"),
-		}
+		return opts, errors.New("moloco endpoint is empty")
 	}
 	if a.APIKey == "" {
-		return &adapters.DemandResponse{
-			DemandID:  adapter.MolocoKey,
-			RequestID: request.ID,
-			TagID:     a.TagID,
-			Error:     errors.New("moloco API key is empty"),
-		}
+		return opts, errors.New("moloco API key is empty")
 	}
 
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.MolocoKey,
-		URL:      url,
-		TagID:    a.TagID,
-		Headers:  http.Header{"Authorization": {a.APIKey}},
-	})
+	opts.URL = url
+	opts.Headers = http.Header{"Authorization": {a.APIKey}}
+	return opts, nil
 }
 
 // Builder builds a new instance of the Moloco adapter for the given bidder with the given config.

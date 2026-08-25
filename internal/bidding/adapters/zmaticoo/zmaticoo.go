@@ -1,7 +1,6 @@
 package zmaticoo
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -84,21 +83,20 @@ func (a *ZmaticooAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auct
 	return nil
 }
 
-func (a *ZmaticooAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
+func (a *ZmaticooAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
 	impID := ""
 	// Zmaticoo response is not OpenRTB, so we store imp ID for fallback in ParseBids.
 	if len(request.Imp) > 0 {
 		impID = request.Imp[0].ID
 	}
 
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID:    adapter.ZmaticooKey,
+	return adapters.ExecuteRTBOptions{
 		URL:         getEndpoint(adapters.CountryFromRequest(request)),
 		TagID:       a.PlacementID,
 		PlacementID: a.PlacementID,
 		ImpID:       impID,
 		Headers:     http.Header{"X-OpenRTB-Version": {"2.5"}},
-	})
+	}, nil
 }
 
 func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {

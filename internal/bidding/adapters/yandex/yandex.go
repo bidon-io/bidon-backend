@@ -1,7 +1,6 @@
 package yandex
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -109,12 +108,11 @@ func (a *YandexAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctio
 	return nil
 }
 
-func (a *YandexAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.YandexKey,
-		URL:      yandexEndpoint,
-		TagID:    a.AdUnitID,
-	})
+func (a *YandexAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL:   yandexEndpoint,
+		TagID: a.AdUnitID,
+	}, nil
 }
 
 // Builder builds a new instance of the Yandex adapter for the given bidder with the given config.

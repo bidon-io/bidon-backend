@@ -219,7 +219,7 @@ func (b *Builder) processAdapter(
 		return
 	}
 
-	demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
+	demandResponse := adapters.ExecuteDemandRequest(ctx, bidder.Client, bidder.Adapter, bidRequest, adapterKey)
 	demandResponse.StartTS = params.StartTS
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)

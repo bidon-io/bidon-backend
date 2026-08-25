@@ -12,6 +12,45 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 )
 
+// CustomRequestExecutor is implemented by non-OpenRTB adapters that fully own
+// HTTP execution. Type-asserted by ExecuteDemandRequest. Amazon uses FetchBids
+// and never reaches this path.
+type CustomRequestExecutor interface {
+	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
+}
+
+// ExecuteDemandRequest sends the outbound OpenRTB request at the builder call
+// site. Custom executors take precedence; otherwise the shared HTTP transport
+// runs around BidderInterface.ExecuteOptions.
+// Failures are returned on DemandResponse.Error, not as a Go error.
+func ExecuteDemandRequest(
+	ctx context.Context,
+	client *http.Client,
+	bidder BidderInterface,
+	request openrtb.BidRequest,
+	demandKey adapter.Key,
+) *DemandResponse {
+	if c, ok := bidder.(CustomRequestExecutor); ok {
+		return c.ExecuteRequest(ctx, client, request)
+	}
+
+	opts, err := bidder.ExecuteOptions(request)
+	if err != nil {
+		return &DemandResponse{
+			DemandID:    demandKey,
+			RequestID:   request.ID,
+			TagID:       opts.TagID,
+			PlacementID: opts.PlacementID,
+			TimeoutURL:  opts.TimeoutURL,
+			ImpID:       opts.ImpID,
+			Error:       err,
+		}
+	}
+
+	opts.DemandID = demandKey
+	return ExecuteRTBRequest(ctx, client, request, opts)
+}
+
 // ExecuteRTBOptions configures ExecuteRTBRequest.
 // Network-specific URL selection, auth headers, query mutation, and post-response
 // quirks stay in adapters via URL / Headers / PrepareURL / AfterDo.

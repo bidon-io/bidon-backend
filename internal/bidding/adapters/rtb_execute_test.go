@@ -202,3 +202,111 @@ func TestExecuteRTBRequest_DoError(t *testing.T) {
 		t.Fatal("expected Do error")
 	}
 }
+
+func TestExecuteDemandRequest_fillsDemandIDAndPosts(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-OpenRTB-Version") != "2.5" {
+			t.Errorf("X-OpenRTB-Version = %q, want 2.5", r.Header.Get("X-OpenRTB-Version"))
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"id":"resp-1"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	headers := make(http.Header)
+	headers.Set("X-OpenRTB-Version", "2.5")
+
+	dr := adapters.ExecuteDemandRequest(
+		context.Background(),
+		server.Client(),
+		executeOptionsAdapter{opts: adapters.ExecuteRTBOptions{
+			URL:     server.URL,
+			TagID:   "tag-1",
+			Headers: headers,
+		}},
+		openrtb.BidRequest{ID: "req-1"},
+		adapter.VungleKey,
+	)
+
+	if dr.Error != nil {
+		t.Fatalf("Error = %v, want nil", dr.Error)
+	}
+	if dr.DemandID != adapter.VungleKey {
+		t.Fatalf("DemandID = %q, want %q", dr.DemandID, adapter.VungleKey)
+	}
+	if dr.TagID != "tag-1" {
+		t.Fatalf("TagID = %q, want tag-1", dr.TagID)
+	}
+	if dr.Status != http.StatusOK {
+		t.Fatalf("Status = %d, want 200", dr.Status)
+	}
+}
+
+func TestExecuteDemandRequest_optionsError(t *testing.T) {
+	t.Parallel()
+
+	wantErr := errors.New("moloco endpoint is empty")
+	dr := adapters.ExecuteDemandRequest(
+		context.Background(),
+		http.DefaultClient,
+		executeOptionsAdapter{
+			opts: adapters.ExecuteRTBOptions{TagID: "tag-1"},
+			err:  wantErr,
+		},
+		openrtb.BidRequest{ID: "req-1"},
+		adapter.MolocoKey,
+	)
+
+	if !errors.Is(dr.Error, wantErr) {
+		t.Fatalf("Error = %v, want %v", dr.Error, wantErr)
+	}
+	if dr.DemandID != adapter.MolocoKey {
+		t.Fatalf("DemandID = %q, want %q", dr.DemandID, adapter.MolocoKey)
+	}
+	if dr.RequestID != "req-1" {
+		t.Fatalf("RequestID = %q, want req-1", dr.RequestID)
+	}
+	if dr.TagID != "tag-1" {
+		t.Fatalf("TagID = %q, want tag-1", dr.TagID)
+	}
+	if dr.RawRequest != "" {
+		t.Fatalf("RawRequest = %q, want empty on options error", dr.RawRequest)
+	}
+}
+
+func TestExecuteDemandRequest_customExecutor(t *testing.T) {
+	t.Parallel()
+
+	want := &adapters.DemandResponse{DemandID: adapter.AmazonKey, Status: 204}
+	dr := adapters.ExecuteDemandRequest(
+		context.Background(),
+		http.DefaultClient,
+		customExecutorAdapter{dr: want},
+		openrtb.BidRequest{ID: "req-1"},
+		adapter.VungleKey,
+	)
+	if dr != want {
+		t.Fatalf("got %+v, want custom executor response", dr)
+	}
+}
+
+type executeOptionsAdapter struct {
+	stubAdapter
+	opts adapters.ExecuteRTBOptions
+	err  error
+}
+
+func (a executeOptionsAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return a.opts, a.err
+}
+
+type customExecutorAdapter struct {
+	stubAdapter
+	dr *adapters.DemandResponse
+}
+
+func (a customExecutorAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {
+	return a.dr
+}
