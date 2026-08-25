@@ -1,7 +1,6 @@
 package inmobi
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -91,13 +90,12 @@ func (a *InMobiAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *sc
 	return imp, opts, nil
 }
 
-func (a *InMobiAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID:    adapter.InmobiKey,
+func (a *InMobiAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
 		URL:         "https://api.w.inmobi.com/ortb/imsdk",
 		PlacementID: a.PlacementID,
 		Headers:     http.Header{"X-OpenRTB-Version": {"2.5"}},
-	})
+	}, nil
 }
 
 // Builder builds a new instance of the InMobi adapter for the given bidder with the given config.

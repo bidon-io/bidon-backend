@@ -1,7 +1,6 @@
 package taurusx
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -108,23 +107,18 @@ func (a *TaurusXAdapter) extractPlacementToken(tokenData, placementID string) (s
 	return "", fmt.Errorf("no token found for placement ID: %s", placementID)
 }
 
-func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
+func (a *TaurusXAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	opts := adapters.ExecuteRTBOptions{
+		TagID: a.TagID,
+	}
 	url := getEndpoint(adapters.CountryFromRequest(request))
 	if url == "" {
-		return &adapters.DemandResponse{
-			DemandID:  adapter.TaurusXKey,
-			RequestID: request.ID,
-			TagID:     a.TagID,
-			Error:     errors.New("taurusx endpoint is empty"),
-		}
+		return opts, errors.New("taurusx endpoint is empty")
 	}
 
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.TaurusXKey,
-		URL:      url,
-		TagID:    a.TagID,
-		Headers:  http.Header{"X-OpenRTB-Version": {"2.5"}},
-	})
+	opts.URL = url
+	opts.Headers = http.Header{"X-OpenRTB-Version": {"2.5"}}
+	return opts, nil
 }
 
 // EnrichOpenRTBBid replaces Payload with BidResponse.ext.payload.

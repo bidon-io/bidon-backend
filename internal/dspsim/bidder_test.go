@@ -1,7 +1,6 @@
 package dspsim
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -26,8 +25,8 @@ func (b stubBidder) BuildImpression(request biddingopenrtb.BidRequest, request2 
 	return nil, adapters.RTBRequestOptions{}, nil
 }
 
-func (stubBidder) ExecuteRequest(context.Context, *http.Client, biddingopenrtb.BidRequest) *adapters.DemandResponse {
-	return nil
+func (stubBidder) ExecuteOptions(biddingopenrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{}, nil
 }
 
 func testConfig() Config {

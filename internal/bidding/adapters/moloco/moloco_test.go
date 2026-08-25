@@ -231,7 +231,7 @@ func TestMoloco_ExecuteRequest_Success(t *testing.T) {
 		}
 	})
 
-	response := adapter.ExecuteRequest(context.Background(), client, baseBidRequest)
+	response := adapters.ExecuteDemandRequest(context.Background(), client, &adapter, baseBidRequest, "moloco")
 
 	if response.Error != nil {
 		t.Errorf("Expected no error, got %v", response.Error)
@@ -266,7 +266,7 @@ func TestMoloco_ExecuteRequest_DefaultEndpoint(t *testing.T) {
 		}
 	})
 
-	adapter.ExecuteRequest(context.Background(), client, baseBidRequest)
+	adapters.ExecuteDemandRequest(context.Background(), client, &adapter, baseBidRequest, "moloco")
 }
 
 func TestMoloco_ExecuteRequest_GeographicRouting(t *testing.T) {
@@ -325,7 +325,7 @@ func TestMoloco_ExecuteRequest_GeographicRouting(t *testing.T) {
 				}
 			})
 
-			adapter.ExecuteRequest(context.Background(), client, baseBidRequest)
+			adapters.ExecuteDemandRequest(context.Background(), client, &adapter, baseBidRequest, "moloco")
 		})
 	}
 }

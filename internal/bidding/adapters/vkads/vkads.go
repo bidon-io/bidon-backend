@@ -1,7 +1,6 @@
 package vkads
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -98,12 +97,11 @@ func (a *VKAdsAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auction
 	return nil
 }
 
-func (a *VKAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID: adapter.VKAdsKey,
-		URL:      "https://ad.mail.ru/api/bid",
-		TagID:    a.TagID,
-	})
+func (a *VKAdsAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL:   "https://ad.mail.ru/api/bid",
+		TagID: a.TagID,
+	}, nil
 }
 
 // Builder builds a new instance of the VKAds adapter for the given bidder with the given config.

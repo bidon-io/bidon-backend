@@ -1,7 +1,6 @@
 package bigoads
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -120,13 +119,12 @@ func (a *BigoAdsAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *s
 	return imp, opts, nil
 }
 
-func (a *BigoAdsAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	return adapters.ExecuteRTBRequest(ctx, client, request, adapters.ExecuteRTBOptions{
-		DemandID:    adapter.BigoAdsKey,
+func (a *BigoAdsAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
 		URL:         "https://api.gov-static.tech/Ad/GetUniAdS2s?id=200104",
 		TagID:       a.TagID,
 		PlacementID: a.PlacementID,
-	})
+	}, nil
 }
 
 // Builder builds a new instance of the BigoAds adapter for the given bidder with the given config.

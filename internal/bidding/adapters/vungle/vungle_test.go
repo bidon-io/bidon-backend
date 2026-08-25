@@ -302,7 +302,7 @@ func TestVungleAdapter_ExecuteRequest(t *testing.T) {
 		ID: "test-request-id",
 	}
 
-	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+	response := adapters.ExecuteDemandRequest(context.Background(), customClient, &networkAdapter, request, adapter.VungleKey)
 
 	if response.DemandID != adapter.VungleKey {
 		t.Errorf("Expected DemandID %v, but got %v", adapter.VungleKey, response.DemandID)
