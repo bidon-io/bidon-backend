@@ -1,12 +1,9 @@
 package taurusx
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
@@ -110,55 +107,18 @@ func (a *TaurusXAdapter) extractPlacementToken(tokenData, placementID string) (s
 	return "", fmt.Errorf("no token found for placement ID: %s", placementID)
 }
 
-func (a *TaurusXAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.TaurusXKey,
-		RequestID: request.ID,
-		TagID:     a.TagID,
+func (a *TaurusXAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	opts := adapters.ExecuteRTBOptions{
+		TagID: a.TagID,
 	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	// Get country code for geographic routing
-	alpha3 := ""
-	if request.Device != nil && request.Device.Geo != nil {
-		alpha3 = request.Device.Geo.Country
-	}
-
-	// Use geographic endpoint selection
-	url := getEndpoint(alpha3)
+	url := getEndpoint(adapters.CountryFromRequest(request))
 	if url == "" {
-		dr.Error = errors.New("taurusx endpoint is empty")
-		return dr
+		return opts, errors.New("taurusx endpoint is empty")
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
 
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	dr.Status = httpResp.StatusCode
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawResponse = string(respBody)
-
-	return dr
+	opts.URL = url
+	opts.Headers = http.Header{"X-OpenRTB-Version": {"2.5"}}
+	return opts, nil
 }
 
 // EnrichOpenRTBBid replaces Payload with BidResponse.ext.payload.

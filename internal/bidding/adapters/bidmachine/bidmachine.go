@@ -1,12 +1,9 @@
 package bidmachine
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"slices"
 
@@ -81,47 +78,10 @@ func (a *BidmachineAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, au
 	return nil
 }
 
-func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.BidmachineKey,
-		RequestID: request.ID,
-	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	alpha3 := ""
-	if request.Device != nil && request.Device.Geo != nil {
-		alpha3 = request.Device.Geo.Country
-	}
-	url := getEndpoint(alpha3)
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+func (a *BidmachineAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL: getEndpoint(adapters.CountryFromRequest(request)),
+	}, nil
 }
 
 // Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.

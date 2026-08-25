@@ -1,7 +1,6 @@
 package adapters
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,19 +12,18 @@ import (
 )
 
 // BidderInterface is the required surface for a demand adapter on the shared
-// bidding path: build impression, execute HTTP, then parse at the call site.
-// Optional extras are type-asserted: OpenRTBRequestEnricher, OpenRTBBidEnricher,
-// CustomBidParser, CustomRequestBuilder.
+// bidding path: build impression, supply execute options, then parse at the
+// call site. Optional extras are type-asserted: OpenRTBRequestEnricher,
+// OpenRTBBidEnricher, CustomBidParser, CustomRequestBuilder, CustomRequestExecutor.
 type BidderInterface interface {
 	// BuildImpression supplies the OpenRTB impression, shell options, and
 	// request validation. BidRequest is the base request so adapters can
 	// validate against it (geo, existing App, etc.).
 	BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, RTBRequestOptions, error)
 
-	// ExecuteRequest sends the request to the bidder endpoint.
-	// It must only populate Status / RawResponse (and transport errors).
-	// Bid parsing is done by ParseDemandResponse at the builder call site.
-	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
+	// ExecuteOptions supplies URL, headers, and execute-time metadata.
+	// DemandID is filled by ExecuteDemandRequest from the builder's adapter key.
+	ExecuteOptions(openrtb.BidRequest) (ExecuteRTBOptions, error)
 }
 
 type Bidder struct {

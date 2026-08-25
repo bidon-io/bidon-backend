@@ -240,7 +240,7 @@ func TestZmaticooAdapter_ExecuteRequest_Success(t *testing.T) {
 		Imp: []openrtb2.Imp{{ID: "imp-1"}},
 	}
 
-	dr := zmaticooAdapter.ExecuteRequest(context.Background(), client, request)
+	dr := adapters.ExecuteDemandRequest(context.Background(), client, zmaticooAdapter, request, adapter.ZmaticooKey)
 	if dr.Error != nil {
 		t.Fatalf("ExecuteRequest() error = %v", dr.Error)
 	}
@@ -287,7 +287,7 @@ func TestZmaticooAdapter_ExecuteRequest_HTTPError(t *testing.T) {
 		ID: "req-1",
 	}
 
-	dr := zmaticooAdapter.ExecuteRequest(context.Background(), client, request)
+	dr := adapters.ExecuteDemandRequest(context.Background(), client, zmaticooAdapter, request, adapter.ZmaticooKey)
 	if dr.Error == nil {
 		t.Fatalf("Expected error on HTTP failure")
 	}

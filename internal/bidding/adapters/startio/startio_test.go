@@ -180,7 +180,7 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 		}
 	})
 
-	dr := adapterInstance.ExecuteRequest(context.Background(), client, request)
+	dr := adapters.ExecuteDemandRequest(context.Background(), client, &adapterInstance, request, adapter.StartIOKey)
 	if dr.Error != nil {
 		t.Fatalf("ExecuteRequest error: %v", dr.Error)
 	}

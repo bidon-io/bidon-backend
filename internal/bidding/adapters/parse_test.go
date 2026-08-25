@@ -1,7 +1,6 @@
 package adapters_test
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -21,8 +20,8 @@ func (stubAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (
 	return &openrtb2.Imp{}, adapters.RTBRequestOptions{}, nil
 }
 
-func (stubAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {
-	return nil
+func (stubAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{}, nil
 }
 
 type enricherAdapter struct {
