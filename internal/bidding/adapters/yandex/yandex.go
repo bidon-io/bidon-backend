@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -26,39 +25,19 @@ type YandexAdapter struct {
 
 var _ adapters.BidderInterface = (*YandexAdapter)(nil)
 
-var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat:      {320, 50},
-	ad.LeaderboardFormat: {728, 90},
-	ad.MRECFormat:        {300, 250},
-	ad.AdaptiveFormat:    {320, 50},
-	ad.EmptyFormat:       {320, 50}, // Default
-}
-
 func (a *YandexAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := bannerFormats[auctionRequest.AdObject.Format()]
-
-	if auctionRequest.AdObject.IsAdaptive() && auctionRequest.Device.IsTablet() {
-		size = bannerFormats[ad.LeaderboardFormat]
-	}
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
+// interstitial stays custom: Instl-only Imp without Banner/Video.
 func (a *YandexAdapter) interstitial() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 1,
 	}
 }
 
+// rewarded stays custom: minimal mp4 Video; Rwdd/Ext set in CreateRequest.
 func (a *YandexAdapter) rewarded() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 0,

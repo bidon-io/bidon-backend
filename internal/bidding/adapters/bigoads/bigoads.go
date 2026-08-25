@@ -28,6 +28,7 @@ type BigoAdsAdapter struct {
 
 var _ adapters.BidderInterface = (*BigoAdsAdapter)(nil)
 
+// Creative builders stay custom: no leaderboard, minimal Pos-only interstitial, video-only rewarded.
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:   {320, 50},
 	ad.MRECFormat:     {300, 250},

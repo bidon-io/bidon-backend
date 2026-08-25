@@ -22,7 +22,8 @@ type AdikteevAdapter struct {
 
 var _ adapters.BidderInterface = (*AdikteevAdapter)(nil)
 
-//Loïc Anton: map sdk request ad types to ad formats
+// Creative builders stay custom: local Banner+MREC size map and dual Banner+Video with MRAID.
+// Loïc Anton: map sdk request ad types to ad formats
 //  banner => openrtb2.Banner with MRAID api
 //  interstitial and rewarded => openrtb2.banner with MRAID API + openrtb2.video
 

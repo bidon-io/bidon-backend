@@ -26,38 +26,17 @@ type VKAdsAdapter struct {
 
 var _ adapters.BidderInterface = (*VKAdsAdapter)(nil)
 
-var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat:      {320, 50},
-	ad.LeaderboardFormat: {728, 90},
-	ad.MRECFormat:        {300, 250},
-	ad.AdaptiveFormat:    {320, 50},
-	ad.EmptyFormat:       {320, 50}, // Default
-}
-
 const (
 	rewardedWidth  int64 = 1920
 	rewardedHeight int64 = 1080
 )
 
 func (a *VKAdsAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := bannerFormats[auctionRequest.AdObject.Format()]
-
-	if auctionRequest.AdObject.IsAdaptive() && auctionRequest.Device.IsTablet() {
-		size = bannerFormats[ad.LeaderboardFormat]
-	}
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
+// interstitial stays custom: Pos-only fullscreen Banner without W/H.
 func (a *VKAdsAdapter) interstitial() *openrtb2.Imp {
 	return &openrtb2.Imp{
 		Instl: 1,
@@ -67,6 +46,7 @@ func (a *VKAdsAdapter) interstitial() *openrtb2.Imp {
 	}
 }
 
+// rewarded stays custom: fixed 1920×1080 Banner (not fullscreen device sizes).
 func (a *VKAdsAdapter) rewarded() *openrtb2.Imp {
 	w, h := rewardedWidth, rewardedHeight
 	return &openrtb2.Imp{

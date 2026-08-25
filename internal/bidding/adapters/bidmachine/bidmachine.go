@@ -27,82 +27,24 @@ type BidmachineAdapter struct {
 
 var _ adapters.BidderInterface = (*BidmachineAdapter)(nil)
 
-var bannerFormats = map[ad.Format][2]int64{
-	ad.BannerFormat:      {320, 50},
-	ad.LeaderboardFormat: {728, 90},
-	ad.MRECFormat:        {300, 250},
-	ad.AdaptiveFormat:    {320, 50},
-	ad.EmptyFormat:       {320, 50}, // Default
-}
-
 func (a *BidmachineAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := bannerFormats[auctionRequest.AdObject.Format()]
-
-	if auctionRequest.AdObject.IsAdaptive() && auctionRequest.Device.IsTablet() {
-		size = bannerFormats[ad.LeaderboardFormat]
-	}
-
-	w, h := size[0], size[1]
-
-	return &openrtb2.Imp{
-		Instl: 0,
-		Banner: &openrtb2.Banner{
-			W:   &w,
-			H:   &h,
-			Pos: adcom1.PositionAboveFold.Ptr(),
-		},
-	}
+	imp, _ := adapters.BuildBannerImp(auctionRequest, adapters.BannerImpOptions{})
+	return imp
 }
 
 func (a *BidmachineAdapter) interstitial(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-		},
-		Video: &openrtb2.Video{
-			W:     w,
-			H:     h,
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-			MIMEs: []string{"video/mp4", "video/3gpp", "video/3gpp2", "video/x-m4v", "video/quicktime"},
-		},
-	}
+	return adapters.BuildInterstitialImp(auctionRequest, adapters.InterstitialImpOptions{
+		IncludeVideo: true,
+	})
 }
 
 func (a *BidmachineAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
-	size := adapters.FullscreenFormats[string(auctionRequest.Device.Type)]
-	w, h := size[0], size[1]
-	if !auctionRequest.AdObject.IsPortrait() {
-		w, h = h, w
-	}
-	return &openrtb2.Imp{
-		Instl: 1,
-		Banner: &openrtb2.Banner{
-			W:     &w,
-			H:     &h,
-			BType: []openrtb2.BannerAdType{},
-			BAttr: []adcom1.CreativeAttribute{16},
-			Pos:   adcom1.PositionFullScreen.Ptr(),
-		},
-		Video: &openrtb2.Video{
-			W:         w,
-			H:         h,
-			BAttr:     []adcom1.CreativeAttribute{16},
-			Pos:       adcom1.PositionFullScreen.Ptr(),
-			MIMEs:     []string{"video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi"},
-			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-		},
-		Ext: json.RawMessage(`{"rewarded": 1}`),
-	}
+	return adapters.BuildRewardedImp(auctionRequest, adapters.RewardedImpOptions{
+		IncludeBanner: true,
+		BannerBAttr:   []adcom1.CreativeAttribute{16},
+		VideoBAttr:    []adcom1.CreativeAttribute{16},
+		ImpExt:        json.RawMessage(`{"rewarded": 1}`),
+	})
 }
 
 func (a *BidmachineAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
