@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/oschwald/maxminddb-golang"
-	"github.com/redis/go-redis/v9"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
@@ -87,14 +85,10 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
-	redisClusterAddrs := os.Getenv("REDIS_CLUSTER")
-	if redisClusterAddrs == "" {
-		log.Fatalf("REDIS_CLUSTER is not set")
+	rdb, err := config.NewRedisClient(10 * cpus)
+	if err != nil {
+		log.Fatalf("config.NewRedisClient(): %v", err)
 	}
-	rdb := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:    strings.Split(redisClusterAddrs, ","),
-		PoolSize: 10 * cpus,
-	})
 
 	var maxMindDB *maxminddb.Reader
 

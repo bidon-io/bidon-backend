@@ -19,7 +19,7 @@ import (
 const TTL = 5 * 60 * time.Second
 
 type BidCache struct {
-	Redis *redis.ClusterClient
+	Redis redis.UniversalClient
 	Clock clock.Clock
 }
 

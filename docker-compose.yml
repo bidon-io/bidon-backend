@@ -89,16 +89,12 @@ services:
       interval: 5s
 
   redis:
-    build:
-        context: .
-        dockerfile: docker/redis/Dockerfile
+    image: redis:7.4-alpine
     ports:
-      - '7001-7003:7001-7003'
-    environment:
-      - REDIS_CLUSTER_START_PORT=7001
-      - REDIS_CLUSTER_ANNOUNCE_HOSTNAME=host.docker.internal
-    volumes:
-      - redis-data:/data
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
@@ -173,12 +169,12 @@ services:
       copilot-postgres:
           condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - ./copilot/.env
     environment:
-      REDIS_URI: redis://redis:7001
-      REDIS_CLUSTER: True
+      REDIS_URI: redis://redis:6379
+      REDIS_CLUSTER: False
       REDIS_KEY_PREFIX: "copilot:"
       DATABASE_URI: postgres://postgres:postgres@copilot-postgres:5432/postgres?sslmode=disable
 
@@ -204,7 +200,6 @@ volumes:
   precommit-tools:
   cargo-cache:
   target-cache:
-  redis-data:
   copilot-pgdata:
 
 networks:

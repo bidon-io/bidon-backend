@@ -15,7 +15,7 @@ import (
 var TTL = 4 * time.Hour
 
 type AuctionResultRepo struct {
-	Redis *redis.ClusterClient
+	Redis redis.UniversalClient
 }
 
 func (r AuctionResultRepo) CreateOrUpdate(ctx context.Context, adObject *schema.AdObject, bids []notification.Bid) error {

@@ -48,10 +48,9 @@ x-staging-kafka-env: &staging-kafka-env
 
 x-staging-redis-env: &staging-redis-env
   REDIS_URL: redis://${SERVICE_NAME_REDIS:-redis}:6379/0
-  REDIS_CLUSTER: redis://${SERVICE_NAME_REDIS:-redis}:6379/0
 
 x-staging-bidon-app-env: &staging-bidon-app-env
-  <<: [*staging-kafka-env, *staging-redis-env]
+  <<: *staging-kafka-env
   ENVIRONMENT: production
   USE_GEOCODING: "true"
   MAXMIND_GEOIP_FILE_PATH: /public/system/GeoLite2-City.mmdb
@@ -141,7 +140,7 @@ services:
     <<: *restart-policy
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4-alpine
     volumes:
       - redis-data:/data
     healthcheck:
@@ -169,8 +168,6 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      redis:
-        condition: service_healthy
       redpanda:
         condition: service_healthy
     environment:
@@ -197,7 +194,7 @@ services:
       redpanda:
         condition: service_healthy
     environment:
-      <<: [*staging-db-env, *staging-bidon-app-env]
+      <<: [*staging-db-env, *staging-bidon-app-env, *staging-redis-env]
       PORT: 1323
       APP_SECRET: ${APP_SECRET}
     volumes:
