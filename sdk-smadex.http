@@ -1,4 +1,4 @@
-### Config Smadex
+### Config
 POST {{sdkapiHost}}/v2/config
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -6,7 +6,7 @@ X-Bidon-Version: 0.6.0
 < ./internal/sdkapi/v2/apihandlers/testdata/config/smadex_config_request.json
 
 
-### Auction banner Smadex — iOS
+### Auction banner — iOS
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -14,8 +14,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_banner.json
 
-### Auction banner Smadex — Android
-
+### Auction banner — Android
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -23,8 +22,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_banner.json
 
-### Auction banner Smadex — iOS MREC
-
+### Auction banner — iOS MREC
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -32,8 +30,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_banner_mrec.json
 
-### Auction banner Smadex — Android MREC
-
+### Auction banner — Android MREC
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -41,8 +38,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_banner_mrec.json
 
-### Auction interstitial Smadex — iOS
-
+### Auction interstitial — iOS
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -50,8 +46,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_interstitial.json
 
-### Auction interstitial Smadex — Android
-
+### Auction interstitial — Android
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -59,8 +54,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/android_smadex_interstitial.json
 
-### Auction rewarded Smadex — iOS
-
+### Auction rewarded — iOS
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -68,8 +62,7 @@ X-Forwarded-For: 31.204.13.24
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/smadex/ios_smadex_rewarded.json
 
-### Auction rewarded Smadex — Android
-
+### Auction rewarded — Android
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
