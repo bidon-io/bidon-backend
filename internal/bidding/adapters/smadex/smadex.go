@@ -28,7 +28,7 @@ var bannerFormats = map[ad.Format][2]int64{
 	ad.MRECFormat:   {300, 250},
 }
 
-var MRAIDAPI = []adcom1.APIFramework{adcom1.APIMRAID10, adcom1.APIMRAID20}
+var MRAIDAPI = []adcom1.APIFramework{adcom1.APIMRAID20}
 
 func (a *SmadexAdapter) banner(auctionRequest *schema.AuctionRequest) *openrtb2.Imp {
 	size, found := bannerFormats[auctionRequest.AdObject.Format()]
@@ -70,7 +70,7 @@ func (a *SmadexAdapter) interstitial(auctionRequest *schema.AuctionRequest) *ope
 			H:         h,
 			Pos:       adcom1.PositionFullScreen.Ptr(),
 			MIMEs:     []string{"video/mp4"},
-			Protocols: []adcom1.MediaCreativeSubtype{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			Protocols: []adcom1.MediaCreativeSubtype{adcom1.CreativeVAST40, adcom1.CreativeVAST40Wrapper},
 		},
 	}
 }
