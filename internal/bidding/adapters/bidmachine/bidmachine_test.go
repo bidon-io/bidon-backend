@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -337,7 +338,7 @@ func TestBidmachine_CreateRequest(t *testing.T) {
 			Request: request,
 			Err:     err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
 			t.Errorf("%s: adapter.CreateRequest(ctx, %v, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.BaseBidRequest, tC.params.AuctionRequest, diff)
 		}
 	}
@@ -425,15 +426,17 @@ func TestBidmachine_ParseBids(t *testing.T) {
 			name: "ParseBids Success",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      200,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      200,
 					RawResponse: rawResponse,
-					Bid: &adapters.BidDemandResponse{
+					Bid: &adapters.DemandBid{
 						ID:       "0",
 						ImpID:    "6579ca7b-7e2c-48b6-8915-46efa6530fb5",
 						Price:    1.5,
@@ -451,12 +454,14 @@ func TestBidmachine_ParseBids(t *testing.T) {
 			name: "ParseBids Bad Request",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      400,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      400,
 					RawResponse: rawResponse,
 				},
@@ -467,12 +472,14 @@ func TestBidmachine_ParseBids(t *testing.T) {
 			name: "ParseBids No Conten",
 			params: ParseBidsTestParams{
 				DemandsResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      204,
 					RawResponse: rawResponse,
 				},
 			},
 			want: ParseBidsTestOutput{
 				DemandResponse: adapters.DemandResponse{
+					DemandID:    "bidmachine",
 					Status:      204,
 					RawResponse: rawResponse,
 				},
@@ -481,13 +488,13 @@ func TestBidmachine_ParseBids(t *testing.T) {
 		},
 	}
 	for _, tC := range testCases {
-		response, err := adapter.ParseBids(&tC.params.DemandsResponse)
+		response, err := adapters.ParseDemandResponse(&adapter, &tC.params.DemandsResponse)
 		got := ParseBidsTestOutput{
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors)); diff != "" {
-			t.Errorf("%s: adapter.ParseBids(ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
+			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
 }

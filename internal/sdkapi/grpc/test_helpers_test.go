@@ -279,7 +279,7 @@ func BuildDemandResponses(adUnits []auction.AdUnit) []adapters.DemandResponse {
 			DemandID: adapter.Key(adUnit.DemandID),
 		}
 		if adUnit.PriceFloor != nil {
-			response.Bid = &adapters.BidDemandResponse{
+			response.Bid = &adapters.DemandBid{
 				Price:    *adUnit.PriceFloor,
 				Payload:  "payload",
 				ID:       "123",

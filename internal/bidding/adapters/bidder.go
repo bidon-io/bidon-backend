@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -14,10 +15,9 @@ type BidderInterface interface {
 	CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error)
 
 	// ExecuteRequest sends request to bidder endpoint.
+	// It must only populate Status / RawResponse (and transport errors);
+	// bid parsing is done by ParseDemandResponse at the builder call site.
 	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
-
-	// ParseBids unpacks the server's response into Bids.
-	ParseBids(*DemandResponse) (*DemandResponse, error)
 }
 
 type Bidder struct {
@@ -33,7 +33,7 @@ type DemandResponse struct {
 	RawRequest  string
 	RawResponse string
 	Status      int
-	Bid         *BidDemandResponse
+	Bid         *DemandBid
 	Error       error
 	ImpID       string
 	TagID       string
@@ -86,8 +86,11 @@ func (dr *DemandResponse) CanCache() bool {
 	return true
 }
 
-type BidDemandResponse struct {
-	Payload    string
+// DemandBid is the DSP-agnostic bid after network response parsing.
+// OpenRTB adapters fill Ext from seatbid.bid.ext; proprietary adapters leave it nil.
+type DemandBid struct {
+	Payload string
+	// Signaldata is extracted from seatbid.bid.ext.signaldata by the shared OpenRTB parser.
 	Signaldata string
 	ID         string
 	ImpID      string
@@ -98,6 +101,8 @@ type BidDemandResponse struct {
 	LURL       string
 	NURL       string
 	BURL       string
+	// Ext is the raw OpenRTB seatbid.bid.ext (nil for non-OpenRTB demands).
+	Ext json.RawMessage
 }
 
 type Token struct {

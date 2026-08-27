@@ -187,13 +187,7 @@ func (a *ZmaticooAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 	}
 	dr.RawResponse = string(respBody)
 
-	parsedDr, err := a.ParseBids(dr)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	return parsedDr
+	return dr
 }
 
 func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
@@ -235,7 +229,7 @@ func (a *ZmaticooAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.Dema
 		impID = dr.ImpID
 	}
 
-	dr.Bid = &adapters.BidDemandResponse{
+	dr.Bid = &adapters.DemandBid{
 		ID:       br.RequestID,
 		ImpID:    impID, // Zmaticoo response is not OpenRTB, so we get it from request
 		Price:    br.ECPM,

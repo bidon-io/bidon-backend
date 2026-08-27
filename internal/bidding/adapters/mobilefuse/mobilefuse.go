@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"slices"
-	"strconv"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -181,57 +180,6 @@ func (a *MobileFuseAdapter) ExecuteRequest(ctx context.Context, client *http.Cli
 	dr.Status = httpResp.StatusCode
 
 	return dr
-}
-
-func (a *MobileFuseAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	switch dr.Status {
-	case http.StatusNoContent:
-		return dr, nil
-	case http.StatusServiceUnavailable:
-		fallthrough
-	case http.StatusBadRequest:
-		fallthrough
-	case http.StatusUnauthorized:
-		fallthrough
-	case http.StatusForbidden:
-		return dr, fmt.Errorf("unauthorized request: %s", strconv.Itoa(dr.Status))
-	case http.StatusOK:
-		break
-	default:
-		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
-	}
-
-	var bidResponse openrtb2.BidResponse
-	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
-	if err != nil {
-		return dr, err
-	}
-
-	seat := bidResponse.SeatBid[0]
-	bid := seat.Bid[0]
-
-	var extParam map[string]any
-	err = json.Unmarshal(bid.Ext, &extParam)
-	if err != nil {
-		return dr, err
-	}
-	signaldata := extParam["signaldata"].(string)
-
-	dr.Bid = &adapters.BidDemandResponse{
-		ID:         bid.ID,
-		ImpID:      bid.ImpID,
-		Price:      bid.Price,
-		Payload:    bid.AdM,
-		Signaldata: signaldata,
-		DemandID:   adapter.MobileFuseKey,
-		AdID:       bid.AdID,
-		SeatID:     seat.Seat,
-		LURL:       bid.LURL,
-		NURL:       bid.NURL,
-		BURL:       bid.BURL,
-	}
-
-	return dr, nil
 }
 
 // Builder builds a new instance of the MobileFuse adapter for the given bidder with the given config.

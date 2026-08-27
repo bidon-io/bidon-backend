@@ -337,7 +337,7 @@ func TestMoloco_ParseBids_Success(t *testing.T) {
 		RawResponse: `{"id":"test-response","seatbid":[{"seat":"moloco","bid":[{"id":"test-bid","impid":"test-imp","price":1.5,"adm":"<html>test ad</html>","adid":"test-ad-id","nurl":"http://test.com/nurl","burl":"http://test.com/burl","lurl":"http://test.com/lurl","ext":{"signaldata":"test-signal"}}]}]}`,
 	}
 
-	result, err := adapter.ParseBids(demandResponse)
+	result, err := adapters.ParseDemandResponse(&adapter, demandResponse)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -364,7 +364,7 @@ func TestMoloco_ParseBids_NoContent(t *testing.T) {
 		Status: 204,
 	}
 
-	result, err := adapter.ParseBids(demandResponse)
+	result, err := adapters.ParseDemandResponse(&adapter, demandResponse)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -381,7 +381,7 @@ func TestMoloco_ParseBids_Unauthorized(t *testing.T) {
 		Status: 401,
 	}
 
-	_, err := adapter.ParseBids(demandResponse)
+	_, err := adapters.ParseDemandResponse(&adapter, demandResponse)
 
 	if err == nil {
 		t.Error("Expected error for 401 status, got nil")
@@ -411,9 +411,9 @@ func TestMoloco_Builder(t *testing.T) {
 
 	// Test that adapter was created with correct configuration
 	wantAdapter := moloco.MolocoAdapter{
-		TagID:    "test-tag-id",
-		AppID:    "test-app-id",
-		APIKey:   "test-api-key",
+		TagID:  "test-tag-id",
+		AppID:  "test-app-id",
+		APIKey: "test-api-key",
 	}
 	wantBidder := &adapters.Bidder{
 		Adapter: &wantAdapter,

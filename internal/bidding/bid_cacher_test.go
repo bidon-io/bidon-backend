@@ -50,9 +50,9 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 		{
 			name: "no cache, has bids",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: 2.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.DemandBid{DemandID: adapter.BidmachineKey, Price: 1.0}},
+				{DemandID: adapter.ApplovinKey, Bid: &adapters.DemandBid{DemandID: adapter.ApplovinKey, Price: 2.0}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.DemandBid{DemandID: adapter.MetaKey, Price: 3.0}},
 			},
 			cacheGet: bidding.Cache{},
 			cacheSet: bidding.Cache{
@@ -65,8 +65,8 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.DemandBid{DemandID: adapter.BidmachineKey, Price: 1.0}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.DemandBid{DemandID: adapter.MetaKey, Price: 3.0}},
 			},
 		},
 		{
@@ -96,7 +96,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.ApplovinKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.ApplovinKey, Price: 2.0}},
+				{DemandID: adapter.ApplovinKey, Bid: &adapters.DemandBid{DemandID: adapter.ApplovinKey, Price: 2.0}},
 			},
 		},
 		{
@@ -118,7 +118,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			},
 			cacheSet: bidding.Cache{},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.VKAdsKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VKAdsKey, Price: 1.0}},
+				{DemandID: adapter.VKAdsKey, Bid: &adapters.DemandBid{DemandID: adapter.VKAdsKey, Price: 1.0}},
 			},
 		},
 		{
@@ -156,15 +156,15 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 			},
 			want: []adapters.DemandResponse{
 				{DemandID: adapter.BigoAdsKey, Bid: nil, Error: errors.New("some error")},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 1.5}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.DemandBid{DemandID: adapter.MetaKey, Price: 1.5}},
 			},
 		},
 		{
 			name: "has bids, has cache",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 2.0}},
-				{DemandID: adapter.MetaKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.MetaKey, Price: 2.5}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.DemandBid{DemandID: adapter.BidmachineKey, Price: 1.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.DemandBid{DemandID: adapter.VungleKey, Price: 2.0}},
+				{DemandID: adapter.MetaKey, Bid: &adapters.DemandBid{DemandID: adapter.MetaKey, Price: 2.5}},
 			},
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
@@ -195,14 +195,14 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.BidmachineKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.BidmachineKey, Price: 1.0}},
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.BidmachineKey, Bid: &adapters.DemandBid{DemandID: adapter.BidmachineKey, Price: 1.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.DemandBid{DemandID: adapter.VungleKey, Price: 3.0}},
 			},
 		},
 		{
 			name: "has bids, has cheap cache",
 			bids: []adapters.DemandResponse{
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.DemandBid{DemandID: adapter.VungleKey, Price: 3.0}},
 			},
 			cacheGet: bidding.Cache{
 				Bids: map[adapter.Key]bidding.CacheEntry{
@@ -217,7 +217,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 				Bids: map[adapter.Key]bidding.CacheEntry{},
 			},
 			want: []adapters.DemandResponse{
-				{DemandID: adapter.VungleKey, Bid: &adapters.BidDemandResponse{DemandID: adapter.VungleKey, Price: 3.0}},
+				{DemandID: adapter.VungleKey, Bid: &adapters.DemandBid{DemandID: adapter.VungleKey, Price: 3.0}},
 			},
 		},
 	}
@@ -240,7 +240,7 @@ func TestBidCache_ApplyBidCache(t *testing.T) {
 
 			got := bidCache.ApplyBidCache(ctx, auctionRequest, aucResult)
 
-			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreFields(adapters.DemandResponse{}, "Error")); diff != "" {
+			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreFields(adapters.DemandResponse{}, "Error"), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
 				t.Errorf("Create() mismatch (-want +got):\n%s", diff)
 			}
 

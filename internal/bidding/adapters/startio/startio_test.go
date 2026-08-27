@@ -39,10 +39,10 @@ func buildAdapter() startio.Adapter {
 
 func buildBidRequest() openrtb.BidRequest {
 	return openrtb.BidRequest{
-		ID: "test-request-id",
+		ID:  "test-request-id",
 		App: &openrtb2.App{ID: ""},
 		Device: &openrtb2.Device{
-			UA: "test-user-agent",
+			UA:  "test-user-agent",
 			Geo: &openrtb2.Geo{Country: "USA"},
 		},
 	}
@@ -193,12 +193,12 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 func TestAdapter_ParseBids(t *testing.T) {
 	adapterInstance := buildAdapter()
 	resp := adapters.DemandResponse{
-		DemandID: adapter.StartIOKey,
-		Status:   http.StatusOK,
+		DemandID:    adapter.StartIOKey,
+		Status:      http.StatusOK,
 		RawResponse: `{"id":"response","seatbid":[{"seat":"startio","bid":[{"id":"bid-1","impid":"imp-1","price":1.23,"adm":"<html></html>","adid":"creative","nurl":"http://nurl","lurl":"http://lurl","burl":"http://burl"}]}]}`,
 	}
 
-	parsed, err := adapterInstance.ParseBids(&resp)
+	parsed, err := adapters.ParseDemandResponse(&adapterInstance, &resp)
 	if err != nil {
 		t.Fatalf("ParseBids error: %v", err)
 	}

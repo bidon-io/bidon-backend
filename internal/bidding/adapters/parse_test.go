@@ -1,0 +1,309 @@
+package adapters_test
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"testing"
+
+	"github.com/prebid/openrtb/v19/openrtb2"
+
+	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+)
+
+type stubAdapter struct{}
+
+func (stubAdapter) CreateRequest(openrtb.BidRequest, *schema.AuctionRequest) (openrtb.BidRequest, error) {
+	return openrtb.BidRequest{}, nil
+}
+
+func (stubAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {
+	return nil
+}
+
+type enricherAdapter struct {
+	stubAdapter
+	called bool
+}
+
+func (a *enricherAdapter) EnrichOpenRTBBid(
+	dr *adapters.DemandResponse,
+	_ *openrtb2.BidResponse,
+	_ openrtb2.SeatBid,
+	_ openrtb2.Bid,
+) error {
+	a.called = true
+	dr.Bid.Payload = "enriched"
+	return nil
+}
+
+type failingEnricherAdapter struct {
+	stubAdapter
+	err error
+}
+
+func (a *failingEnricherAdapter) EnrichOpenRTBBid(
+	*adapters.DemandResponse,
+	*openrtb2.BidResponse,
+	openrtb2.SeatBid,
+	openrtb2.Bid,
+) error {
+	return a.err
+}
+
+type customParserAdapter struct {
+	stubAdapter
+}
+
+func (customParserAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
+	dr.Bid = &adapters.DemandBid{
+		DemandID: adapter.ZmaticooKey,
+		Payload:  "custom",
+		Price:    1.23,
+	}
+	return dr, nil
+}
+
+func TestParseDemandResponse_mapsOpenRTBBid(t *testing.T) {
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		ID: "resp-1",
+		SeatBid: []openrtb2.SeatBid{{
+			Seat: "seat-1",
+			Bid: []openrtb2.Bid{{
+				ID:    "bid-1",
+				ImpID: "imp-1",
+				Price: 2.5,
+				AdM:   "<ad>",
+				AdID:  "ad-1",
+				LURL:  "https://l",
+				NURL:  "https://n",
+				BURL:  "https://b",
+			}},
+		}},
+	})
+
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.VungleKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid == nil {
+		t.Fatal("expected bid")
+	}
+	bid := got.Bid
+	if bid.ID != "bid-1" || bid.ImpID != "imp-1" || bid.Price != 2.5 || bid.Payload != "<ad>" {
+		t.Fatalf("unexpected bid fields: %+v", bid)
+	}
+	if bid.DemandID != adapter.VungleKey || bid.AdID != "ad-1" || bid.SeatID != "seat-1" {
+		t.Fatalf("unexpected ids: %+v", bid)
+	}
+	if bid.LURL != "https://l" || bid.NURL != "https://n" || bid.BURL != "https://b" {
+		t.Fatalf("unexpected urls: %+v", bid)
+	}
+	if bid.Ext != nil {
+		t.Fatalf("expected nil Ext, got %s", string(bid.Ext))
+	}
+}
+
+func TestParseDemandResponse_extractsSignaldataAndPreservesBidExt(t *testing.T) {
+	ext := json.RawMessage(`{"signaldata":"x","rendering":{"creative":{"type":"vast"}}}`)
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1, Ext: ext}},
+		}},
+	})
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.AdikteevKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid.Signaldata != "x" {
+		t.Fatalf("expected Signaldata %q, got %q", "x", got.Bid.Signaldata)
+	}
+	if string(got.Bid.Ext) != string(ext) {
+		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
+	}
+}
+
+func TestParseDemandResponse_malformedBidExtLeavesSignaldataEmpty(t *testing.T) {
+	ext := json.RawMessage(`{"signaldata":123}`)
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1.5, AdM: "<ad>", Ext: ext}},
+		}},
+	})
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.AdikteevKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid == nil {
+		t.Fatal("expected bid to be kept")
+	}
+	if got.Bid.Signaldata != "" {
+		t.Fatalf("expected empty Signaldata, got %q", got.Bid.Signaldata)
+	}
+	if got.Bid.Price != 1.5 || got.Bid.Payload != "<ad>" {
+		t.Fatalf("expected bid fields to be preserved, got %+v", got.Bid)
+	}
+	if string(got.Bid.Ext) != string(ext) {
+		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
+	}
+}
+
+func TestParseDemandResponse_emptySeatBidIsNoBid(t *testing.T) {
+	raw, _ := json.Marshal(openrtb2.BidResponse{ID: "resp-1", SeatBid: []openrtb2.SeatBid{}})
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.MolocoKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid != nil {
+		t.Fatalf("expected no bid, got %+v", got.Bid)
+	}
+}
+
+func TestParseDemandResponse_noContent(t *testing.T) {
+	dr := &adapters.DemandResponse{Status: http.StatusNoContent}
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid != nil {
+		t.Fatalf("expected no bid")
+	}
+}
+
+func TestParseDemandResponse_unauthorizedStatuses(t *testing.T) {
+	for _, status := range []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusServiceUnavailable} {
+		_, err := adapters.ParseDemandResponse(stubAdapter{}, &adapters.DemandResponse{Status: status})
+		if err == nil {
+			t.Fatalf("expected error for status %d", status)
+		}
+	}
+}
+
+func TestParseDemandResponse_unexpectedStatus(t *testing.T) {
+	dr := &adapters.DemandResponse{Status: http.StatusInternalServerError}
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if err.Error() != "unexpected status code: 500" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != dr {
+		t.Fatalf("expected demand response to be returned, got %+v", got)
+	}
+}
+
+func TestParseDemandResponse_invalidJSON(t *testing.T) {
+	_, err := adapters.ParseDemandResponse(stubAdapter{}, &adapters.DemandResponse{
+		Status:      http.StatusOK,
+		RawResponse: "{not-json",
+	})
+	if err == nil {
+		t.Fatal("expected JSON error")
+	}
+}
+
+func TestParseDemandResponse_nilDemandResponse(t *testing.T) {
+	got, err := adapters.ParseDemandResponse(stubAdapter{}, nil)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if err.Error() != "nil demand response" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("expected nil result, got %+v", got)
+	}
+}
+
+func TestParseDemandResponse_callsEnricher(t *testing.T) {
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1}},
+		}},
+	})
+	enricher := &enricherAdapter{}
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.YandexKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(enricher, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !enricher.called {
+		t.Fatal("expected enricher to be called")
+	}
+	if got.Bid.Payload != "enriched" {
+		t.Fatalf("expected enriched payload, got %q", got.Bid.Payload)
+	}
+}
+
+func TestParseDemandResponse_enricherError(t *testing.T) {
+	raw, _ := json.Marshal(openrtb2.BidResponse{
+		SeatBid: []openrtb2.SeatBid{{
+			Bid: []openrtb2.Bid{{ID: "bid-1", ImpID: "imp-1", Price: 1, AdM: "<ad>"}},
+		}},
+	})
+	enrichErr := errors.New("enrich failed")
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.TaurusXKey,
+		Status:      http.StatusOK,
+		RawResponse: string(raw),
+	}
+
+	got, err := adapters.ParseDemandResponse(&failingEnricherAdapter{err: enrichErr}, dr)
+	if err == nil {
+		t.Fatal("expected enricher error")
+	}
+	if !errors.Is(err, enrichErr) {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != dr {
+		t.Fatalf("expected demand response to be returned, got %+v", got)
+	}
+	if got.Bid == nil {
+		t.Fatal("expected bid to be populated before enricher failure")
+	}
+}
+
+func TestParseDemandResponse_customParser(t *testing.T) {
+	dr := &adapters.DemandResponse{Status: http.StatusOK, RawResponse: "ignored"}
+	got, err := adapters.ParseDemandResponse(customParserAdapter{}, dr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Bid == nil || got.Bid.Payload != "custom" || got.Bid.Price != 1.23 {
+		t.Fatalf("unexpected custom bid: %+v", got.Bid)
+	}
+}
