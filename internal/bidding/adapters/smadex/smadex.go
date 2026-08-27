@@ -5,10 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -158,41 +156,6 @@ func (a *SmadexAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	dr.Status = httpResp.StatusCode
 
 	return dr
-}
-
-func (a *SmadexAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
-	switch dr.Status {
-	case http.StatusNoContent:
-		return dr, nil
-	case http.StatusOK:
-		break
-	default:
-		return dr, fmt.Errorf("unexpected status code: %s", strconv.Itoa(dr.Status))
-	}
-
-	var bidResponse openrtb2.BidResponse
-	err := json.Unmarshal([]byte(dr.RawResponse), &bidResponse)
-	if err != nil {
-		return dr, err
-	}
-
-	seat := bidResponse.SeatBid[0]
-	bid := seat.Bid[0]
-
-	dr.Bid = &adapters.BidDemandResponse{
-		ID:       bid.ID,
-		ImpID:    bid.ImpID,
-		Price:    bid.Price,
-		Payload:  bid.AdM,
-		DemandID: adapter.SmadexKey,
-		AdID:     bid.AdID,
-		SeatID:   seat.Seat,
-		LURL:     bid.LURL,
-		NURL:     bid.NURL,
-		BURL:     bid.BURL,
-	}
-
-	return dr, nil
 }
 
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {

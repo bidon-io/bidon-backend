@@ -204,10 +204,6 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					SdkInstanceID: "sdk_instance_id",
 					Order:         0,
 				},
-				&sdkapi.SmadexInitConfig{
-					SdkInstanceID: "sdk_instance_id",
-					Order:         0,
-				},
 				&sdkapi.ChartboostInitConfig{
 					AppID:        fmt.Sprintf("chartboost_app_%d", apps[1].ID),
 					AppSignature: "123",
@@ -229,6 +225,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 				&sdkapi.MobileFuseInitConfig{},
 				&sdkapi.MolocoInitConfig{
 					AppKey: fmt.Sprintf("moloco_app_%d", apps[1].ID),
+				},
+				&sdkapi.SmadexInitConfig{
+					SdkInstanceID: "sdk_instance_id",
+					Order:         0,
 				},
 				&sdkapi.StartIOInitConfig{
 					AppID: fmt.Sprintf("startio_app_%d", apps[1].ID),
@@ -264,7 +264,6 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 			setOrder:       true,
 			want: []sdkapi.AdapterInitConfig{
 				&sdkapi.AdkiteevInitConfig{SdkInstanceID: "sdk_instance_id"},
-				&sdkapi.SmadexInitConfig{SdkInstanceID: "sdk_instance_id"},
 				&sdkapi.ChartboostInitConfig{
 					AppID:        fmt.Sprintf("chartboost_app_%d", apps[1].ID),
 					AppSignature: "123",
@@ -295,6 +294,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AppKey: fmt.Sprintf("moloco_app_%d", apps[1].ID),
 					Order:  0,
 				},
+				&sdkapi.SmadexInitConfig{SdkInstanceID: "sdk_instance_id"},
 				&sdkapi.StartIOInitConfig{
 					AppID: fmt.Sprintf("startio_app_%d", apps[1].ID),
 					Order: 0,
