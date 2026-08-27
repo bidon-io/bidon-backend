@@ -9,14 +9,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// NewRedisClient builds a redis.UniversalClient from REDIS_URL (falling back to the
-// deprecated REDIS_CLUSTER). A single address yields a standalone *redis.Client, multiple
-// comma-separated addresses yield a *redis.ClusterClient.
+// NewRedisClient builds a redis.UniversalClient from REDIS_URL. A single address yields a
+// standalone *redis.Client, multiple comma-separated addresses yield a *redis.ClusterClient.
 func NewRedisClient(poolSize int) (redis.UniversalClient, error) {
 	addrsEnv := os.Getenv("REDIS_URL")
-	if addrsEnv == "" {
-		addrsEnv = os.Getenv("REDIS_CLUSTER")
-	}
 	if addrsEnv == "" {
 		return nil, fmt.Errorf("REDIS_URL is not set")
 	}
