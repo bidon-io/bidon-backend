@@ -20,6 +20,8 @@
             pkgs.just
             pkgs.buf
             pkgs.pre-commit
+            #
+            pkgs.doctl
           ];
         };
 

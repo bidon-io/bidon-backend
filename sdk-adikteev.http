@@ -1,14 +1,12 @@
-
 ### Config
 POST {{sdkapiHost}}/v2/config
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
 
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/adikteev_config_request.json
+< ./internal/sdkapi/v2/apihandlers/testdata/config/adikteev_config_request.json
 
 
-
-### Auction banner Adikteev — iOS
+### Auction banner — iOS
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -16,8 +14,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_banner.json
 
-### Auction banner Adikteev — Android
-
+### Auction banner — Android
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -25,8 +22,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner.json
 
-### Auction banner Adikteev — iOS MREC
-
+### Auction banner — iOS MREC
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -34,8 +30,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_banner_mrec.json
 
-### Auction banner Adikteev — Android MREC
-
+### Auction banner — Android MREC
 POST {{sdkapiHost}}/v2/auction/banner
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -43,8 +38,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner_mrec.json
 
-### Auction interstitial Adikteev — iOS
-
+### Auction interstitial — iOS
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -52,8 +46,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_interstitial.json
 
-### Auction interstitial Adikteev — Android
-
+### Auction interstitial — Android
 POST {{sdkapiHost}}/v2/auction/interstitial
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -61,8 +54,7 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_interstitial.json
 
-### Auction rewarded Adikteev — iOS
-
+### Auction rewarded — iOS
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
@@ -70,22 +62,10 @@ X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_rewarded.json
 
-### Auction rewarded Adikteev — Android
-
+### Auction rewarded — Android
 POST {{sdkapiHost}}/v2/auction/rewarded
 Content-Type: application/json
 X-Bidon-Version: 0.6.0
 X-Forwarded-For: 94.24.105.28
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_rewarded.json
-
-
-
-### Auction banner PubRevPlus
-
-POST {{sdkapiHost}}/v2/auction/banner
-Content-Type: application/json
-X-Bidon-Version: 0.6.0
-X-Forwarded-For: 94.24.105.28
-
-< ./internal/sdkapi/v2/apihandlers/testdata/auction/ios_pubrevplus.json
