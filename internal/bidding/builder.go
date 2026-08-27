@@ -100,7 +100,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		return emptyResponse, fmt.Errorf("cannot generate Bid UUID: %s", err)
 	}
 
-	logger := b.log().With(
+	childLogger := b.log().With(
 		zap.String("auction_id", auctionRequest.AdObject.AuctionID),
 		zap.String("bid_id", bidID.String()),
 	)
@@ -122,7 +122,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	)
 
 	if len(adapterKeys) == 0 {
-		logger.Debug("no adapters matched",
+		childLogger.Debug("no adapters matched",
 			zap.Strings("bidding_adapters", keyStrings(params.BiddingAdapters)),
 			zap.Strings("request_adapters", keyStrings(auctionRequest.Adapters.Keys())),
 			zap.Strings("demands_with_token", keyStrings(maps.Keys(filteredDemands))),
@@ -131,7 +131,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		return emptyResponse, ErrNoAdaptersMatched
 	}
 
-	logger.Debug("matched bidding adapters",
+	childLogger.Debug("matched bidding adapters",
 		zap.Strings("adapter_keys", keyStrings(adapterKeys)),
 		zap.String("ad_type", string(auctionRequest.AdType)),
 		zap.String("bundle", auctionRequest.App.Bundle),
@@ -166,7 +166,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	}()
 
 	for bid := range bids {
-		logger.Debug("received demand response",
+		childLogger.Debug("received demand response",
 			zap.String("demand_id", string(bid.DemandID)),
 			zap.Bool("is_bid", bid.IsBid()),
 			zap.Float64("price", bid.Price()),
@@ -181,7 +181,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	auctionResult.Bids = b.BidCacher.ApplyBidCache(ctx, &auctionRequest, &auctionResult)
 
 	if err := b.NotificationHandler.HandleBiddingRound(ctx, &auctionRequest.AdObject, auctionResult, auctionRequest.App.Bundle, string(auctionRequest.AdType)); err != nil {
-		logger.Error("handle bidding round",
+		childLogger.Error("handle bidding round",
 			zap.String("bundle", auctionRequest.App.Bundle),
 			zap.String("ad_type", string(auctionRequest.AdType)),
 			zap.Int("bids", len(auctionResult.Bids)),
@@ -189,7 +189,7 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 		)
 	}
 
-	logger.Debug("auction completed",
+	childLogger.Debug("auction completed",
 		zap.Int("bids", len(auctionResult.Bids)),
 		zap.Float64("max_bid_price", auctionResult.GetMaxBidPrice()),
 		zap.Int64("duration_ms", time.Now().UnixMilli()-params.StartTS),
@@ -233,7 +233,7 @@ func (b *Builder) processAdapter(
 ) {
 	defer wg.Done()
 
-	logger := b.log().With(
+	childLogger := b.log().With(
 		zap.String("auction_id", auctionRequest.AdObject.AuctionID),
 		zap.String("bid_id", bidID),
 		zap.String("demand_id", string(adapterKey)),
@@ -242,7 +242,7 @@ func (b *Builder) processAdapter(
 	if adapterKey == adapter.AmazonKey {
 		bidder, err := amazon.Builder(params.AdapterConfigs)
 		if err != nil {
-			logger.Debug("build amazon bidder", zap.Error(err))
+			childLogger.Debug("build amazon bidder", zap.Error(err))
 			handleError(adapterKey, err)
 			return
 		}
@@ -266,14 +266,14 @@ func (b *Builder) processAdapter(
 
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
-		logger.Debug("build bidder", zap.Error(err))
+		childLogger.Debug("build bidder", zap.Error(err))
 		handleError(adapterKey, err)
 		return
 	}
 
 	bidRequest, err := bidder.Adapter.CreateRequest(baseBidRequest, &auctionRequest)
 	if err != nil {
-		logger.Debug("create bid request", zap.Error(err))
+		childLogger.Debug("create bid request", zap.Error(err))
 		handleError(adapterKey, err)
 		return
 	}
@@ -283,14 +283,14 @@ func (b *Builder) processAdapter(
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
-		logger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
 		bids <- *demandResponse
 		return
 	}
 
 	demandResponse, err = bidder.Adapter.ParseBids(demandResponse)
 	if err != nil {
-		logger.Debug("parse bids", zap.Error(err))
+		childLogger.Error("parse bids", zap.Error(err))
 	}
 	demandResponse.Error = err
 
