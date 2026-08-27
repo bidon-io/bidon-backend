@@ -194,6 +194,7 @@ func main() {
 		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHTTPClient),
 		NotificationHandler: notificationHandler,
 		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
+		Logger:              logger.Named("bidding"),
 	}
 	biddingAdaptersCfgCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, 10*time.Minute, "bidding_adapters_cfg")
 	err = biddingAdaptersCfgCache.Monitor(meter)
