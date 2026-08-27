@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-// NewRedisClient builds a redis.UniversalClient from REDIS_URL. A single address yields a
-// standalone *redis.Client, multiple comma-separated addresses yield a *redis.ClusterClient.
-func NewRedisClient(poolSize int) (redis.UniversalClient, error) {
+const redisPingTimeout = 3 * time.Second
+
+// NewRedisClient builds a redis.UniversalClient from REDIS_URL and verifies connectivity
+// with a PING before returning. A single address yields a standalone *redis.Client, multiple
+// comma-separated addresses yield a *redis.ClusterClient.
+func NewRedisClient(ctx context.Context, poolSize int) (redis.UniversalClient, error) {
 	addrsEnv := os.Getenv("REDIS_URL")
 	if addrsEnv == "" {
 		return nil, fmt.Errorf("REDIS_URL is not set")
@@ -36,7 +40,16 @@ func NewRedisClient(poolSize int) (redis.UniversalClient, error) {
 		opts.Addrs = entries
 	}
 
-	return redis.NewUniversalClient(opts), nil
+	client := redis.NewUniversalClient(opts)
+
+	pingCtx, cancel := context.WithTimeout(ctx, redisPingTimeout)
+	defer cancel()
+	if err := NewRedisPinger(client).Ping(pingCtx); err != nil {
+		_ = client.Close()
+		return nil, fmt.Errorf("redis ping %v: %w", opts.Addrs, err)
+	}
+
+	return client, nil
 }
 
 type RedisPinger struct {

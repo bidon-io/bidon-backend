@@ -85,17 +85,9 @@ func main() {
 		log.Fatalf("db.Open(%v): %v", dbURL, err)
 	}
 
-	rdb, err := config.NewRedisClient(10 * cpus)
+	rdb, err := config.NewRedisClient(context.Background(), 10*cpus)
 	if err != nil {
 		log.Fatalf("config.NewRedisClient(): %v", err)
-	}
-	{
-		pingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		err := rdb.Ping(pingCtx).Err()
-		cancel()
-		if err != nil {
-			log.Fatalf("redis.Ping(): %v", err)
-		}
 	}
 
 	var maxMindDB *maxminddb.Reader
