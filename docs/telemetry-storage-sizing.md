@@ -12,8 +12,9 @@ Replace inputs with measured direct-mode traffic before using any figure as a bi
 
 | Input | Symbol | Default | Confidence |
 | --- | --- | --- | --- |
-| Sessions per DAU | `S` | 2 | Assumed |
-| Auctions per DAU | — | 4 (8 at the 1M tier) | Assumed |
+| Sessions per DAU | `S` | **2** (all tiers) | Assumed |
+| Auctions per session | — | **5** | Assumed |
+| Auctions per DAU | — | `S × 5` = **10** | Derived |
 | Registered network adapters | `A` | 20 | PRD ("20+ network adapters") |
 | Bidding DSPs per auction | `D` | 6 | Assumed |
 | DSPs that return a bid | `B` | 4 | Assumed |
@@ -29,7 +30,7 @@ Replace inputs with measured direct-mode traffic before using any figure as a bi
 | Metric sample in VictoriaMetrics | — | 1 B + 20% index + 25% merge | Vendor claim |
 | Redis `tel:evt:{app_id}:{event_id}` | — | 200 B, 72 h | Estimated |
 
-`K` = 0.1 is used in §3–§4 to derive per-unit figures. **At the ~10k DAU design point the operational default is `K` = 1.0** — 472 MiB/day is not worth sampling away, and full fidelity while calibrating is worth more than the storage. §5 tiers each state the `K` they use.
+`K` = 0.1 is used in §3–§4 to derive sampled figures. **The TRD implements events as Parquet on Spaces, 10 min flush, `K` = 1.0.** At ~10k DAU that is **1.1 GiB/day Parquet, 114 GiB retained**. JSON on the bus is ~6.8 GiB/day (not the Spaces bill).
 
 The two "highest leverage" rows scale the entire lake linearly. 200 B/row assumes columnar dictionary + zstd on a mostly-repetitive envelope; the `payload` JSON blob column compresses far worse than the envelope columns, so **200 B is optimistic until measured**. Treat lake figures as ±2×.
 
@@ -179,9 +180,11 @@ The unit of account is the **auction**, not the ad. At fill 0.4 most auctions ne
 
 ```
 sessions_day    = DAU × S
-auctions_day    = DAU × auctions_per_DAU
+auctions_day    = sessions_day × 5
 impressions_day = auctions_day × fill
 unfilled_day    = auctions_day − impressions_day
+raw_day         = impressions_day × 55 + unfilled_day × 54 + sessions_day × 23
+raw_json_day    = raw_day × 1.2 KiB
 
 stored_day  = impressions_day × (18 + K × 36)
             + unfilled_day    × (18 + K × 30)
@@ -198,60 +201,36 @@ redis       = client_events_day × 200 B × 3 d
 
 `r_*` are the retained-bytes-per-unit figures from §4, which depend on `K`. They are quoted below per tier rather than as constants.
 
-### Tier 1 — first iteration (10k DAU, 4 auctions, `S`=2, fill 0.4, **`K` = 1.0**)
+### Raw events vs Parquet (TRD store)
 
-Full fidelity, because at this volume sampling buys nothing worth the loss of detail.
+Unsampled catalog (`K` = 1). **Bus = 1.2 KiB JSON. Store = 200 B Parquet on Spaces, flush every 10 min.**
 
-```
-auctions 40k · impressions 16k · unfilled 24k · sessions 20k
-stored_day   = 16k×54 + 24k×48 + 20k×23   = 2.48M events/day
-parquet_day  = 2.48M × 200 B              = 472 MiB / day
-bus_day      = 2.48M × 1.2 KiB            = 2.8 GiB / day (≈ 0.8 GiB zstd)
-s3_retained  = 16k×1.22 + 24k×0.88 + 20k×0.39 MiB  ≈ 47 GiB
-traces_day   @ 100% keep                  = 59 MiB / day → 820 MiB at 14 d
-redis (72 h) = 1.7M client events × 200 B × 3       ≈ 1.0 GiB
-ingest       = 1.7M / 100 per batch                 ≈ 0.2 rps mean
-```
+| | Events / day | JSON bus / day | **Parquet / day** | **Parquet on Spaces** (90/400 d) | Per 10 min flush |
+| --- | --- | --- | --- | --- | --- |
+| **10k DAU** | **5.9M** | 6.8 GiB | **1.1 GiB** | **114 GiB** | ~41k events, ~8 MiB |
+| 100k DAU | **59M** | 68 GiB | **11 GiB** | **1.1 TiB** | ~410k, ~78 MiB |
+| 1M DAU | **590M** | 675 GiB | **110 GiB** | **11 TiB** | ~4.1M, ~780 MiB |
 
-### Tier 2 — growth (100k DAU, 4 auctions, `S`=2, fill 0.4, `K` = 0.1)
+### Sampled / Parquet / traces (not in the TRD storage budget)
+
+Same traffic, `K` = 1.0 at 10k and `K` = 0.1 at 100k–1M; Parquet 200 B/row.
 
 ```
-auctions 400k · impressions 160k · unfilled 240k · sessions 200k
-stored_day   = 160k×21.6 + 240k×21.0 + 200k×5.9  = 9.68M events/day
-parquet_day  = 1.8 GiB / day
-bus_day      = 11.1 GiB / day (≈ 3 GiB zstd)
-s3_retained  = 160k×0.67 + 240k×0.42 + 200k×0.10 MiB  ≈ 223 GiB
-traces_day   @ 100% keep = 572 MiB / day → 7.8 GiB at 14 d
-redis (72 h) = 5.8M client events × 200 B × 3    ≈ 3.2 GiB
-ingest       ≈ 0.7 rps mean
+10k  (K=1.0): 100k auctions · 40k impressions · 60k unfilled · 20k sessions
+stored_day   = 40k×54 + 60k×48 + 20k×23   = 5.5M
+parquet_day  = 5.5M × 200 B               = 1.0 GiB / day
+s3_parquet   ≈ 107 GiB retained
+redis (72 h) ≈ 2.5 GiB (client events only)
+ingest       ≈ 0.5 rps mean
+
+100k (K=0.1): 1M auctions
+stored_day   ≈ 22M  · parquet ≈ 4.2 GiB / day · s3 ≈ 527 GiB
+redis ≈ 9 GiB · ingest ≈ 2 rps
+
+1M   (K=0.1): 10M auctions
+stored_day   ≈ 224M · parquet ≈ 42 GiB / day · s3 ≈ 5.2 TiB
+redis ≈ 93 GiB · ingest ≈ 19 rps   ← Redis tripwire
 ```
-
-### Tier 3 — headroom check (1M DAU, 8 auctions, `S`=3, fill 0.4, `K` = 0.1)
-
-```
-auctions 8M · impressions 3.2M · unfilled 4.8M · sessions 3M
-stored_day   = 3.2M×21.6 + 4.8M×21.0 + 3M×5.9    = 187.6M events/day
-parquet_day  = 35 GiB / day
-bus_day      = 215 GiB / day (≈ 57 GiB zstd)
-s3_retained  = 3.2M×0.67 + 4.8M×0.42 + 3M×0.10 MiB    ≈ 4.25 TiB
-traces_day   @ 10% keep = 1.1 GiB / day → 16 GiB at 14 d
-redis (72 h) = 110M client events × 200 B × 3    ≈ 62 GiB   ← see §7, tripwire
-ingest       ≈ 13 rps mean, ~65 rps peak
-```
-
-Tier 1 runs at `K` = 1.0 and Tiers 2–3 at `K` = 0.1, which is the realistic operating plan rather than a like-for-like comparison. Holding Tier 1 at `K` = 0.1 would give 185 MiB/day and ~22 GiB retained — the floor, not the plan.
-
-### Summary
-
-| | `K` | Stored / day | Parquet / day | Retained on S3 | Bus / day (zstd) | Traces on VT (14 d) | Redis 72 h | Ingest |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **10k DAU** | **1.0** | 2.5M | **472 MiB** | **47 GiB** | 0.8 GiB | 820 MiB | 1.0 GiB | 0.2 rps |
-| 100k DAU | 0.1 | 9.7M | 1.8 GiB | 223 GiB | 3 GiB | 7.8 GiB | 3.2 GiB | 0.7 rps |
-| 1M DAU | 0.1 | 188M | 35 GiB | 4.25 TiB | 57 GiB | 16 GiB | **62 GiB** | 13 rps |
-
-Metrics are independent of DAU — see §6.
-
-Every figure here is post-sampling. The ~55 raw events per auction in §2 sizes the instrumentation, not the pipeline; it equals the transported volume only at `K` = 1, which is why Tier 1's bus figure is the largest relative to its DAU.
 
 ---
 
@@ -285,7 +264,7 @@ Each component is adequate now with a written condition for when it stops being.
 | --- | --- | --- | --- |
 | Parquet + DuckDB | ~100k DAU | Funnel queries daily/hourly, or >2 concurrent SQL users | ClickHouse on the **same** files (events Phase 4) |
 | Hive-partitioned Parquet | Until legal rules on DSRs | Row-level delete required, or file counts explode | Iceberg + REST catalog (events Phase 2) |
-| **Redis `event_id` dedupe** | ~100k DAU (4 GiB) | RAM cost exceeds the lake's | Read-time dedupe: `ROW_NUMBER() OVER (PARTITION BY event_id)`. Lake is append-only and every query is batch, so G5 holds logically without RAM |
+| **Redis `event_id` dedupe** | ~10k DAU (~2.5 GiB raw) | RAM at 1M unsampled (~250 GiB) | Read-time dedupe: `ROW_NUMBER() OVER (PARTITION BY event_id)`. Lake is append-only and every query is batch, so G5 holds logically without RAM |
 | Single-node VictoriaTraces | ~1M DAU at 10% keep | Ingest or lookup latency | VT cluster |
 | Single-node VictoriaMetrics | Well past 1M DAU | Scrape fan-out | vmagent, then VM cluster |
 | `telemetry-events` partitions | Set explicitly at creation | Auto-created topics default to 1 partition | Size partitions to peak raw/day before first write |

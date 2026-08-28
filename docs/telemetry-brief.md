@@ -56,21 +56,19 @@ Three kinds of data. They can share infrastructure; they must not share grain.
 
 ## 4. What it costs
 
-At the design point (~10k DAU, 4 auctions/DAU, fill 0.4):
+At the design point (~10k DAU, **2 sessions × 5 auctions**, fill 0.4, **Parquet on Spaces**, 10 min flush):
 
-| | Per day | Retained |
+| | Per day | Retained (90/400 d) |
 | --- | --- | --- |
-| Events → Parquet | **472 MiB** | **~47 GiB** |
-| Redpanda (new topic, zstd) | 0.8 GiB | topic retention |
-| Traces on VictoriaTraces @ 100% keep | 59 MiB | 820 MiB (14 d) |
-| Metrics on VictoriaMetrics | — | ~4 GiB (90 d) |
-| Redis `event_id` dedupe | — | ~1.0 GiB (72 h) |
+| **Events (Parquet)** | **1.1 GiB** (5.9M events) | **114 GiB** (~$5/mo Spaces) |
 
-**Object storage is not where this project's cost lives.** Even at 1M DAU the lake is ~4.25 TiB — low hundreds of dollars a month. The costs that actually matter are elsewhere, and are easy to miss:
+JSON on Redpanda is ~6.8 GiB/day; topic retention is days, not 400 d. Traces and metrics are not in this TRD. [TRD §6](./TRD_BidOn_Telemetry.md#6-storage--events-parquet-on-spaces).
 
-1. **Retention policy.** Unconfirmed and dominant: 400 d → 180 d cuts the lake ~30%. Note the statutory 6–10 year accounting window applies to the *ledger*, not the event log — a daily aggregate tier satisfies it for ~25 GiB over seven years, versus ~25 TiB to keep raw events that long. Build the aggregate in M0; it cannot be backfilled.
-2. **Redis dedupe at scale.** Fine now (~1 GiB), ~62 GiB of RAM at 1M DAU — roughly 10× the lake's cost. Tripwire written; the fallback is read-time dedupe in SQL.
-3. **People-time.** Three stores, a sink, and a collector, run by a small team. This is the honest cost of the grain split and we accepted it deliberately.
+**At 10k, Parquet on Spaces is ~$5/mo** (114 GiB). At 1M: **~11 TiB retained (~$230/mo)**. Redis 72 h dedupe is ~2.5 GiB now and ~250 GiB RAM at 1M unsampled — tripwire to SQL dedupe.
+
+1. **Retention policy.** Statutory 6–10 year accounting applies to the *ledger* (aggregates, ~25 GiB over seven years), not individual auction runs. 400 d on raw reconciliation rows is analytics/audit, not tax. Build the aggregate in M0; it cannot be backfilled.
+2. **Redis dedupe at scale.** Fine now (~2.5 GiB). Fallback is read-time dedupe in SQL.
+3. **People-time** to run the sink. Owner still unnamed.
 
 ---
 
