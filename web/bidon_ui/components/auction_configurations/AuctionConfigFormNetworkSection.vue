@@ -274,11 +274,11 @@
 <script setup>
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import {
-  AUCTION_NETWORKS,
-  NETWORK_LABEL_BY_KEY,
-  NETWORK_ACCOUNT_TYPE_BY_KEY,
-} from "@/constants/Networks.js";
+
+const networks = useNetworks();
+onMounted(() => {
+  void networks.ensureLoaded();
+});
 
 const props = defineProps({
   isBidding: { type: Boolean, required: true },
@@ -319,13 +319,14 @@ const profileAccountTypes = computed(
 );
 
 function networkHasProfile(networkKey) {
-  return profileAccountTypes.value.has(NETWORK_ACCOUNT_TYPE_BY_KEY[networkKey]);
+  const accountType = networks.accountTypeFor(networkKey);
+  return accountType != null && profileAccountTypes.value.has(accountType);
 }
 
 const allNetworks = computed(() =>
-  AUCTION_NETWORKS.filter((n) => n.isBidding === props.isBidding).map((n) => ({
+  networks.auctionNetworks(props.isBidding).map((n) => ({
     key: n.key,
-    label: NETWORK_LABEL_BY_KEY[n.key] ?? n.key,
+    label: n.label,
   })),
 );
 

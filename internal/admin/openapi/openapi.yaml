@@ -963,6 +963,23 @@ paths:
                 $ref: './schemas/user-detailed.schema.json'
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /api/networks:
+    get:
+      operationId: getNetworks
+      summary: List registered demand networks
+      tags:
+        - Networks
+      responses:
+        '200':
+          description: A list of networks from the adapter registry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/network.schema.json'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
   /api/rest/resources:
     get:
       operationId: getResources
