@@ -146,8 +146,6 @@ services:
     depends_on:
       postgres:
         condition: service_started
-      redis:
-        condition: service_started
       bidon-migrate:
         condition: service_completed_successfully
     environment:
@@ -211,7 +209,7 @@ services:
       ENVIRONMENT: production
       DATABASE_URL: postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon
       DATABASE_REPLICA_URL: postgres://bidon:${PG_PASSWORD:-password}@postgres:5432/bidon
-      REDIS_CLUSTER: redis://redis:6379/0
+      REDIS_URL: redis://redis:6379/0
       USE_KAFKA: "true"
       KAFKA_BROKERS_LIST: kafka:9092
       KAFKA_CLIENT_ID: bidon_dev

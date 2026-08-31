@@ -31,6 +31,7 @@ docker compose -f docker-compose.dev.yml up -d
 | bidon-admin | http://localhost:1323      |
 | bidon-sdkapi| http://localhost:1324      |
 | Postgres    | localhost:5434             |
+| Redis       | localhost:6379             |
 | Kafka       | localhost:9092             |
 
 **First run** requires internet access to pull images and download Go modules. Subsequent runs work offline once the module cache is warm.

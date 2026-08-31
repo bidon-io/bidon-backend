@@ -5,9 +5,6 @@ x-golang-dev-app-base: &golang-dev-app-base
     - gocache-dev:/root/.cache/go-build
   working_dir: /app
 
-x-host-gateway-extra-hosts: &host-gateway-extra-hosts
-  - "host.docker.internal:host-gateway"
-
 x-dev-db-env: &dev-db-env
   DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon
   DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon
@@ -20,14 +17,11 @@ x-dev-kafka-env: &dev-kafka-env
   KAFKA_AD_EVENTS_TOPIC: ad-events
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
 
-x-redis-cluster-env: &redis-cluster-env
-  REDIS_CLUSTER_START_PORT: 7001
-  REDIS_CLUSTER_ANNOUNCE_HOSTNAME: host.docker.internal
-  REDIS_URL: redis://host.docker.internal:7001/0
-  REDIS_CLUSTER: host.docker.internal:7001,host.docker.internal:7002,host.docker.internal:7003
+x-dev-redis-env: &dev-redis-env
+  REDIS_URL: redis://redis:6379/0
 
 x-dev-bidon-app-env: &dev-bidon-app-env
-  <<: [*dev-kafka-env, *redis-cluster-env]
+  <<: *dev-kafka-env
   ENVIRONMENT: development
   USE_GEOCODING: "true"
   MAXMIND_GEOIP_FILE_PATH: GeoLite2-City.mmdb
@@ -53,16 +47,12 @@ services:
       interval: 5s
 
   redis:
-    build:
-      context: .
-      dockerfile: docker/redis/Dockerfile
+    image: redis:7.4-alpine
     ports:
-      - '7001-7003:7001-7003'
-    environment:
-      <<: *redis-cluster-env
-    volumes:
-      - redis-data-dev:/data
-    extra_hosts: *host-gateway-extra-hosts
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
 
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v26.1.9
@@ -134,8 +124,6 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      redis:
-        condition: service_started
       redpanda:
         condition: service_healthy
     environment:
@@ -143,7 +131,6 @@ services:
       PORT: 1323
       GRPC_PORT: 50051
       APP_SECRET: app_secret
-    extra_hosts: *host-gateway-extra-hosts
 
   bidon-sdkapi:
     image: golang:1.24-alpine
@@ -155,14 +142,13 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
       redpanda:
         condition: service_healthy
     environment:
-      <<: [*dev-db-env, *dev-bidon-app-env]
+      <<: [*dev-db-env, *dev-bidon-app-env, *dev-redis-env]
       PORT: 1323
       APP_SECRET: app_secret
-    extra_hosts: *host-gateway-extra-hosts
 
   bidon-ui:
     image: node:22-alpine
@@ -206,6 +192,5 @@ volumes:
   pgdata-dev:
   gomodcache-dev:
   gocache-dev:
-  redis-data-dev:
   redpanda-data-dev:
   bidon-ui-node-modules-dev:

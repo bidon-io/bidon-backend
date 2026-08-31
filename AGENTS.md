@@ -32,6 +32,7 @@ Runs Postgres, Redis, Redpanda, migrations, seed data, both API services, and th
 | bidon-admin      | http://localhost:1323 |
 | bidon-sdkapi     | http://localhost:1324 |
 | Postgres         | localhost:5434        |
+| Redis            | localhost:6379        |
 | Redpanda         | localhost:19092     |
 | Redpanda Console | http://localhost:8080 |
 
