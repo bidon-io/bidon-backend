@@ -5,7 +5,7 @@
 **Start here:** [telemetry-brief.md](./telemetry-brief.md)  
 **Source PRD:** [PRD_BidOn_Telemetry - v1.pdf](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
 **Requirements:** [telemetry-requirements.md](./telemetry-requirements.md)  
-**Infrastructure spec:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md)  
+**Events warehouse TRD:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) (Parquet on Spaces only; not ingest, traces, or metrics)  
 **Settled stores:** events (A) [telemetry-events-store.md](./telemetry-events-store.md) · traces (B) [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces) · metrics (C) [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics)  
 **Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md)  
 **Option we declined:** [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) (unified ClickHouse)  
@@ -195,7 +195,7 @@ Numbering matches the Linear initiative.
 
 **Cutover:** dual-emit. Old topics stay until the unnamed downstream consumer of `ad-events` / `notification-events` is migrated. A hard cutover is unsafe.
 
-Who consumes those topics is **not in this repo** (README mentions a `bidon-ad-events` topic historically; compose uses `ad-events`). Owner must be named before monthly cost can close. See TRD open items.
+Who consumes those topics is **not in this repo** (README mentions a `bidon-ad-events` topic historically; compose uses `ad-events`). Owner must be named before monthly cost can close. See §6 below.
 
 ### Q4. Direct-mode auction mechanics
 
@@ -285,7 +285,7 @@ M1 funnel metrics that need **both** sides:
 ## 4. Dual-emission rules
 
 1. Keep writing `ad-events` and `notification-events` unchanged until the downstream owner signs off.
-2. New PRD events go to a new topic (`telemetry-events`; see TRD).
+2. New PRD events go to a new topic (`telemetry-events`; the [events TRD](./TRD_BidOn_Telemetry.md) sink reads only this topic).
 3. Do not widen `AdEvent` in place to look like the M0 envelope. That mixes PII policy and schema versioning.
 4. `/v2/show` remains the billing trigger. New `ad_impression` / `billing_notice_sent` are additional writes from that handler, not a replacement of BURL.
 5. If the SDK later posts `ad_impression` to ingest as well, dedupe on `event_id` (or a derived key `show:{auction_id}:{demand_id}` during transition).
@@ -332,7 +332,7 @@ OTel: span in `auction.Service.Run`, child span per DSP in `bidding.Builder`, ch
 
 Infra not in the Go ticket list: Compose/Coolify for VM, VT, otelcol, Parquet sink, object-storage bucket. Owners still unnamed.
 
-Details: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md).
+Events warehouse (Parquet sink, Spaces, DuckDB): [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md). Ingest, sampling, dual-emit, and OTel stay in this spike.
 
 ---
 
@@ -363,7 +363,7 @@ Waterfall/stats work is listed separately (highest remaining uncertainty on the 
 | --- | --- | --- | --- |
 | BE-M0-1 | Shared envelope types + `schema_version` in a new `internal/telemetry` package (do not extend `AdEvent`) | TBC | Blocked on BID-46. Include `event_id`, host/auction_owner/integration_mode, sampling_rate |
 | BE-M0-2 | `telemetry-events` Kafka topic + logger engine next to `internal/sdkapi/event` | TBC | Env var `KAFKA_TELEMETRY_EVENTS_TOPIC`; compose/dev/staging wiring. **Create the topic explicitly** — `config/kafka.go:30` has `AllowAutoTopicCreation`, so auto-creation would give one partition. Set partitions, retention, and **zstd** compression at creation |
-| BE-M0-3 | `POST /v2/telemetry` ingest: batch parse, app-key auth, allow-list validation, `event_id` dedupe (client events only, `(app_id, event_id)`), MaxMind `country` | TBC | See TRD ingest. Never sample errors; never reject on `schema_version`; fail open if Redis is down |
+| BE-M0-3 | `POST /v2/telemetry` ingest: batch parse, app-key auth, allow-list validation, `event_id` dedupe (client events only, `(app_id, event_id)`), MaxMind `country` | TBC | Requirements G3/G5/G8/G11. Never sample errors; never reject on `schema_version`; fail open if Redis is down |
 | BE-M0-4 | `/v2/config` `telemetry` block: single `auction_sample_rate`, publisher kill switch | TBC | Storage: app settings or dedicated config table. Default `1.0` at current scale. Per-auction kill switch **not** in this ticket |
 | BE-M0-5 | Privacy enforcement on the new stream: no IP/IFA/IDFV/city; COPPA reduced field set; scrub `error_message`; do not copy `raw_request`/`raw_response` | TBC | Old topics stay as they are during dual-emission |
 | BE-M0-6 | OTel auction trace skeleton: span in `Service.Run`, child per DSP, exemplar-friendly | TBC | Export **otelcol → VictoriaTraces**. Sentry exceptions only. Spanmetrics → VictoriaMetrics (no `auction_id` labels). No new business events in this ticket |
@@ -375,7 +375,7 @@ Waterfall/stats work is listed separately (highest remaining uncertainty on the 
 | BE-M1-1 | DSP fan-out events: `dsp_request_sent` at send time; `dsp_response_received` with outcome enum; `dsp_response_rejected` with reason | TBC | Highest server uncertainty: map HTTP/timeout/parse/below-floor onto PRD outcomes; capture `nbr`/`creative_id`/`crtype`/`supports_omid` where adapters already parse them (many do not) |
 | BE-M1-2 | `auction_request_received` at request accept + `auction_completed` at bidding-round end | TBC | Distinct from fill. Include winner_demand_source, clearing_price, participant_count, total_latency_ms |
 | BE-M1-3 | Notice events: success, http_status, retry_count, latency_ms on win/billing/loss; add `notice_delivery_failed` | TBC | **Sequence first in M1.** `EventSender` currently returns `nil` for any HTTP response (§1.2), so notice delivery rate is not merely unreported — it is unobserved. Unblocks J4 / Goal 3. Retry on 5xx while here; consider the float-equality bid match in `handler.go:234` as a companion fix |
-| BE-M1-4 | `/v2/show` emits `ad_impression` + `billing_notice_sent` onto `telemetry-events`; keep BURL behaviour | TBC | Delivery guarantee = the `/show` HTTP call. Dedupe key documented in TRD |
+| BE-M1-4 | `/v2/show` emits `ad_impression` + `billing_notice_sent` onto `telemetry-events`; keep BURL behaviour | TBC | Delivery guarantee = the `/show` HTTP call. Dedupe: client `event_id`, or `show:{auction_id}:{demand_id}:{ad_unit_uid}` in transition |
 | BE-M1-5 | Dual-write: existing `AdEvent`/`NotificationEvent` unchanged alongside new events | TBC | Feature-flag off-switch for the new topic only |
 | BE-M1-6 | **Waterfall / fill (listed separately):** derive `waterfall_position` / `attempts_made` from `/v2/stats` **or** accept explicit SDK fields; emit data needed for fill rate / time to fill / per-source load rate | TBC | Confirm with SDK before scheduling (stats order vs payload change). Not a server waterfall rewrite |
 

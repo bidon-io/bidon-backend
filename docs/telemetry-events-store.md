@@ -1,6 +1,7 @@
 # Product events: Parquet on S3, SQL when needed, Iceberg when ready
 
-**Scope:** grain A only ([telemetry-requirements.md](./telemetry-requirements.md) §2.A). Grain B: [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces from day 1). Grain C: [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics from day 1).  
+**Scope:** events only ([telemetry-requirements.md](./telemetry-requirements.md) §2.A). Traces: [telemetry-traces-store.md](./telemetry-traces-store.md). Metrics: [telemetry-metrics-store.md](./telemetry-metrics-store.md).  
+**Phase 1 implementation contract:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) — Parquet on DigitalOcean Spaces, 10 min flush. This file is the design and later phases.  
 **Decision:** JSON → OSS Redpanda → **Parquet on object storage** → **DuckDB** (or Athena/Trino) when you query. **Iceberg** is the table format to adopt when an OSS writer + REST catalog are in place — not Redpanda Enterprise, not Connect’s licensed `iceberg` output. **ClickHouse** later reads the **same** lake.  
 **Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
@@ -26,7 +27,7 @@ Redpanda is already paid for. Incremental store = sink that writes **Parquet**, 
 
 ```
 bidon-sdkapi (JSON) → Redpanda telemetry-events
-                         → OSS consumer (flush every **10 min**, or 64 MiB, whichever first)
+                         → custom Go sink (flush every **10 min**, or 64 MiB, whichever first)
                          → DigitalOcean Spaces: s3://…/events/dt=YYYY-MM-DD/event_name=…/*.parquet
                          → DuckDB: read_parquet('s3://…/events/dt=…/**')
 ```
@@ -37,7 +38,7 @@ bidon-sdkapi (JSON) → Redpanda telemetry-events
 
 **Good enough** to size sampling and prove the catalog. Hive paths are a **temporary** layout.
 
-At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./telemetry-storage-sizing.md), [TRD §6](./TRD_BidOn_Telemetry.md#6-storage--events-parquet-on-spaces)). JSON on the bus is ~6.8 GiB/day at 10k DAU; that is not the Spaces bill.
+At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./telemetry-storage-sizing.md), [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost)). JSON on the bus is ~6.8 GiB/day at 10k DAU; that is not the Spaces bill.
 
 The `payload` JSON blob column is why the 200 B/row estimate is optimistic — envelope columns dictionary-encode well, an opaque JSON string does not. Measure bytes/row in Phase 1 and feed it back into the sizing model before quoting a bill.
 
@@ -90,14 +91,14 @@ But `session_id` + `device_model` + `app_bundle` + `country` is plausibly **pseu
 
 | Phase | Writer | What lands in the bucket |
 | --- | --- | --- |
-| 1 | Connect community S3 parquet, or any consumer | Hive-style Parquet |
-| 2+ | PyIceberg `append` (OSS) | Parquet **plus** Iceberg metadata + catalog pointer |
+| 1 | Custom Go consumer in this repo (franz-go → Parquet → Spaces). Not Redpanda Enterprise, not Connect. | Hive-style Parquet |
+| 2+ | OSS Iceberg writer if a catalog is ever added — still not Redpanda Enterprise | Parquet **plus** Iceberg metadata + catalog pointer |
 
 JSON on the topic never changes.
 
 ## M0 slice
 
-1. `telemetry-events` + Phase 1 sink (or Phase 2 if catalog is ready in the same sprint).  
+1. `telemetry-events` + custom Go Phase 1 sink ([TRD](./TRD_BidOn_Telemetry.md)).  
 2. DuckDB SQL pack.  
 3. **Daily aggregate rollup** written to a separate long-retention prefix ([sizing §4](./telemetry-storage-sizing.md#4-retention)) — a scheduled query, ~25 GiB over seven years, and the only artefact that survives a decision to shorten raw retention. It cannot be backfilled once raw rows expire, so it ships with the sink.  
 4. Freshness alert on the sink.  

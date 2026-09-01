@@ -8,7 +8,7 @@ Start here. The supporting documents are linked at each decision.
 | --- | --- |
 | Why | [PRD v1](./PRD_BidOn_Telemetry%20-%20v1.pdf) (Jonathan Kuperberg) |
 | What must be true | [telemetry-requirements.md](./telemetry-requirements.md) |
-| What carries it | [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) |
+| Events warehouse (Parquet on Spaces) | [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) |
 | What the code does today | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) |
 | Stores | [events](./telemetry-events-store.md) · [traces](./telemetry-traces-store.md) · [metrics](./telemetry-metrics-store.md) |
 | Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
@@ -62,7 +62,7 @@ At the design point (~10k DAU, **2 sessions × 5 auctions**, fill 0.4, **Parquet
 | --- | --- | --- |
 | **Events (Parquet)** | **1.1 GiB** (5.9M events) | **114 GiB** (~$5/mo Spaces) |
 
-JSON on Redpanda is ~6.8 GiB/day; topic retention is days, not 400 d. Traces and metrics are not in this TRD. [TRD §6](./TRD_BidOn_Telemetry.md#6-storage--events-parquet-on-spaces).
+JSON on Redpanda is ~6.8 GiB/day; topic retention is days, not 400 d. Traces and metrics are not in the events TRD. [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost).
 
 **At 10k, Parquet on Spaces is ~$5/mo** (114 GiB). At 1M: **~11 TiB retained (~$230/mo)**. Redis 72 h dedupe is ~2.5 GiB now and ~250 GiB RAM at 1M unsampled — tripwire to SQL dedupe.
 

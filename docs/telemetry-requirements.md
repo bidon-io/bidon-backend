@@ -4,7 +4,7 @@
 **Date:** 2026-08-26  
 **Start here:** [telemetry-brief.md](./telemetry-brief.md)  
 **PRD:** [PRD_BidOn_Telemetry v1](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
-**TRD:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md)  
+**Events warehouse TRD:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) (Parquet on DigitalOcean Spaces only)  
 **Code audit:** [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md)
 
 Vendor notes from earlier discussion are *not* requirements. This document is what a store (or stores) must satisfy.

@@ -30,7 +30,7 @@ Replace inputs with measured direct-mode traffic before using any figure as a bi
 | Metric sample in VictoriaMetrics | — | 1 B + 20% index + 25% merge | Vendor claim |
 | Redis `tel:evt:{app_id}:{event_id}` | — | 200 B, 72 h | Estimated |
 
-`K` = 0.1 is used in §3–§4 to derive sampled figures. **The TRD implements events as Parquet on Spaces, 10 min flush, `K` = 1.0.** At ~10k DAU that is **1.1 GiB/day Parquet, 114 GiB retained**. JSON on the bus is ~6.8 GiB/day (not the Spaces bill).
+`K` = 0.1 is used in §3–§4 to derive sampled figures. **The events TRD implements Parquet on Spaces, 10 min flush, at `K` = 1.0.** At ~10k DAU that is **1.1 GiB/day Parquet, 114 GiB retained**. JSON on the bus is ~6.8 GiB/day (not the Spaces bill).
 
 The two "highest leverage" rows scale the entire lake linearly. 200 B/row assumes columnar dictionary + zstd on a mostly-repetitive envelope; the `payload` JSON blob column compresses far worse than the envelope columns, so **200 B is optimistic until measured**. Treat lake figures as ±2×.
 
@@ -197,11 +197,11 @@ traces_day  = auctions_day × trace_keep × 1.5 KiB
 redis       = client_events_day × 200 B × 3 d
 ```
 
-**Sampling happens before the bus, not after.** Both producers apply `K` at emit (TRD §4.5), so Redpanda, the client queue and the ingest endpoint all carry *stored* volume, not raw. The ~55 raw events per auction from §2 is the instrumentation's full output — it equals the transported volume only at `K` = 1.
+**Sampling happens before the bus, not after.** Both producers apply `K` at emit (requirements G11), so Redpanda, the client queue and the ingest endpoint all carry *stored* volume, not raw. The ~55 raw events per auction from §2 is the instrumentation's full output — it equals the transported volume only at `K` = 1. The events TRD sink does not re-sample.
 
 `r_*` are the retained-bytes-per-unit figures from §4, which depend on `K`. They are quoted below per tier rather than as constants.
 
-### Raw events vs Parquet (TRD store)
+### Raw events vs Parquet (events TRD store)
 
 Unsampled catalog (`K` = 1). **Bus = 1.2 KiB JSON. Store = 200 B Parquet on Spaces, flush every 10 min.**
 

@@ -1,247 +1,226 @@
-# Technical Requirements Document — BidOn Telemetry (backend)
+# Technical Requirements Document — Telemetry event storage
+
+**Parquet on DigitalOcean Spaces**
 
 **Status:** Draft  
-**Date:** 2026-08-28  
-**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
-**Companion PRD:** [PRD_BidOn_Telemetry - v1.pdf](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
-**Backend spike / mapping:** [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md)  
-**Requirements:** [telemetry-requirements.md](./telemetry-requirements.md)  
-**Settled for this TRD:** grain A only — [telemetry-events-store.md](./telemetry-events-store.md): JSON → Redpanda `telemetry-events` → **Parquet on DigitalOcean Spaces**, **10 min flush**.  
-**Out of this TRD:** traces (B) and metrics (C). See [telemetry-traces-store.md](./telemetry-traces-store.md) / [telemetry-metrics-store.md](./telemetry-metrics-store.md) when those are implemented.  
-**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md)
+**Date:** 2026-09-01  
+**This TRD specifies:** the events warehouse. One row per product event, retained as Parquet on DigitalOcean Spaces, flushed every 10 minutes.  
+**This TRD does not specify:** how events are produced, ingested, sampled, or privacy-filtered; traces; metrics.
 
-The PRD states *what* must be observable. This TRD states *what carries it* on the Bidon server. Client transport (on-disk queue, crash path, retry-to-ingest) is SDK-owned (BID-47); this document only specifies the ingest contract that queue talks to, and the server-native event path.
-
-No production instrumentation ships from this draft.
-
----
-
-## 1. Design constraints
-
-- Telemetry must not delay or fail an ad request. Server-native emits are fire-and-forget, same as today's `event.Logger.Log`.
-- Exception: `ad_impression` / billing stay on the **ad-serving channel** (`POST /v2/show/{ad_type}`), not the SDK batch queue.
-- New stream has **no PII**. The existing `ad-events` topic is unchanged during dual-emission and still contains PII; it is not the telemetry product.
-- Additive schema changes within a `schema_version` major; bump major for breaking changes.
-- Errors are never sampled. Sampling is **coherent per auction** (requirements G11), never independent per event.
-- Every join, dedupe key and partition predicate is scoped by `(app_id, …)` (requirements G10). `auction_id` is client-supplied and not globally unique.
-
-**Scale posture.** First iteration of **events only**. Design point ~10k DAU, headroom to 1M. Traces and metrics are not in this implementation.
-
----
-
-## 2. Client transport (ingest-facing contract)
-
-SDK implements the queue. Server requires:
-
-| Rule | Value |
+| | |
 | --- | --- |
-| Endpoint | `POST /v2/telemetry` on `bidon-sdkapi` |
-| Auth | Same as other SDK routes: `app.key` + `app.bundle` lookup; `X-Bidon-Version` |
-| Content-Type | `application/json` body (not query params) |
-| Batch | Array of envelope objects, max **100 events** or **256 KiB** uncompressed, whichever first. Oversize batch → `413` |
-| Compression | `Content-Encoding: gzip` accepted |
-| Clock | Client `event_ts` is wall clock ms; server also stores `received_ts` |
-| Sampling | Client stamps `sampling_rate` from `/v2/config`. Server does **not** re-sample. Missing rate on a sampled event class → treat as `1.0` and increment a metric |
-| Kill switch | If config says publisher kill switch on, SDK should not send. If it does, ingest accepts and drops with `telemetry_dropped` reason `kill_switch` (still 200 so the SDK queue drains) |
-| Retry | SDK retries network and 5xx, up to 5, TTL-bounded (BID-47). **4xx is not retried.** Ingest must not return 4xx for transient overload |
-| Idempotency | Dedupe on `event_id` (UUID). Duplicate within retention → 200, not stored twice |
+| Why the warehouse exists | [PRD v1](./PRD_BidOn_Telemetry%20-%20v1.pdf) — Goals 1–4; Part II “raw events to a columnar warehouse for funnel joins” |
+| What the warehouse must answer | [telemetry-requirements.md](./telemetry-requirements.md) §2.A (jobs J3, J4, J5) |
+| Why Parquet on object storage | [telemetry-events-store.md](./telemetry-events-store.md) |
+| Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
+| Producers, ingest, dual-emit | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) |
+| Traces | [telemetry-traces-store.md](./telemetry-traces-store.md) |
+| Metrics | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
 
-Success response: `200 { "accepted": N, "duplicate": M, "rejected": K }`. Per-event reject reasons in a bounded array (cap 20) so a poison event is visible without huge payloads.
-
-This endpoint is new. Domain endpoints (`/auction`, `/stats`, `/show`, …) keep their current contracts.
+No production instrumentation ships from this draft. The lake can exist empty; producers are a different piece of work.
 
 ---
 
-## 3. The `ad_impression` exception
+## 1. Scope
 
-### Mechanism
+### In
 
-`POST /v2/show/{ad_type}` is the delivery-guaranteed path.
+- A DigitalOcean Spaces bucket (S3 API) for telemetry events.
+- A **custom** Parquet writer (new Go binary in this repo) that consumes Redpanda `telemetry-events`. Not a licensed Redpanda or Confluent sink.
+- Hive layout, 10-minute flush, compression.
+- Lifecycle retention on the two raw classes, plus a daily aggregate prefix.
+- A DuckDB SQL pack an engineer can run against the bucket.
+- A freshness alert on the sink.
 
-1. Handler authenticates and validates as today.
-2. For bidding ads, `HandleShow` fires BURL (billing notice) with existing retries.
-3. Handler emits `ad_impression` and, after the BURL attempt, `billing_notice_sent` or `notice_delivery_failed` onto `telemetry-events`.
-4. HTTP 200 to the SDK means Bidon accepted the impression for billing purposes, **independent of Kafka**.
+### Out
 
-Kafka remaining down after `/show` 200 is a **pipeline** loss, not a billing loss. Alert on produce failures; do not fail `/show`.
+| Topic | Where it lives instead |
+| --- | --- |
+| `POST /v2/telemetry`, batch size, gzip, 4xx vs 5xx | Spike BE-M0-3 |
+| `/v2/config` telemetry block, kill switch, sample rate | Spike BE-M0-4 |
+| Envelope types, `schema_version`, error-code table | Spike BE-M0-1; BID-46 |
+| Redis `event_id` dedupe | Requirements G5; spike BE-M0-3 |
+| Sampling policy (coherent per auction) | Requirements G11; sizing §3 |
+| Privacy allow-list, COPPA field set, `raw_request` exclusion | Requirements G3; spike BE-M0-5 |
+| Dual-emit of `ad-events` / `notification-events` | Requirements G4; spike §4 |
+| `/v2/show` as billing channel | Requirements G2; spike BE-M1-4 |
+| OTel traces, VictoriaTraces | [telemetry-traces-store.md](./telemetry-traces-store.md) |
+| `/metrics` scrape, VictoriaMetrics, paging | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
+| Redpanda Enterprise Iceberg topics, Redpanda Connect Iceberg/S3, Confluent Kafka Connect S3 | Licensed / existing JSON sink — not this store |
+| Publisher-facing BI, a second query engine, a table catalog | Out |
 
-### If `/show` is unavailable
+### Upstream assumptions (not built here)
 
-No impression, no BURL. That is existing product behaviour. Telemetry does not invent a second billing trigger.
+The sink reads JSON envelopes already on `telemetry-events`. Those envelopes are assumed to already satisfy:
 
-### SDK also sending `ad_impression`
+- PRD common envelope (`event_id`, `event_name`, `event_ts`, `schema_version`, `auction_id`, `session_id`, `sampling_rate`, `app_id`, …).
+- No PII (G3). `country` already derived; no IP / IFA / IDFV / city / `raw_request` / `raw_response`.
+- `sampling_rate` already stamped at emit. The sink does not re-sample and does not drop by rate.
 
-Allowed for renderer-side diagnostics. Dedupe:
-
-- Prefer client `event_id` if `/show` echoes or accepts an `event_id`.
-- Transition key if not: `show:{auction_id}:{demand_id}:{ad_unit_uid}`.
-
-**Source of truth for `billing_notice_sent`:** the server BURL attempt from `/show`, never the SDK batch event.
-
-### Degradation
-
-| Failure | Billing | Telemetry |
-| --- | --- | --- |
-| `/show` 4xx/5xx | No BURL | No server `ad_impression` |
-| BURL transport failure after retries | Unbilled win (existing, detected) | `notice_delivery_failed` |
-| BURL returns 4xx/5xx | Unbilled win | **Today: undetected.** See below |
-| Kafka produce fail | BURL already sent | Missing warehouse row; `telemetry_produce_failed` metric |
-
-### Known defect: notice outcomes are not observed today
-
-`internal/notification/event_sender.go:52-60` returns `nil` from the retry closure for **any** HTTP response. Only transport errors are caught; a 500 from a DSP's BURL endpoint is recorded as delivered.
-
-Consequence: **J4 (reconcile impressions against mediator/DSP billing) and PRD Goal 3 are not achievable at all until BE-M1-3 lands.** This makes BE-M1-3 the highest-value ticket for the PRD's stated business case, not a late M1 item — reflected in the sequencing in the [spike](./telemetry-m0-m1-backend-spike.md#suggested-sequence).
-
-Related, and separate from telemetry: `internal/notification/handler.go:234` selects the bid to bill with `bid.Price == impression.GetPrice()` — float equality across a client round-trip, first-match-wins when two DSPs bid identically. For an initiative whose Goal 3 is reconciliation within an agreed tolerance, the billing notice can be attributed to the wrong demand. Instrumenting this path will surface it; better to fix it deliberately than to discover it during certification.
+If the topic is empty, the lake is empty. That is acceptable for this TRD.
 
 ---
 
-## 4. Ingest
+## 2. Why this store
 
-### 4.1 Server-native producer
+The PRD’s jobs that need a warehouse are catalog SQL, not point-gets and not alerts:
 
-Package `internal/telemetry` (new), used by:
+| Job | Query the lake must support |
+| --- | --- |
+| J3 | Fill rate, time-to-fill, render rate, per-source load — `sum(1 / sampling_rate)`, `GROUP BY` demand |
+| J4 | Reconcile Bidon impressions vs mediator / DSP billing |
+| J5 | Per-DSP loss and render |
 
-- `internal/auction/service.go` — `auction_request_received`, `auction_completed`
-- `internal/bidding/builder.go` — `dsp_request_sent` (before `ExecuteRequest`), `dsp_response_received` / `dsp_response_rejected` (after `ParseBids`)
-- `internal/notification/event_sender.go` — notice events with HTTP outcome
+Requirements §2.A: if a system cannot do those joins, it is not the event store. Minutes of lag are fine. Paging is not this store’s job.
 
-Same `LoggerEngine` pattern as `internal/sdkapi/event`, writing `telemetry-events`.
+The PRD also says telemetry must not delay or fail an ad request. The lake is downstream of Redpanda. If the sink or Spaces is down, ads still serve (G1/G2). `/v2/show` produces events onto the bus; it does not query this bucket.
 
-`dsp_request_sent` must be timestamped at **send**, not auction start. Today's `DemandResponse.StartTS` is `params.StartTS` (auction start) and is the wrong clock for this event.
-
-### 4.2 Authentication and app identity
-
-Reuse `AppFetcher.FetchCached`. Unknown app → `422` (consistent with other SDK routes, not 401, unless product changes all routes together).
-
-`publisher_id` on the envelope is the Bidon app/user owner id from the fetched app, not a client-supplied field.
-
-### 4.3 `event_id` dedupe
-
-- Client events: client-generated UUID. **Dedupe applies to these only.**
-- Server events: server-generated UUID at emit time. A UUID minted in-process cannot arrive twice — do **not** spend a Redis entry on it. ~15 of the ~55 raw events per auction are server-minted.
-- Store: Redis SET with TTL **72h**, key `tel:evt:{app_id}:{event_id}` (scoped per G10). Cluster already required (`REDIS_CLUSTER`).
-- **Redis-down policy: fail open.** Accept the batch and skip the dedupe check. G1 outranks G5, and read-time dedupe catches whatever slipped through.
-- **Tripwire.** Redis dedupe is ~2.5 GiB at 10k DAU (raw client events, 72 h). At 1M DAU, still unsampled, it is **~250 GiB of RAM**. At that point move to read-time dedupe (`ROW_NUMBER() OVER (PARTITION BY event_id)`); the lake is append-only and every query is batch, so G5 holds logically without RAM. Recorded in [sizing §7](./telemetry-storage-sizing.md#7-tripwires).
-- **TTL is a joint contract with BID-47.** The SDK queue is disk-backed and survives process death. If its TTL exceeds 72h, dedupe silently fails for exactly the crash-recovery events most likely to be replayed. Either the two numbers are agreed together, or read-time dedupe makes the question moot.
-
-**Ingest QPS — closed, not open.** From the [raw events model](./telemetry-storage-sizing.md#5-volume) (5 auctions/session, `K` = 1): ~0.5 rps at 10k DAU, ~5 rps at 100k, ~50 rps mean at 1M. Size the handler like any other SDK route; no special provision.
-
-### 4.4 Schema validation and rejection
-
-| Condition | HTTP | Event fate |
-| --- | --- | --- |
-| Invalid JSON / oversize | 413 / 400 | None stored |
-| Unknown `schema_version` major | 200 | **Store anyway**, tagged with the version — see below |
-| Missing `event_name` / `event_id` | 200, that event rejected | Drop |
-| Fields outside the allow-list | 200 | **Drop the fields**, store a count, increment `telemetry_unknown_fields_total` |
-| Error events | Accept | Never sampled, never dropped for sampling |
-
-Do not return 4xx for individual bad events inside a valid batch (poison-pill protection for the SDK queue).
-
-**Never hard-reject on `schema_version`.** A version window ("current and previous major") is the conventional choice and is wrong here: PRD rationale 6 states SDK propagation is measured in quarters and never reaches 100%, so rejecting old majors would drop telemetry from a long tail of publishers and bias precisely the fill and reconciliation numbers J3/J4 exist to produce. The lake is schema-on-read — land everything, tag the version, filter in queries.
-
-**Unknown fields are dropped on the client path, not stored.** Keeping them in a bounded `unknown_fields` column is the tempting debug-friendly option, and it contradicts G3: unknown fields on a client batch are exactly where an advertising identifier arrives under a name the denylist does not know. On a public repo, where PRD rationale 5 makes over-collection a liability that cannot be quietly fixed, this is allow-list only. (`adm_parse_result.unknown_fields[]` in the PRD is a different thing — DSP creative-envelope keys observed server-side — and is unaffected.)
-
-### 4.5 Sampling
-
-**Coherent by auction, not independent per event** (requirements G11). Hash `(app_id, auction_id)`; keep or drop that auction's whole diagnostic set.
-
-- **Never sampled, ever:** all errors; every PRD funnel stage (`ad_request_started`, `token_collection_completed`, `auction_requested`, `auction_response_received`, `ad_filled`, `ad_show_requested`, `ad_impression`, `billing_notice_sent`); all notices; `auction_completed`; `dsp_response_rejected`.
-- **Sampled as a set** at rate `K` (default 0.1): per-adapter token detail, per-DSP request/response pairs, per-attempt load detail, `renderer_selected` / `ad_loaded`, viewability, VAST quartiles, `adapter_init_result` successes.
-- Record `sampling_rate` on every event so `sum(1 / sampling_rate)` corrects counts at query time.
-- Config delivers `K`; server-native emits apply the same auction hash, so client and server halves of one auction are kept or dropped together.
-
-The obvious alternative — a sampling rate per `event_name`, applied independently — makes PRD success metric 1 (funnel completeness >98%) unmeasurable by construction, leaves every J1 path with holes, and produces ragged joins where a sampled numerator is divided by an unsampled denominator. Coherence by auction fixes all three at once, and costs nothing beyond hashing an id that is already on the event.
+**Who runs the SQL.** J3/J4/J5 name BD, publisher support, solutions and finance. For this slice those jobs are engineer-mediated: someone runs the saved SQL pack and returns numbers. A query surface for non-engineers is not in this TRD.
 
 ---
 
-## 5. Remote config
-
-Extend `POST /v2/config` response:
-
-```json
-{
-  "telemetry": {
-    "enabled": true,
-    "ingest_path": "/v2/telemetry",
-    "auction_sample_rate": 0.1,
-    "schema_version": 1
-  }
-}
-```
-
-One rate, not a per-`event_name` map: sampling is coherent per auction (§4.5), so a map of independent rates would re-introduce the defect it replaces. Never-sampled classes are a property of the schema, not of config, and cannot be turned off by a mis-set value.
-
-- `enabled: false` is the publisher kill switch.
-- Per-auction kill switch (BID-47) can be added later on the auction response; **not** required for M0.
-- Storage: start with environment / static defaults, then app-level overrides in DB if publishers need different rates. Exact table is an implementation detail of BE-M0-4.
-
-At the first-iteration design point (~10k DAU) the honest default is **`auction_sample_rate: 1.0`**. This TRD’s lake budget is **unsampled Parquet** (~1.1 GiB/day at 10k). `K` = 0.1 is a later reduction. Ship the knob in M0; turn it down when volume justifies it.
-
----
-
-## 6. Storage — events (Parquet on Spaces)
-
-This TRD implements **grain A only**.
+## 3. Pipeline
 
 ```
-bidon-sdkapi  →  JSON  →  Redpanda telemetry-events
-                              →  Parquet sink (flush every 10 min)
-                              →  DigitalOcean Spaces
-                              →  DuckDB when queried
+Redpanda telemetry-events (JSON, already produced)
+        │
+        ▼
+Parquet sink (custom Go, this repo)  ── flush every 10 min, or 64 MiB uncompressed, whichever first
+        │
+        ▼
+DigitalOcean Spaces
+  events/dt=YYYY-MM-DD/event_name=…/*.parquet          ← raw
+  aggregates/dt=YYYY-MM-DD/*.parquet                   ← daily rollup
+        │
+        ▼
+DuckDB  (read_parquet, on demand)
 ```
 
-JSON on the topic is the **bus**. **Parquet on Spaces is the store.** Do not land JSON-on-S3. Traces and metrics are out of this implementation. `/v2/show` produces events; it does not query the lake. If the sink or Spaces is down, ads still serve (G1/G2).
+JSON on the topic is the **bus**. Parquet on Spaces is the **store**. Do not land JSON-on-S3 for this catalog.
 
-Detail: [telemetry-events-store.md](./telemetry-events-store.md). Numbers: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+The writer is a **custom Go consumer** we build. It is not:
 
-### 6.1 Spaces + sink
+- Redpanda Iceberg topics (`redpanda.iceberg.mode`) or any other Redpanda Enterprise sink
+- Redpanda Connect / Benthos Iceberg or S3 output
+- Confluent Kafka Connect S3 — including the existing `docker/kafka-connect` connector, which writes **JSON** of `ad-events`. Do not point that connector at `telemetry-events`, and do not extend it.
+
+---
+
+## 4. Requirements
+
+### 4.1 Bucket
 
 | Item | Requirement |
 | --- | --- |
-| Bucket | DigitalOcean **Spaces** (S3 API), prefix `events/` |
-| Format | **Parquet** (snappy or zstd). Envelope columns + `payload` JSON column |
-| Layout | `s3://…/events/dt=YYYY-MM-DD/event_name=…/*.parquet` (hive; Iceberg later) |
-| **Flush** | **Every 10 minutes**, or **64 MiB** uncompressed batch, whichever first. Do not flush empty. |
-| Writer | OSS consumer (Connect S3 parquet or a small writer). One writer. |
-| Query | DuckDB `read_parquet` on demand. Not a BI farm in M0. |
-| Freshness | Alert if latest object lags the topic by **> 20 min** (two flush intervals) |
+| Service | DigitalOcean **Spaces** (S3 API) |
+| Isolation | Dedicated telemetry bucket, or a dedicated prefix on a bucket that is **not** the Postgres-backup bucket (`infra` currently creates `${name_prefix}-backups-*`). Backup lifecycle must not delete event objects. |
+| ACL | Private. No public list or get. |
+| Credentials | Spaces access key available to the sink process only. Not in application runtime for `bidon-sdkapi`. |
+| Region | Same Spaces region as existing infra (`ams3` in current Terraform). |
 
-10 min lag is acceptable for funnel SQL. Do not page off this lake.
+### 4.2 Format and layout
 
-**Small files.** At 10k DAU a flush is ~**41k events / 8 MiB** if one file. Partitioning by `event_name` (~40 names) yields many sub-MiB objects — accepted at 10k; compact or drop `event_name` partitioning if LIST hurts. At 1M a flush is ~780 MiB.
-
-### 6.2 Inputs (assumed until measured)
-
-| Input | Value |
+| Item | Requirement |
 | --- | --- |
-| Sessions per DAU | **2** |
-| **Auctions per session** | **5** → **10 auctions / DAU** |
-| Fill rate | **0.4** |
-| Catalog | **23** events/session; **~55** filled / **~54** unfilled auction |
-| Parquet | **200 B / row** (unmeasured — ±2×) |
-| Sample rate in this table | **`K` = 1.0** |
+| Encoding | **Parquet** (snappy or zstd). Never JSON, Avro, or CSV as the retained form. |
+| Columns | Envelope fields as typed columns + one `payload` JSON column for event-body fields. |
+| Layout | Hive: `s3://<bucket>/events/dt=YYYY-MM-DD/event_name=<name>/*.parquet` |
+| Partition clock | `dt` from `event_ts` (event wall clock), not ingest wall clock. Late events land on their event day. |
+| Join / list predicates | Every path and every query is scoped by `(app_id, …)` (G10). `event_name` partitioning does not replace that. |
 
-Campaigns are not a term. Ads served = impressions. Unfilled auctions cost about as much as filled.
+**Small files.** At 10k DAU a 10-minute flush is ~41k events / ~8 MiB if written as one file. Partitioning by `event_name` (~40 names) yields many sub-MiB objects — accepted at 10k. Compact, or drop `event_name` from the path, if LIST becomes the bottleneck. Do not shorten the flush to “fix” small files.
 
-```
-raw_day     = impressions × 55 + unfilled × 54 + sessions × 23
-parquet_day = raw_day × 200 B
-```
+Hive day prefixes are the layout. Retention is lifecycle on those prefixes. This TRD does not introduce a table catalog.
 
-**590 events / DAU / day.**
+### 4.3 Writer
 
-### 6.3 Volume (Parquet on Spaces)
+A process we write and operate. Redpanda is the **bus** (Kafka API, already running). It is not the sink.
 
-| Class | Window | What |
+| Item | Requirement |
+| --- | --- |
+| Cardinality | **One writer.** Concurrent appends to the same hive prefix corrupt listings. |
+| Implementation | **Custom Go binary in this repo** (new `cmd/`, not inside `bidon-sdkapi`). Consume with **franz-go** (already the producer stack). Encode Parquet in-process. PUT objects to Spaces via the S3 API. |
+| Not | Redpanda Enterprise Iceberg, Redpanda Connect, Confluent Kafka Connect S3, or any other licensed connector. |
+| Input | Topic `telemetry-events` only. Do not consume `ad-events` or `notification-events`. |
+| Empty flush | Do not write an object when the batch is empty. |
+| Idempotence | At-least-once from Kafka is expected. Duplicate Parquet rows are a query concern (`ROW_NUMBER() OVER (PARTITION BY app_id, event_id)` in the SQL pack), not a writer concern. The sink does not talk to Redis. |
+
+### 4.4 Flush
+
+| Trigger | Value |
+| --- | --- |
+| Time | **Every 10 minutes** |
+| Size | **64 MiB** uncompressed batch, whichever first |
+| Empty | Skip |
+
+10-minute lag is acceptable for funnel SQL. Do not page off this lake. Do not flush more often to chase freshness — small files are the cost of that.
+
+### 4.5 Topic (sink input)
+
+The sink cannot start without a topic. Provisioning it is in this TRD because it is a store prerequisite, not because this TRD owns producers.
+
+| Item | Requirement |
+| --- | --- |
+| Name | `telemetry-events` (env `KAFKA_TELEMETRY_EVENTS_TOPIC`) |
+| Creation | **Explicit.** `config/kafka.go` allows auto-create, which yields one partition. |
+| Compression | Producer zstd (set at topic / producer; do not rely on the franz-go default). |
+| Retention on the bus | **Days**, not 400 d. JSON is ~6× Parquet. The lake is the retain. |
+| Partitions | Set from peak JSON/day before first write ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). |
+
+### 4.6 Query
+
+| Item | Requirement |
+| --- | --- |
+| Engine | DuckDB `read_parquet('s3://…/events/dt=…/**')`. Not an always-on warehouse. |
+| When | On demand. Start DuckDB when someone has a question. |
+| Users | Engineers. Not BD / support / finance self-serve. |
+| SQL pack | Funnel (request → fill → impression → billing), DSP timeout rate, notice success, `GROUP BY event_name`. Every join on `(app_id, auction_id)`. Counts corrected by `sum(1 / sampling_rate)`. |
+
+### 4.7 Retention
+
+Three drivers, three artefacts. Do not keep one window for everything. Detail: [sizing §4](./telemetry-storage-sizing.md#4-retention).
+
+| Class | Window | Prefix | Contents |
+| --- | --- | --- | --- |
+| **Aggregates** | **7–10 years** | `aggregates/dt=YYYY-MM-DD/` | Daily rollup: date × app × DSP × ad_format × country → impressions, billable amount, notice successes. No ids, no per-user grain. Statutory **ledger**. |
+| Reconciliation | **400 days** | `events/` (lifecycle keep) | `ad_impression`, `billing_notice_sent`, `win_notice_sent`, `auction_completed`, `ad_filled` |
+| Diagnostics | **90 days** | `events/` (lifecycle expire) | Everything else, including loss notices |
+
+**Lifecycle.** Spaces/S3 lifecycle rules on `dt=` prefixes. Hive cannot `DELETE` a row; it can drop a day. If legal requires row-level deletes (open item 3), that is a new requirement — not a catalog this TRD ships.
+
+**400 d is an analytics/audit buffer**, not a tax derivation. Confirm the contractual dispute window (AppLovin / DSP agreements) before treating it as settled. Statutory 6–10 year accounting is satisfied by the aggregate, not by replaying auctions.
+
+**Aggregates ship with the sink.** ~10 MB/day, ~25 GiB over seven years. They are computed from never-sampled events, so they do not depend on `K`. They cannot be backfilled once raw rows expire. A scheduled DuckDB (or equivalent) job writes one Parquet file per day to `aggregates/`.
+
+Loss notices sit at 90 d on purpose: only events evidencing a *billing* claim need the reconciliation window.
+
+### 4.8 Failure isolation
+
+| Failure | Ads | Lake |
 | --- | --- | --- |
-| **Aggregates** | **7–10 y** | Daily rollups (date × app × DSP × format × country). Statutory **ledger** — totals, not auction replay. ~25 GiB over seven years. Ship with the sink; cannot backfill. |
-| Reconciliation | **400 d** | `ad_impression`, `billing_notice_sent`, `win_notice_sent`, `auction_completed`, `ad_filled` |
-| Diagnostics | **90 d** | Everything else, including loss notices |
+| Sink stalled | Unaffected | Freshness alert; bus retains days of JSON |
+| Spaces down / 5xx | Unaffected | Writer backs off; Kafka consumer lag grows |
+| DuckDB not running | Unaffected | No one can query until it is started |
+| Topic empty (no producers yet) | Unaffected | Lake empty; freshness check must not false-page |
 
-Tax/accounting does **not** require individual auction runs. 400 d is a 13-month analytics/audit buffer — confirm AppLovin / DSP dispute windows.
+The sink is not on the ad path. Do not add a Spaces or DuckDB dependency to `bidon-sdkapi`.
+
+### 4.9 What the files contain
+
+Schema-on-read. The writer projects known envelope columns and dumps the rest into `payload`. It does **not**:
+
+- Reject a record because `schema_version` is unknown or old. Tag the version, land the row, filter in queries. PRD rationale 6: old SDK majors persist for quarters and never reach zero; dropping them would bias J3/J4.
+- Re-sample.
+- Strip or rewrite fields (privacy is upstream).
+- Interpret `trace_id`. If present it is just another envelope column; this lake does not store or query traces.
+
+---
+
+## 5. Volume and cost
+
+Design point: ~10k DAU, 2 sessions × 5 auctions, fill 0.4, **unsampled** (`K` = 1.0). Model and caveats: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+
+Two unmeasured inputs scale the bill linearly: **1.2 KiB JSON/event on the bus**, **200 B/row in Parquet**. The 200 B figure is optimistic — envelope columns dictionary-encode; the `payload` JSON blob does not. Treat every storage figure as ±2× until the sink produces real bytes.
 
 | | Auctions / day | Events / day | **Parquet / day** | **On Spaces** (90/400 d) | Per 10 min flush | Spaces $/mo |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -249,132 +228,91 @@ Tax/accounting does **not** require individual auction runs. 400 d is a 13-month
 | **100k** | 1M | **59M** | **11 GiB** | **1.1 TiB** | ~410k, ~78 MiB | **~$23** |
 | **1M** | 10M | **590M** | **110 GiB** | **11 TiB** | ~4.1M, ~780 MiB | **~$230** |
 
-`1.1 GiB/day` is new Parquet. `114 GiB` is retained. JSON on Redpanda is ~6× larger (~6.8 GiB/day at 10k); keep topic retention in **days**, not 400 d.
+`1.1 GiB/day` is new Parquet. `114 GiB` is retained. JSON on Redpanda is ~6.8 GiB/day at 10k — that is not the Spaces bill.
 
-Redis 72 h dedupe (client ingest only): **~2.5 / ~25 / ~250 GiB**. Tripwire: SQL `ROW_NUMBER()` at query time before 1M.
-
-### 6.4 Bus
-
-| Topic | Schema | Lifetime |
-| --- | --- | --- |
-| `ad-events` | current `AdEvent` | Dual-emit until cutover |
-| `notification-events` | current `NotificationEvent` | Dual-emit until cutover |
-| `telemetry-events` | PRD envelope + body | New — the Parquet sink reads this |
-
-Env: `KAFKA_TELEMETRY_EVENTS_TOPIC`. Create **explicitly** (auto-create is one partition). Set producer **zstd**. Dual-emission is the peak bus window; measure `ad-events` bytes/day before enabling.
-
-### 6.5 Dual-emission and cutover
-
-1. New producers write both buses.
-2. Lake queries use Spaces Parquet.
-3. Old topics stop after the current consumer owner signs off.
-4. `TELEMETRY_EVENTS_ENABLED` gates the new topic only.
+First measurement after the sink writes: mean Parquet bytes/row, and `event_name` count per `(app_id, auction_id)`. Those two replace the model.
 
 ---
 
-## 7. Event-pipeline observability
+## 6. Sink observability
 
-This TRD does **not** implement VictoriaTraces or VictoriaMetrics. Existing `GET /metrics` stays. Auction traces may remain on Sentry until a traces TRD; **do not write spans onto `telemetry-events`**.
+Existing `GET /metrics` on sdkapi is a producer concern and is out of this TRD. The sink needs its own signals:
 
-Minimum counters on sdkapi:
-
-- `telemetry_ingest_accepted_total{event_name}`
-- `telemetry_ingest_duplicate_total`
-- `telemetry_ingest_rejected_total{reason}`
-- `telemetry_unknown_fields_total`
-- `telemetry_produce_failed_total{topic}`
-- `telemetry_dropped_total{reason}`
-- Sink freshness (latest Spaces object vs topic lag); alert **> 20 min**
-
-Join client and server on **`(app_id, auction_id)`** (G10). `sampling_rate` on every event. `trace_id` on the envelope is reserved for a later traces join; unused by this lake.
-
-Funnel / fill / reconciliation: **DuckDB on Spaces Parquet**.
-
-**PRD client-side loss metric** (`telemetry_dropped` ÷ emitted) has no transport yet — SDK queue, not this sink.
-
----
-
-## 8. Schema governance
-
-- **Source of truth:** a versioned schema (JSON Schema or proto) that Kotlin SDK and Go server generate from. Until BID-46 lands, Go types in `internal/telemetry` are the backend draft and must not diverge silently.
-- `schema_version` integer on every event. M0 starts at `1`.
-- Error-code table (PRD bands 1000–11999) lives next to the schema, not hardcoded per handler. Server uses 3000–4999 (request handling, DSP communication) first.
-- **Rollout: accept every version, forever.** Tag the row and filter in queries. Hard-rejecting old majors would drop data from publishers on old SDKs — the exact cohort whose fill and reconciliation numbers J3/J4 need — and PRD rationale 6 says that cohort persists for quarters and never empties. The lake is schema-on-read; this costs nothing.
-- `dsp_id` vs today's `demand_id`: map 1:1 for adapters; keep `demand_source` as the PRD field; do not invent a second identifier.
-- **`sampling_rate` is an envelope field** (PRD). `trace_id` may be present for a later traces join; this TRD does not store or query traces.
-
----
-
-## 9. Privacy enforcement points
-
-Apply on the **new stream only**. Do not quietly rewrite `ad-events`.
-
-| Point | Action |
+| Signal | Purpose |
 | --- | --- |
-| Ingest (client batches) | **Allow-list.** Fields not in the schema are dropped, counted, and never stored. A denylist cannot catch an identifier arriving under an unexpected name |
-| Ingest | Drop `idfa` / `idfv` / `idg` / `ip` / `city` if present; fill `country` from MaxMind only |
-| Server emit | Never copy `raw_request` / `raw_response` onto telemetry events |
-| `error_message` | Truncate (256 chars), strip emails/IPs/query strings. Regex scrubbing of free text is best-effort — prefer structured `error_code` and treat the message as a diagnostic bonus, not a field to rely on |
-| COPPA (`coppa=true`) | Reduced field set: no advertising ids, no device model if policy requires, keep coarse `os` + `country` |
-| LMT / consent | GAID not on this stream at all in M0 (PRD: coarse or null; backend chooses **null**) |
-| Notices | Store `notice_type` + `http_status`, not the expanded URL with macros |
+| Consumer lag on `telemetry-events` | Bus is backing up |
+| Time since last successful Spaces PUT | Writer is stalled |
+| Latest object `dt` / modified time vs topic high-water | **Freshness** |
+| Objects written / bytes written per flush | Confirms 10 min / 64 MiB triggers |
+| Empty-flush skipped | Distinguishes “quiet topic” from “dead writer” |
 
-Legal review of retention and COPPA field set is required before launch, not after.
+**Alert:** latest object lags the topic by **> 20 minutes** (two flush intervals). Do not fire that alert when the topic has had no records in the window.
 
-**Blocked on a missing PRD section.** The PRD envelope routes all five regulation fields (`gdpr_applies`, `has_tcf_string`, `us_privacy`, `coppa`, `lmt`) to "Note 2", and PRD v1 ends mid-sentence at `Note 2(` with no content. G3 and the COPPA reduced field set are specified against a note that does not exist. This is the highest-priority PRD gap for BE-M0-5.
+Do not write spans onto `telemetry-events`. Do not scrape this lake for paging.
 
-**Ask legal two questions, not one.** Beyond retention: is `session_id` + `device_model` + `app_bundle` + `country` pseudonymous personal data? If yes, and DSRs must be honoured, row-level delete becomes an M0 requirement — hive-partitioned Parquet cannot do it and Iceberg stops being a Phase 2 nicety. That answer changes the events-store sequencing, so it is worth asking before Phase 1's layout is committed.
-
-Consent provenance (`consent_source`) is an envelope field supplied by the SDK. Server does not infer it, and cannot verify it.
+The PRD client-side loss metric (`telemetry_dropped` ÷ emitted) is an SDK-queue counter. It has no transport through this sink.
 
 ---
 
-## 10. PRD requirement traceability (infrastructure)
+## 7. Deliverables
 
-| PRD requirement | TRD section | Status |
+| # | Work | Done when |
 | --- | --- | --- |
-| Common envelope | Schema governance; BE-M0-1 | Draft; blocked on BID-46 |
-| Country from IP | Ingest 4.2; privacy | MaxMind already exists |
-| Fire-and-forget server emit | Design constraints; 4.1 | Same as current logger |
-| `ad_impression` delivery guarantee | §3 | `/v2/show` |
-| `event_id` dedupe, burst ingest | §4.3 | Redis 72h, client path only; **QPS closed** (~0.5 rps at 10k raw) with a tripwire to read-time dedupe |
-| Sampling + rate on event | §4.5, §5 | Config block new; **auction-coherent** (G11) |
-| Kill switch | §5 | Publisher-level in M0 |
-| OTel one trace / DSP span | — | **Out of this TRD** (grain B) |
-| Metrics vs warehouse | §7 | Funnel SQL on Spaces Parquet. `/metrics` client stays; no VM/VT in this implementation |
-| Warehouse + monthly cost | §6 | **Parquet on Spaces, 10 min flush.** 10k: 1.1 GiB/day, 114 GiB retained, ~$5/mo. **Sink/bucket owner still open** |
-| No PII, COPPA reduction | §9 | New stream only |
-| Schema version, additive changes | §8 | |
-| Notice reliability | §3, BE-M1-3 | Sender must record HTTP status |
-| Client disk queue / crash path | SDK BID-47 | Out of this TRD’s implementation |
-| Reconciliation of old vs new stream | §6.5 | Dual-emission |
-| Funnel completeness > 98% | §4.5 | **Requires** auction-coherent sampling. Unmeasurable under independent per-event sampling |
-| Telemetry loss rate < 1% | §7 | **No transport defined.** Client-queue counter; needs a PRD/SDK decision |
-| Notice delivery rate | §3 | **Not measurable today** — `EventSender` swallows HTTP status. BE-M1-3 |
-| COPPA reduced field set | §9 | **Blocked**: PRD "Note 2" is missing |
-| Ad-path latency gate | Open item 8 | **Blocked**: PRD target is "N/A" and the risk row's mitigation cell is corrupted |
+| 1 | Spaces bucket (or dedicated prefix) + private credentials | Terraform or Coolify; not the backups bucket |
+| 2 | `telemetry-events` topic created explicitly (partitions, day-scale retention, zstd) | Topic exists before the sink starts |
+| 3 | Custom Go Parquet sink (`cmd/…`), 10 min / 64 MiB flush, hive layout as §4.2 | Objects appear under `events/dt=…/event_name=…/`. No Connect, no Enterprise Iceberg. |
+| 4 | Lifecycle rules: 90 d diagnostics, 400 d reconciliation, 7–10 y aggregates | Day prefixes expire; aggregates do not |
+| 5 | Daily aggregate job writing `aggregates/dt=…/` | One Parquet file per day; cannot wait until raw retention is a problem |
+| 6 | DuckDB SQL pack (funnel, DSP timeout, notice success, `GROUP BY event_name`) | An engineer can answer J3/J4 against a day of files |
+| 7 | Freshness alert (> 20 min, quiet-topic excluded) | Page on stall, not on idle |
 
-Any PRD infrastructure dependency not listed here is an open item, not an implicit decision.
+Local/dev: MinIO or a Spaces staging bucket is enough. Do not require production Spaces to prove the writer.
 
 ---
 
-## 11. Open items
+## 8. Acceptance
 
-Nothing below is architecture-blocked. Every item needs a **name**.
+This TRD is done when all of the following are true:
+
+1. A JSON record on `telemetry-events` becomes a Parquet row under `events/dt=<event day>/event_name=<name>/` within **10 minutes** under load below the 64 MiB trigger.
+2. DuckDB `read_parquet` over a day partition returns that row. Funnel SQL in the pack runs, scoped by `app_id`, correcting with `sampling_rate`.
+3. No object is JSON. No writer reads `ad-events`. The writer is the custom Go binary in this repo — not Connect, not Redpanda Iceberg.
+4. `bidon-sdkapi` has no Spaces or DuckDB import; killing the sink does not change auction or `/show` behaviour.
+5. A day of diagnostics older than 90 d is gone; reconciliation event names survive to 400 d; the aggregate prefix is excluded from those expiries.
+6. After one scheduled run, `aggregates/dt=<day>/` contains a rollup file.
+7. Freshness pages when the writer is stalled with records on the topic, and does not page when the topic is idle.
+
+It is **not** a failure of this TRD that the topic is empty, that `/v2/telemetry` does not exist, or that traces and metrics are unset.
+
+---
+
+## 9. Open items
+
+Nothing below is architecture-blocked. Every item needs a **name**. Items that belong to ingest, traces, or metrics are not listed.
 
 | # | Item | Blocks | Owner |
 | --- | --- | --- | --- |
-| 1 | DigitalOcean Spaces bucket + Parquet sink (**10 min flush**) | Grain A lake | **unnamed** |
-| 2 | Traces / metrics (VT, VM, otelcol) | Not this TRD | — |
-| 3 | Current `ad-events` / `notification-events` consumer | Cutover | **unnamed** |
-| 4 | BID-46 envelope sign-off | All `internal/telemetry` types | Tiziano, Jonathan |
-| 5 | Legal: retention window **and** whether `session_id` is pseudonymous PII | Launch; possibly Iceberg-in-M0 | **unnamed** |
-| 6 | PRD: missing Note 2, corrupted latency risk row, "N/A" latency target, loss-metric transport | BE-M0-5; G1 acceptance | PRD owner |
-| 7 | SDK: is `/v2/stats` `ad_units[]` attempt-ordered? | Fill rate, time to fill (BE-M1-6) | SDK |
-| 8 | Server-minted `auction_id` (PRD Note 1 vs required request field) | Correlation contract; deferrable | SDK + backend |
-| 9 | Impression definition vs OM viewable | Meaning of `ad_impression`, not the channel | OM spike |
-| 10 | Measured events per auction and bytes/row | Turns the model into a bill | Backend, post-M0 |
+| 1 | Who provisions the Spaces bucket and runs the custom sink | This TRD entirely | **unnamed** |
+| 2 | Contractual dispute / audit window (MAX terms, DSP agreements) — is 400 d right? | Reconciliation lifecycle | Commercial / counsel |
+| 3 | Legal: is `session_id` + `device_model` + `app_bundle` + `country` pseudonymous PII requiring DSRs? | Whether day-prefix lifecycle is enough | Counsel |
+| 4 | Measured Parquet bytes/row and `event_name` counts per auction | Turns §5 from a model into a bill | Backend, once the sink writes |
 
-Not this TRD: VictoriaTraces, VictoriaMetrics, Grafana. ClickHouse is events Phase 4 only.
+---
 
-Ticket list and sequencing: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md#7-m0--m1-backend-tickets).
+## 10. PRD traceability (this store only)
+
+| PRD requirement | This TRD | Status |
+| --- | --- | --- |
+| Raw events to a columnar warehouse for funnel joins | Entire document | Parquet on Spaces, DuckDB on demand |
+| Funnel completeness, fill / render / notice rates (catalog SQL) | §4.6 SQL pack | Engineer-mediated in this slice |
+| Goal 3 reconciliation (impression-level rows) | §4.7 400 d class + aggregates | Window unconfirmed commercially |
+| Retention per event class before launch | §4.7 | Lifecycle + aggregate job |
+| Schema_version additive; do not break downstream queries | §4.9 land every version | Writer does not reject |
+| Telemetry must not delay the ad path | §4.8 | Sink is off the ad path |
+| Sampling rate recorded so counts correct at query time | §4.6 `sum(1 / sampling_rate)` | Rate is an upstream field; lake only reads it |
+| OTel one trace / DSP span | — | **Out** |
+| Metrics for alerting | — | **Out** |
+| Client disk queue, ingest, kill switch | — | **Out** |
+| No PII on the stream | Assumed upstream | Writer does not enforce |
+
+Any PRD infrastructure dependency not listed here is out of this TRD, not an implicit decision.

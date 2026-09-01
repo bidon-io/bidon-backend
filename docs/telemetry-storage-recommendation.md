@@ -12,7 +12,7 @@
 
 Per-unit bytes and retention windows: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
-Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5. TRD: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) §6.
+Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5. Events warehouse TRD: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md).
 
 **Date:** 2026-08-26  
 **Start here:** [telemetry-brief.md](./telemetry-brief.md)  
@@ -181,4 +181,4 @@ Still required outside the family: **OTLP collector + a trace (and metric) store
 
 ## Where this option would have landed
 
-This option's M0 would have been: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Our M0 is the three-grain architecture** in the spike §5 / TRD §6.
+This option's M0 would have been: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Our M0 is the three-store architecture** in the spike §5; the events warehouse is the [events TRD](./TRD_BidOn_Telemetry.md).
