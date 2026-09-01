@@ -301,7 +301,7 @@ Three grains, three stores. Details in the store docs; this is the wiring.
 SDK domain routes + POST /v2/telemetry
         │
         v
-  bidon-sdkapi ── JSON envelope ──► Redpanda telemetry-events ──► Parquet sink ──► S3 ──► DuckDB
+  bidon-sdkapi ── protobuf ──► Redpanda telemetry-events ──► Connect S3 Parquet ──► Spaces ──► DuckDB
         │                              │                              (Iceberg later; CH later on same files)
         │                              └── dual-emit unchanged ──► ad-events / notification-events
         │
@@ -315,7 +315,7 @@ SDK domain routes + POST /v2/telemetry
 
 | Grain | Job | Store |
 | --- | --- | --- |
-| A | Catalog SQL (`sampling_rate`, join `auction_id`) | Redpanda `telemetry-events` → Parquet/Iceberg → DuckDB |
+| A | Catalog SQL (`sampling_rate`, join `auction_id`) | Redpanda `telemetry-events` (protobuf) → Connect Parquet → DuckDB |
 | B | Per-auction span tree | OTLP → **VictoriaTraces** |
 | C | “Page if X is bad for N minutes” | **VictoriaMetrics** (scrape `/metrics` + spanmetrics) |
 

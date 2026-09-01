@@ -2,7 +2,7 @@
 
 **Scope:** events only ([telemetry-requirements.md](./telemetry-requirements.md) §2.A). Traces: [telemetry-traces-store.md](./telemetry-traces-store.md). Metrics: [telemetry-metrics-store.md](./telemetry-metrics-store.md).  
 **Phase 1 implementation contract:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) — Parquet on DigitalOcean Spaces, 10 min flush. This file is the design and later phases.  
-**Decision:** JSON → OSS Redpanda → **Parquet on object storage** → **DuckDB** (or Athena/Trino) when you query. **Iceberg** is the table format to adopt when an OSS writer + REST catalog are in place — not Redpanda Enterprise, not Connect’s licensed `iceberg` output. **ClickHouse** later reads the **same** lake.  
+**Decision:** protobuf → OSS Redpanda → **Kafka Connect S3 sink (Parquet)** → **DuckDB** when you query. Iceberg later is an OSS catalog over the same files — not Redpanda Enterprise Iceberg. ClickHouse later reads the **same** lake.  
 **Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
 These are **phased**. Each phase keeps the wire format and `/v2/show` → Redpanda produce path.
@@ -15,7 +15,7 @@ These are **phased**. Each phase keeps the wire format and `/v2/show` → Redpan
 
 Catalog SQL is delivery evidence (`sum(1 / sampling_rate)`, `GROUP BY dsp_id`, join `auction_id`), typically minutes to T+1 — normal in ad analytics. Real-time is BURL and later metrics/traces, not DuckDB.
 
-Redpanda is already paid for. Incremental store = sink that writes **Parquet**, plus an engine you start **when you have a question**.
+Redpanda is already paid for. Incremental store = Connect sink that writes **Parquet**, plus an engine you start **when you have a question**.
 
 **Parquet** is the file encoding (never JSON-on-S3 for this catalog). **Iceberg** is a catalog + snapshots *over* those files so engines do not glob `dt=*`. **DuckDB** is the first engine (CLI/CI, `read_parquet` then Iceberg extension). CH is a query accelerator on the same files when load requires it.
 
@@ -26,21 +26,19 @@ Redpanda is already paid for. Incremental store = sink that writes **Parquet**, 
 ### Phase 1 — Lake exists (M0 minimum)
 
 ```
-bidon-sdkapi (JSON) → Redpanda telemetry-events
-                         → custom Go sink (flush every **10 min**, or 64 MiB, whichever first)
-                         → DigitalOcean Spaces: s3://…/events/dt=YYYY-MM-DD/event_name=…/*.parquet
-                         → DuckDB: read_parquet('s3://…/events/dt=…/**')
+bidon-sdkapi (protobuf) → Redpanda telemetry-events
+                         → Kafka Connect S3 sink (ParquetFormat, flush every **10 min**)
+                         → DigitalOcean Spaces: s3://…/events/<event_name>/dt=YYYY-MM-DD/*.parquet
+                         → DuckDB: read_parquet per table, join on (app_id, auction_id)
 ```
 
-- Envelope columns + `payload` JSON. Dual-emit old topics unchanged.  
+- Typed protobuf columns; **one table per `event_name`**. Dual-emit old topics unchanged.  
 - Redis `event_id` at ingest, client events only. Freshness = latest object vs topic; alert if lag **> 20 min**.  
-- Saved SQL: funnel, DSP timeout, notice success, `GROUP BY event_name` — scoped by `(app_id, auction_id)` (G10).
+- Saved SQL: funnel as **joins across tables** on `(app_id, auction_id)` (G10); DSP timeout; notice success.
 
 **Good enough** to size sampling and prove the catalog. Hive paths are a **temporary** layout.
 
-At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./telemetry-storage-sizing.md), [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost)). JSON on the bus is ~6.8 GiB/day at 10k DAU; that is not the Spaces bill.
-
-The `payload` JSON blob column is why the 200 B/row estimate is optimistic — envelope columns dictionary-encode well, an opaque JSON string does not. Measure bytes/row in Phase 1 and feed it back into the sizing model before quoting a bill.
+At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./telemetry-storage-sizing.md), [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost)). Bus volume is protobuf, not JSON; the 1.2 KiB/event figure is still unmeasured.
 
 ### Phase 2 — Iceberg table (OSS, no Enterprise)
 
@@ -54,7 +52,7 @@ same topic → PyIceberg (or Iceberg Java) consumer
                 → DuckDB Iceberg extension
 ```
 
-`table.append(batch)` **is** writing Iceberg metadata. One writer, one table `bidon.telemetry_events`, partition on day(`event_ts`) + `event_name`.
+`table.append(batch)` **is** writing Iceberg metadata. One writer; **one Iceberg table per event type** (same grain as Phase 1 prefixes), partition on day(`event_ts`) only.
 
 If Phase 1 already has hive Parquet: convert **before** file counts explode (rewrite into Iceberg once), or skip hive and start Phase 2 as soon as the catalog runs in Compose.
 
@@ -91,14 +89,14 @@ But `session_id` + `device_model` + `app_bundle` + `country` is plausibly **pseu
 
 | Phase | Writer | What lands in the bucket |
 | --- | --- | --- |
-| 1 | Custom Go consumer in this repo (franz-go → Parquet → Spaces). Not Redpanda Enterprise, not Connect. | Hive-style Parquet |
+| 1 | Kafka Connect S3 sink: protobuf + Schema Registry → ParquetFormat (Community License). New connector; not the JSON `ad-events` sink. | One Parquet table per event type (`events/<event_name>/dt=…`) |
 | 2+ | OSS Iceberg writer if a catalog is ever added — still not Redpanda Enterprise | Parquet **plus** Iceberg metadata + catalog pointer |
 
-JSON on the topic never changes.
+Protobuf on the topic is the bus contract.
 
 ## M0 slice
 
-1. `telemetry-events` + custom Go Phase 1 sink ([TRD](./TRD_BidOn_Telemetry.md)).  
+1. Schema Registry + protobuf event messages + `telemetry-events` + Connect Parquet sink ([TRD](./TRD_BidOn_Telemetry.md)).  
 2. DuckDB SQL pack.  
 3. **Daily aggregate rollup** written to a separate long-retention prefix ([sizing §4](./telemetry-storage-sizing.md#4-retention)) — a scheduled query, ~25 GiB over seven years, and the only artefact that survives a decision to shorten raw retention. It cannot be backfilled once raw rows expire, so it ships with the sink.  
 4. Freshness alert on the sink.  

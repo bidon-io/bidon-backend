@@ -44,7 +44,7 @@ Adjacent, on the same code path: `internal/notification/handler.go:234` picks th
 
 Three kinds of data. They can share infrastructure; they must not share grain.
 
-**A — Product events.** One row per thing that happened. JSON → Redpanda `telemetry-events` → Parquet on object storage → DuckDB when someone has a question. Iceberg when a catalog exists; ClickHouse later as an accelerator on the *same files*. This is the warehouse: fill rate, render rate, per-DSP loss, reconciliation.
+**A — Product events.** One row per thing that happened. Protobuf → Redpanda `telemetry-events` → Kafka Connect Parquet on Spaces → DuckDB when someone has a question. Iceberg when a catalog exists; ClickHouse later as an accelerator on the *same files*. This is the warehouse: fill rate, render rate, per-DSP loss, reconciliation.
 
 **B — Traces.** One tree per auction, child span per DSP. OTLP → otelcol-contrib → VictoriaTraces. Answers "show me auction X's legs." Sentry stays exceptions-only.
 
@@ -62,7 +62,7 @@ At the design point (~10k DAU, **2 sessions × 5 auctions**, fill 0.4, **Parquet
 | --- | --- | --- |
 | **Events (Parquet)** | **1.1 GiB** (5.9M events) | **114 GiB** (~$5/mo Spaces) |
 
-JSON on Redpanda is ~6.8 GiB/day; topic retention is days, not 400 d. Traces and metrics are not in the events TRD. [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost).
+JSON/protobuf on Redpanda is the bus; topic retention is days, not 400 d. Traces and metrics are not in the events TRD. [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost).
 
 **At 10k, Parquet on Spaces is ~$5/mo** (114 GiB). At 1M: **~11 TiB retained (~$230/mo)**. Redis 72 h dedupe is ~2.5 GiB now and ~250 GiB RAM at 1M unsampled — tripwire to SQL dedupe.
 

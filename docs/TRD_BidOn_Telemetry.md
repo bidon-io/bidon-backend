@@ -4,8 +4,7 @@
 
 **Status:** Draft  
 **Date:** 2026-09-01  
-**This TRD specifies:** the events warehouse. One row per product event, retained as Parquet on DigitalOcean Spaces, flushed every 10 minutes.  
-**This TRD does not specify:** how events are produced, ingested, sampled, or privacy-filtered; traces; metrics.
+**This TRD specifies:** the events warehouse. One row per product event, retained as Parquet on DigitalOcean Spaces, flushed every 10 minutes.
 
 | | |
 | --- | --- |
@@ -13,9 +12,6 @@
 | What the warehouse must answer | [telemetry-requirements.md](./telemetry-requirements.md) §2.A (jobs J3, J4, J5) |
 | Why Parquet on object storage | [telemetry-events-store.md](./telemetry-events-store.md) |
 | Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
-| Producers, ingest, dual-emit | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) |
-| Traces | [telemetry-traces-store.md](./telemetry-traces-store.md) |
-| Metrics | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
 
 No production instrumentation ships from this draft. The lake can exist empty; producers are a different piece of work.
 
@@ -23,39 +19,16 @@ No production instrumentation ships from this draft. The lake can exist empty; p
 
 ## 1. Scope
 
-### In
-
 - A DigitalOcean Spaces bucket (S3 API) for telemetry events.
-- A **custom** Parquet writer (new Go binary in this repo) that consumes Redpanda `telemetry-events`. Not a licensed Redpanda or Confluent sink.
-- Hive layout, 10-minute flush, compression.
-- Lifecycle retention on the two raw classes, plus a daily aggregate prefix.
+- **Protobuf** schemas, one message type per event, in Schema Registry.
+- A **Kafka Connect** S3 sink (Confluent Community License — not a paid SKU) that reads those protobuf records and writes **Parquet**.
+- **One table per event type** (own prefix, own schema). Day partitions inside each table.
+- 10-minute flush, compression.
+- Lifecycle retention **per table** (400 d reconciliation tables, 90 d diagnostics), plus a daily aggregate table.
 - A DuckDB SQL pack an engineer can run against the bucket.
 - A freshness alert on the sink.
 
-### Out
-
-| Topic | Where it lives instead |
-| --- | --- |
-| `POST /v2/telemetry`, batch size, gzip, 4xx vs 5xx | Spike BE-M0-3 |
-| `/v2/config` telemetry block, kill switch, sample rate | Spike BE-M0-4 |
-| Envelope types, `schema_version`, error-code table | Spike BE-M0-1; BID-46 |
-| Redis `event_id` dedupe | Requirements G5; spike BE-M0-3 |
-| Sampling policy (coherent per auction) | Requirements G11; sizing §3 |
-| Privacy allow-list, COPPA field set, `raw_request` exclusion | Requirements G3; spike BE-M0-5 |
-| Dual-emit of `ad-events` / `notification-events` | Requirements G4; spike §4 |
-| `/v2/show` as billing channel | Requirements G2; spike BE-M1-4 |
-| OTel traces, VictoriaTraces | [telemetry-traces-store.md](./telemetry-traces-store.md) |
-| `/metrics` scrape, VictoriaMetrics, paging | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
-| Redpanda Enterprise Iceberg topics, Redpanda Connect Iceberg/S3, Confluent Kafka Connect S3 | Licensed / existing JSON sink — not this store |
-| Publisher-facing BI, a second query engine, a table catalog | Out |
-
-### Upstream assumptions (not built here)
-
-The sink reads JSON envelopes already on `telemetry-events`. Those envelopes are assumed to already satisfy:
-
-- PRD common envelope (`event_id`, `event_name`, `event_ts`, `schema_version`, `auction_id`, `session_id`, `sampling_rate`, `app_id`, …).
-- No PII (G3). `country` already derived; no IP / IFA / IDFV / city / `raw_request` / `raw_response`.
-- `sampling_rate` already stamped at emit. The sink does not re-sample and does not drop by rate.
+The sink reads Confluent-wire **protobuf** already on `telemetry-events` (magic byte + schema id + message). Each record is a registered message type. `sampling_rate` is a field on the message; the sink does not re-sample and does not drop by rate.
 
 If the topic is empty, the lake is empty. That is acceptable for this TRD.
 
@@ -63,7 +36,7 @@ If the topic is empty, the lake is empty. That is acceptable for this TRD.
 
 ## 2. Why this store
 
-The PRD’s jobs that need a warehouse are catalog SQL, not point-gets and not alerts:
+The PRD’s jobs that need a warehouse are catalog SQL:
 
 | Job | Query the lake must support |
 | --- | --- |
@@ -71,38 +44,34 @@ The PRD’s jobs that need a warehouse are catalog SQL, not point-gets and not a
 | J4 | Reconcile Bidon impressions vs mediator / DSP billing |
 | J5 | Per-DSP loss and render |
 
-Requirements §2.A: if a system cannot do those joins, it is not the event store. Minutes of lag are fine. Paging is not this store’s job.
+Requirements §2.A: if a system cannot do those joins, it is not the event store. Minutes of lag are fine.
 
-The PRD also says telemetry must not delay or fail an ad request. The lake is downstream of Redpanda. If the sink or Spaces is down, ads still serve (G1/G2). `/v2/show` produces events onto the bus; it does not query this bucket.
+The lake is downstream of Redpanda. If the sink or Spaces is down, ads still serve (G1/G2).
 
-**Who runs the SQL.** J3/J4/J5 name BD, publisher support, solutions and finance. For this slice those jobs are engineer-mediated: someone runs the saved SQL pack and returns numbers. A query surface for non-engineers is not in this TRD.
+**Who runs the SQL.** For this slice those jobs are engineer-mediated: someone runs the saved SQL pack and returns numbers.
 
 ---
 
 ## 3. Pipeline
 
 ```
-Redpanda telemetry-events (JSON, already produced)
+Redpanda telemetry-events (protobuf + Schema Registry)
         │
         ▼
-Parquet sink (custom Go, this repo)  ── flush every 10 min, or 64 MiB uncompressed, whichever first
+Kafka Connect S3 sink  ── ParquetFormat, flush every 10 min
         │
         ▼
 DigitalOcean Spaces
-  events/dt=YYYY-MM-DD/event_name=…/*.parquet          ← raw
-  aggregates/dt=YYYY-MM-DD/*.parquet                   ← daily rollup
+  events/<event_name>/dt=YYYY-MM-DD/*.parquet   ← one table per event type
+  aggregates/dt=YYYY-MM-DD/*.parquet            ← daily rollup (its own table)
         │
         ▼
-DuckDB  (read_parquet, on demand)
+DuckDB  (read_parquet per table, join on envelope keys)
 ```
 
-JSON on the topic is the **bus**. Parquet on Spaces is the **store**. Do not land JSON-on-S3 for this catalog.
+Protobuf on the topic is the **bus**. Parquet on Spaces is the **store**.
 
-The writer is a **custom Go consumer** we build. It is not:
-
-- Redpanda Iceberg topics (`redpanda.iceberg.mode`) or any other Redpanda Enterprise sink
-- Redpanda Connect / Benthos Iceberg or S3 output
-- Confluent Kafka Connect S3 — including the existing `docker/kafka-connect` connector, which writes **JSON** of `ad-events`. Do not point that connector at `telemetry-events`, and do not extend it.
+The existing Connect connector (`docker/kafka-connect`, JSON of `ad-events`) stays as that archive. This warehouse is a **new** connector on `telemetry-events`.
 
 ---
 
@@ -115,78 +84,106 @@ The writer is a **custom Go consumer** we build. It is not:
 | Service | DigitalOcean **Spaces** (S3 API) |
 | Isolation | Dedicated telemetry bucket, or a dedicated prefix on a bucket that is **not** the Postgres-backup bucket (`infra` currently creates `${name_prefix}-backups-*`). Backup lifecycle must not delete event objects. |
 | ACL | Private. No public list or get. |
-| Credentials | Spaces access key available to the sink process only. Not in application runtime for `bidon-sdkapi`. |
+| Credentials | Spaces access key on the **Connect worker** only. Not in `bidon-sdkapi`. |
 | Region | Same Spaces region as existing infra (`ams3` in current Terraform). |
 
-### 4.2 Format and layout
+### 4.2 Protobuf schemas
+
+Strict, per event type. The Parquet columns **are** the protobuf fields.
 
 | Item | Requirement |
 | --- | --- |
-| Encoding | **Parquet** (snappy or zstd). Never JSON, Avro, or CSV as the retained form. |
-| Columns | Envelope fields as typed columns + one `payload` JSON column for event-body fields. |
-| Layout | Hive: `s3://<bucket>/events/dt=YYYY-MM-DD/event_name=<name>/*.parquet` |
+| Source | `.proto` files in this repo (alongside existing `proto/`). Generated Go for producers; the registry is the runtime source for Connect. |
+| Shape | One message type per PRD `event_name` (`AuctionCompleted`, `DspRequestSent`, …). Shared envelope fields live in a reusable message **embedded** in every event (not a JSON blob). |
+| Wire | Confluent protobuf: magic byte, schema id, protobuf payload. |
+| Registry | Schema Registry (already in `docker-compose-prod.yml`). Subject strategy **TopicRecordNameStrategy** so each message type has its own subject on `telemetry-events`. |
+| Compatibility | **BACKWARD** per subject. Additive field numbers only; never reuse a number. Matches PRD “additive within a major.” |
+| Versions | The sink lands every registered schema id. It does not reject old majors. DuckDB reads mixed file versions with `union_by_name=true`. PRD rationale 6: old SDK (and old producer) schemas persist for quarters. |
+
+Envelope fields required on every message (embedded): `event_name`, `event_id`, `event_ts`, `schema_version`, `app_id`, `auction_id`, `session_id`, `sampling_rate`, plus the rest of the PRD common envelope as protobuf fields.
+
+Type-specific fields are first-class columns (`dsp_id`, `http_status`, `clearing_price`, …), not packed into `payload`.
+
+### 4.3 Tables, format, and layout
+
+A table has one schema. Strict protobuf per event type therefore means **one table per `event_name`**, not one `events` table partitioned by type. Hive `event_name=` as a partition of a unified table would imply shared columns; these messages do not share columns beyond the embedded envelope.
+
+| Item | Requirement |
+| --- | --- |
+| Table | One per PRD event type. Name = `event_name` (`auction_completed`, `dsp_request_sent`, …). ~40 tables at full catalog. |
+| Encoding | **Parquet** (`ParquetFormat`, snappy or zstd). |
+| Columns | That type’s protobuf fields (envelope + type-specific). |
+| Layout | `s3://<bucket>/events/<event_name>/dt=YYYY-MM-DD/*.parquet` |
 | Partition clock | `dt` from `event_ts` (event wall clock), not ingest wall clock. Late events land on their event day. |
-| Join / list predicates | Every path and every query is scoped by `(app_id, …)` (G10). `event_name` partitioning does not replace that. |
+| Homogeneous files | A file belongs to one table. Connect Parquet cannot hold two schemas. |
+| Joins | Envelope keys `(app_id, auction_id)` (G10). Funnel SQL is **JOIN across tables**, not `GROUP BY event_name` on a union. |
+| Schema evolution | `union_by_name` **within** a table (old vs new field numbers of the same message). Do not union different event types into one scan. |
 
-**Small files.** At 10k DAU a 10-minute flush is ~41k events / ~8 MiB if written as one file. Partitioning by `event_name` (~40 names) yields many sub-MiB objects — accepted at 10k. Compact, or drop `event_name` from the path, if LIST becomes the bottleneck. Do not shorten the flush to “fix” small files.
+**Connect partitioner.** `FieldPartitioner` on `event_name` (table directory) plus a `dt` field materialised from `event_ts` (SMT `TimestampConverter` or equivalent). One connector writes all tables.
 
-Hive day prefixes are the layout. Retention is lifecycle on those prefixes. This TRD does not introduce a table catalog.
+**Small files.** At 10k DAU a 10-minute flush splits across ~40 tables. Accepted at 10k. Compact **inside** a table if LIST hurts. Do not merge types into one prefix.
 
-### 4.3 Writer
+**Not a table:** a fat protobuf `oneof` wrapping every event, or one Parquet schema with every field nullable. That undoes strict per-type schemas.
 
-A process we write and operate. Redpanda is the **bus** (Kafka API, already running). It is not the sink.
+### 4.4 Writer
+
+Kafka Connect S3 sink, Confluent Community License (no fee; competing-SaaS restriction only). Redpanda is the bus.
 
 | Item | Requirement |
 | --- | --- |
-| Cardinality | **One writer.** Concurrent appends to the same hive prefix corrupt listings. |
-| Implementation | **Custom Go binary in this repo** (new `cmd/`, not inside `bidon-sdkapi`). Consume with **franz-go** (already the producer stack). Encode Parquet in-process. PUT objects to Spaces via the S3 API. |
-| Not | Redpanda Enterprise Iceberg, Redpanda Connect, Confluent Kafka Connect S3, or any other licensed connector. |
-| Input | Topic `telemetry-events` only. Do not consume `ad-events` or `notification-events`. |
+| Cardinality | **One task** (`tasks.max=1`). |
+| Connector | New: `telemetry-events-parquet`. Class `io.confluent.connect.s3.S3SinkConnector`. |
+| Format | `io.confluent.connect.s3.format.parquet.ParquetFormat` |
+| Value converter | `io.confluent.connect.protobuf.ProtobufConverter` + Schema Registry URL. Not `JsonConverter` (NPE with ParquetFormat). |
+| Input | Topic `telemetry-events` only. |
+| Spaces | Path-style, `store.url` for the Spaces endpoint, keys from Connect env. |
 | Empty flush | Do not write an object when the batch is empty. |
-| Idempotence | At-least-once from Kafka is expected. Duplicate Parquet rows are a query concern (`ROW_NUMBER() OVER (PARTITION BY app_id, event_id)` in the SQL pack), not a writer concern. The sink does not talk to Redis. |
+| Idempotence | At-least-once. Duplicate Parquet rows are a query concern (`ROW_NUMBER() OVER (PARTITION BY app_id, event_id)`). |
 
-### 4.4 Flush
+Reuse the existing Connect **worker** (`docker/kafka-connect`). Do not retarget the JSON `ad-events` connector.
+
+### 4.5 Flush
 
 | Trigger | Value |
 | --- | --- |
-| Time | **Every 10 minutes** |
-| Size | **64 MiB** uncompressed batch, whichever first |
+| Time | **Every 10 minutes** — `rotate.schedule.interval.ms=600000` (set `timezone=UTC`) |
+| Size | `flush.size` high enough that **time wins at 10k DAU** (~41k events / 10 min). Revisit once protobuf bytes/row are measured. |
 | Empty | Skip |
 
-10-minute lag is acceptable for funnel SQL. Do not page off this lake. Do not flush more often to chase freshness — small files are the cost of that.
+10-minute lag is acceptable for funnel SQL. Do not flush more often to chase freshness — small files are the cost of that.
 
-### 4.5 Topic (sink input)
+### 4.6 Topic (sink input)
 
-The sink cannot start without a topic. Provisioning it is in this TRD because it is a store prerequisite, not because this TRD owns producers.
+The sink cannot start without a topic. Provisioning it is in this TRD because it is a store prerequisite.
 
 | Item | Requirement |
 | --- | --- |
 | Name | `telemetry-events` (env `KAFKA_TELEMETRY_EVENTS_TOPIC`) |
 | Creation | **Explicit.** `config/kafka.go` allows auto-create, which yields one partition. |
 | Compression | Producer zstd (set at topic / producer; do not rely on the franz-go default). |
-| Retention on the bus | **Days**, not 400 d. JSON is ~6× Parquet. The lake is the retain. |
-| Partitions | Set from peak JSON/day before first write ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). |
+| Retention on the bus | **Days**, not 400 d. The lake is the retain. |
+| Partitions | Set from peak protobuf/day before first write ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). |
 
-### 4.6 Query
+### 4.7 Query
 
 | Item | Requirement |
 | --- | --- |
-| Engine | DuckDB `read_parquet('s3://…/events/dt=…/**')`. Not an always-on warehouse. |
+| Engine | DuckDB. Scan **one table** at a time: `read_parquet('s3://…/events/ad_impression/dt=…/**', union_by_name=true)`. Not an always-on warehouse. |
 | When | On demand. Start DuckDB when someone has a question. |
-| Users | Engineers. Not BD / support / finance self-serve. |
-| SQL pack | Funnel (request → fill → impression → billing), DSP timeout rate, notice success, `GROUP BY event_name`. Every join on `(app_id, auction_id)`. Counts corrected by `sum(1 / sampling_rate)`. |
+| Users | Engineers. |
+| SQL pack | Funnel is joins: `ad_request_started` ⋈ `ad_filled` ⋈ `ad_impression` ⋈ `billing_notice_sent` on `(app_id, auction_id)`, each from its own table. DSP timeout and notice success similarly. Counts corrected by `sum(1 / sampling_rate)`. |
 
-### 4.7 Retention
+### 4.8 Retention
 
 Three drivers, three artefacts. Do not keep one window for everything. Detail: [sizing §4](./telemetry-storage-sizing.md#4-retention).
 
-| Class | Window | Prefix | Contents |
+| Class | Window | Where | Contents |
 | --- | --- | --- | --- |
-| **Aggregates** | **7–10 years** | `aggregates/dt=YYYY-MM-DD/` | Daily rollup: date × app × DSP × ad_format × country → impressions, billable amount, notice successes. No ids, no per-user grain. Statutory **ledger**. |
-| Reconciliation | **400 days** | `events/` (lifecycle keep) | `ad_impression`, `billing_notice_sent`, `win_notice_sent`, `auction_completed`, `ad_filled` |
-| Diagnostics | **90 days** | `events/` (lifecycle expire) | Everything else, including loss notices |
+| **Aggregates** | **7–10 years** | table `aggregates/` | Daily rollup: date × app × DSP × ad_format × country → impressions, billable amount, notice successes. No ids, no per-user grain. Statutory **ledger**. |
+| Reconciliation | **400 days** | those **tables** only | `ad_impression`, `billing_notice_sent`, `win_notice_sent`, `auction_completed`, `ad_filled` |
+| Diagnostics | **90 days** | every other event table | Including loss notices |
 
-**Lifecycle.** Spaces/S3 lifecycle rules on `dt=` prefixes. Hive cannot `DELETE` a row; it can drop a day. If legal requires row-level deletes (open item 3), that is a new requirement — not a catalog this TRD ships.
+**Lifecycle is per table prefix**, not a row filter inside a mixed `events/` folder. Spaces rules on `events/ad_impression/` vs `events/loss_notice_sent/` (and the other names in each class). Hive cannot `DELETE` a row; it can drop a day of a table.
 
 **400 d is an analytics/audit buffer**, not a tax derivation. Confirm the contractual dispute window (AppLovin / DSP agreements) before treating it as settled. Statutory 6–10 year accounting is satisfied by the aggregate, not by replaying auctions.
 
@@ -194,25 +191,17 @@ Three drivers, three artefacts. Do not keep one window for everything. Detail: [
 
 Loss notices sit at 90 d on purpose: only events evidencing a *billing* claim need the reconciliation window.
 
-### 4.8 Failure isolation
+### 4.9 Failure isolation
 
 | Failure | Ads | Lake |
 | --- | --- | --- |
-| Sink stalled | Unaffected | Freshness alert; bus retains days of JSON |
-| Spaces down / 5xx | Unaffected | Writer backs off; Kafka consumer lag grows |
+| Connect stalled | Unaffected | Freshness alert; bus retains days of protobuf |
+| Schema Registry down | Unaffected (produce may fail — producer concern) | Sink cannot decode new ids until SR returns |
+| Spaces down / 5xx | Unaffected | Connector backs off; Kafka consumer lag grows |
 | DuckDB not running | Unaffected | No one can query until it is started |
 | Topic empty (no producers yet) | Unaffected | Lake empty; freshness check must not false-page |
 
-The sink is not on the ad path. Do not add a Spaces or DuckDB dependency to `bidon-sdkapi`.
-
-### 4.9 What the files contain
-
-Schema-on-read. The writer projects known envelope columns and dumps the rest into `payload`. It does **not**:
-
-- Reject a record because `schema_version` is unknown or old. Tag the version, land the row, filter in queries. PRD rationale 6: old SDK majors persist for quarters and never reach zero; dropping them would bias J3/J4.
-- Re-sample.
-- Strip or rewrite fields (privacy is upstream).
-- Interpret `trace_id`. If present it is just another envelope column; this lake does not store or query traces.
+The sink is not on the ad path. Do not add a Spaces, Connect, or DuckDB dependency to `bidon-sdkapi`.
 
 ---
 
@@ -220,37 +209,31 @@ Schema-on-read. The writer projects known envelope columns and dumps the rest in
 
 Design point: ~10k DAU, 2 sessions × 5 auctions, fill 0.4, **unsampled** (`K` = 1.0). Model and caveats: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
 
-Two unmeasured inputs scale the bill linearly: **1.2 KiB JSON/event on the bus**, **200 B/row in Parquet**. The 200 B figure is optimistic — envelope columns dictionary-encode; the `payload` JSON blob does not. Treat every storage figure as ±2× until the sink produces real bytes.
+Sizing still uses **1.2 KiB/event on the bus** and **200 B/row Parquet** as unmeasured placeholders (those were JSON-era). Protobuf + typed columns should compress better than a `payload` JSON blob; treat figures as ±2× until the sink produces real bytes.
 
 | | Auctions / day | Events / day | **Parquet / day** | **On Spaces** (90/400 d) | Per 10 min flush | Spaces $/mo |
 | --- | --- | --- | --- | --- | --- | --- |
-| **10k DAU** | 100k | **5.9M** | **1.1 GiB** | **114 GiB** | ~41k events, ~8 MiB | **~$5** |
-| **100k** | 1M | **59M** | **11 GiB** | **1.1 TiB** | ~410k, ~78 MiB | **~$23** |
-| **1M** | 10M | **590M** | **110 GiB** | **11 TiB** | ~4.1M, ~780 MiB | **~$230** |
+| **10k DAU** | 100k | **5.9M** | **1.1 GiB** | **114 GiB** | ~41k events | **~$5** |
+| **100k** | 1M | **59M** | **11 GiB** | **1.1 TiB** | ~410k | **~$23** |
+| **1M** | 10M | **590M** | **110 GiB** | **11 TiB** | ~4.1M | **~$230** |
 
-`1.1 GiB/day` is new Parquet. `114 GiB` is retained. JSON on Redpanda is ~6.8 GiB/day at 10k — that is not the Spaces bill.
+`1.1 GiB/day` is new Parquet. `114 GiB` is retained. Bus retention is days, not 400 d.
 
-First measurement after the sink writes: mean Parquet bytes/row, and `event_name` count per `(app_id, auction_id)`. Those two replace the model.
+First measurement after the sink writes: mean protobuf bytes on the wire, Parquet bytes/row, and `event_name` count per `(app_id, auction_id)`.
 
 ---
 
 ## 6. Sink observability
 
-Existing `GET /metrics` on sdkapi is a producer concern and is out of this TRD. The sink needs its own signals:
-
 | Signal | Purpose |
 | --- | --- |
 | Consumer lag on `telemetry-events` | Bus is backing up |
+| Connect task state / failed records | Decoder or PUT errors |
 | Time since last successful Spaces PUT | Writer is stalled |
 | Latest object `dt` / modified time vs topic high-water | **Freshness** |
-| Objects written / bytes written per flush | Confirms 10 min / 64 MiB triggers |
-| Empty-flush skipped | Distinguishes “quiet topic” from “dead writer” |
+| Objects written / bytes written per flush | Confirms the 10 min trigger |
 
 **Alert:** latest object lags the topic by **> 20 minutes** (two flush intervals). Do not fire that alert when the topic has had no records in the window.
-
-Do not write spans onto `telemetry-events`. Do not scrape this lake for paging.
-
-The PRD client-side loss metric (`telemetry_dropped` ÷ emitted) is an SDK-queue counter. It has no transport through this sink.
 
 ---
 
@@ -259,12 +242,14 @@ The PRD client-side loss metric (`telemetry_dropped` ÷ emitted) is an SDK-queue
 | # | Work | Done when |
 | --- | --- | --- |
 | 1 | Spaces bucket (or dedicated prefix) + private credentials | Terraform or Coolify; not the backups bucket |
-| 2 | `telemetry-events` topic created explicitly (partitions, day-scale retention, zstd) | Topic exists before the sink starts |
-| 3 | Custom Go Parquet sink (`cmd/…`), 10 min / 64 MiB flush, hive layout as §4.2 | Objects appear under `events/dt=…/event_name=…/`. No Connect, no Enterprise Iceberg. |
-| 4 | Lifecycle rules: 90 d diagnostics, 400 d reconciliation, 7–10 y aggregates | Day prefixes expire; aggregates do not |
-| 5 | Daily aggregate job writing `aggregates/dt=…/` | One Parquet file per day; cannot wait until raw retention is a problem |
-| 6 | DuckDB SQL pack (funnel, DSP timeout, notice success, `GROUP BY event_name`) | An engineer can answer J3/J4 against a day of files |
-| 7 | Freshness alert (> 20 min, quiet-topic excluded) | Page on stall, not on idle |
+| 2 | Schema Registry reachable from Connect (prod compose already has it; dev/Coolify must too) | Protobuf converter can fetch ids |
+| 3 | Protobuf event messages in-repo + subjects registered (BACKWARD, TopicRecordNameStrategy) | At least one event type round-trips |
+| 4 | `telemetry-events` topic created explicitly (partitions, day-scale retention, zstd) | Topic exists before the sink starts |
+| 5 | New Connect connector `telemetry-events-parquet`: ProtobufConverter, ParquetFormat, 10 min rotate, one table prefix per `event_name` + `dt=`, Spaces endpoint | Objects appear under `events/<event_name>/dt=…/` as Parquet |
+| 6 | Lifecycle rules **per table**: 90 d diagnostics tables, 400 d reconciliation tables, 7–10 y aggregates | Day prefixes expire; the two classes differ by table |
+| 7 | Daily aggregate job writing the `aggregates` table | One Parquet file per day |
+| 8 | DuckDB SQL pack (per-table scans, funnel as joins) | An engineer can answer J3/J4 against a day of files |
+| 9 | Freshness alert (> 20 min, quiet-topic excluded) | Page on stall, not on idle |
 
 Local/dev: MinIO or a Spaces staging bucket is enough. Do not require production Spaces to prove the writer.
 
@@ -274,45 +259,36 @@ Local/dev: MinIO or a Spaces staging bucket is enough. Do not require production
 
 This TRD is done when all of the following are true:
 
-1. A JSON record on `telemetry-events` becomes a Parquet row under `events/dt=<event day>/event_name=<name>/` within **10 minutes** under load below the 64 MiB trigger.
-2. DuckDB `read_parquet` over a day partition returns that row. Funnel SQL in the pack runs, scoped by `app_id`, correcting with `sampling_rate`.
-3. No object is JSON. No writer reads `ad-events`. The writer is the custom Go binary in this repo — not Connect, not Redpanda Iceberg.
-4. `bidon-sdkapi` has no Spaces or DuckDB import; killing the sink does not change auction or `/show` behaviour.
-5. A day of diagnostics older than 90 d is gone; reconciliation event names survive to 400 d; the aggregate prefix is excluded from those expiries.
-6. After one scheduled run, `aggregates/dt=<day>/` contains a rollup file.
+1. A protobuf record on `telemetry-events` (registered schema id) becomes a Parquet row under `events/<event_name>/dt=<event day>/` within **10 minutes** under load where time-based rotate fires first.
+2. That file’s columns match that event’s protobuf message. DuckDB `read_parquet` on **that table** (with `union_by_name` for schema versions of the same type) returns the row. Funnel SQL joins tables on `(app_id, auction_id)` and corrects with `sampling_rate`.
+3. Objects are Parquet. The writer is the new Connect connector, consuming `telemetry-events` only. Each `events/<event_name>/` prefix is one table: one message type, one schema.
+4. `bidon-sdkapi` has no Spaces, Connect, or DuckDB import; killing Connect does not change auction or `/show` behaviour.
+5. Diagnostics tables older than 90 d are gone; reconciliation tables survive to 400 d; `aggregates/` is excluded from those expiries.
+6. After one scheduled run, the `aggregates` table contains a rollup file for that day.
 7. Freshness pages when the writer is stalled with records on the topic, and does not page when the topic is idle.
-
-It is **not** a failure of this TRD that the topic is empty, that `/v2/telemetry` does not exist, or that traces and metrics are unset.
 
 ---
 
 ## 9. Open items
 
-Nothing below is architecture-blocked. Every item needs a **name**. Items that belong to ingest, traces, or metrics are not listed.
+Nothing below is architecture-blocked. Every item needs a **name**.
 
 | # | Item | Blocks | Owner |
 | --- | --- | --- | --- |
-| 1 | Who provisions the Spaces bucket and runs the custom sink | This TRD entirely | **unnamed** |
+| 1 | Who provisions Spaces, Schema Registry (dev/Coolify), and the Connect connector | This TRD entirely | **unnamed** |
 | 2 | Contractual dispute / audit window (MAX terms, DSP agreements) — is 400 d right? | Reconciliation lifecycle | Commercial / counsel |
-| 3 | Legal: is `session_id` + `device_model` + `app_bundle` + `country` pseudonymous PII requiring DSRs? | Whether day-prefix lifecycle is enough | Counsel |
-| 4 | Measured Parquet bytes/row and `event_name` counts per auction | Turns §5 from a model into a bill | Backend, once the sink writes |
+| 3 | Measured protobuf bytes/event and Parquet bytes/row | Turns §5 from a model into a bill | Backend, once the sink writes |
 
 ---
 
-## 10. PRD traceability (this store only)
+## 10. PRD traceability
 
 | PRD requirement | This TRD | Status |
 | --- | --- | --- |
-| Raw events to a columnar warehouse for funnel joins | Entire document | Parquet on Spaces, DuckDB on demand |
-| Funnel completeness, fill / render / notice rates (catalog SQL) | §4.6 SQL pack | Engineer-mediated in this slice |
-| Goal 3 reconciliation (impression-level rows) | §4.7 400 d class + aggregates | Window unconfirmed commercially |
-| Retention per event class before launch | §4.7 | Lifecycle + aggregate job |
-| Schema_version additive; do not break downstream queries | §4.9 land every version | Writer does not reject |
-| Telemetry must not delay the ad path | §4.8 | Sink is off the ad path |
-| Sampling rate recorded so counts correct at query time | §4.6 `sum(1 / sampling_rate)` | Rate is an upstream field; lake only reads it |
-| OTel one trace / DSP span | — | **Out** |
-| Metrics for alerting | — | **Out** |
-| Client disk queue, ingest, kill switch | — | **Out** |
-| No PII on the stream | Assumed upstream | Writer does not enforce |
-
-Any PRD infrastructure dependency not listed here is out of this TRD, not an implicit decision.
+| Raw events to a columnar warehouse for funnel joins | Entire document | Protobuf → Connect → Parquet on Spaces, DuckDB on demand |
+| Funnel completeness, fill / render / notice rates (catalog SQL) | §4.7 SQL pack | Engineer-mediated in this slice |
+| Goal 3 reconciliation (impression-level rows) | §4.8 400 d class + aggregates | Window unconfirmed commercially |
+| Retention per event class before launch | §4.8 | Lifecycle + aggregate job |
+| Schema versioned; additive within a major | §4.2 BACKWARD, additive field numbers | Sink lands every registered id |
+| Telemetry must not delay the ad path | §4.9 | Sink is off the ad path |
+| Sampling rate recorded so counts correct at query time | §4.7 `sum(1 / sampling_rate)` | Field on the protobuf message |
