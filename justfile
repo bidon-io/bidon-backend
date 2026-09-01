@@ -16,6 +16,9 @@ seed:
 sdk-api:
     go run ./cmd/bidon-sdkapi
 
+dsp-sim:
+    go run ./cmd/bidon-dspsim
+
 # --- Testing ---
 
 test-db:
@@ -79,6 +82,9 @@ build-migrate:
 build-seed:
     just _build bidon-seed
 
+build-dspsim:
+    just _build bidon-dspsim
+
 build-ui:
     just _build bidon-ui
 
@@ -87,6 +93,7 @@ build-all:
     just build-sdkapi
     just build-migrate
     just build-seed
+    just build-dspsim
     just build-ui
 
 # --- CI / registry image builds ---
@@ -111,6 +118,9 @@ ci-build-migrate:
 ci-build-seed:
     just _ci-build bidon-seed
 
+ci-build-dspsim:
+    just _ci-build bidon-dspsim
+
 ci-build-ui:
     just _ci-build bidon-ui
 
@@ -120,4 +130,5 @@ ci-build-all:
     just ci-build-sdkapi
     just ci-build-migrate
     just ci-build-seed
+    just ci-build-dspsim
     just ci-build-ui
