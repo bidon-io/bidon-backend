@@ -1,0 +1,125 @@
+{
+  "default": {
+    "static_banner": [
+      {
+        "id": "default_static_320x50",
+        "w": 320,
+        "h": 50,
+        "formats": ["BANNER", "LEADERBOARD", "ADAPTIVE"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<a href=\"{{.ClickURL}}\" target=\"_blank\"><img src=\"{{.AssetURL}}/banner-320x50.svg\" width=\"320\" height=\"50\" border=\"0\" alt=\"dspsim {{.CreativeID}}\"/></a><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/>"
+      },
+      {
+        "id": "default_static_300x250",
+        "w": 300,
+        "h": 250,
+        "formats": ["MREC"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<a href=\"{{.ClickURL}}\" target=\"_blank\"><img src=\"{{.AssetURL}}/banner-300x250.svg\" width=\"300\" height=\"250\" border=\"0\" alt=\"dspsim {{.CreativeID}}\"/></a><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/>"
+      }
+    ],
+    "mraid_banner": [
+      {
+        "id": "default_mraid_320x50",
+        "w": 320,
+        "h": 50,
+        "formats": ["BANNER", "LEADERBOARD", "ADAPTIVE"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><script src=\"mraid.js\"></script></head><body style=\"margin:0;padding:0\"><div onclick=\"window.open('{{.ClickURL}}')\" style=\"width:320px;height:50px;background:#1f2933;color:#fff;font:12px/50px sans-serif;text-align:center;cursor:pointer\">dspsim {{.CreativeID}} &middot; {{.Price}} {{.Currency}}</div><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/><script>function dspsimReady(){}if(window.mraid){mraid.getState()==='loading'?mraid.addEventListener('ready',dspsimReady):dspsimReady();}</script></body></html>"
+      },
+      {
+        "id": "default_mraid_300x250",
+        "w": 300,
+        "h": 250,
+        "formats": ["MREC"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><script src=\"mraid.js\"></script></head><body style=\"margin:0;padding:0\"><div onclick=\"window.open('{{.ClickURL}}')\" style=\"width:300px;height:250px;background:#1f2933;color:#fff;font:14px sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer\"><strong>dspsim MREC</strong><span>{{.CreativeID}}</span><span>{{.Price}} {{.Currency}}</span><span>bid {{.BidID}}</span></div><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/><script>function dspsimReady(){}if(window.mraid){mraid.getState()==='loading'?mraid.addEventListener('ready',dspsimReady):dspsimReady();}</script></body></html>"
+      }
+    ],
+    "mraid_interstitial": [
+      {
+        "id": "default_mraid_interstitial",
+        "ad_types": ["interstitial", "rewarded"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1\"><script src=\"mraid.js\"></script></head><body style=\"margin:0;padding:0;background:#0b1015\"><div style=\"position:fixed;inset:0;color:#fff;font:16px sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center\" onclick=\"window.open('{{.ClickURL}}')\"><strong style=\"font-size:22px\">dspsim interstitial</strong><span>{{.CreativeID}}</span><span>{{.Price}} {{.Currency}}</span><span>bid {{.BidID}}</span></div><div onclick=\"dspsimClose()\" style=\"position:fixed;top:12px;right:12px;width:32px;height:32px;border-radius:16px;background:rgba(255,255,255,.85);color:#000;font:20px/32px sans-serif;text-align:center;cursor:pointer\">&times;</div><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/><script>function dspsimClose(){if(window.mraid){mraid.close();}}function dspsimReady(){}if(window.mraid){mraid.getState()==='loading'?mraid.addEventListener('ready',dspsimReady):dspsimReady();}</script></body></html>"
+      }
+    ],
+    "vast_video": [
+      {
+        "id": "default_vast_video",
+        "ad_types": ["interstitial", "rewarded"],
+        "adomain": ["example.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"3.0\"><Ad id=\"{{.CreativeID}}\"><InLine><AdSystem version=\"1.0\">dspsim</AdSystem><AdTitle><![CDATA[dspsim {{.CreativeID}}]]></AdTitle><Impression><![CDATA[{{.ImpressionURL}}]]></Impression><Creatives><Creative id=\"{{.CreativeID}}\" sequence=\"1\"><Linear><Duration>00:00:15</Duration><TrackingEvents><Tracking event=\"start\"><![CDATA[{{.TrackURL}}/start]]></Tracking><Tracking event=\"firstQuartile\"><![CDATA[{{.TrackURL}}/firstQuartile]]></Tracking><Tracking event=\"midpoint\"><![CDATA[{{.TrackURL}}/midpoint]]></Tracking><Tracking event=\"thirdQuartile\"><![CDATA[{{.TrackURL}}/thirdQuartile]]></Tracking><Tracking event=\"complete\"><![CDATA[{{.TrackURL}}/complete]]></Tracking><Tracking event=\"close\"><![CDATA[{{.TrackURL}}/close]]></Tracking></TrackingEvents><VideoClicks><ClickThrough><![CDATA[{{.ClickURL}}]]></ClickThrough><ClickTracking><![CDATA[{{.TrackURL}}/clickTracking]]></ClickTracking></VideoClicks><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"640\" height=\"480\" bitrate=\"500\" scalable=\"true\" maintainAspectRatio=\"true\"><![CDATA[{{.AssetURL}}/video-640x480.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>"
+      }
+    ]
+  },
+
+  "adikteev": {
+    "static_banner": [
+      {
+        "id": "adikteev_static_320x50",
+        "w": 320,
+        "h": 50,
+        "formats": ["BANNER", "LEADERBOARD", "ADAPTIVE"],
+        "adomain": ["adikteev.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<a href=\"{{.ClickURL}}\" target=\"_blank\"><img src=\"{{.AssetURL}}/adikteev-320x50.svg\" width=\"320\" height=\"50\" border=\"0\" alt=\"adikteev {{.CreativeID}}\"/></a><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/>"
+      },
+      {
+        "id": "adikteev_static_300x250",
+        "w": 300,
+        "h": 250,
+        "formats": ["MREC"],
+        "adomain": ["adikteev.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<a href=\"{{.ClickURL}}\" target=\"_blank\"><img src=\"{{.AssetURL}}/adikteev-300x250.svg\" width=\"300\" height=\"250\" border=\"0\" alt=\"adikteev {{.CreativeID}}\"/></a><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/>"
+      }
+    ],
+    "mraid_banner": [
+      {
+        "id": "adikteev_mraid_300x250",
+        "w": 300,
+        "h": 250,
+        "formats": ["MREC"],
+        "adomain": ["adikteev.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><script src=\"mraid.js\"></script></head><body style=\"margin:0;padding:0\"><div onclick=\"window.open('{{.ClickURL}}')\" style=\"width:300px;height:250px;background:#20124d;color:#fff;font:14px sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer\"><strong>adikteev MREC</strong><span>{{.CreativeID}}</span><span>{{.Price}} {{.Currency}}</span></div><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/><script>function dspsimReady(){}if(window.mraid){mraid.getState()==='loading'?mraid.addEventListener('ready',dspsimReady):dspsimReady();}</script></body></html>"
+      }
+    ],
+    "mraid_interstitial": [
+      {
+        "id": "adikteev_mraid_interstitial",
+        "ad_types": ["interstitial", "rewarded"],
+        "adomain": ["adikteev.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1\"><script src=\"mraid.js\"></script></head><body style=\"margin:0;padding:0;background:#20124d\"><div style=\"position:fixed;inset:0;color:#fff;font:16px sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center\" onclick=\"window.open('{{.ClickURL}}')\"><strong style=\"font-size:22px\">adikteev interstitial</strong><span>{{.CreativeID}}</span><span>{{.Price}} {{.Currency}}</span></div><div onclick=\"dspsimClose()\" style=\"position:fixed;top:12px;right:12px;width:32px;height:32px;border-radius:16px;background:rgba(255,255,255,.85);color:#000;font:20px/32px sans-serif;text-align:center;cursor:pointer\">&times;</div><img src=\"{{.ImpressionURL}}\" width=\"1\" height=\"1\" style=\"display:none\" alt=\"\"/><script>function dspsimClose(){if(window.mraid){mraid.close();}}function dspsimReady(){}if(window.mraid){mraid.getState()==='loading'?mraid.addEventListener('ready',dspsimReady):dspsimReady();}</script></body></html>"
+      }
+    ],
+    "vast_video": [
+      {
+        "id": "adikteev_vast_video",
+        "ad_types": ["interstitial", "rewarded"],
+        "adomain": ["adikteev.com"],
+        "bundle": "com.example.advertiser",
+        "weight": 1,
+        "adm": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"3.0\"><Ad id=\"{{.CreativeID}}\"><InLine><AdSystem version=\"1.0\">dspsim (adikteev)</AdSystem><AdTitle><![CDATA[adikteev {{.CreativeID}}]]></AdTitle><Impression><![CDATA[{{.ImpressionURL}}]]></Impression><Creatives><Creative id=\"{{.CreativeID}}\" sequence=\"1\"><Linear><Duration>00:00:30</Duration><TrackingEvents><Tracking event=\"start\"><![CDATA[{{.TrackURL}}/start]]></Tracking><Tracking event=\"firstQuartile\"><![CDATA[{{.TrackURL}}/firstQuartile]]></Tracking><Tracking event=\"midpoint\"><![CDATA[{{.TrackURL}}/midpoint]]></Tracking><Tracking event=\"thirdQuartile\"><![CDATA[{{.TrackURL}}/thirdQuartile]]></Tracking><Tracking event=\"complete\"><![CDATA[{{.TrackURL}}/complete]]></Tracking></TrackingEvents><VideoClicks><ClickThrough><![CDATA[{{.ClickURL}}]]></ClickThrough><ClickTracking><![CDATA[{{.TrackURL}}/clickTracking]]></ClickTracking></VideoClicks><MediaFiles><MediaFile delivery=\"progressive\" type=\"video/mp4\" width=\"640\" height=\"480\" bitrate=\"700\" scalable=\"true\" maintainAspectRatio=\"true\"><![CDATA[{{.AssetURL}}/video-640x480.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>"
+      }
+    ]
+  }
+}

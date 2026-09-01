@@ -1,0 +1,68 @@
+{
+  "id" : "f9e64e50-f24a-4990-8c56-aecea75c90c9",
+  "imp" : [ {
+    "id" : "28db2164-6dd5-4e5c-bc78-025fa6ff9a3f",
+    "video" : {
+      "mimes" : [ "video/mp4", "video/x-m4v", "video/quicktime", "video/mpeg", "video/avi" ],
+      "protocols" : [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ],
+      "w" : 320,
+      "h" : 480,
+      "pos" : 7
+    },
+    "native" : {
+      "request" : "{\"ver\":\"1.2\",\"layout\":1,\"adunit\":2,\"assets\":[{\"id\":1,\"required\":1,\"title\":{\"len\":80}},{\"id\":2,\"required\":1,\"img\":{\"type\":3,\"w\":1200,\"h\":627}},{\"id\":3,\"required\":0,\"img\":{\"type\":1,\"w\":100,\"h\":100}},{\"id\":4,\"required\":1,\"data\":{\"type\":2,\"len\":100}},{\"id\":5,\"required\":0,\"data\":{\"type\":12,\"len\":15}}]}",
+      "ver" : "1.2"
+    },
+    "displaymanager" : "adikteev",
+    "displaymanagerver" : "11.8.2",
+    "instl" : 1,
+    "bidfloor" : 0.500001,
+    "secure" : 1
+  } ],
+  "app" : {
+    "id" : "2005",
+    "bundle" : "com.demo.tetris",
+    "ver" : "1.0",
+    "publisher" : {
+      "id" : "1"
+    },
+    "ext" : {
+      "sdkinstanceid" : 123
+    }
+  },
+  "device" : {
+    "geo" : {
+      "lat" : 38.1147,
+      "lon" : -1.2944,
+      "type" : 2,
+      "accuracy" : 5000,
+      "ipservice" : 3,
+      "country" : "ESP",
+      "region" : "MC",
+      "city" : "Archena",
+      "zip" : "30600"
+    },
+    "ua" : "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+    "ip" : "94.24.105.28",
+    "devicetype" : 4,
+    "make" : "Apple",
+    "model" : "iPhone14,2",
+    "os" : "ios",
+    "osv" : "16.0",
+    "hwv" : "iPhone14,2",
+    "h" : 2556,
+    "w" : 1179,
+    "ppi" : 460,
+    "pxratio" : 3,
+    "js" : 1,
+    "language" : "en_US",
+    "connectiontype" : 2,
+    "ifa" : "f40ef78f-01dd-4053-a657-061ec2db55cc"
+  },
+  "at" : 1,
+  "tmax" : 2000,
+  "cur" : [ "USD" ],
+  "regs" : {
+    "gdpr" : 0
+  }
+}

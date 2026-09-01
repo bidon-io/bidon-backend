@@ -1,0 +1,75 @@
+### DSP simulator — bid, debug, reload
+#
+# Drive the simulator standalone with the real OpenRTB requests captured under
+# ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/.
+#
+# Query overrides on /openrtb/bid:
+#   ?dsp=<name>       force the DSP bucket (overrides imp.displaymanager)
+#   ?adtype=<type>    force banner|interstitial|rewarded (resolves the
+#                     fullscreen ambiguity that reward-> instl=1 requests share)
+#   ?creative=<id>    pin a creative by id, e.g. default_vast_video
+
+@dspsimHost = http://localhost:1325
+
+
+### Bid — banner (iOS)
+POST {{dspsimHost}}/openrtb/bid
+Content-Type: application/json
+
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_banner_bidreq.json
+
+
+### Bid — banner / MREC (Android)
+POST {{dspsimHost}}/openrtb/bid
+Content-Type: application/json
+
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner_mrec_bidreq.json
+
+
+### Bid — interstitial (Android) — pinned to interstitial so the fullscreen ambiguity does not resolve to rewarded
+POST {{dspsimHost}}/openrtb/bid?adtype=interstitial
+Content-Type: application/json
+
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_interstitial_bidreq.json
+
+
+### Bid — rewarded (iOS) — force the VAST creative
+POST {{dspsimHost}}/openrtb/bid?adtype=rewarded&creative=default_vast_video
+Content-Type: application/json
+
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/ios_adikteev_rewarded_bidreq.json
+
+
+### Bid — unknown DSP bucket — falls back to default creatives
+POST {{dspsimHost}}/openrtb/bid?dsp=tinkoff
+Content-Type: application/json
+
+< ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/android_adikteev_banner_bidreq.json
+
+
+### Debug — catalog snapshot (what the simulator considered a configured auction)
+GET {{dspsimHost}}/debug/catalog
+
+
+### Debug — recorded bids, notifications, and orphan notifications
+GET {{dspsimHost}}/debug/bids
+
+
+### Debug — recorded bids for one DSP
+GET {{dspsimHost}}/debug/bids?dsp=adikteev
+
+
+### Debug — creative library and serve counts
+GET {{dspsimHost}}/debug/creatives
+
+
+### Debug — reload catalog and creative library without a restart
+POST {{dspsimHost}}/debug/reload
+
+
+### Debug — clear the bid registry
+DELETE {{dspsimHost}}/debug/bids
+
+
+### Health
+GET {{dspsimHost}}/health_checks

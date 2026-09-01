@@ -36,6 +36,7 @@ just compose-down   # tear down
 | bidon-ui         | http://localhost:3010 |
 | bidon-admin      | http://localhost:1323 |
 | bidon-sdkapi     | http://localhost:1324 |
+| bidon-dspsim     | http://localhost:1325 |
 | Postgres         | localhost:5434        |
 | Redis            | localhost:6379        |
 | Redpanda         | localhost:19092       |

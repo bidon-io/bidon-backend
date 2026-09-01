@@ -150,6 +150,20 @@ services:
       PORT: 1323
       APP_SECRET: app_secret
 
+  bidon-dspsim:
+    image: golang:1.24-alpine
+    <<: *golang-dev-app-base
+    command: go run ./cmd/bidon-dspsim
+    ports:
+      - '1325:1325'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: [*dev-db-env, *dev-bidon-app-env]
+      DSPSIM_PORT: 1325
+      DSPSIM_PUBLIC_URL: http://localhost:1325
+
   bidon-ui:
     image: node:22-alpine
     working_dir: /workspace/web/bidon_ui
