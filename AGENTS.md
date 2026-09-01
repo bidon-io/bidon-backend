@@ -31,10 +31,20 @@ Runs Postgres, Redis, Redpanda, migrations, seed data, both API services, and th
 | bidon-ui         | http://localhost:3010 |
 | bidon-admin      | http://localhost:1323 |
 | bidon-sdkapi     | http://localhost:1324 |
+| bidon-dspsim     | http://localhost:1325 |
 | Postgres         | localhost:5434        |
 | Redis            | localhost:6379        |
 | Redpanda         | localhost:19092     |
 | Redpanda Console | http://localhost:8080 |
+
+`bidon-dspsim` is a standalone OpenRTB DSP simulator (see
+`docs/adr/0001-dsp-simulator.md`): it reads auction configuration from Postgres,
+answers bid requests from a JSON creative library indexed by DSP and creative
+type, and receives the nurl/burl/lurl it advertises, tracked per bid id under
+`/debug/bids`. Drive it with `dspsim.http` (companion to `sdk.http`, which posts
+the captured `testData/auction/adikteev/*_bidreq.json` requests) or with
+`go run ./cmd/bidon-dspsim`. Bidon itself is not modified to reach it; pointing
+a live auction at the simulator needs an out-of-band endpoint redirect.
 
 ### Manual setup (dependencies only)
 
