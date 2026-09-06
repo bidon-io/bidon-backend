@@ -308,7 +308,7 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 				ID: tc.expectedRequestID,
 			}
 
-			response := a.ExecuteRequest(context.Background(), customClient, request)
+			response := adapters.ExecuteDemandRequest(context.Background(), customClient, &a, request, adapter.VKAdsKey)
 
 			if response.DemandID != tc.expectedDemandID {
 				t.Errorf("Expected DemandID %v, but got %v", tc.expectedDemandID, response.DemandID)

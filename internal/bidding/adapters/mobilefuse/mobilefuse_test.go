@@ -297,7 +297,7 @@ func TestMobileFuseAdapter_ExecuteRequest(t *testing.T) {
 		},
 	}
 
-	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+	response := adapters.ExecuteDemandRequest(context.Background(), customClient, &networkAdapter, request, adapter.MobileFuseKey)
 
 	if response.DemandID != adapter.MobileFuseKey {
 		t.Errorf("Expected DemandID %v, but got %v", adapter.MobileFuseKey, response.DemandID)

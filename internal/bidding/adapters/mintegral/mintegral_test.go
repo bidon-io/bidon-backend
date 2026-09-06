@@ -303,7 +303,7 @@ func TestMintegralAdapter_ExecuteRequest(t *testing.T) {
 		ID: "test-request-id",
 	}
 
-	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+	response := adapters.ExecuteDemandRequest(context.Background(), customClient, &networkAdapter, request, adapter.MintegralKey)
 
 	if response.DemandID != adapter.MintegralKey {
 		t.Errorf("Expected DemandID %v, but got %v", adapter.BigoAdsKey, response.DemandID)
