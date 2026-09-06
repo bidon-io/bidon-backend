@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: [bidon-admin, bidon-sdkapi, bidon-migrate, bidon-proxy, bidon-copilot]
+        component: [bidon-admin, bidon-sdkapi, bidon-migrate, bidon-proxy, bidon-copilot, bidon-ui]
     env:
       TARGET: ${{ matrix.component }}
     steps:
