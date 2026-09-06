@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -24,6 +23,8 @@ type TaurusXAdapter struct {
 	AppID string
 	TagID string
 }
+
+var _ adapters.BidderInterface = (*TaurusXAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:   {320, 50},
@@ -83,12 +84,10 @@ func (a *TaurusXAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrt
 	}
 }
 
-func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
+func (a *TaurusXAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
 	}
-
-	secure := int8(1)
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -99,27 +98,20 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impID, _ := uuid.NewV4()
-	imp.ID = impID.String()
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.TaurusXKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.TaurusXKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	// Set app ID
+	opts := adapters.RTBRequestOptions{
+		TagID: a.TagID,
+	}
 	if request.App != nil {
-		request.App.ID = a.AppID
+		opts.AppID = a.AppID
 	}
 
+	return imp, opts, nil
+}
+
+func (a *TaurusXAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	reqExt := make(map[string]interface{})
 	if request.Ext != nil {
 		_ = json.Unmarshal(request.Ext, &reqExt)
@@ -127,7 +119,6 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 
 	if demandData, ok := auctionRequest.AdObject.Demands[adapter.TaurusXKey]; ok {
 		if tokenData, ok := demandData["token"].(string); ok && tokenData != "" {
-			// Parse the token JSON to extract placement-specific token
 			placementToken, err := a.extractPlacementToken(tokenData, a.TagID)
 			if err == nil && placementToken != "" {
 				reqExt["token"] = placementToken
@@ -135,10 +126,12 @@ func (a *TaurusXAdapter) CreateRequest(request openrtb.BidRequest, auctionReques
 		}
 	}
 
-	extBytes, _ := json.Marshal(reqExt)
+	extBytes, err := json.Marshal(reqExt)
+	if err != nil {
+		return err
+	}
 	request.Ext = extBytes
-
-	return request, nil
+	return nil
 }
 
 func (a *TaurusXAdapter) extractPlacementToken(tokenData, placementID string) (string, error) {

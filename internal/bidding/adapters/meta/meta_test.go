@@ -258,7 +258,7 @@ func TestMeta_CreateRequestTest(t *testing.T) {
 	}
 
 	for _, tC := range testCases {
-		request, err := adapter.CreateRequest(tC.params.BaseBidRequest, tC.params.AuctionRequest)
+		request, err := adapters.BuildDemandRequest(adapter, tC.params.BaseBidRequest, tC.params.AuctionRequest, "meta")
 		if err == nil {
 			request.Imp[0].ID = "1" // ommit random uuid
 		}

@@ -115,7 +115,7 @@ func TestMoloco_CreateRequest_Banner(t *testing.T) {
 	baseBidRequest := buildBaseBidRequest()
 	auctionRequest := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 
-	request, err := adapter.CreateRequest(baseBidRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(&adapter, baseBidRequest, auctionRequest, "moloco")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -148,7 +148,7 @@ func TestMoloco_CreateRequest_Interstitial(t *testing.T) {
 	baseBidRequest := buildBaseBidRequest()
 	auctionRequest := buildAuctionRequest(ad.InterstitialType, ad.EmptyFormat)
 
-	request, err := adapter.CreateRequest(baseBidRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(&adapter, baseBidRequest, auctionRequest, "moloco")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -169,7 +169,7 @@ func TestMoloco_CreateRequest_Rewarded(t *testing.T) {
 	baseBidRequest := buildBaseBidRequest()
 	auctionRequest := buildAuctionRequest(ad.RewardedType, ad.EmptyFormat)
 
-	request, err := adapter.CreateRequest(baseBidRequest, auctionRequest)
+	request, err := adapters.BuildDemandRequest(&adapter, baseBidRequest, auctionRequest, "moloco")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -190,7 +190,7 @@ func TestMoloco_CreateRequest_EmptyTagID(t *testing.T) {
 	baseBidRequest := buildBaseBidRequest()
 	auctionRequest := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 
-	_, err := adapter.CreateRequest(baseBidRequest, auctionRequest)
+	_, err := adapters.BuildDemandRequest(&adapter, baseBidRequest, auctionRequest, "moloco")
 
 	if err == nil {
 		t.Error("Expected error for empty TagID, got nil")
@@ -205,7 +205,7 @@ func TestMoloco_CreateRequest_DefaultAdType(t *testing.T) {
 	auctionRequest := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 
 	// This should succeed since it defaults to BannerType
-	_, err := adapter.CreateRequest(baseBidRequest, auctionRequest)
+	_, err := adapters.BuildDemandRequest(&adapter, baseBidRequest, auctionRequest, "moloco")
 
 	if err != nil {
 		t.Errorf("Expected no error for default ad type, got %v", err)

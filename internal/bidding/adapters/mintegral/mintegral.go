@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -26,6 +25,8 @@ type MintegralAdapter struct {
 	TagID       string
 	PlacementID string
 }
+
+var _ adapters.BidderInterface = (*MintegralAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -87,8 +88,10 @@ func (a *MintegralAdapter) rewarded(auctionRequest *schema.AuctionRequest) *open
 	}
 }
 
-func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
+func (a *MintegralAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	if a.TagID == "" {
+		return nil, adapters.RTBRequestOptions{}, errors.New("TagID is empty")
+	}
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -99,41 +102,34 @@ func (a *MintegralAdapter) CreateRequest(request openrtb.BidRequest, auctionRequ
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-
-	if a.TagID == "" {
-		return request, errors.New("TagID is empty")
+	opts := adapters.RTBRequestOptions{
+		TagID:       a.TagID,
+		AppID:       a.AppID,
+		PublisherID: a.SellerID,
 	}
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.MintegralKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MintegralKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-	request.User = &openrtb.User{
-		BuyerUID: auctionRequest.AdObject.Demands[adapter.MintegralKey]["token"].(string),
+	if token, ok := auctionRequest.AdObject.Demands[adapter.MintegralKey]["token"].(string); ok {
+		opts.BuyerUID = token
 	}
-	request.App.Publisher.ID = a.SellerID
-	request.App.ID = a.AppID
 
+	return imp, opts, nil
+}
+
+func (a *MintegralAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	appExtStructure := &map[string]interface{}{}
 	if auctionRequest.AdObject.IsPortrait() {
 		(*appExtStructure)["orientation"] = 1
 	} else {
 		(*appExtStructure)["orientation"] = 2
 	}
-	raw, _ := json.Marshal(appExtStructure)
+	raw, err := json.Marshal(appExtStructure)
+	if err != nil {
+		return err
+	}
 	request.App.Ext = raw
-
-	return request, nil
+	return nil
 }
 
 func (a *MintegralAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

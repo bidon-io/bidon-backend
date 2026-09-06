@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -25,6 +24,8 @@ type MolocoAdapter struct { //nolint:revive
 	AppID  string
 	APIKey string
 }
+
+var _ adapters.BidderInterface = (*MolocoAdapter)(nil)
 
 // bannerFormats defines the supported banner formats and their dimensions
 var bannerFormats = map[ad.Format][2]int64{
@@ -110,9 +111,10 @@ func (a *MolocoAdapter) rewarded(auctionRequest *schema.AuctionRequest) *openrtb
 	}
 }
 
-// CreateRequest implements the BidderInterface.CreateRequest method
-func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
+func (a *MolocoAdapter) BuildImpression(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	if a.TagID == "" {
+		return nil, adapters.RTBRequestOptions{}, errors.New("moloco AdUnitID is empty")
+	}
 
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -123,37 +125,21 @@ func (a *MolocoAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impID, _ := uuid.NewV4()
-	imp.ID = impID.String()
-
-	if a.TagID == "" {
-		return request, errors.New("moloco AdUnitID is empty")
+	opts := adapters.RTBRequestOptions{
+		TagID: a.TagID,
 	}
-	imp.TagID = a.TagID
-
-	imp.DisplayManager = string(adapter.MolocoKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.MolocoKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-	imp.BidFloorCur = "USD"
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	// Set app ID if configured
+	// Preserve previous behavior: only set App.ID when App is already present.
 	if a.AppID != "" && request.App != nil {
-		request.App.ID = a.AppID
+		opts.AppID = a.AppID
+	}
+	if token, ok := auctionRequest.AdObject.Demands[adapter.MolocoKey]["token"].(string); ok {
+		opts.BuyerUID = token
 	}
 
-	// Add user data if token is available
-	request.User = &openrtb.User{
-		BuyerUID: auctionRequest.AdObject.Demands[adapter.MolocoKey]["token"].(string),
-	}
-
-	return request, nil
+	return imp, opts, nil
 }
 
 // ExecuteRequest implements the BidderInterface.ExecuteRequest method

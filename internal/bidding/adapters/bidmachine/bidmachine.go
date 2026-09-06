@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 
@@ -25,6 +24,8 @@ type BidmachineAdapter struct {
 	SellerID string
 	Endpoint string
 }
+
+var _ adapters.BidderInterface = (*BidmachineAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat:      {320, 50},
@@ -104,13 +105,7 @@ func (a *BidmachineAdapter) rewarded(auctionRequest *schema.AuctionRequest) *ope
 	}
 }
 
-func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
-
-	x := ExtraParams(auctionRequest)
-	ext, _ := json.Marshal(x)
-	request.Ext = ext
-
+func (a *BidmachineAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -120,31 +115,28 @@ func (a *BidmachineAdapter) CreateRequest(request openrtb.BidRequest, auctionReq
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
-
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.BidmachineKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.BidmachineKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
-
-	request.App.Publisher.ID = a.SellerID
 
 	extStructure := &map[string]interface{}{}
 	_ = json.Unmarshal(imp.Ext, extStructure)
-
 	(*extStructure)["bid_token"] = auctionRequest.AdObject.Demands[adapter.BidmachineKey]["token"]
-
 	raw, _ := json.Marshal(extStructure)
-
 	imp.Ext = raw
 
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
+	return imp, adapters.RTBRequestOptions{
+		PublisherID:     a.SellerID,
+		OmitBidFloorCur: true,
+	}, nil
+}
 
-	return request, nil
+func (a *BidmachineAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
+	ext, err := json.Marshal(ExtraParams(auctionRequest))
+	if err != nil {
+		return err
+	}
+	request.Ext = ext
+	return nil
 }
 
 func (a *BidmachineAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {

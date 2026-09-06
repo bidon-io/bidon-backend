@@ -85,7 +85,7 @@ func TestAdapter_CreateRequest_Banner(t *testing.T) {
 	auction := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 	auction.Test = true
 
-	request, err := adapterInstance.CreateRequest(base, auction)
+	request, err := adapters.BuildDemandRequest(&adapterInstance, base, auction, adapter.StartIOKey)
 	if err != nil {
 		t.Fatalf("CreateRequest returned error: %v", err)
 	}
@@ -133,7 +133,7 @@ func TestAdapter_CreateRequest_Errors(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tc.adapter.CreateRequest(base, auction)
+			_, err := adapters.BuildDemandRequest(&tc.adapter, base, auction, adapter.StartIOKey)
 			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
 				t.Fatalf("expected error containing %q, got %v", tc.wantErr, err)
 			}
@@ -145,7 +145,7 @@ func TestAdapter_CreateRequest_Errors(t *testing.T) {
 		auction := buildAuctionRequest(ad.BannerType, ad.BannerFormat)
 		auction.AdObject.Demands[adapter.StartIOKey]["token"] = ""
 
-		_, err := adapterInstance.CreateRequest(base, auction)
+		_, err := adapters.BuildDemandRequest(&adapterInstance, base, auction, adapter.StartIOKey)
 		if err == nil || !strings.Contains(err.Error(), "token") {
 			t.Fatalf("expected token error, got %v", err)
 		}
@@ -157,7 +157,7 @@ func TestAdapter_ExecuteRequest(t *testing.T) {
 	base := buildBidRequest()
 	auction := buildAuctionRequest(ad.InterstitialType, ad.EmptyFormat)
 
-	request, err := adapterInstance.CreateRequest(base, auction)
+	request, err := adapters.BuildDemandRequest(&adapterInstance, base, auction, adapter.StartIOKey)
 	if err != nil {
 		t.Fatalf("CreateRequest error: %v", err)
 	}
