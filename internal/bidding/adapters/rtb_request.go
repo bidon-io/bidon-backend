@@ -72,10 +72,22 @@ func BuildDemandRequest(
 	return request, nil
 }
 
+func CalculatePriceFloor(rtbRequest *openrtb.BidRequest, incomingRequest *schema.AuctionRequest) float64 {
+	if rtbRequest == nil || incomingRequest == nil {
+		return 0
+	}
+
+	if len(rtbRequest.Imp) == 1 {
+		return rtbRequest.Imp[0].BidFloor
+	}
+
+	return incomingRequest.AdObject.GetBidFloorForBidding()
+}
+
 // BuildRTBRequest applies the common OpenRTB impression shell around an
-// adapter-built creative Imp. Imp is required; callers must not pass a
-// zero-value placeholder in place of a real creative. Creative construction
-// (banner/interstitial/rewarded) remains adapter-owned until BAC-28.
+// adapter-built Imp. Imp is required; callers must not pass a zero-value
+// placeholder in place of a real creative. Size maps and banner / interstitial
+// / rewarded Imp builders live in impression.go.
 func BuildRTBRequest(
 	request openrtb.BidRequest,
 	auctionRequest *schema.AuctionRequest,
