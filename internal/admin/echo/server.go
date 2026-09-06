@@ -13,6 +13,7 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	session "github.com/spazzymoto/echo-scs-session"
 
+	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/admin"
 	"github.com/bidon-io/bidon-backend/internal/admin/api"
 	"github.com/bidon-io/bidon-backend/internal/admin/auth"
@@ -355,6 +356,34 @@ func (s *Server) UpdatePassword(c echo.Context) error {
 	}
 
 	return s.SettingsHandler.updatePassword(c, authCtx)
+}
+
+func (s *Server) GetNetworks(c echo.Context) error {
+	if _, err := getAuthContext(c); err != nil {
+		return err
+	}
+
+	networks := adapter.Networks()
+	resp := make([]networkCatalogItem, 0, len(networks))
+	for _, n := range networks {
+		resp = append(resp, networkCatalogItem{
+			Key:               string(n.Key),
+			Label:             n.Label,
+			AccountType:       n.AccountType,
+			SupportsBidding:   n.SupportsBidding,
+			SupportsWaterfall: n.SupportsWaterfall,
+		})
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+type networkCatalogItem struct {
+	Key               string `json:"key"`
+	Label             string `json:"label"`
+	AccountType       string `json:"account_type"`
+	SupportsBidding   bool   `json:"supports_bidding"`
+	SupportsWaterfall bool   `json:"supports_waterfall"`
 }
 
 func (s *Server) GetResources(c echo.Context) error {

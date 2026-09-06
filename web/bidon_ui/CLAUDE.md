@@ -59,7 +59,7 @@ bidon_ui/
 │   ├── line_items/
 │   ├── app_demand_profiles/
 │   └── auction_configurations/
-├── composables/              # Vue 3 composables (useCreateResource, etc.)
+├── composables/              # Vue 3 composables (useCreateResource, useNetworks, etc.)
 ├── layouts/
 │   ├── default.vue           # Authenticated layout (sidebar + header)
 │   └── auth.vue              # Unauthenticated layout (login)
@@ -75,8 +75,7 @@ bidon_ui/
 ├── constants/
 │   ├── API_URL.js            # Base URL = "/"
 │   ├── ResourceTableFields.js
-│   ├── ResourceCardFields.js
-│   └── DemandSourceOptions.js
+│   └── ResourceCardFields.js
 ├── plugins/
 │   └── primevue.js           # PrimeVue component registration
 ├── types/index.ts

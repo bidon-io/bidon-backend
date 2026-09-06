@@ -105,110 +105,34 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 	adaptersMap := NewAdapters(adapterKeys)
 
 	for key, profile := range profiles {
-		extra := profile.AccountExtra
-		appData := profile.AppData
-		switch key {
-		case adapter.AdikteevKey:
-			adaptersMap[key]["sdk_instance_id"] = extra["sdk_instance_id"]
-		case adapter.AmazonKey:
-			adaptersMap[key]["price_points_map"] = extra["price_points_map"]
-		case adapter.BidmachineKey:
-			adaptersMap[key]["seller_id"] = extra["seller_id"]
-			adaptersMap[key]["endpoint"] = extra["endpoint"]
-			adaptersMap[key]["mediation_config"] = extra["mediation_config"]
-		case adapter.BigoAdsKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-			adaptersMap[key]["seller_id"] = extra["publisher_id"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["slot_id"]
-				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.InmobiKey:
-			adaptersMap[key]["app_id"] = appData["app_key"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.MintegralKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-			adaptersMap[key]["seller_id"] = extra["publisher_id"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["unit_id"]
-				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.VKAdsKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["slot_id"]
-			}
-		case adapter.VungleKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-			adaptersMap[key]["seller_id"] = extra["account_id"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.MetaKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-			adaptersMap[key]["app_secret"] = b.DemandConfig.MetaAppSecret
-			adaptersMap[key]["platform_id"] = b.DemandConfig.MetaPlatformID
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.MobileFuseKey:
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.MolocoKey:
-			adaptersMap[key]["app_id"] = appData["app_key"]
-			adaptersMap[key]["api_key"] = b.DemandConfig.MolocoAPIKey
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["ad_unit_id"]
-			}
-		case adapter.StartIOKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-			adaptersMap[key]["account"] = extra["account"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["tag_id"]
-			}
-		case adapter.TaurusXKey:
-			adaptersMap[key]["app_id"] = appData["app_id"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["tag_id"] = adUnit.Extra["placement_id"]
-			}
-		case adapter.YandexKey:
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["ad_unit_id"] = adUnit.Extra["ad_unit_id"]
-			}
-		case adapter.ZmaticooKey:
-			adaptersMap[key]["app_id"] = appData["app_key"]
-
-			adUnit, _ := adUnitsMap.First(key, schema.RTBBidType)
-			if adUnit != nil {
-				adaptersMap[key]["placement_id"] = adUnit.Extra["placement_id"]
-			}
-		default:
-			adaptersMap[key] = extra
+		network, ok := adapter.NetworkByKey(key)
+		if !ok || !network.HasProcessedConfigMaps() {
+			adaptersMap[key] = profile.AccountExtra
+			continue
 		}
+
+		var adUnitExtra map[string]any
+		if adUnitsMap != nil {
+			if adUnit, _ := adUnitsMap.First(key, schema.RTBBidType); adUnit != nil {
+				adUnitExtra = adUnit.Extra
+			}
+		}
+
+		cfg := adaptersMap[key]
+		network.ApplyProcessedConfig(cfg, profile.AccountExtra, profile.AppData, adUnitExtra)
+		network.ApplyEnvSecrets(cfg, demandEnvSecrets(b.DemandConfig))
 	}
 
 	return adaptersMap, nil
+}
+
+func demandEnvSecrets(cfg *config.DemandConfig) *adapter.DemandEnvSecrets {
+	if cfg == nil {
+		return nil
+	}
+	return &adapter.DemandEnvSecrets{
+		MetaAppSecret:  cfg.MetaAppSecret,
+		MetaPlatformID: cfg.MetaPlatformID,
+		MolocoAPIKey:   cfg.MolocoAPIKey,
+	}
 }

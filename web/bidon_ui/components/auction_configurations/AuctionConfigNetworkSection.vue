@@ -165,7 +165,8 @@
 <script setup>
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { NETWORK_LABEL_BY_KEY } from "@/constants/Networks.js";
+
+const networks = useNetworks();
 
 const props = defineProps({
   config: { type: Object, required: true },
@@ -258,7 +259,7 @@ const groups = computed(() => {
 
   return enabledKeys.map((key) => ({
     key,
-    label: NETWORK_LABEL_BY_KEY[key] ?? key,
+    label: networks.labelFor(key),
     items: items.filter(
       (item) => item.account?.type?.split("::")?.[1]?.toLowerCase() === key,
     ),

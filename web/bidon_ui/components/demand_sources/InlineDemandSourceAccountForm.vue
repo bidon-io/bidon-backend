@@ -59,7 +59,6 @@
 <script setup>
 import * as yup from "yup";
 import { useToast } from "primevue/usetoast";
-import { NETWORK_ACCOUNT_TYPE_BY_KEY } from "@/constants/Networks.js";
 import OwnerWithSharedDropdown from "~/components/form/OwnerWithSharedDropdown.vue";
 
 const props = defineProps({
@@ -72,6 +71,7 @@ const emit = defineEmits(["created", "updated", "cancel"]);
 
 const { currentUser } = useAuthStore();
 const toast = useToast();
+const networks = useNetworks();
 const isEditMode = computed(() => !!props.initialAccount);
 const saving = ref(false);
 const submitError = ref("");
@@ -101,9 +101,8 @@ const label = useFieldModel("label");
 
 const accountType = computed(() => {
   return (
-    NETWORK_ACCOUNT_TYPE_BY_KEY[
-      String(props.demandSourceApiKey).toLowerCase()
-    ] ?? null
+    networks.accountTypeFor(String(props.demandSourceApiKey).toLowerCase()) ??
+    null
   );
 });
 
