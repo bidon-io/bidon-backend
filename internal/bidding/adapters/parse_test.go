@@ -146,7 +146,7 @@ func TestParseDemandResponse_extractsSignaldataAndPreservesBidExt(t *testing.T) 
 	}
 }
 
-func TestParseDemandResponse_malformedBidExtLeavesSignaldataEmpty(t *testing.T) {
+func TestParseDemandResponse_malformedBidExtReturnsError(t *testing.T) {
 	ext := json.RawMessage(`{"signaldata":123}`)
 	raw, _ := json.Marshal(openrtb2.BidResponse{
 		SeatBid: []openrtb2.SeatBid{{
@@ -160,20 +160,11 @@ func TestParseDemandResponse_malformedBidExtLeavesSignaldataEmpty(t *testing.T) 
 	}
 
 	got, err := adapters.ParseDemandResponse(stubAdapter{}, dr)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error when bid.ext cannot be decoded")
 	}
-	if got.Bid == nil {
-		t.Fatal("expected bid to be kept")
-	}
-	if got.Bid.Signaldata != "" {
-		t.Fatalf("expected empty Signaldata, got %q", got.Bid.Signaldata)
-	}
-	if got.Bid.Price != 1.5 || got.Bid.Payload != "<ad>" {
-		t.Fatalf("expected bid fields to be preserved, got %+v", got.Bid)
-	}
-	if string(got.Bid.Ext) != string(ext) {
-		t.Fatalf("expected Ext %s, got %s", string(ext), string(got.Bid.Ext))
+	if got.Bid != nil {
+		t.Fatalf("expected no bid when Ext decode fails, got %+v", got.Bid)
 	}
 }
 
