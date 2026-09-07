@@ -162,7 +162,7 @@ services:
     environment:
       <<: [*dev-db-env, *dev-bidon-app-env]
       DSPSIM_PORT: 1325
-      DSPSIM_PUBLIC_URL: http://localhost:1325
+      DSPSIM_PUBLIC_URL: http://bidon-dspsim:1325
 
   bidon-ui:
     image: node:22-alpine

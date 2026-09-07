@@ -38,10 +38,7 @@ Two further observations shape the design:
   (`internal/bidding/adapters/adikteev/adikteev.go:113`,
   `internal/bidding/adapters/moloco/moloco.go:137`, …), and that string equals
   `demand_sources.api_key`. It is a reliable DSP discriminator.
-- Adapter RTB endpoints are **hardcoded in Go** — one constant per adapter —
-  with the single exception of Bidmachine, which reads `endpoint` from
-  `demand_source_accounts.extra`
-  (`internal/bidding/adapters/bidmachine/bidmachine.go:194-197`).
+- Adapter RTB endpoints should read `endpoint` from `demand_source_accounts.extra`.
 
 A corpus of real captured bid requests already exists at
 `internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/*_bidreq.json`.
@@ -126,11 +123,6 @@ to pin behaviour for manual testing (`dspsim.http`).
 
 ### Negative / accepted
 
-- **Bidon cannot reach the simulator without an out-of-band redirect** (hosts
-  entry, HTTP proxy, or Bidmachine `endpoint` override in the database). This is
-  the direct cost of D1 and is accepted: the simulator is driven standalone via
-  `dspsim.http`, and adapter endpoint overrides are a separate, deliberate
-  change (see follow-ups).
 - The simulator **couples to the DB schema**: changes to `line_items` /
   `auction_configurations` will need matching changes here. Accepted because
   schema changes are migrations reviewed in this repo.
@@ -141,10 +133,5 @@ to pin behaviour for manual testing (`dspsim.http`).
 
 ### Follow-ups
 
-1. Optional `DSPSIM_ENDPOINT` / per-adapter env endpoint overrides so a live
-   bidon auction can be pointed at the simulator — a separate ADR; D1 keeps
-   this one independent.
-2. A dedicated seed app + auction configurations for simulator testing, so
-   fixture bundles and DB bundles coincide without editing sample seeds.
-3. Optional RAOT proxying of `mraid.js` and true video assets if a downstream
+1. Optional RAOT proxying of `mraid.js` and true video assets if a downstream
    consumer needs to actually render/play the creatives.

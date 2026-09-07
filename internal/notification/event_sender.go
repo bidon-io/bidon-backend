@@ -46,6 +46,8 @@ func (es EventSender) SendEvent(ctx context.Context, p Params) {
 	for param := range params {
 		if val, ok := macroses[params.Get(param)]; ok {
 			params.Set(param, val)
+		} else {
+			log.Printf("SendNotificationEvent: cannot replace param %s", param)
 		}
 	}
 	u.RawQuery = params.Encode()

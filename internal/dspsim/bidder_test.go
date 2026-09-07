@@ -13,6 +13,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	biddingopenrtb "github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
 // stubBidder satisfies adapters.BidderInterface so the simulator's responses
@@ -20,8 +21,8 @@ import (
 // CustomBidParser nor OpenRTBBidEnricher, which is the default OpenRTB path.
 type stubBidder struct{}
 
-func (stubBidder) CreateRequest(r biddingopenrtb.BidRequest, _ *schema.AuctionRequest) (biddingopenrtb.BidRequest, error) {
-	return r, nil
+func (b stubBidder) BuildImpression(request biddingopenrtb.BidRequest, request2 *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return nil, adapters.RTBRequestOptions{}, nil
 }
 
 func (stubBidder) ExecuteRequest(context.Context, *http.Client, biddingopenrtb.BidRequest) *adapters.DemandResponse {

@@ -63,8 +63,12 @@ func compareErrors(want, got error) bool {
 	return (want == nil) == (got == nil)
 }
 
+const testEndpoint = "https://example.com/openrtb/bid"
+
 func buildAdapter() adikteev.AdikteevAdapter {
-	return adikteev.AdikteevAdapter{}
+	return adikteev.AdikteevAdapter{
+		Endpoint: testEndpoint,
+	}
 }
 
 func buildBaseRequest() openrtb.BidRequest {
@@ -281,8 +285,8 @@ func TestAdikteevAdapter_ExecuteRequest(t *testing.T) {
 		if req.Method != http.MethodPost {
 			t.Errorf("Expected POST request")
 		}
-		if req.URL.String() != "http://appodeal-eu.dsp.adikteev.com" {
-			t.Errorf("Expected URL: http://appodeal-eu.dsp.adikteev.com")
+		if req.URL.String() != testEndpoint {
+			t.Errorf("Expected URL: %s, got %s", testEndpoint, req.URL.String())
 		}
 		contentType := req.Header.Get("Content-Type")
 		if contentType != "application/json" {
@@ -430,13 +434,12 @@ func TestAdikteev_ParseBids(t *testing.T) {
 
 func TestAdikteev_Builder(t *testing.T) {
 	client := &http.Client{}
-	bmCfg := adapter.ProcessedConfigsMap{
+	cfg := adapter.ProcessedConfigsMap{
 		adapter.AdikteevKey: map[string]any{
-			"seller_id": "1",
-			"endpoint":  "example.com",
+			"endpoint": testEndpoint,
 		},
 	}
-	bidder, err := adikteev.Builder(bmCfg, client)
+	bidder, err := adikteev.Builder(cfg, client)
 	wantAdapter := buildAdapter()
 	wantBidder := &adapters.Bidder{
 		Adapter: &wantAdapter,
@@ -446,6 +449,54 @@ func TestAdikteev_Builder(t *testing.T) {
 		t.Errorf("Error building adapter: %v", err)
 	}
 	if diff := cmp.Diff(wantBidder, bidder); diff != "" {
-		t.Errorf("builder(bmCfg, client) mismatch (-want, +got):\n%s", diff)
+		t.Errorf("builder(cfg, client) mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestAdikteev_Builder_DefaultEndpoint(t *testing.T) {
+	client := &http.Client{}
+	testCases := []struct {
+		name string
+		cfg  adapter.ProcessedConfigsMap
+	}{
+		{
+			name: "no config for the adapter",
+			cfg:  adapter.ProcessedConfigsMap{},
+		},
+		{
+			name: "missing endpoint",
+			cfg: adapter.ProcessedConfigsMap{
+				adapter.AdikteevKey: map[string]any{"foo": "bar"},
+			},
+		},
+		{
+			name: "blank endpoint",
+			cfg: adapter.ProcessedConfigsMap{
+				adapter.AdikteevKey: map[string]any{"endpoint": ""},
+			},
+		},
+		{
+			name: "endpoint of the wrong type",
+			cfg: adapter.ProcessedConfigsMap{
+				adapter.AdikteevKey: map[string]any{"endpoint": 42},
+			},
+		},
+	}
+
+	for _, tC := range testCases {
+		bidder, err := adikteev.Builder(tC.cfg, client)
+		if err != nil {
+			t.Errorf("%s: error building adapter: %v", tC.name, err)
+			continue
+		}
+
+		adpt, ok := bidder.Adapter.(*adikteev.AdikteevAdapter)
+		if !ok {
+			t.Errorf("%s: expected *adikteev.AdikteevAdapter, got %T", tC.name, bidder.Adapter)
+			continue
+		}
+		if adpt.Endpoint != "http://appodeal-eu.dsp.adikteev.com" {
+			t.Errorf("%s: expected the default endpoint, got %v", tC.name, adpt.Endpoint)
+		}
 	}
 }

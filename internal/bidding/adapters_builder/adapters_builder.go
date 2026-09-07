@@ -109,7 +109,7 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 		appData := profile.AppData
 		switch key {
 		case adapter.AdikteevKey:
-			adaptersMap[key]["sdk_instance_id"] = extra["sdk_instance_id"]
+			adaptersMap[key]["endpoint"] = extra["endpoint"]
 		case adapter.AmazonKey:
 			adaptersMap[key]["price_points_map"] = extra["price_points_map"]
 		case adapter.BidmachineKey:

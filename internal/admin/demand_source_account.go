@@ -175,6 +175,11 @@ func (v *demandSourceAccountValidator) extraRule(demandSource *DemandSource) v8n
 	var rule v8n.MapRule
 
 	switch adapter.Key(demandSource.ApiKey) {
+	case adapter.AdikteevKey:
+		// endpoint is optional: the adapter falls back to its default DSP URL
+		rule = v8n.Map(
+			v8n.Key("endpoint", is.URL).Optional(),
+		)
 	case adapter.AmazonKey:
 		rule = v8n.Map(v8n.Key("price_points_map", isMap, v8n.Each(v8n.Map(
 			v8n.Key("name", v8n.Required, isString),
