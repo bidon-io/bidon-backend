@@ -9,10 +9,19 @@ import (
 	"sync"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/joho/godotenv"
 
 	"github.com/bidon-io/bidon-backend/internal/db"
 )
+
+// defaultDatabaseURL points at the postgres-test service published by docker-compose.yml.
+const defaultDatabaseURL = "postgres://bidon:pass@localhost:5435/bidon_test"
+
+func databaseURL() string {
+	if url := os.Getenv("DATABASE_URL"); url != "" {
+		return url
+	}
+	return defaultDatabaseURL
+}
 
 // Prepare sets up the database for testing and initializes test factories.
 // It should be called once per test package, usually in TestMain.
@@ -34,11 +43,6 @@ func Prepare() *db.DB {
 
 	counter.base = hashNum >> 16 // cut in half for readability
 
-	err = godotenv.Load("../../../.env.test")
-	if err != nil {
-		log.Printf("Did not load from .env.test file: %v", err)
-	}
-
 	nodeID := int64(hashNum >> 22) // max value is 1023 or 10 bits
 	node, err := snowflake.NewNode(nodeID)
 	if err != nil {
@@ -46,7 +50,7 @@ func Prepare() *db.DB {
 	}
 
 	testDB, err = db.Open(
-		os.Getenv("DATABASE_URL"),
+		databaseURL(),
 		db.WithIgnoreRecordNotFoundError(),
 		db.WithSnowflakeNode(node),
 	)

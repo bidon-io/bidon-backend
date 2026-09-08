@@ -33,13 +33,7 @@ func Debug() bool {
 }
 
 func LoadEnvFile() {
-	var err error
-	if GetEnv() == TestEnv {
-		err = godotenv.Load(".env.test")
-	} else {
-		err = godotenv.Load()
-	}
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Printf("Did not load .env file: %v", err)
 	}
 }
