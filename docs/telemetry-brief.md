@@ -10,6 +10,7 @@ Start here. The supporting documents are linked at each decision.
 | What must be true | [telemetry-requirements.md](./telemetry-requirements.md) |
 | Events warehouse (Parquet on Spaces) | [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) |
 | What the code does today | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) |
+| First implementable slice | [telemetry-poc/](./telemetry-poc/README.md) (6 Linear issues, 5 MRs) |
 | Stores | [events](./telemetry-events-store.md) · [traces](./telemetry-traces-store.md) · [metrics](./telemetry-metrics-store.md) |
 | Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
 | Option history | [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) |
