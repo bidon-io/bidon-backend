@@ -11,7 +11,7 @@
 **Definition of done.**
 
 - HTTP 500 in a unit test → `notice_delivery_failed` and `success=false`; HTTP 200 → `*_notice_sent` with `http_status=200`.
-- Show handler, flag on → `ad_impression` produced; BURL still fired.
+- Show handler → `ad_impression` produced; BURL still fired.
 - `notification-events` JSON shape unchanged.
 - After a show on the compose stack: `funnel_5m` impression/billing counts move; `notice_delivery_5m` reflects the HTTP class.
 
@@ -108,7 +108,7 @@ Use whatever field you chose for notice kind.
 ### Tests
 
 - `event_sender` test with `httptest.Server` returning 500 then 200 (retry) and 500×4 (failed). Assert telemetry mock + old `NotificationEvent` still produced.
-- `show_handler_test.go`: flag-equivalent = non-nil enabled logger → one `ad_impression`; `HandleShow` still invoked (existing mock).
+- `show_handler_test.go`: logger present → one `ad_impression`; `HandleShow` still invoked (existing mock).
 
 ### Do not
 

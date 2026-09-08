@@ -8,7 +8,7 @@ Six Linear issues, five MRs. File the parent as the project/epic; file `01`–`0
 | # | Linear title | File | Blocks |
 | --- | --- | --- | --- |
 | 0 | Telemetry POC: server auction path | [00-parent.md](./00-parent.md) | — |
-| 1 | Envelope and flagged telemetry logger | [01-envelope.md](./01-envelope.md) | 0 |
+| 1 | Typed telemetry-events logger | [01-telemetry-logger.md](./01-telemetry-logger.md) | 0 |
 | 2 | Auction and DSP events plus metrics | [02-auction-events-metrics.md](./02-auction-events-metrics.md) | 1 |
 | 3 | Auction and DSP traces | [03-traces.md](./03-traces.md) | 1 |
 | 4 | Local live funnel (RisingWave) and observe stack | [04-observe-stack.md](./04-observe-stack.md) | 1 |
@@ -16,7 +16,7 @@ Six Linear issues, five MRs. File the parent as the project/epic; file `01`–`0
 
 ```
 0 parent
-  ├── 1  envelope + logger
+  ├── 1  typed telemetry logger
   │     └── 2  auction events + metrics
   │           ├── 3  traces          (∥ 4)
   │           └── 4  RisingWave + VM/VT/Grafana

@@ -4,7 +4,7 @@
 
 **Title:** `POC: OpenTelemetry auction parent and per-DSP child spans`
 
-**User story.** As a server engineer (or support looking at one partner complaint), I want the legs of a single auction as one trace so I can see which DSP was slow or timed out without reconstructing it from logs.
+**User story.** As a backend engineer (or support looking at one partner complaint), I want the legs of a single auction as one trace so I can see which DSP was slow or timed out without reconstructing it from logs.
 
 **Goal.** Each `/v2/auction` creates one parent span and one child per DSP. Events from that request carry `trace_id`. When an OTLP endpoint is configured, export there; keep Sentry as it is.
 

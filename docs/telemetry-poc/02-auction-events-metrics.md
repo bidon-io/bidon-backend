@@ -4,16 +4,16 @@
 
 **Title:** `POC: auction and DSP events plus /metrics counters`
 
-**User story.** As a server engineer, I want each bidding round to record request, per-DSP send/receive (bid / no-bid / timeout), and completion, plus simple rates I can scrape, so I can see funnel and adapter health without an SDK change.
+**User story.** As a backend engineer, I want each bidding round to record request, per-DSP send/receive (bid / no-bid / timeout), and completion, plus simple rates I can scrape, so I can see funnel and adapter health without an SDK change.
 
 **Goal.** Dual-write the server bidding-round catalog to `telemetry-events` and increment low-cardinality Prometheus series. `ad-events` keep working exactly as today.
 
 **Definition of done.**
 
-- One 3-DSP auction (bid / nobid / timeout) emits 1 + 3 + 3 + 1 telemetry events when the flag is on.
+- One 3-DSP auction (bid / nobid / timeout) emits 1 + 3 + 3 + 1 telemetry events.
 - DSP latency is send→return, not auction-start→return.
 - `GET /metrics` exposes `dsp_response_total{dsp,outcome}`, `dsp_request_duration_seconds{dsp}`, `auction_completed_total{result}`. No `auction_id` label.
-- Flag off: auction HTTP unchanged; no new topic writes; `ad-events` still written.
+- Auction HTTP unchanged if the telemetry logger fails; `ad-events` still written.
 - Outcome mapping covered by a table test.
 
 **Out of scope.** Notices, `/v2/show`, OTel spans, per-adapter code, waterfall fill.
