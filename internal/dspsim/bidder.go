@@ -79,9 +79,11 @@ func (b *Bidder) ShouldSkip() bool {
 	return b.rnd.Float64() < b.Config.NoBidRate
 }
 
-// Build produces the bid response for a match. forcedCreative pins a creative
-// by id. It returns a no-bid reason when no creative can serve the slot.
-func (b *Bidder) Build(match *Match, forcedCreative string) (*openrtb2.BidResponse, *BidRecord, NoBidReason, error) {
+// Build produces the bid response for a match. base is the notification and
+// creative URL prefix for this request (see Server.publicBase). forcedCreative
+// pins a creative by id. It returns a no-bid reason when no creative can serve
+// the slot.
+func (b *Bidder) Build(base string, match *Match, forcedCreative string) (*openrtb2.BidResponse, *BidRecord, NoBidReason, error) {
 	summary := match.Summary
 	library := b.GetLibrary()
 
@@ -100,7 +102,6 @@ func (b *Bidder) Build(match *Match, forcedCreative string) (*openrtb2.BidRespon
 	price := b.price(summary.Floor)
 	w, h := creativeSize(creative, summary)
 
-	base := b.Config.PublicURL
 	data := CreativeData{
 		BidID:         id,
 		ImpID:         summary.ImpID,
@@ -142,9 +143,9 @@ func (b *Bidder) Build(match *Match, forcedCreative string) (*openrtb2.BidRespon
 		AuctionConfigID:  match.Auction.ConfigID,
 		DemandConfigured: match.DemandConfigured,
 		CreatedAt:        time.Now().UTC(),
-		NURL:             b.winURL(id),
-		BURL:             b.billingURL(id),
-		LURL:             b.lossURL(id),
+		NURL:             b.winURL(base, id),
+		BURL:             b.billingURL(base, id),
+		LURL:             b.lossURL(base, id),
 	}
 
 	response := &openrtb2.BidResponse{
@@ -215,8 +216,8 @@ func creativeSize(c *Creative, summary RequestSummary) (int64, int64) {
 	return summary.Width, summary.Height
 }
 
-func (b *Bidder) winURL(bidID string) string {
-	return b.notifyURL("win", bidID, []string{
+func (b *Bidder) winURL(base, bidID string) string {
+	return notifyURL(base, "win", bidID, []string{
 		"price=" + MacroPrice,
 		"mintowin=" + MacroMinToWin,
 		"auction=" + MacroAuctionID,
@@ -228,8 +229,8 @@ func (b *Bidder) winURL(bidID string) string {
 	})
 }
 
-func (b *Bidder) billingURL(bidID string) string {
-	return b.notifyURL("billing", bidID, []string{
+func (b *Bidder) billingURL(base, bidID string) string {
+	return notifyURL(base, "billing", bidID, []string{
 		"price=" + MacroPrice,
 		"bid=" + MacroBidID,
 		"imp=" + MacroImpID,
@@ -237,8 +238,8 @@ func (b *Bidder) billingURL(bidID string) string {
 	})
 }
 
-func (b *Bidder) lossURL(bidID string) string {
-	return b.notifyURL("loss", bidID, []string{
+func (b *Bidder) lossURL(base, bidID string) string {
+	return notifyURL(base, "loss", bidID, []string{
 		"price=" + MacroPrice,
 		"loss=" + MacroLoss,
 		"mintowin=" + MacroMinToWin,
@@ -251,8 +252,8 @@ func (b *Bidder) lossURL(bidID string) string {
 // notifyURL writes the query unencoded, the way real DSPs emit macros, so the
 // URL stays readable in logs. bidon parses it with url.ParseQuery, which
 // accepts the braces.
-func (b *Bidder) notifyURL(kind, bidID string, params []string) string {
-	return fmt.Sprintf("%s/notify/%s/%s?%s", b.Config.PublicURL, kind, bidID, strings.Join(params, "&"))
+func notifyURL(base, kind, bidID string, params []string) string {
+	return fmt.Sprintf("%s/notify/%s/%s?%s", base, kind, bidID, strings.Join(params, "&"))
 }
 
 // AdTypeString renders an ad type for logs and debug output.

@@ -8,12 +8,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/prebid/openrtb/v19/openrtb2"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	biddingopenrtb "github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
 // stubBidder satisfies adapters.BidderInterface so the simulator's responses
@@ -74,7 +75,7 @@ func TestBidResponseRoundTripsThroughSharedParser(t *testing.T) {
 			bidder := NewBidder(testConfig(), loadDefaultLibrary(t))
 			match := testMatch(t, fixture)
 
-			response, record, reason, err := bidder.Build(match, "")
+			response, record, reason, err := bidder.Build(bidder.Config.PublicURL, match, "")
 			if err != nil {
 				t.Fatalf("Build(): %v", err)
 			}
@@ -131,7 +132,7 @@ func TestBidResponseRoundTripsThroughSharedParser(t *testing.T) {
 // event_sender.go only substitutes on a whole-value match.
 func TestNotificationURLsCarryWholeValueMacros(t *testing.T) {
 	bidder := NewBidder(testConfig(), loadDefaultLibrary(t))
-	_, record, _, err := bidder.Build(testMatch(t, "android_adikteev_banner_bidreq.json"), "")
+	_, record, _, err := bidder.Build(bidder.Config.PublicURL, testMatch(t, "android_adikteev_banner_bidreq.json"), "")
 	if err != nil {
 		t.Fatalf("Build(): %v", err)
 	}
@@ -179,7 +180,7 @@ func TestNotificationURLsCarryWholeValueMacros(t *testing.T) {
 func TestBuildUsesForcedCreative(t *testing.T) {
 	bidder := NewBidder(testConfig(), loadDefaultLibrary(t))
 
-	_, record, reason, err := bidder.Build(testMatch(t, "android_adikteev_banner_bidreq.json"), "default_mraid_320x50")
+	_, record, reason, err := bidder.Build(bidder.Config.PublicURL, testMatch(t, "android_adikteev_banner_bidreq.json"), "default_mraid_320x50")
 	if err != nil || reason != "" {
 		t.Fatalf("Build() err=%v reason=%q", err, reason)
 	}
@@ -198,7 +199,7 @@ func TestBuildNoCreativeIsANoBid(t *testing.T) {
 	}
 
 	bidder := NewBidder(testConfig(), empty)
-	_, _, reason, err := bidder.Build(testMatch(t, "android_adikteev_banner_bidreq.json"), "")
+	_, _, reason, err := bidder.Build(bidder.Config.PublicURL, testMatch(t, "android_adikteev_banner_bidreq.json"), "")
 	if err != nil {
 		t.Fatalf("Build(): %v", err)
 	}

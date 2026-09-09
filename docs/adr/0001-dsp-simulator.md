@@ -92,7 +92,13 @@ Build **`bidon-dspsim`**: a standalone OpenRTB DSP simulator in
 ### Configuration
 
 All env vars are prefixed `DSPSIM_`, except the shared `DATABASE_URL` (opened
-read-only). Defaults: `PORT=1325`, `PUBLIC_URL=http://localhost:$PORT`,
+read-only). `PUBLIC_URL` is an override, empty by default: the base URL
+advertised in notification and creative URLs is normally derived per request
+from the caller's `Host` (honouring `X-Forwarded-Host`/`X-Forwarded-Proto`),
+so it works out of the box for both compose-internal callers and a
+host-run `dspsim.http`. An override is only needed when creative URLs —
+fetched by whatever renders the ad, not by bidon — must point somewhere the
+request's own Host can't reach. Other defaults: `PORT=1325`,
 `SEAT=dspsim`, `CUR=USD`, `PRICE_MULT_MIN=1.5` / `PRICE_MULT_MAX=3.0`,
 `FALLBACK_FLOOR=0.5`, `MAX_PRICE=25`, `NO_BID_RATE=0`, `LATENCY_MS=0`,
 `CATALOG_TTL=60s`, `BID_TTL=1h`, `MAX_BIDS=10000`, `CREATIVES_FILE=` (embedded),

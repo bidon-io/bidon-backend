@@ -91,8 +91,12 @@ func main() {
 	config.UseHealthCheckHandler(e, config.HealthCheckParams{"db": db})
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
+	publicURL := cfg.PublicURL
+	if publicURL == "" {
+		publicURL = "<derived per request from Host>"
+	}
 	go func() {
-		log.Printf("dspsim listening on %s, advertising %s (creatives: %s)", addr, cfg.PublicURL, library.Source)
+		log.Printf("dspsim listening on %s, advertising %s (creatives: %s)", addr, publicURL, library.Source)
 		err := e.Start(addr)
 		if !errors.Is(err, http.ErrServerClosed) {
 			e.Logger.Fatalf("failed to start http server: %v", err)

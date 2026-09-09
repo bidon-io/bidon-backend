@@ -98,7 +98,7 @@ func (s *Server) handleBid(c echo.Context) error {
 		return s.noBid(c, match.Summary, ReasonRandomNoBid)
 	}
 
-	response, record, reason, err := s.Bidder.Build(match, forcedCreative)
+	response, record, reason, err := s.Bidder.Build(s.publicBase(c), match, forcedCreative)
 	if err != nil {
 		return err
 	}
@@ -136,6 +136,40 @@ func (s *Server) handleBid(c echo.Context) error {
 	)
 
 	return c.JSON(http.StatusOK, response)
+}
+
+// publicBase returns the base URL the simulator advertises in notification
+// and creative URLs for this request. Config.PublicURL, when set, always
+// wins; otherwise the base is derived from how the caller reached the
+// simulator, so notification URLs land back on the right host without any
+// configuration.
+func (s *Server) publicBase(c echo.Context) string {
+	if s.Config.PublicURL != "" {
+		return s.Config.PublicURL
+	}
+	return requestBase(c)
+}
+
+// requestBase reconstructs scheme://host from the request, honouring a
+// reverse proxy's forwarded headers.
+func requestBase(c echo.Context) string {
+	req := c.Request()
+
+	host := req.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = req.Host
+	}
+
+	scheme := req.Header.Get(echo.HeaderXForwardedProto)
+	if scheme == "" {
+		if req.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+
+	return strings.TrimRight(fmt.Sprintf("%s://%s", scheme, host), "/")
 }
 
 func (s *Server) noBid(c echo.Context, summary RequestSummary, reason NoBidReason) error {

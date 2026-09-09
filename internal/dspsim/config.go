@@ -8,10 +8,10 @@
 // inspected after the fact.
 //
 // Nothing in bidon is modified to support the simulator. Adapter RTB endpoints
-// are hardcoded in Go (except Bidmachine, which reads "endpoint" from
+// are hardcoded in Go (except Adikteev, which reads "endpoint" from
 // demand_source_accounts.extra), so pointing a live bidon auction at the
 // simulator requires an out-of-band redirect: a hosts entry, an HTTP proxy, or
-// a Bidmachine endpoint override in the database. See
+// an Adikteev endpoint override in the database. See
 // docs/adr/0001-dsp-simulator.md.
 package dspsim
 
@@ -30,8 +30,13 @@ type Config struct {
 	DatabaseURL string
 	// Port is the HTTP listen port.
 	Port string
-	// PublicURL is the base URL the simulator advertises in notification and
-	// creative URLs. It must be reachable by whoever receives the bid.
+	// PublicURL overrides the base URL the simulator advertises in
+	// notification and creative URLs. When empty, the base is derived per
+	// request from the Host the caller used to reach the simulator (see
+	// Server.publicBase), which is enough for notification URLs since bidon
+	// fires those itself. An override is only needed when creative URLs -
+	// fetched by whatever renders the ad, not by bidon - must point somewhere
+	// else, e.g. the dev stack's container-internal hostname.
 	PublicURL string
 	// CreativesFile points at a JSON creative library. Empty means the
 	// embedded default library.
@@ -86,9 +91,6 @@ func LoadConfig() (Config, error) {
 
 	if cfg.DatabaseURL == "" {
 		return cfg, fmt.Errorf("missing DATABASE_URL environment variable")
-	}
-	if cfg.PublicURL == "" {
-		cfg.PublicURL = fmt.Sprintf("http://localhost:%s", cfg.Port)
 	}
 	cfg.PublicURL = strings.TrimRight(cfg.PublicURL, "/")
 

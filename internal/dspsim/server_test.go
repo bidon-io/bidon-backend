@@ -1,6 +1,7 @@
 package dspsim
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,14 +18,17 @@ import (
 	"go.uber.org/zap"
 )
 
-// newTestServer wires the simulator over an httptest server whose own address
-// is advertised in notification URLs, so the notification round trip is real.
+// newTestServer wires the simulator over an httptest server. Config.PublicURL
+// is left empty, so notification and creative URLs are derived from the
+// request's Host — the same path a bidon call over the network takes — which
+// exercises Server.publicBase rather than pinning it.
 func newTestServer(t *testing.T) (*httptest.Server, *Server) {
 	t.Helper()
 
 	cfg := testConfig()
 	cfg.MaxBids = 100
 	cfg.BidTTL = time.Hour
+	cfg.PublicURL = ""
 
 	sim := &Server{
 		Config:  cfg,
@@ -44,10 +48,55 @@ func newTestServer(t *testing.T) (*httptest.Server, *Server) {
 	httpServer := httptest.NewServer(e)
 	t.Cleanup(httpServer.Close)
 
-	sim.Config.PublicURL = httpServer.URL
-	sim.Bidder.Config.PublicURL = httpServer.URL
-
 	return httpServer, sim
+}
+
+func TestPublicBase(t *testing.T) {
+	e := echo.New()
+
+	newContext := func(target string, headers map[string]string) echo.Context {
+		req := httptest.NewRequest(http.MethodPost, target, nil)
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		return e.NewContext(req, httptest.NewRecorder())
+	}
+
+	t.Run("override wins over the request", func(t *testing.T) {
+		s := &Server{Config: Config{PublicURL: "https://pinned.example"}}
+		c := newContext("http://ignored.example/openrtb/bid", nil)
+		if got := s.publicBase(c); got != "https://pinned.example" {
+			t.Errorf("publicBase() = %q, want the override", got)
+		}
+	})
+
+	t.Run("derives from plain Host", func(t *testing.T) {
+		s := &Server{}
+		c := newContext("http://dspsim.internal:1325/openrtb/bid", nil)
+		if got := s.publicBase(c); got != "http://dspsim.internal:1325" {
+			t.Errorf("publicBase() = %q, want http://dspsim.internal:1325", got)
+		}
+	})
+
+	t.Run("honours forwarded proto and host", func(t *testing.T) {
+		s := &Server{}
+		c := newContext("http://internal:1325/openrtb/bid", map[string]string{
+			"X-Forwarded-Host":  "dspsim.public.example",
+			"X-Forwarded-Proto": "https",
+		})
+		if got := s.publicBase(c); got != "https://dspsim.public.example" {
+			t.Errorf("publicBase() = %q, want https://dspsim.public.example", got)
+		}
+	})
+
+	t.Run("TLS request defaults to https", func(t *testing.T) {
+		s := &Server{}
+		c := newContext("http://dspsim.internal:1325/openrtb/bid", nil)
+		c.Request().TLS = &tls.ConnectionState{}
+		if got := s.publicBase(c); got != "https://dspsim.internal:1325" {
+			t.Errorf("publicBase() = %q, want https://dspsim.internal:1325", got)
+		}
+	})
 }
 
 func postFixture(t *testing.T, server *httptest.Server, fixture, query string) *http.Response {
