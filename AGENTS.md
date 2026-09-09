@@ -1,30 +1,35 @@
 # Agent Instructions
 
-Practical guidance for AI agents working in the Bidon backend codebase.
-
-For full architecture, patterns, and code templates, see [CLAUDE.md](CLAUDE.md).
+Guidance for AI agents working in the Bidon backend codebase.
 
 ## Project Overview
 
-Bidon is a **Go-based ad mediation and programmatic advertising platform** handling RTB auctions, ad unit management, demand source adapters, and event tracking.
+Bidon is a Go-based ad mediation and programmatic advertising platform: RTB
+auctions, ad unit management, demand source adapters, win/loss notifications,
+and event tracking.
 
-**Key Technologies:**
-- Language: Go
-- Database: PostgreSQL (with GORM ORM)
-- Caching: Redis
-- Messaging: Redpanda (Kafka-compatible API)
-- APIs: REST (Echo framework) + gRPC
-- Protocol Buffers: For API definitions
+Go · PostgreSQL (GORM) · Redis · Redpanda (Kafka API) · Echo REST + gRPC · Protobuf
+
+## Structure
+
+```
+cmd/       bidon-admin, bidon-sdkapi, bidon-migrate, bidon-seed, bidon-coolify
+internal/  ad, adapter, admin, auction, audit, bidding, db, device,
+           notification, sdkapi, segment
+pkg/       reusable packages
+proto/     protobuf definitions (git submodule, update=none)
+config/    YAML config    docker/  scripts/  web/bidon_ui (Nuxt frontend)
+```
 
 ## Local Development
 
-### Full local stack (recommended)
+Commands are `just` recipes — see `justfile`.
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+just compose        # full dev stack: Postgres, Redis, Redpanda,
+                    # migrations, seed, both APIs, Nuxt UI (foreground)
+just compose-down   # tear down
 ```
-
-Runs Postgres, Redis, Redpanda, migrations, seed data, both API services, and the Nuxt frontend.
 
 | Service          | URL                   |
 |------------------|-----------------------|
@@ -33,60 +38,85 @@ Runs Postgres, Redis, Redpanda, migrations, seed data, both API services, and th
 | bidon-sdkapi     | http://localhost:1324 |
 | Postgres         | localhost:5434        |
 | Redis            | localhost:6379        |
-| Redpanda         | localhost:19092     |
+| Redpanda         | localhost:19092       |
 | Redpanda Console | http://localhost:8080 |
 
-### Manual setup (dependencies only)
-
 ```bash
-make local-init
-docker compose up -d
+just admin          # admin API only
+just sdk-api        # SDK API only
+just seed           # reset + load sample data
+just migrate        # apply migrations (also: just migrate down)
+just config-diff    # ensure .env.local exists, list keys missing vs .env.sample
 ```
 
-Starts Postgres and Redis. Use the full dev stack above for Redpanda.
-
-### Running services directly
-
-```bash
-go run ./cmd/bidon-admin
-go run ./cmd/bidon-sdkapi
-```
-
-### Migrations
-
-```bash
-go run ./cmd/bidon-migrate up
-```
+First-time setup also needs `make local-init` (submodules + deps).
 
 ### Tests
 
 ```bash
-make test
-go test ./internal/auction/...
+just test-db        # bring up the test database first
+just test           # go test ./...
+just precommit      # lint
 ```
 
-### Staging / production (Coolify)
+Single package: `go test ./internal/auction/...`
+Regenerate mocks: `go generate ./...`
 
-Local dev (`docker-compose.dev.yml`) mounts source into `bidon-ui` and hot-reloads. **Coolify runs pre-built registry images** tagged via `BIDON_*_TAG` env vars — not the working tree.
+### Images / Coolify
 
-When debugging staging-only admin UI issues, **verify image tags in Coolify** match the commit you expect (especially `BIDON_UI_TAG`). Backend/seed can be newer than `bidon-ui` if only some images were rebuilt and redeployed. Rebuild with `just ci-build-ui` (or `just ci-build-all`) and redeploy with aligned tags. See README “Staging deployment”.
+```bash
+just build-all      # local docker store
+just ci-build-all   # build + push to registry
+```
 
-## Key Concepts
+Local dev mounts source into `bidon-ui` and hot-reloads. **Coolify runs pre-built
+registry images** tagged via `BIDON_*_TAG` — not the working tree. When debugging
+staging-only UI issues, verify tags in Coolify match the commit you expect
+(especially `BIDON_UI_TAG`); backend/seed can be newer than `bidon-ui`. Rebuild
+with `just ci-build-ui` and redeploy with aligned tags. See README "Staging
+deployment".
 
-- **Repository pattern** for all data access (`internal/*/store/*_repo.go`)
-- **Service layer** for business logic (`internal/*/service.go`)
-- **User scoping** via `ListOwnedByUser()` / `FindOwnedByUser()` for multi-tenancy
-- **Event logging** to Redpanda for analytics (auction, impression, click events)
+## Architecture
+
+- **Repository pattern** — `internal/*/store/*_repo.go`, wraps GORM; generic
+  `resourceRepo` provides List/Find/Create/Update/Delete
+- **Service layer** — `internal/*/service.go`, depends on interfaces, DI
+- **Three-layer models** — `internal/db/*.gen.go` (generated) → `internal/admin/*.go`
+  (domain) → `internal/admin/openapi/*.go` (API); mappers live in repo files
+- **Adapters** — `internal/bidding/adapters/`, common interface per demand source
+- **User scoping** — `ListOwnedByUser()` / `FindOwnedByUser()` for multi-tenancy
+- **Advisory locking** — `pg_advisory_xact_lock` guards concurrent dedup
+  (e.g. `LineItemRepo.firstOrCreate()`)
+- **Event logging** — auction/impression/click events to Redpanda
+
+### Auction flow
+
+SDK → `/v2/auction` → segment match + config fetch → build demand (line items +
+bidding) → parallel bidding round → ranked ad units → win/loss notifications
 
 ## Code Style
 
-- Follow standard Go conventions; use `golangci-lint`
+- Standard Go conventions; `golangci-lint`
 - Interfaces defined in consuming packages
-- Context as first parameter; explicit error handling (no panics in production)
-- Generate mocks with `go generate ./...` (moq)
+- Context first parameter; explicit errors, no panics in production
+- Mocks via `moq` (`go generate ./...`)
+
+## Testing Conventions
+
+`*_test.go`, `testify`, table-driven preferred; DB tests use `internal/db/dbtest`
+
+## Configuration
+
+`.env.sample` → `.env.local` · `config/` · auction configs in the
+`auction_configurations` table
 
 ## Verification Checklist
 
 - Run targeted tests in changed packages
-- Run `make test` when contracts or shared logic change
+- Run `just test` when contracts or shared logic change
 - Confirm no lint errors on touched files
+
+## Resources
+
+[Self-Hosted Deployment Guide](https://docs.bidon.org/docs/server/self-hosted) ·
+OpenAPI: `internal/admin/openapi/` · Proto: `proto/`
