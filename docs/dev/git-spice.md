@@ -24,13 +24,26 @@ your system `$PATH` — including Ubuntu's Ghostscript, which also installs a
 
 `gh` reads its config and token from `~/.config/gh/` and the system keyring —
 user-level, so it's shared with any system-installed `gh` and survives
-entering/leaving the devShell. No extra repo config needed.
+entering/leaving the devShell.
+
+`gs` keeps its own separate token store, and `gs auth login` doesn't
+reliably stick on our machines. Instead, `.envrc` hands it gh's token
+directly:
 
 ```bash
-gh auth status                # confirm gh is logged in, scope includes `repo`
-gh auth refresh -s repo       # if the scope is missing
-gs auth login                 # pick the "CLI" method — reuses gh's token
-gs auth status
+export GITHUB_TOKEN="$(gh auth token 2>/dev/null || true)"
+```
+
+So the only auth step you need is `gh auth login` (once, outside the devShell
+is fine); `gs` picks up `GITHUB_TOKEN` automatically. **This only works
+through a direnv-loaded shell** — `direnv exec .` (or a shell direnv is
+hooked into), not a bare `nix develop`, since `nix develop` doesn't run
+`.envrc`.
+
+```bash
+gh auth status                 # confirm gh is logged in, scope includes `repo`
+gh auth refresh -s repo        # if the scope is missing
+direnv exec . gs auth status   # should report "currently logged in"
 ```
 
 ## One-time repo setup
@@ -110,8 +123,8 @@ This only registers the branch with git-spice; it doesn't rewrite history.
 git-spice's tracked-branch state is shared across worktrees via
 `refs/spice/data` — init once, use from any worktree. Caveat:
 `gs repo sync` won't delete a branch that's checked out in another worktree
-even after it's merged (`spice.repoSync.detachWorktrees` would fix this but
-isn't released yet as of git-spice 0.31.2).
+even after it's merged (`spice.repoSync.detachWorktrees` fixes this in newer
+git-spice releases; check `gs --version` against the changelog).
 
 ## Config (`just spice-init`)
 
@@ -138,6 +151,9 @@ eval "$(gh completion -s zsh)"
 
 - `gs: command not found` behaves like Ghostscript, or `gh --version` shows an
   old version → you're outside the devShell; run `direnv reload` or re-enter it.
+- `gs: github: not logged in` → you ran `gs` through a bare `nix develop`
+  instead of a direnv-loaded shell, so `.envrc`'s `GITHUB_TOKEN` export never
+  ran. Use `direnv exec .` (or a properly direnv-hooked shell) instead.
 - `gs log short --all` (`gs ls -a`) — see every stack, not just the current one.
 - `gs auth status` / `gh auth status` — confirm both are logged in if PR
   operations fail.
