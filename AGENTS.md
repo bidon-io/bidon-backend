@@ -51,6 +51,15 @@ just config-diff    # ensure .env.local exists, list keys missing vs .env.sample
 
 First-time setup also needs `make local-init` (submodules + deps).
 
+### Stacked PRs
+
+Trunk is `new-main`, not GitHub's default branch. One-time setup: `gs auth
+login` then `just spice-init`. Daily loop: `gs branch create` (`bc`), `gs
+branch submit` (`bs`), `gs repo restack` (`rr`), `gs repo sync` (`rs`) after a
+merge — never rebase a stack by hand, `gs repo sync` reconciles merged
+branches and restacks what's above them. Bare `gh pr create` targets `main`;
+use `gs branch submit` instead. Full guide: [docs/dev/git-spice.md](docs/dev/git-spice.md).
+
 ### Tests
 
 ```bash

@@ -20,7 +20,12 @@
             pkgs.just
             pkgs.buf
             pkgs.pre-commit
+            pkgs.git-spice
+            pkgs.gh
           ];
+
+          # git-spice's package only ships the `gs` binary; this silences its "use git-spice" warning.
+          GIT_SPICE_NO_GS_WARNING = "1";
         };
 
       }
