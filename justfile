@@ -46,6 +46,21 @@ test-db:
 test:
     go test ./...
 
+# Bring up Redis + the DSP simulator (and its Postgres + migrations) for the e2e suite.
+test-e2e-up:
+    docker compose -f docker-compose.test.yml up -d redis dspsim
+
+test-e2e-down:
+    docker compose -f docker-compose.test.yml down --remove-orphans
+
+# Run the e2e suite against a stack started with `just test-e2e-up`.
+test-e2e:
+    go test -tags e2e ./internal/sdkapi/v2/e2e/...
+
+# Run the e2e suite fully inside Docker, the way CI does.
+test-e2e-ci:
+    docker compose -f docker-compose.test.yml run --rm go-e2e
+
 precommit:
     pre-commit run --all-files
 
