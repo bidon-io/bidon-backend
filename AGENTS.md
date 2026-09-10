@@ -45,10 +45,17 @@ just compose-down   # tear down
 ```bash
 just admin          # admin API only
 just sdk-api        # SDK API only
+just dsp-sim        # OpenRTB DSP simulator (localhost:1325)
 just seed           # reset + load sample data
 just migrate        # apply migrations (also: just migrate down)
 just config-diff    # ensure .env.local exists, list keys missing vs .env.sample
 ```
+
+`bidon-dspsim` is a standalone OpenRTB DSP simulator: reads auction config from
+Postgres, answers bid requests from a JSON creative library, and records the
+nurl/burl/lurl it advertises under `/debug/bids`. Drive it with `dspsim.http`;
+pointing a live auction at it needs an out-of-band endpoint redirect. Design:
+[docs/adr/0001-dsp-simulator.md](docs/adr/0001-dsp-simulator.md).
 
 First-time setup also needs `make local-init` (submodules + deps).
 
