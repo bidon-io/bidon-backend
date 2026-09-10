@@ -1,0 +1,88 @@
+name: bidon-test
+
+x-golang-test-base: &golang-test-base
+  image: golang:1.24-alpine
+  volumes:
+    - .:/app
+    - gomodcache-test:/go/pkg/mod
+    - gocache-test:/root/.cache/go-build
+  working_dir: /app
+
+x-test-db-env: &test-db-env
+  DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon_e2e
+  DATABASE_REPLICA_URL: postgres://bidon:pass@postgres:5432/bidon_e2e
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - '5436:5432'
+    volumes:
+      - pgdata-test-e2e:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bidon_e2e
+      POSTGRES_USER: bidon
+      POSTGRES_PASSWORD: pass
+    healthcheck:
+      test: pg_isready -U bidon -d bidon_e2e
+      interval: 5s
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+
+  migrate:
+    <<: *golang-test-base
+    command: go run ./cmd/bidon-migrate up
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *test-db-env
+      ENVIRONMENT: test
+
+  dspsim:
+    <<: *golang-test-base
+    command: go run ./cmd/bidon-dspsim
+    ports:
+      - '1326:1325'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *test-db-env
+      DSPSIM_PORT: 1325
+      DSPSIM_SEED: 1
+      DSPSIM_NO_BID_RATE: 0
+      DSPSIM_CATALOG_TTL: 2
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:1325/health_checks || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  go-e2e:
+    <<: *golang-test-base
+    entrypoint: ["go", "test", "-tags", "e2e"]
+    command: ./internal/sdkapi/v2/e2e/...
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      dspsim:
+        condition: service_healthy
+    environment:
+      <<: *test-db-env
+      REDIS_URL: redis://redis:6379/0
+      DSPSIM_URL: http://dspsim:1325
+
+volumes:
+  pgdata-test-e2e:
+  gomodcache-test:
+  gocache-test:
