@@ -1,0 +1,50 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 200
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title DSP Simulator (bidon-dspsim) — bid and notification lifecycle\nADR-0001
+
+participant "Caller\n(curl / sdk.http /\nbidon auction)" as CALLER
+participant "bidon-dspsim\n/openrtb/bid" as SIM
+database "Postgres\n(catalog snapshot)" as PG
+participant "in-memory\nbid registry" as STORE
+participant "bidon-dspsim\n/notify + /creative" as NOTIFY
+
+== Startup ==
+SIM -> PG : read apps + auction_configurations\n+ line_items + demand_sources (read-only)
+PG --> SIM : configured auctions snapshot
+note over SIM, PG : refreshed every DSPSIM_CATALOG_TTL,\nprevious snapshot kept on failure
+
+== Bid request ==
+CALLER -> SIM ++ : POST /openrtb/bid\nOpenRTB 2.x JSON
+SIM -> SIM : describe imp[0]: bundle, ad type/format,\nfloor, dsp=imp.displaymanager
+SIM -> PG : match bundle + ad type/format\nagainst snapshot
+PG --> SIM : configured auction (or no match)
+
+alt matched
+  SIM -> SIM : weighted random creative from\nlibrary[dsp][type] (fallback: "default")\nprice = floor × [1.5, 3.0]
+  SIM -> STORE : keep BidRecord(bid_id →\nmatch, price, creative, urls)
+  SIM --> CALLER -- : 200 BidResponse\nnurl /notify/win/{bid_id}?price=${AUCTION_PRICE}&...\nburl /notify/billing/{bid_id}?...\nlurl /notify/loss/{bid_id}?loss=${AUCTION_LOSS}&...
+else unmatched (204)
+  SIM --> CALLER -- : 204 + X-Dspsim-Nobid-Reason:\nunknown_bundle | no_config_for_adtype |\nformat_not_configured | floor_too_high |\ndemand_not_configured | no_creative | random_no_bid
+end
+
+== Outcome feedback ==
+CALLER -> NOTIFY ++ : GET nurl (win) or lurl (loss)\nmacros pre-substituted
+NOTIFY -> STORE : append notification, mark\nunresolved ${...} per param
+NOTIFY --> CALLER -- : 200 (always)\nunknown bid id → orphan list + warn log
+
+== Impression / billing ==
+CALLER -> NOTIFY ++ : GET burl (render/start billing)
+NOTIFY -> STORE : append notification
+NOTIFY --> CALLER -- : 200
+
+== Debug & observability ==
+CALLER -> SIM : GET /debug/bids · /debug/catalog · /debug/creatives
+CALLER -> SIM : POST /debug/reload\ndelete /debug/bids
+SIM --> CALLER : JSON snapshot of registry,\ncatalog, creative serve counts
+
+@enduml

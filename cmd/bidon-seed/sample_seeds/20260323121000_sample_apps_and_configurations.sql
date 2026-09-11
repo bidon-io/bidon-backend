@@ -106,7 +106,7 @@ BEGIN
     (
         adikteev_account_id, adikteev_id, owner_id,
         'DemandSourceAccount::adikteev',
-        '{}'::jsonb,
+        '{"endpoint": "http://bidon-dspsim:1325/openrtb/bid"}'::jsonb,
         true, false, NOW(), NOW(), 'Adikteev Audience Network', adikteev_account_id
     )
     ON CONFLICT (id) DO NOTHING;
@@ -615,7 +615,7 @@ BEGIN
         timeout, demands, bidding, ad_unit_ids
     ) VALUES (
     6050, 'Tetris Banner Auction', tetris_app_id, 3, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
-    NOW(), NOW(), NULL, false, 6050, 10000,
+    NOW(), NOW(), NULL, true, 6050, 10000,
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
     ARRAY[5301, 5302]::bigint[]
@@ -635,7 +635,7 @@ BEGIN
         timeout, demands, bidding, ad_unit_ids
     ) VALUES (
     6051, 'Tetris Interstitial Auction', tetris_app_id, 1, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
-    NOW(), NOW(), NULL, false, 6051, 10000,
+    NOW(), NOW(), NULL, true, 6051, 10000,
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
     ARRAY[5303]::bigint[]
@@ -655,7 +655,7 @@ BEGIN
         timeout, demands, bidding, ad_unit_ids
     ) VALUES (
     6052, 'Tetris Rewarded Auction', tetris_app_id, 6, '[]'::jsonb, 1, '{"v2": true}'::jsonb, 0.15,
-    NOW(), NOW(), NULL, false, 6052, 10000,
+    NOW(), NOW(), NULL, true, 6052, 10000,
     ARRAY['adikteev']::varchar[],
     ARRAY['adikteev']::varchar[],
     ARRAY[5304]::bigint[]

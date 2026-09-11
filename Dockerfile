@@ -57,6 +57,10 @@ FROM base AS bidon-seed-builder
 
 RUN go build -o /bidon-seed ./cmd/bidon-seed
 
+FROM base AS bidon-dspsim-builder
+
+RUN go build -o /bidon-dspsim ./cmd/bidon-dspsim
+
 FROM rust:1.83-alpine AS proxy-builder
 
 WORKDIR /app
@@ -113,6 +117,14 @@ FROM deploy AS bidon-seed
 COPY --from=bidon-seed-builder --chown=deploy /bidon-seed /bidon-seed
 
 CMD [ "/bidon-seed" ]
+
+FROM deploy AS bidon-dspsim
+
+COPY --from=bidon-dspsim-builder --chown=deploy /bidon-dspsim /bidon-dspsim
+
+CMD [ "/bidon-dspsim" ]
+
+EXPOSE 1325
 
 FROM deploy AS bidon-proxy
 

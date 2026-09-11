@@ -17,7 +17,11 @@ import (
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
+// defaultEndpoint is used when the demand source account has no endpoint configured.
+const defaultEndpoint = "http://appodeal-eu.dsp.adikteev.com"
+
 type AdikteevAdapter struct {
+	Endpoint string
 }
 
 var _ adapters.BidderInterface = (*AdikteevAdapter)(nil)
@@ -91,10 +95,6 @@ func (a *AdikteevAdapter) sdkInstanceID(auctionRequest *schema.AuctionRequest) [
 	return raw
 }
 
-func getEndpoint() string {
-	return "http://appodeal-eu.dsp.adikteev.com" //?debug=true"
-}
-
 func (a *AdikteevAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
@@ -131,8 +131,7 @@ func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 	}
 	dr.RawRequest = string(requestBody)
 
-	url := getEndpoint()
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.Endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
 		return dr
@@ -158,9 +157,18 @@ func (a *AdikteevAdapter) ExecuteRequest(ctx context.Context, client *http.Clien
 	return dr
 }
 
-// Builder builds a new instance of the Bidmachine adapter for the given bidder with the given config.
+// Builder builds a new instance of the Adikteev adapter for the given bidder with the given config.
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
-	adpt := &AdikteevAdapter{}
+	adikteevCfg := cfg[adapter.AdikteevKey]
+
+	endpoint, ok := adikteevCfg["endpoint"].(string)
+	if !ok || endpoint == "" {
+		endpoint = defaultEndpoint
+	}
+
+	adpt := &AdikteevAdapter{
+		Endpoint: endpoint,
+	}
 
 	bidder := &adapters.Bidder{
 		Adapter: adpt,

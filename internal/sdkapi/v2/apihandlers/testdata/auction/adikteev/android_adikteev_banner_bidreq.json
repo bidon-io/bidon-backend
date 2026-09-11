@@ -1,0 +1,61 @@
+{
+  "id" : "237660ad-d575-4cca-9994-44bb33ddf877",
+  "imp" : [ {
+    "id" : "50a642f6-d17c-4803-bbe5-090729ed2ecc",
+    "banner" : {
+      "w" : 320,
+      "h" : 50,
+      "pos" : 1
+    },
+    "displaymanager" : "adikteev",
+    "displaymanagerver" : "11.8.2",
+    "bidfloor" : 0.150001,
+    "secure" : 1
+  } ],
+  "app" : {
+    "id" : "2005",
+    "bundle" : "com.demo.tetris",
+    "ver" : "1.0",
+    "publisher" : {
+      "id" : "1"
+    },
+    "ext" : {
+      "sdkinstanceid" : 123
+    }
+  },
+  "device" : {
+    "geo" : {
+      "lat" : 38.1147,
+      "lon" : -1.2944,
+      "type" : 2,
+      "accuracy" : 5000,
+      "ipservice" : 3,
+      "country" : "ESP",
+      "region" : "MC",
+      "city" : "Archena",
+      "zip" : "30600"
+    },
+    "ua" : "Mozilla/5.0 (Linux; Android 12; Pixel 3 Build/SP1A.210812.016.C1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/114.0.5735.131 Mobile Safari/537.36",
+    "ip" : "94.24.105.28",
+    "devicetype" : 4,
+    "make" : "Google",
+    "model" : "Google Pixel 3",
+    "os" : "android",
+    "osv" : "12",
+    "hwv" : "blueline",
+    "h" : 2028,
+    "w" : 1080,
+    "ppi" : 440,
+    "pxratio" : 3,
+    "js" : 1,
+    "language" : "en_US",
+    "connectiontype" : 2,
+    "ifa" : "013b8c47-8beb-41b4-aefe-60fe466f9fd8"
+  },
+  "at" : 1,
+  "tmax" : 2000,
+  "cur" : [ "USD" ],
+  "regs" : {
+    "gdpr" : 0
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id" : "b9a3040a-324d-4cbb-bad9-e4f3a6d5d027",
+  "imp" : [ {
+    "id" : "ef7bbaab-75aa-4068-bd2b-20f771ce07df",
+    "banner" : {
+      "w" : 300,
+      "h" : 250,
+      "pos" : 1
+    },
+    "displaymanager" : "adikteev",
+    "displaymanagerver" : "11.8.2",
+    "bidfloor" : 0.150001,
+    "secure" : 1
+  } ],
+  "app" : {
+    "id" : "2005",
+    "bundle" : "com.demo.tetris",
+    "ver" : "1.0",
+    "publisher" : {
+      "id" : "1"
+    },
+    "ext" : {
+      "sdkinstanceid" : 123
+    }
+  },
+  "device" : {
+    "geo" : {
+      "lat" : 38.1147,
+      "lon" : -1.2944,
+      "type" : 2,
+      "accuracy" : 5000,
+      "ipservice" : 3,
+      "country" : "ESP",
+      "region" : "MC",
+      "city" : "Archena",
+      "zip" : "30600"
+    },
+    "ua" : "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+    "ip" : "94.24.105.28",
+    "devicetype" : 4,
+    "make" : "Apple",
+    "model" : "iPhone14,2",
+    "os" : "ios",
+    "osv" : "16.0",
+    "hwv" : "iPhone14,2",
+    "h" : 2556,
+    "w" : 1179,
+    "ppi" : 460,
+    "pxratio" : 3,
+    "js" : 1,
+    "language" : "en_US",
+    "connectiontype" : 2,
+    "ifa" : "f40ef78f-01dd-4053-a657-061ec2db55cc"
+  },
+  "at" : 1,
+  "tmax" : 2000,
+  "cur" : [ "USD" ],
+  "regs" : {
+    "gdpr" : 0
+  }
+}
