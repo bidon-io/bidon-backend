@@ -13,8 +13,15 @@ compose-down:
 seed:
     go run ./cmd/bidon-seed -reset -sample
 
+admin:
+    go run ./cmd/bidon-admin
+
 sdk-api:
     go run ./cmd/bidon-sdkapi
+
+# Apply migrations. Pass args to override, e.g. `just migrate down`.
+migrate *args="up":
+    go run ./cmd/bidon-migrate {{args}}
 
 # --- Testing ---
 
