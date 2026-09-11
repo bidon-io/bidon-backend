@@ -89,6 +89,17 @@ func TestPublicBase(t *testing.T) {
 		}
 	})
 
+	t.Run("takes the first hop of a proxy chain", func(t *testing.T) {
+		s := &Server{}
+		c := newContext("http://internal:1325/openrtb/bid", map[string]string{
+			"X-Forwarded-Host":  "dspsim.public.example, internal.lb",
+			"X-Forwarded-Proto": "https,http",
+		})
+		if got := s.publicBase(c); got != "https://dspsim.public.example" {
+			t.Errorf("publicBase() = %q, want https://dspsim.public.example", got)
+		}
+	})
+
 	t.Run("TLS request defaults to https", func(t *testing.T) {
 		s := &Server{}
 		c := newContext("http://dspsim.internal:1325/openrtb/bid", nil)

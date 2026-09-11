@@ -50,6 +50,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("db.Open(): %v", err)
 	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("db.Close(): %v", err)
+		}
+	}()
 
 	library, err := dspsim.LoadLibrary(cfg.CreativesFile)
 	if err != nil {

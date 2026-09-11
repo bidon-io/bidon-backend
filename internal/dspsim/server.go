@@ -155,12 +155,12 @@ func (s *Server) publicBase(c echo.Context) string {
 func requestBase(c echo.Context) string {
 	req := c.Request()
 
-	host := req.Header.Get("X-Forwarded-Host")
+	host := firstForwarded(req.Header.Get("X-Forwarded-Host"))
 	if host == "" {
 		host = req.Host
 	}
 
-	scheme := req.Header.Get(echo.HeaderXForwardedProto)
+	scheme := firstForwarded(req.Header.Get(echo.HeaderXForwardedProto))
 	if scheme == "" {
 		if req.TLS != nil {
 			scheme = "https"
@@ -170,6 +170,14 @@ func requestBase(c echo.Context) string {
 	}
 
 	return strings.TrimRight(fmt.Sprintf("%s://%s", scheme, host), "/")
+}
+
+// firstForwarded returns the first entry of a comma-separated forwarded
+// header value; a proxy chain appends to these, and the first hop is the
+// one the client actually reached.
+func firstForwarded(value string) string {
+	first, _, _ := strings.Cut(value, ",")
+	return strings.TrimSpace(first)
 }
 
 func (s *Server) noBid(c echo.Context, summary RequestSummary, reason NoBidReason) error {

@@ -131,6 +131,16 @@ func (db *DB) SetDebug() {
 	db.Logger = db.Logger.LogMode(logger.Info)
 }
 
+// Close releases the underlying database connection pool.
+func (db *DB) Close() error {
+	sqlDB, err := db.DB.DB()
+	if err != nil {
+		return fmt.Errorf("close database: %v", err)
+	}
+
+	return sqlDB.Close()
+}
+
 func (db *DB) Ping(ctx context.Context) error {
 	sqlDB, err := db.DB.DB()
 	if err != nil {
