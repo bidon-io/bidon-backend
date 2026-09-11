@@ -9,7 +9,10 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "envFile": "${workspaceFolder}/.env.test",
+      "env": {
+        "DATABASE_URL": "postgres://bidon:pass@localhost:5435/bidon_test",
+        "DATABASE_REPLICA_URL": "postgres://bidon:pass@localhost:5435/bidon_test"
+      },
       "program": "${fileDirname}"
     },
     {

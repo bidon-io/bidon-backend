@@ -6,7 +6,6 @@ LANGGRAPH_API_VERSION ?= 0.2.110
 
 init: update-submodules
 	@cp -n .env.sample .env || true
-	@cp -n .env.test.sample .env.test || true
 
 install-deps:
 	@brew ls --versions buf || brew install bufbuild/buf/buf@1.47.2
