@@ -13,11 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bool64/cache"
 	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
 	"github.com/oschwald/maxminddb-golang"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -26,26 +24,11 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bidon-io/bidon-backend/config"
-	"github.com/bidon-io/bidon-backend/internal/adapter"
-	adapterstore "github.com/bidon-io/bidon-backend/internal/adapter/store"
-	"github.com/bidon-io/bidon-backend/internal/auction"
-	auctionstore "github.com/bidon-io/bidon-backend/internal/auction/store"
-	"github.com/bidon-io/bidon-backend/internal/bidding"
-	"github.com/bidon-io/bidon-backend/internal/bidding/adapters_builder"
 	dbpkg "github.com/bidon-io/bidon-backend/internal/db"
-	"github.com/bidon-io/bidon-backend/internal/notification"
-	notificationstore "github.com/bidon-io/bidon-backend/internal/notification/store"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
-	sdkapistore "github.com/bidon-io/bidon-backend/internal/sdkapi/store"
-	v2 "github.com/bidon-io/bidon-backend/internal/sdkapi/v2"
-	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/openapi"
-	"github.com/bidon-io/bidon-backend/internal/segment"
-	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
-	"github.com/bidon-io/bidon-backend/pkg/clock"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/app"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1"
 )
 
@@ -126,40 +109,6 @@ func main() {
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
 
-	geoCoder := &geocoder.Geocoder{
-		DB:        db,
-		MaxMindDB: maxMindDB,
-		Cache:     config.NewMemoryCacheOf[*dbpkg.Country](cache.UnlimitedTTL), // We don't update countries
-	}
-	auctionCache := config.NewRedisCacheOf[*auction.Config](rdb, 10*time.Minute, "auction_configs")
-	err = auctionCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for auctionCache: %v", err)
-	}
-	configFetcher := &auctionstore.ConfigFetcher{
-		DB:    db,
-		Cache: auctionCache,
-	}
-	appCache := config.NewRedisCacheOf[sdkapi.App](rdb, 10*time.Minute, "apps")
-	err = appCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for appCache: %v", err)
-	}
-	appFetcher := &sdkapistore.AppFetcher{
-		DB:    db,
-		Cache: appCache,
-	}
-	segmentCache := config.NewRedisCacheOf[[]segment.Segment](rdb, 10*time.Minute, "segments")
-	err = segmentCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for segmentCache: %v", err)
-	}
-	segmentMatcher := &segment.Matcher{
-		Fetcher: &segmentstore.SegmentFetcher{
-			DB:    db,
-			Cache: segmentCache,
-		},
-	}
 	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,
 		Transport: otelhttp.NewTransport(&http.Transport{
@@ -168,124 +117,28 @@ func main() {
 			MaxIdleConnsPerHost: 30 * cpus,
 		}),
 	}
-	notificationHandler := notification.Handler{
-		AuctionResultRepo: notificationstore.AuctionResultRepo{Redis: rdb},
-		Sender: notification.EventSender{
-			HttpClient:  biddingHTTPClient,
-			EventLogger: eventLogger,
-		},
-	}
-	adUnitsCache := config.NewRedisCacheOf[[]auction.AdUnit](rdb, 10*time.Minute, "ad_units")
-	err = adUnitsCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for adUnitsCache: %v", err)
-	}
-	adUnitsMatcher := &auctionstore.AdUnitsMatcher{
-		DB:    db,
-		Cache: adUnitsCache,
-	}
-	biddingBuilder := &bidding.Builder{
-		AdaptersBuilder:     adapters_builder.BuildBiddingAdapters(biddingHTTPClient),
-		NotificationHandler: notificationHandler,
-		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
-		Logger:              logger.Named("bidding"),
-	}
-	biddingAdaptersCfgCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, 10*time.Minute, "bidding_adapters_cfg")
-	err = biddingAdaptersCfgCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for biddingAdaptersCfgCache: %v", err)
-	}
-	demandCfg := config.NewDemandConfig()
-	biddingAdaptersCfgBuilder := adapters_builder.NewAdaptersConfigBuilder(
-		&adapterstore.ConfigurationFetcher{
-			DB:    db,
-			Cache: biddingAdaptersCfgCache,
-		},
-		demandCfg,
-	)
-	lineItemsCache := config.NewRedisCacheOf[[]dbpkg.LineItem](rdb, 10*time.Minute, "line_items")
-	err = lineItemsCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for lineItemsCache: %v", err)
-	}
-	profilesCache := config.NewRedisCacheOf[[]dbpkg.AppDemandProfile](rdb, 10*time.Minute, "app_demand_profiles")
-	err = profilesCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for profilesCache: %v", err)
-	}
-	amazonSlotsCache := config.NewRedisCacheOf[[]sdkapi.AmazonSlot](rdb, 10*time.Minute, "amazon_slots")
-	err = amazonSlotsCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for amazonSlotsCache: %v", err)
-	}
 
-	adapterInitConfigsFetcher := &sdkapistore.AdapterInitConfigsFetcher{DB: db, ProfilesCache: profilesCache, AmazonSlotsCache: amazonSlotsCache, LineItemsCache: lineItemsCache}
-	configsCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, 10*time.Minute, "configs")
-	err = configsCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for configsCache: %v", err)
-	}
-	configurationFetcher := &adapterstore.ConfigurationFetcher{
-		DB:    db,
-		Cache: configsCache,
-	}
-	adUnitLookupCache := config.NewRedisCacheOf[*dbpkg.LineItem](rdb, 10*time.Minute, "ad_unit_lookup")
-	err = adUnitLookupCache.Monitor(meter)
-	if err != nil {
-		log.Fatalf("Unable to register observer for adUnitLookupCache: %v", err)
-	}
-	adUnitLookup := &sdkapistore.AdUnitLookup{
-		DB:    db,
-		Cache: adUnitLookupCache,
-	}
-	auctionService := &auction.Service{
-		ConfigFetcher:      configFetcher,
-		SegmentMatcher:     segmentMatcher,
-		AdapterKeysFetcher: adapterInitConfigsFetcher,
-		AuctionBuilder: &auction.Builder{
-			AdUnitsMatcher:               adUnitsMatcher,
-			BiddingBuilder:               biddingBuilder,
-			BiddingAdaptersConfigBuilder: biddingAdaptersCfgBuilder,
-		},
-		EventLogger: eventLogger,
-	}
-
-	e := config.Echo()
-
-	v2Group := e.Group("")
-	config.UseCommonMiddleware(v2Group, config.Middleware{
-		Service:               "bidon-sdkapi",
+	sdkapiApp, err := app.New(app.Deps{
+		DB:                    db,
+		Redis:                 rdb,
+		EventLogger:           eventLogger,
 		Logger:                logger,
+		MaxMindDB:             maxMindDB,
+		HTTPClient:            biddingHTTPClient,
+		Meter:                 meter,
+		Service:               "bidon-sdkapi",
 		LogRequestAndResponse: true,
 	})
-	v2Group.Use(sdkapi.CheckBidonHeader)
-	routerV2 := v2.Router{
-		ConfigFetcher:             configFetcher,
-		AppFetcher:                appFetcher,
-		SegmentMatcher:            segmentMatcher,
-		BiddingBuilder:            biddingBuilder,
-		AdUnitsMatcher:            adUnitsMatcher,
-		NotificationHandler:       notificationHandler,
-		GeoCoder:                  geoCoder,
-		EventLogger:               eventLogger,
-		AdapterInitConfigsFetcher: adapterInitConfigsFetcher,
-		ConfigurationFetcher:      configurationFetcher,
-		AuctionService:            auctionService,
-		AdUnitLookup:              adUnitLookup,
+	if err != nil {
+		log.Fatalf("app.New(): %v", err)
 	}
-	routerV2.RegisterRoutes(v2Group)
-
-	docsWebServer := http.FileServer(http.FS(openapi.FS))
-	e.GET("/docs/*", echo.WrapHandler(http.StripPrefix("/docs/", docsWebServer)))
+	e := sdkapiApp.Echo
+	auctionService := sdkapiApp.AuctionService
+	appFetcher := sdkapiApp.AppFetcher
+	geoCoder := sdkapiApp.GeoCoder
 
 	e.Use(echoprometheus.NewMiddleware("sdkapi"))  // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
-
-	config.UseHealthCheckHandler(e, config.HealthCheckParams{
-		"db":    db,
-		"redis": config.NewRedisPinger(rdb),
-		"kafka": eventLogger.Engine,
-	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
