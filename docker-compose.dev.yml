@@ -16,6 +16,7 @@ x-dev-kafka-env: &dev-kafka-env
   KAFKA_DELIVERY_INTERVAL: 5
   KAFKA_AD_EVENTS_TOPIC: ad-events
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+  KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
 
 x-dev-redis-env: &dev-redis-env
   REDIS_URL: redis://redis:6379/0
