@@ -48,6 +48,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/openapi"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 	"github.com/bidon-io/bidon-backend/pkg/clock"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1"
 )
@@ -107,6 +108,7 @@ func main() {
 	}
 
 	var loggerEngine event.LoggerEngine
+	var telemetryEngine telemetry.LoggerEngine
 	if os.Getenv("USE_KAFKA") == "true" {
 		conf, err := config.Kafka()
 		if err != nil {
@@ -128,10 +130,13 @@ func main() {
 		}()
 
 		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
+		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
 	} else {
 		loggerEngine = &engine.Log{}
+		telemetryEngine = &telemetry.Log{}
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
+	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine}
 
 	geoCoder := &geocoder.Geocoder{
 		DB:        db,
@@ -273,6 +278,7 @@ func main() {
 			BiddingAdaptersConfigBuilder: biddingAdaptersCfgBuilder,
 		},
 		EventLogger: eventLogger,
+		Telemetry:   telemetryLogger,
 	}
 
 	e := config.Echo()

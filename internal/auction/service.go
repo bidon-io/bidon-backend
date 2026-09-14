@@ -22,6 +22,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/store"
 	"github.com/bidon-io/bidon-backend/internal/segment"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type Service struct {
@@ -31,6 +32,7 @@ type Service struct {
 	AdapterKeysFetcher AdapterKeysFetcher
 	InsightsService    FloorPriceService
 	EventLogger        *event.Logger
+	Telemetry          *telemetry.Logger
 }
 
 type Response struct {
