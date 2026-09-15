@@ -125,6 +125,7 @@ func TestService_Run(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	t.Run("Successful Run", func(t *testing.T) {
@@ -572,6 +573,7 @@ func TestService_Run_BidmachineWithMediator(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -699,6 +701,7 @@ func TestService_Run_BiddingWithDemandExt(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -815,6 +818,7 @@ func TestService_Run_BidmachineWithMediatorInBidding(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -1027,6 +1031,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -1179,6 +1184,7 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	app := testApp(1)
@@ -1282,7 +1288,7 @@ func TestService_Run_EmitsAuctionTelemetry(t *testing.T) {
 			},
 		},
 		EventLogger: &event.Logger{Engine: &engine.Log{}},
-		Telemetry:   &telemetry.Logger{Engine: telEngine},
+		Telemetry:   telemetry.New(telEngine, nil),
 	}
 
 	_, err := service.Run(ctx, &auction.ExecutionParams{
@@ -1395,7 +1401,7 @@ func TestService_Run_TelemetryFailureKeepsAdEvents(t *testing.T) {
 			},
 		},
 		EventLogger: &event.Logger{Engine: mockEventLogger},
-		Telemetry:   &telemetry.Logger{Engine: failingTelemetryEngine{}},
+		Telemetry:   telemetry.New(failingTelemetryEngine{}, nil),
 	}
 
 	resp, err := service.Run(ctx, &auction.ExecutionParams{

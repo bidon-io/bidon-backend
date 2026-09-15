@@ -9,11 +9,6 @@ import (
 	"github.com/bidon-io/bidon-backend/config"
 )
 
-type Logger struct {
-	Engine LoggerEngine
-	Logger *zap.Logger
-}
-
 type LoggerEngine interface {
 	Produce(message LogMessage, handleErr func(error))
 	Ping(ctx context.Context) error
@@ -24,74 +19,80 @@ type LogMessage struct {
 	Value []byte
 }
 
-func (l *Logger) log() *zap.Logger {
-	if l == nil || l.Logger == nil {
-		return zap.NewNop()
-	}
-	return l.Logger
+// Logger is the sdkapi telemetry handle. Catalog emits go through Event.
+type Logger struct {
+	Event Event
 }
 
-func (l *Logger) Log(ev Event, handleErr func(error)) {
-	if l == nil || l.Engine == nil {
+func New(engine LoggerEngine, log *zap.Logger) *Logger {
+	return &Logger{Event: Event{engine: engine, log: log}}
+}
+
+// Nop discards catalog events. Use it when no engine is configured.
+var Nop = New(nil, nil)
+
+// Event produces catalog rows onto telemetry-events.
+type Event struct {
+	engine LoggerEngine
+	log    *zap.Logger
+}
+
+func (e Event) logf() *zap.Logger {
+	if e.log == nil {
+		return zap.NewNop()
+	}
+	return e.log
+}
+
+func (e Event) emit(eventName, dsp string, a attrs, v any) {
+	if e.engine == nil {
 		return
 	}
 
-	logger := l.log().With(eventLogFields(ev)...)
+	logger := e.logf().With(attrsLogFields(eventName, dsp, a)...)
 
-	message, err := json.Marshal(ev)
+	message, err := json.Marshal(v)
 	if err != nil {
 		logger.Error("marshal telemetry event", zap.Error(err))
-		if handleErr != nil {
-			handleErr(err)
-		}
 		return
 	}
 
-	l.Engine.Produce(LogMessage{Topic: ev.Topic(), Value: message}, func(err error) {
+	e.engine.Produce(LogMessage{Topic: config.TelemetryEventsTopic, Value: message}, func(err error) {
 		logger.Error("produce telemetry event", zap.Error(err))
-		if handleErr != nil {
-			handleErr(err)
-		}
 	})
 }
 
-func eventLogFields(ev Event) []zap.Field {
-	if ev == nil {
-		return nil
+func attrsLogFields(eventName, dsp string, a attrs) []zap.Field {
+	fields := []zap.Field{
+		zap.String("topic", string(config.TelemetryEventsTopic)),
+		zap.String("event_name", eventName),
+		zap.String("auction_id", a.AuctionID),
+		zap.Int64("app_id", a.AppID),
+		zap.String("session_id", a.SessionID),
 	}
-
-	fields := []zap.Field{zap.String("topic", string(ev.Topic()))}
-	rec, ok := eventRecord(ev)
-	if !ok {
-		return fields
+	if dsp != "" {
+		fields = append(fields, zap.String("dsp", dsp))
 	}
-
-	fields = append(fields,
-		zap.String("event_name", rec.EventName),
-		zap.String("event_id", rec.EventID),
-		zap.String("auction_id", rec.AuctionID),
-		zap.Int64("app_id", rec.AppID),
-		zap.String("session_id", rec.SessionID),
-	)
-	if rec.DSP != "" {
-		fields = append(fields, zap.String("dsp", rec.DSP))
-	}
-	if rec.TraceID != "" {
-		fields = append(fields, zap.String("trace_id", rec.TraceID))
+	if a.TraceID != "" {
+		fields = append(fields, zap.String("trace_id", a.TraceID))
 	}
 	return fields
 }
 
-func eventRecord(ev Event) (Record, bool) {
-	switch v := ev.(type) {
-	case Record:
-		return v, true
-	case *Record:
-		if v == nil {
-			return Record{}, false
-		}
-		return *v, true
-	default:
-		return Record{}, false
+func envelopeLogFields(topic config.Topic, env Envelope, dsp string) []zap.Field {
+	fields := []zap.Field{
+		zap.String("topic", string(topic)),
+		zap.String("event_name", env.EventName),
+		zap.String("event_id", env.EventID),
+		zap.String("auction_id", env.AuctionID),
+		zap.Int64("app_id", env.AppID),
+		zap.String("session_id", env.SessionID),
 	}
+	if dsp != "" {
+		fields = append(fields, zap.String("dsp", dsp))
+	}
+	if env.TraceID != "" {
+		fields = append(fields, zap.String("trace_id", env.TraceID))
+	}
+	return fields
 }
