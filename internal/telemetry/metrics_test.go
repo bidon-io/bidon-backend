@@ -14,7 +14,7 @@ func TestObserveDSPAndAuction(t *testing.T) {
 	ObserveAuctionCompleted(AuctionResultOK)
 	ObserveAuctionCompleted(AuctionResultError)
 
-	bid, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, OutcomeBid)
+	bid, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, string(OutcomeBid))
 	if err != nil {
 		t.Fatalf("dsp_response_total bid: %v", err)
 	}
@@ -22,7 +22,7 @@ func TestObserveDSPAndAuction(t *testing.T) {
 		t.Errorf("dsp_response_total{outcome=bid} = %v, want >= 1", got)
 	}
 
-	timeout, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, OutcomeTimeout)
+	timeout, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, string(OutcomeTimeout))
 	if err != nil {
 		t.Fatalf("dsp_response_total timeout: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestObserveDSPAndAuction(t *testing.T) {
 		t.Errorf("dsp_request_duration_seconds sample_count = %v, want >= 2", got)
 	}
 
-	completed, err := AuctionCompletedTotal.GetMetricWithLabelValues(AuctionResultOK)
+	completed, err := AuctionCompletedTotal.GetMetricWithLabelValues(string(AuctionResultOK))
 	if err != nil {
 		t.Fatalf("auction_completed_total ok: %v", err)
 	}

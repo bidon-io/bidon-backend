@@ -5,26 +5,42 @@ import (
 	"errors"
 )
 
+type Outcome string
+
 const (
-	OutcomeBid       = "bid"
-	OutcomeNoBid     = "nobid"
-	OutcomeTimeout   = "timeout"
-	OutcomeHTTPError = "http_error"
-	OutcomeMalformed = "malformed"
+	OutcomeBid       Outcome = "bid"
+	OutcomeNoBid     Outcome = "nobid"
+	OutcomeTimeout   Outcome = "timeout"
+	OutcomeHTTPError Outcome = "http_error"
+	OutcomeMalformed Outcome = "malformed"
 )
 
-const RejectReasonBelowFloor = "below_floor"
+type Scope string
 
-const ScopeBiddingRound = "bidding_round"
+const ScopeBiddingRound Scope = "bidding_round"
+
+type RejectReason string
+
+const RejectReasonBelowFloor RejectReason = "below_floor"
+
+type AuctionResult string
 
 const (
-	AuctionResultOK    = "ok"
-	AuctionResultError = "error"
+	AuctionResultOK    AuctionResult = "ok"
+	AuctionResultError AuctionResult = "error"
+)
+
+type ErrorCode string
+
+const (
+	ErrorCodeNoAdsFound        ErrorCode = "no_ads_found"
+	ErrorCodeInvalidAuctionKey ErrorCode = "invalid_auction_key"
+	ErrorCodeError             ErrorCode = "error"
 )
 
 // OutcomeFromDemand maps a demand response to a catalog outcome.
 // Precedence: timeout → http_error (4xx/5xx or status 0 with err) → malformed → bid → nobid.
-func OutcomeFromDemand(err error, isBid bool, status int) string {
+func OutcomeFromDemand(err error, isBid bool, status int) Outcome {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return OutcomeTimeout
 	}

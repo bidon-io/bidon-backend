@@ -86,12 +86,25 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	var adUnitsMap *AdUnitsMap
 	var err error
 
-	s.emitAuctionRequestReceived(params)
+	s.Telemetry.Event.AuctionRequestReceived(telemetry.Params{
+		Request: params.Req,
+		App:     params.App,
+		Country: params.Country,
+	})
 
 	// Ensure events are always logged, even on errors
 	defer func() {
 		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
-		s.emitAuctionCompleted(params, auctionResult, started, err)
+		s.Telemetry.Event.AuctionCompleted(telemetry.AuctionCompletedParams{
+			Params: telemetry.Params{
+				Request: params.Req,
+				App:     params.App,
+				Country: params.Country,
+			},
+			Bids:    biddingBids(auctionResult),
+			Started: started,
+			Err:     err,
+		})
 	}()
 
 	segmentParams := &segment.Params{
@@ -326,76 +339,11 @@ func (s *Service) logEvents(
 	}
 }
 
-func (s *Service) emitAuctionRequestReceived(params *ExecutionParams) {
-	req := params.Req
-	rec := telemetry.NewRecord(telemetry.EventAuctionRequestReceived, telemetryEnvelope(params))
-	rec.PriceFloor = req.AdObject.PriceFloor
-	s.logTelemetry(params, rec)
-}
-
-func (s *Service) emitAuctionCompleted(params *ExecutionParams, result *Result, started time.Time, runErr error) {
-	rec := telemetry.NewRecord(telemetry.EventAuctionCompleted, telemetryEnvelope(params))
-	rec.Scope = telemetry.ScopeBiddingRound
-	rec.TotalLatencyMS = time.Since(started).Milliseconds()
-	if result != nil && result.BiddingAuctionResult != nil {
-		rec.ParticipantCount = len(result.BiddingAuctionResult.Bids)
-		rec.WinnerDSP, rec.Price = serverRoundWinner(result, params.Req.AdObject.PriceFloor)
+func biddingBids(result *Result) []adapters.DemandResponse {
+	if result == nil || result.BiddingAuctionResult == nil {
+		return nil
 	}
-	metricResult := telemetry.AuctionResultOK
-	if runErr != nil {
-		rec.ErrorCode = auctionErrorCode(runErr)
-		metricResult = telemetry.AuctionResultError
-	}
-	s.logTelemetry(params, rec)
-	telemetry.ObserveAuctionCompleted(metricResult)
-}
-
-func (s *Service) logTelemetry(params *ExecutionParams, rec telemetry.Record) {
-	s.Telemetry.Log(rec, func(err error) {
-		params.LogErr(fmt.Errorf("log %v telemetry event: %v", rec.EventName, err))
-	})
-}
-
-func telemetryEnvelope(params *ExecutionParams) telemetry.Envelope {
-	req := params.Req
-	var appID int64
-	if params.App != nil {
-		appID = params.App.ID
-	}
-	return telemetry.Envelope{
-		AppID:     appID,
-		AuctionID: req.AdObject.AuctionID,
-		SessionID: req.Session.ID,
-		AdType:    string(req.AdType),
-		AdFormat:  string(req.AdObject.Format()),
-		Country:   params.Country,
-	}
-}
-
-func serverRoundWinner(result *Result, floor float64) (string, float64) {
-	var winner string
-	var price float64
-	for _, bid := range result.BiddingAuctionResult.Bids {
-		if !bid.IsBid() || bid.Price() <= floor {
-			continue
-		}
-		if bid.Price() > price {
-			winner = string(bid.DemandID)
-			price = bid.Price()
-		}
-	}
-	return winner, price
-}
-
-func auctionErrorCode(err error) string {
-	switch {
-	case errors.Is(err, sdkapi.ErrNoAdsFound), errors.Is(err, ErrNoAdsFound):
-		return "no_ads_found"
-	case errors.Is(err, sdkapi.ErrInvalidAuctionKey):
-		return "invalid_auction_key"
-	default:
-		return "error"
-	}
+	return result.BiddingAuctionResult.Bids
 }
 
 func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap) *AdUnit {
