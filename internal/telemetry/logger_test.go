@@ -3,7 +3,11 @@ package telemetry
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/bidon-io/bidon-backend/config"
 )
@@ -142,6 +146,107 @@ func TestKafkaProduceEmptyTopic(t *testing.T) {
 
 	if !called {
 		t.Fatal("handleErr must be called when topic env is empty")
+	}
+}
+
+func TestLoggerEmptyTopicStructured(t *testing.T) {
+	core, logs := observer.New(zap.ErrorLevel)
+	logger := &Logger{
+		Engine: &Kafka{Topics: map[config.Topic]string{}},
+		Logger: zap.New(core),
+	}
+
+	rec := NewRecord(EventAuctionRequestReceived, Envelope{
+		AppID:     7,
+		AuctionID: "auc-structured",
+		SessionID: "sess-structured",
+	})
+	logger.Log(rec, func(error) {})
+
+	entries := logs.All()
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 error log, got %d", len(entries))
+	}
+	if entries[0].Message != "produce telemetry event" {
+		t.Errorf("message: got %q", entries[0].Message)
+	}
+
+	fields := entries[0].ContextMap()
+	assertField(t, fields, "topic", string(config.TelemetryEventsTopic))
+	assertField(t, fields, "event_name", EventAuctionRequestReceived)
+	assertField(t, fields, "auction_id", "auc-structured")
+	assertField(t, fields, "session_id", "sess-structured")
+	if fields["app_id"] != int64(7) {
+		t.Errorf("app_id: got %#v, want 7", fields["app_id"])
+	}
+	if _, ok := fields["error"]; !ok {
+		t.Error("expected error field")
+	}
+}
+
+func TestLogEngineStructured(t *testing.T) {
+	core, logs := observer.New(zap.DebugLevel)
+	engine := &Log{Logger: zap.New(core)}
+	logger := &Logger{Engine: engine}
+
+	rec := NewRecord(EventDSPResponseReceived, Envelope{
+		AppID:     3,
+		AuctionID: "auc-log",
+		SessionID: "sess-log",
+		TraceID:   "trace-log",
+	})
+	rec.DSP = "bidmachine"
+	logger.Log(rec, func(error) {})
+
+	entries := logs.FilterMessage("produce telemetry").All()
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 debug log, got %d", len(entries))
+	}
+
+	fields := entries[0].ContextMap()
+	assertField(t, fields, "event_name", EventDSPResponseReceived)
+	assertField(t, fields, "auction_id", "auc-log")
+	assertField(t, fields, "dsp", "bidmachine")
+	assertField(t, fields, "trace_id", "trace-log")
+	if _, ok := fields["value"]; ok {
+		t.Error("raw JSON blob must not be logged; use named fields")
+	}
+}
+
+type brokenEvent struct{}
+
+func (brokenEvent) Topic() config.Topic { return config.TelemetryEventsTopic }
+
+func (brokenEvent) MarshalJSON() ([]byte, error) { return nil, errors.New("boom") }
+
+func TestLoggerMarshalErrorStructured(t *testing.T) {
+	core, logs := observer.New(zap.ErrorLevel)
+	logger := &Logger{
+		Engine: &recordingEngine{},
+		Logger: zap.New(core),
+	}
+
+	logger.Log(brokenEvent{}, func(error) {})
+
+	entries := logs.All()
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 error log, got %d", len(entries))
+	}
+	if entries[0].Message != "marshal telemetry event" {
+		t.Errorf("message: got %q", entries[0].Message)
+	}
+	fields := entries[0].ContextMap()
+	assertField(t, fields, "topic", string(config.TelemetryEventsTopic))
+	if _, ok := fields["error"]; !ok {
+		t.Error("expected error field")
+	}
+}
+
+func assertField(t *testing.T, fields map[string]any, key, want string) {
+	t.Helper()
+	got, ok := fields[key]
+	if !ok || got != want {
+		t.Errorf("%s: got %#v, want %q", key, fields[key], want)
 	}
 }
 
