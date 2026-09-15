@@ -103,7 +103,9 @@ services:
       - --overprovisioned
       - --node-id 0
       - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
-      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      # Coolify previews rename the service (redpanda-pr-N). Kafka clients connect to
+      # KAFKA_BROKERS then reconnect to this advertised host — it must match SERVICE_NAME_REDPANDA.
+      - --advertise-kafka-addr PLAINTEXT://${SERVICE_NAME_REDPANDA:-redpanda}:29092,OUTSIDE://localhost:9092
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -112,11 +114,15 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    networks:
+      default:
+        aliases:
+          - redpanda
     logging: *default-logging
     <<: *restart-policy
 
   # Redpanda Console (UI): expose publicly via Coolify → Traefik; protect with Basic Auth middleware
-  # labels only on this service. Kafka brokers stay at redpanda:29092 without proxy auth — see Coolify docs:
+  # labels only on this service. Kafka brokers stay on the compose network (no proxy auth) — see Coolify docs:
   # https://coolify.io/docs/knowledge-base/proxy/traefik/basic-auth#docker-compose-and-services
   redpanda-console:
     image: redpandadata/console:v2.8.15
