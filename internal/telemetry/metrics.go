@@ -23,11 +23,11 @@ var (
 	}, []string{"result"})
 )
 
-func ObserveDSP(dsp, outcome string, seconds float64) {
-	DSPResponseTotal.WithLabelValues(dsp, outcome).Inc()
+func ObserveDSP(dsp string, outcome Outcome, seconds float64) {
+	DSPResponseTotal.WithLabelValues(dsp, string(outcome)).Inc()
 	DSPRequestDuration.WithLabelValues(dsp).Observe(seconds)
 }
 
-func ObserveAuctionCompleted(result string) {
-	AuctionCompletedTotal.WithLabelValues(result).Inc()
+func ObserveAuctionCompleted(result AuctionResult) {
+	AuctionCompletedTotal.WithLabelValues(string(result)).Inc()
 }

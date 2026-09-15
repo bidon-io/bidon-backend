@@ -3,7 +3,7 @@ package telemetry
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"net/http"
 	"testing"
 
 	"go.uber.org/zap"
@@ -11,6 +11,11 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/config"
+	"github.com/bidon-io/bidon-backend/internal/ad"
+	"github.com/bidon-io/bidon-backend/internal/adapter"
+	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
@@ -26,28 +31,34 @@ func (e *recordingEngine) Ping(_ context.Context) error {
 	return nil
 }
 
-func TestLoggerLogTypedRecord(t *testing.T) {
+func testAuctionParams() Params {
+	return Params{
+		Request: &schema.AuctionRequest{
+			AdType: ad.BannerType,
+			AdObject: schema.AdObject{
+				AuctionID: "auc-1",
+				Banner:    &schema.BannerAdObject{Format: ad.BannerFormat},
+			},
+			BaseRequest: schema.BaseRequest{
+				Session: schema.Session{ID: "sess-1"},
+			},
+		},
+		App:     &sdkapi.App{ID: 42},
+		Country: "US",
+		TraceID: "trace-1",
+	}
+}
+
+func TestEventDSPResponseReceived(t *testing.T) {
 	engine := &recordingEngine{}
-	logger := &Logger{Engine: engine}
+	logger := New(engine, nil)
 
-	rec := NewRecord(EventDSPResponseReceived, Envelope{
-		AppID:     42,
-		AuctionID: "auc-1",
-		SessionID: "sess-1",
-		AdType:    "banner",
-		AdFormat:  "BANNER",
-		Country:   "US",
-		TraceID:   "trace-1",
-	})
-	rec.Scope = "bidding_round"
-	rec.DSP = "bidmachine"
-	rec.Outcome = "bid"
-	rec.HTTPStatus = 200
-	rec.LatencyMS = 15
-	rec.Price = 1.23
-
-	logger.Log(rec, func(err error) {
-		t.Fatalf("unexpected produce error: %v", err)
+	logger.Event.DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
+		DemandID: adapter.BidmachineKey,
+		Status:   http.StatusOK,
+		Bid:      &adapters.DemandBid{Price: 1.23},
+		StartTS:  0,
+		EndTS:    15,
 	})
 
 	if len(engine.messages) != 1 {
@@ -76,70 +87,57 @@ func TestLoggerLogTypedRecord(t *testing.T) {
 		t.Fatal("envelope must be embedded")
 	}
 
-	got, err := DecodeRecord(msg)
+	rec, err := DecodeRecord(msg)
 	if err != nil {
 		t.Fatalf("DecodeRecord: %v", err)
 	}
-	if got.EventName != EventDSPResponseReceived {
-		t.Errorf("event_name: got %q", got.EventName)
+
+	if rec.EventName != EventDSPResponseReceived {
+		t.Errorf("event_name: got %q", rec.EventName)
 	}
-	if got.SchemaVersion != SchemaVersion {
-		t.Errorf("schema_version: got %q", got.SchemaVersion)
+	if rec.SchemaVersion != SchemaVersion {
+		t.Errorf("schema_version: got %q", rec.SchemaVersion)
 	}
-	if got.AuctionID != "auc-1" || got.SessionID != "sess-1" {
-		t.Errorf("ids: auction=%q session=%q", got.AuctionID, got.SessionID)
+	if rec.AuctionID != "auc-1" || rec.SessionID != "sess-1" {
+		t.Errorf("ids: auction=%q session=%q", rec.AuctionID, rec.SessionID)
 	}
-	if got.AdType != "banner" || got.AdFormat != "BANNER" {
-		t.Errorf("ad: type=%q format=%q", got.AdType, got.AdFormat)
+	if rec.AdType != string(ad.BannerType) || rec.AdFormat != string(ad.BannerFormat) {
+		t.Errorf("ad: type=%q format=%q", rec.AdType, rec.AdFormat)
 	}
-	if got.Country != "US" || got.TraceID != "trace-1" {
-		t.Errorf("country/trace: %q %q", got.Country, got.TraceID)
+	if rec.Country != "US" || rec.TraceID != "trace-1" {
+		t.Errorf("country/trace: %q %q", rec.Country, rec.TraceID)
 	}
-	if got.Scope != "bidding_round" || got.DSP != "bidmachine" || got.Outcome != "bid" {
-		t.Errorf("dsp fields: scope=%q dsp=%q outcome=%q", got.Scope, got.DSP, got.Outcome)
+	if rec.Scope != ScopeBiddingRound {
+		t.Errorf("scope: got %q", rec.Scope)
 	}
-	if got.AppID != 42 || got.SamplingRate != 1.0 {
-		t.Errorf("app_id=%d sampling_rate=%v", got.AppID, got.SamplingRate)
+	if rec.DSP != string(adapter.BidmachineKey) {
+		t.Errorf("dsp: got %q", rec.DSP)
 	}
-	if got.HTTPStatus != 200 || got.LatencyMS != 15 || got.Price != 1.23 {
-		t.Errorf("http=%d latency=%d price=%v", got.HTTPStatus, got.LatencyMS, got.Price)
+	if rec.Outcome != OutcomeBid {
+		t.Errorf("outcome: got %q", rec.Outcome)
 	}
-	if got.EventID == "" {
+	if rec.AppID != 42 || rec.SamplingRate != 1.0 {
+		t.Errorf("app_id=%d sampling_rate=%v", rec.AppID, rec.SamplingRate)
+	}
+	if rec.HTTPStatus != 200 || rec.LatencyMS != 15 || rec.Price != 1.23 {
+		t.Errorf("http=%d latency=%d price=%v", rec.HTTPStatus, rec.LatencyMS, rec.Price)
+	}
+	if rec.PriceFloor != 0 {
+		t.Errorf("dsp_response_received must not set price_floor, got %v", rec.PriceFloor)
+	}
+	if rec.EventID == "" {
 		t.Error("event_id must be a non-empty UUID")
 	}
-	if got.EventTS <= 0 {
-		t.Errorf("event_ts: got %d, want unix ms", got.EventTS)
-	}
-}
-
-func TestCatalogEventRegistry(t *testing.T) {
-	for _, name := range CatalogEventNames() {
-		msg, ok := NewMessage(name)
-		if !ok {
-			t.Errorf("NewMessage(%q) missing from proto registry", name)
-			continue
-		}
-		if messageTypeName(msg) == "" {
-			t.Errorf("%s proto full name is empty", name)
-		}
-	}
-	if _, ok := NewMessage("not_a_catalog_event"); ok {
-		t.Fatal("unknown event_name must not resolve")
+	if rec.EventTS <= 0 {
+		t.Errorf("event_ts: got %d, want unix ms", rec.EventTS)
 	}
 }
 
 func TestLoggerNilSafe(t *testing.T) {
-	rec := NewRecord(EventAuctionRequestReceived, Envelope{AuctionID: "auc-1"})
+	params := testAuctionParams()
 
-	var logger *Logger
-	logger.Log(rec, func(error) {
-		t.Fatal("nil logger must not call handleErr")
-	})
-
-	logger = &Logger{}
-	logger.Log(rec, func(error) {
-		t.Fatal("nil engine must not call handleErr")
-	})
+	Event{}.AuctionRequestReceived(params)
+	New(nil, nil).Event.AuctionRequestReceived(params)
 }
 
 func TestKafkaProduceEmptyTopic(t *testing.T) {
@@ -148,7 +146,7 @@ func TestKafkaProduceEmptyTopic(t *testing.T) {
 
 	engine.Produce(LogMessage{
 		Topic: config.TelemetryEventsTopic,
-		Value: []byte(`{}`),
+		Value: []byte{0x00},
 	}, func(err error) {
 		called = true
 		if err == nil {
@@ -163,17 +161,17 @@ func TestKafkaProduceEmptyTopic(t *testing.T) {
 
 func TestLoggerEmptyTopicStructured(t *testing.T) {
 	core, logs := observer.New(zap.ErrorLevel)
-	logger := &Logger{
-		Engine: &Kafka{Topics: map[config.Topic]string{}},
-		Logger: zap.New(core),
-	}
+	logger := New(&Kafka{Topics: map[config.Topic]string{}}, zap.New(core))
 
-	rec := NewRecord(EventAuctionRequestReceived, Envelope{
-		AppID:     7,
-		AuctionID: "auc-structured",
-		SessionID: "sess-structured",
+	logger.Event.AuctionRequestReceived(Params{
+		Request: &schema.AuctionRequest{
+			AdObject: schema.AdObject{AuctionID: "auc-structured"},
+			BaseRequest: schema.BaseRequest{
+				Session: schema.Session{ID: "sess-structured"},
+			},
+		},
+		App: &sdkapi.App{ID: 7},
 	})
-	logger.Log(rec, func(error) {})
 
 	entries := logs.All()
 	if len(entries) != 1 {
@@ -199,16 +197,18 @@ func TestLoggerEmptyTopicStructured(t *testing.T) {
 func TestLogEngineStructured(t *testing.T) {
 	core, logs := observer.New(zap.DebugLevel)
 	engine := &Log{Logger: zap.New(core)}
-	logger := &Logger{Engine: engine}
+	logger := New(engine, nil)
 
-	rec := NewRecord(EventDSPResponseReceived, Envelope{
-		AppID:     3,
-		AuctionID: "auc-log",
-		SessionID: "sess-log",
-		TraceID:   "trace-log",
-	})
-	rec.DSP = "bidmachine"
-	logger.Log(rec, func(error) {})
+	logger.Event.DSPResponseReceived(Params{
+		Request: &schema.AuctionRequest{
+			AdObject: schema.AdObject{AuctionID: "auc-log"},
+			BaseRequest: schema.BaseRequest{
+				Session: schema.Session{ID: "sess-log"},
+			},
+		},
+		App:     &sdkapi.App{ID: 3},
+		TraceID: "trace-log",
+	}, &adapters.DemandResponse{DemandID: adapter.BidmachineKey})
 
 	entries := logs.FilterMessage("produce telemetry").All()
 	if len(entries) != 1 {
@@ -218,39 +218,28 @@ func TestLogEngineStructured(t *testing.T) {
 	fields := entries[0].ContextMap()
 	assertField(t, fields, "event_name", EventDSPResponseReceived)
 	assertField(t, fields, "auction_id", "auc-log")
-	assertField(t, fields, "dsp", "bidmachine")
+	assertField(t, fields, "dsp", string(adapter.BidmachineKey))
 	assertField(t, fields, "trace_id", "trace-log")
 	if _, ok := fields["value"]; ok {
-		t.Error("raw JSON blob must not be logged; use named fields")
+		t.Error("raw blob must not be logged; use named fields")
 	}
 }
 
-type brokenEvent struct{}
-
-func (brokenEvent) Topic() config.Topic { return config.TelemetryEventsTopic }
-
-func (brokenEvent) MarshalJSON() ([]byte, error) { return nil, errors.New("boom") }
-
-func TestLoggerMarshalErrorStructured(t *testing.T) {
-	core, logs := observer.New(zap.ErrorLevel)
-	logger := &Logger{
-		Engine: &recordingEngine{},
-		Logger: zap.New(core),
+func TestCatalogEventRegistry(t *testing.T) {
+	for _, name := range CatalogEventNames() {
+		msg, ok := NewMessage(name)
+		if !ok {
+			t.Errorf("NewMessage(%q) missing from proto registry", name)
+			continue
+		}
+		if messageTypeName(msg) == "" {
+			t.Errorf("%s proto full name is empty", name)
+		}
 	}
 
-	logger.Log(brokenEvent{}, func(error) {})
-
-	entries := logs.All()
-	if len(entries) != 1 {
-		t.Fatalf("expected 1 error log, got %d", len(entries))
-	}
-	if entries[0].Message != "marshal telemetry event" {
-		t.Errorf("message: got %q", entries[0].Message)
-	}
-	fields := entries[0].ContextMap()
-	assertField(t, fields, "topic", string(config.TelemetryEventsTopic))
-	if _, ok := fields["error"]; !ok {
-		t.Error("expected error field")
+	unknown, ok := NewMessage("not_a_catalog_event")
+	if ok || unknown != nil {
+		t.Fatal("unknown event_name must not resolve")
 	}
 }
 
@@ -259,11 +248,5 @@ func assertField(t *testing.T, fields map[string]any, key, want string) {
 	got, ok := fields[key]
 	if !ok || got != want {
 		t.Errorf("%s: got %#v, want %q", key, fields[key], want)
-	}
-}
-
-func TestRecordTopic(t *testing.T) {
-	if got := NewRecord(EventAuctionCompleted, Envelope{}).Topic(); got != config.TelemetryEventsTopic {
-		t.Errorf("Topic(): got %q, want %q", got, config.TelemetryEventsTopic)
 	}
 }

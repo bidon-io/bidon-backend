@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 
 	"github.com/bidon-io/bidon-backend/config"
@@ -30,8 +29,8 @@ func (e *MemoryEngine) Records() []Record {
 		if msg.Topic != config.TelemetryEventsTopic {
 			continue
 		}
-		var rec Record
-		if err := json.Unmarshal(msg.Value, &rec); err != nil {
+		rec, err := DecodeRecord(msg)
+		if err != nil {
 			continue
 		}
 		out = append(out, rec)

@@ -16,7 +16,7 @@ func TestOutcomeFromDemand(t *testing.T) {
 		err    error
 		isBid  bool
 		status int
-		want   string
+		want   Outcome
 	}{
 		{name: "timeout", err: context.DeadlineExceeded, status: 0, want: OutcomeTimeout},
 		{name: "timeout wrapped", err: errors.Join(errors.New("adapter"), context.DeadlineExceeded), status: 200, want: OutcomeTimeout},

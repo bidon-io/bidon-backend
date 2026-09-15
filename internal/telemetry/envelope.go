@@ -10,6 +10,19 @@ const (
 	EventDSPResponseRejected    = "dsp_response_rejected"
 )
 
+// attrs is the identity every catalog event carries. Callers do not set this;
+// Event methods stamp it from Params.
+type attrs struct {
+	AppID     int64
+	AuctionID string
+	SessionID string
+	AdType    string
+	AdFormat  string
+	Country   string
+	TraceID   string
+}
+
+// Envelope is the on-wire header. It is not part of the emit API.
 type Envelope struct {
 	EventID       string  `json:"event_id"`
 	EventName     string  `json:"event_name"`
