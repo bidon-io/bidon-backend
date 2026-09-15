@@ -185,6 +185,7 @@ func TestBuilder_Build(t *testing.T) {
 				AdaptersBuilder:     tt.adaptersBuilder,
 				NotificationHandler: tt.notificationHandler,
 				BidCacher:           bidCacher,
+				Telemetry:           telemetry.Nop,
 			}
 
 			result, err := builder.HoldAuction(context.Background(), tt.buildParams)
@@ -255,7 +256,7 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 				return aucRes.Bids
 			},
 		},
-		Telemetry: &telemetry.Logger{Engine: engine},
+		Telemetry: telemetry.New(engine, nil),
 	}
 
 	adaptersCfg := schema.Adapters{}
@@ -274,9 +275,6 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 		BiddingAdapters: keys,
 		StartTS:         auctionStart,
 		Country:         "DE",
-		SessionID:       "sess-dsp",
-		AdType:          "banner",
-		AdFormat:        "BANNER",
 		AuctionRequest: schema.AuctionRequest{
 			AdType: "banner",
 			AdObject: schema.AdObject{
@@ -296,7 +294,7 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 
 	recs := engine.Records()
 	var sent, received, rejected int
-	outcomes := map[string]string{}
+	outcomes := map[string]telemetry.Outcome{}
 	for _, rec := range recs {
 		switch rec.EventName {
 		case telemetry.EventDSPRequestSent:
@@ -354,7 +352,7 @@ func TestBuilder_HoldAuction_EmitsDSPRejectedBelowFloor(t *testing.T) {
 				return aucRes.Bids
 			},
 		},
-		Telemetry: &telemetry.Logger{Engine: engine},
+		Telemetry: telemetry.New(engine, nil),
 	}
 
 	_, err := builder.HoldAuction(context.Background(), &bidding.BuildParams{

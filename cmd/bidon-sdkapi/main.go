@@ -116,7 +116,7 @@ func main() {
 		telemetryEngine = &telemetry.Log{Logger: telLog}
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
-	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine, Logger: telLog}
+	telemetryLogger := telemetry.New(telemetryEngine, telLog)
 
 	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,
