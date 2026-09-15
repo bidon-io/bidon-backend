@@ -23,6 +23,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type Builder struct {
@@ -30,6 +31,7 @@ type Builder struct {
 	NotificationHandler NotificationHandler
 	BidCacher           BidCacher
 	Logger              *zap.Logger
+	Telemetry           *telemetry.Logger
 }
 
 // log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
@@ -63,6 +65,10 @@ type BuildParams struct {
 	AdapterConfigs  adapter.ProcessedConfigsMap
 	BiddingAdapters []adapter.Key
 	StartTS         int64
+	Country         string
+	SessionID       string
+	AdType          string
+	AdFormat        string
 }
 
 type AuctionResult struct {
@@ -246,16 +252,27 @@ func (b *Builder) processAdapter(
 			handleError(adapterKey, err)
 			return
 		}
+		sendStart := time.Now().UnixMilli()
+		b.emitDSPRequestSent(params, auctionRequest, adapterKey)
 		demandResponses, err := bidder.FetchBids(&auctionRequest)
 		if err != nil {
-			handleError(adapterKey, err)
+			dr := adapters.DemandResponse{
+				DemandID: adapterKey,
+				Error:    err,
+				StartTS:  sendStart,
+				EndTS:    time.Now().UnixMilli(),
+			}
+			b.emitDSPResponseReceived(params, auctionRequest, &dr)
+			bids <- dr
 			return
 		}
 		for _, demandResponse := range demandResponses {
-			demandResponse.StartTS = params.StartTS
+			demandResponse.StartTS = sendStart
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
 			demandResponse.FillRendering()
+			b.emitDSPResponseReceived(params, auctionRequest, demandResponse)
+			b.emitDSPRejectedIfBelowFloor(params, auctionRequest, demandResponse)
 
 			bids <- *demandResponse
 		}
@@ -279,12 +296,15 @@ func (b *Builder) processAdapter(
 		return
 	}
 
+	sendStart := time.Now().UnixMilli()
+	b.emitDSPRequestSent(params, auctionRequest, adapterKey)
 	demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
-	demandResponse.StartTS = params.StartTS
+	demandResponse.StartTS = sendStart
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
 		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		b.emitDSPResponseReceived(params, auctionRequest, demandResponse)
 		bids <- *demandResponse
 		return
 	}
@@ -294,6 +314,8 @@ func (b *Builder) processAdapter(
 		childLogger.Error("parse demand response", zap.Error(err))
 	}
 	demandResponse.Error = err
+	b.emitDSPResponseReceived(params, auctionRequest, demandResponse)
+	b.emitDSPRejectedIfBelowFloor(params, auctionRequest, demandResponse)
 
 	bids <- *demandResponse
 }
@@ -379,6 +401,86 @@ func (b *Builder) setTokenResponse(demandResponse *adapters.DemandResponse, auct
 	}
 	if tokenFinishTS, ok := demandData["token_finish_ts"].(float64); ok {
 		demandResponse.Token.EndTS = int64(tokenFinishTS)
+	}
+}
+
+func (b *Builder) emitDSPRequestSent(params *BuildParams, auctionRequest schema.AuctionRequest, dsp adapter.Key) {
+	rec := telemetry.NewRecord(telemetry.EventDSPRequestSent, biddingEnvelope(params, auctionRequest))
+	rec.Scope = telemetry.ScopeBiddingRound
+	rec.DSP = string(dsp)
+	b.logTelemetry(rec)
+}
+
+func (b *Builder) emitDSPResponseReceived(params *BuildParams, auctionRequest schema.AuctionRequest, dr *adapters.DemandResponse) {
+	if dr == nil {
+		return
+	}
+	latencyMS := dr.EndTS - dr.StartTS
+	outcome := telemetry.OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
+	rec := telemetry.NewRecord(telemetry.EventDSPResponseReceived, biddingEnvelope(params, auctionRequest))
+	rec.Scope = telemetry.ScopeBiddingRound
+	rec.DSP = string(dr.DemandID)
+	rec.Outcome = outcome
+	rec.HTTPStatus = dr.Status
+	rec.LatencyMS = latencyMS
+	if dr.IsBid() {
+		rec.Price = dr.Price()
+	}
+	b.logTelemetry(rec)
+	telemetry.ObserveDSP(string(dr.DemandID), outcome, float64(latencyMS)/1000)
+}
+
+func (b *Builder) emitDSPRejectedIfBelowFloor(params *BuildParams, auctionRequest schema.AuctionRequest, dr *adapters.DemandResponse) {
+	if dr == nil || !dr.IsBid() {
+		return
+	}
+	floor := auctionRequest.AdObject.GetBidFloorForBidding()
+	if dr.Price() >= floor {
+		return
+	}
+	rec := telemetry.NewRecord(telemetry.EventDSPResponseRejected, biddingEnvelope(params, auctionRequest))
+	rec.Scope = telemetry.ScopeBiddingRound
+	rec.DSP = string(dr.DemandID)
+	rec.Price = dr.Price()
+	rec.PriceFloor = floor
+	rec.RejectReason = telemetry.RejectReasonBelowFloor
+	b.logTelemetry(rec)
+}
+
+func (b *Builder) logTelemetry(rec telemetry.Record) {
+	b.Telemetry.Log(rec, func(err error) {
+		b.log().Error("telemetry", zap.Error(err), zap.String("event_name", rec.EventName))
+	})
+}
+
+func biddingEnvelope(params *BuildParams, auctionRequest schema.AuctionRequest) telemetry.Envelope {
+	var appID int64
+	sessionID := auctionRequest.Session.ID
+	adType := string(auctionRequest.AdType)
+	adFormat := string(auctionRequest.AdObject.Format())
+	country := ""
+	if params != nil {
+		if params.App != nil {
+			appID = params.App.ID
+		}
+		if params.SessionID != "" {
+			sessionID = params.SessionID
+		}
+		if params.AdType != "" {
+			adType = params.AdType
+		}
+		if params.AdFormat != "" {
+			adFormat = params.AdFormat
+		}
+		country = params.Country
+	}
+	return telemetry.Envelope{
+		AppID:     appID,
+		AuctionID: auctionRequest.AdObject.AuctionID,
+		SessionID: sessionID,
+		AdType:    adType,
+		AdFormat:  adFormat,
+		Country:   country,
 	}
 }
 

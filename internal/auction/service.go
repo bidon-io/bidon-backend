@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -78,15 +79,19 @@ var adCacheAdaptersFilter = store.NewAdCacheAdaptersFilter()
 
 func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, error) {
 	req := params.Req
+	started := time.Now()
 
 	var auctionConfig *Config
 	var auctionResult *Result
 	var adUnitsMap *AdUnitsMap
 	var err error
 
+	s.emitAuctionRequestReceived(params)
+
 	// Ensure events are always logged, even on errors
 	defer func() {
 		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
+		s.emitAuctionCompleted(params, auctionResult, started, err)
 	}()
 
 	segmentParams := &segment.Params{
@@ -144,6 +149,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 		PriceFloor:           req.AdObject.PriceFloor,
 		AuctionRequest:       req,
 		GeoData:              params.GeoData,
+		Country:              params.Country,
 		AuctionKey:           req.AdObject.AuctionKey,
 		AuctionConfiguration: auctionConfig,
 	}
@@ -317,6 +323,78 @@ func (s *Service) logEvents(
 		s.EventLogger.Log(ev, func(err error) {
 			params.LogErr(fmt.Errorf("log %v event: %v", ev.EventType, err))
 		})
+	}
+}
+
+func (s *Service) emitAuctionRequestReceived(params *ExecutionParams) {
+	req := params.Req
+	rec := telemetry.NewRecord(telemetry.EventAuctionRequestReceived, telemetryEnvelope(params))
+	rec.PriceFloor = req.AdObject.PriceFloor
+	s.logTelemetry(params, rec)
+}
+
+func (s *Service) emitAuctionCompleted(params *ExecutionParams, result *Result, started time.Time, runErr error) {
+	rec := telemetry.NewRecord(telemetry.EventAuctionCompleted, telemetryEnvelope(params))
+	rec.Scope = telemetry.ScopeBiddingRound
+	rec.TotalLatencyMS = time.Since(started).Milliseconds()
+	if result != nil && result.BiddingAuctionResult != nil {
+		rec.ParticipantCount = len(result.BiddingAuctionResult.Bids)
+		rec.WinnerDSP, rec.Price = serverRoundWinner(result, params.Req.AdObject.PriceFloor)
+	}
+	metricResult := telemetry.AuctionResultOK
+	if runErr != nil {
+		rec.ErrorCode = auctionErrorCode(runErr)
+		metricResult = telemetry.AuctionResultError
+	}
+	s.logTelemetry(params, rec)
+	telemetry.ObserveAuctionCompleted(metricResult)
+}
+
+func (s *Service) logTelemetry(params *ExecutionParams, rec telemetry.Record) {
+	s.Telemetry.Log(rec, func(err error) {
+		params.LogErr(fmt.Errorf("log %v telemetry event: %v", rec.EventName, err))
+	})
+}
+
+func telemetryEnvelope(params *ExecutionParams) telemetry.Envelope {
+	req := params.Req
+	var appID int64
+	if params.App != nil {
+		appID = params.App.ID
+	}
+	return telemetry.Envelope{
+		AppID:     appID,
+		AuctionID: req.AdObject.AuctionID,
+		SessionID: req.Session.ID,
+		AdType:    string(req.AdType),
+		AdFormat:  string(req.AdObject.Format()),
+		Country:   params.Country,
+	}
+}
+
+func serverRoundWinner(result *Result, floor float64) (string, float64) {
+	var winner string
+	var price float64
+	for _, bid := range result.BiddingAuctionResult.Bids {
+		if !bid.IsBid() || bid.Price() <= floor {
+			continue
+		}
+		if bid.Price() > price {
+			winner = string(bid.DemandID)
+			price = bid.Price()
+		}
+	}
+	return winner, price
+}
+
+func auctionErrorCode(err error) string {
+	switch {
+	case errors.Is(err, sdkapi.ErrNoAdsFound), errors.Is(err, ErrNoAdsFound):
+		return "no_ads_found"
+	case errors.Is(err, sdkapi.ErrInvalidAuctionKey):
+		return "invalid_auction_key"
+	default:
+		return "error"
 	}
 }
 

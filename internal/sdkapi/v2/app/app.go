@@ -160,6 +160,7 @@ func New(deps Deps) (*App, error) {
 		NotificationHandler: notificationHandler,
 		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
 		Logger:              logger.Named("bidding"),
+		Telemetry:           deps.Telemetry,
 	}
 	biddingAdaptersCfgCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, cacheTTL, "bidding_adapters_cfg")
 	if err := biddingAdaptersCfgCache.Monitor(meter); err != nil {
