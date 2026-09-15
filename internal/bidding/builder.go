@@ -23,6 +23,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/geocoder"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type Builder struct {
@@ -30,6 +31,7 @@ type Builder struct {
 	NotificationHandler NotificationHandler
 	BidCacher           BidCacher
 	Logger              *zap.Logger
+	Telemetry           *telemetry.Logger
 }
 
 // log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
@@ -63,6 +65,7 @@ type BuildParams struct {
 	AdapterConfigs  adapter.ProcessedConfigsMap
 	BiddingAdapters []adapter.Key
 	StartTS         int64
+	Country         string
 }
 
 type AuctionResult struct {
@@ -233,6 +236,8 @@ func (b *Builder) processAdapter(
 ) {
 	defer wg.Done()
 
+	tp := telemetry.Params{Request: &auctionRequest, App: params.App, Country: params.Country}
+
 	childLogger := b.log().With(
 		zap.String("auction_id", auctionRequest.AdObject.AuctionID),
 		zap.String("bid_id", bidID),
@@ -246,16 +251,26 @@ func (b *Builder) processAdapter(
 			handleError(adapterKey, err)
 			return
 		}
+		sendStart := time.Now().UnixMilli()
+		b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
 		demandResponses, err := bidder.FetchBids(&auctionRequest)
 		if err != nil {
-			handleError(adapterKey, err)
+			dr := adapters.DemandResponse{
+				DemandID: adapterKey,
+				Error:    err,
+				StartTS:  sendStart,
+				EndTS:    time.Now().UnixMilli(),
+			}
+			b.Telemetry.Event.DSPResponseReceived(tp, &dr)
+			bids <- dr
 			return
 		}
 		for _, demandResponse := range demandResponses {
-			demandResponse.StartTS = params.StartTS
+			demandResponse.StartTS = sendStart
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
 			demandResponse.FillRendering()
+			b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
 
 			bids <- *demandResponse
 		}
@@ -279,12 +294,15 @@ func (b *Builder) processAdapter(
 		return
 	}
 
+	sendStart := time.Now().UnixMilli()
+	b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
 	demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
-	demandResponse.StartTS = params.StartTS
+	demandResponse.StartTS = sendStart
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
 		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
 		bids <- *demandResponse
 		return
 	}
@@ -294,6 +312,7 @@ func (b *Builder) processAdapter(
 		childLogger.Error("parse demand response", zap.Error(err))
 	}
 	demandResponse.Error = err
+	b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
 
 	bids <- *demandResponse
 }
