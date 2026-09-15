@@ -1,4 +1,11 @@
 <template>
+  <template v-if="apiKey === 'adikteev'">
+    <VeeFormFieldWrapper
+      field="extra.endpoint"
+      label="Endpoint"
+      placeholder="http://appodeal-eu.dsp.adikteev.com"
+    />
+  </template>
   <template v-if="apiKey === 'amazon'">
     <AmazonPricePointsForm />
   </template>
@@ -88,6 +95,13 @@ const props = defineProps({
 const emit = defineEmits(["update:schema"]);
 
 const dataSchemas = {
+  adikteev: yup.object({
+    endpoint: yup
+      .string()
+      .transform((value) => (value === "" ? undefined : value))
+      .url()
+      .label("Endpoint"),
+  }),
   amazon: yup.object({
     pricePointsMap: yup.object().required().label("Price Points"),
   }),
