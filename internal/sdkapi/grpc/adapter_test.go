@@ -706,6 +706,9 @@ func TestAdUnitToBid_serializesRenderingAsJSON(t *testing.T) {
 	if !strings.Contains(*bidExt.Rendering, `"type":"vast"`) {
 		t.Fatalf("rendering JSON = %q, want vast creative type", *bidExt.Rendering)
 	}
+	if got := bidExt.Ext["rendering"]; got != *bidExt.Rendering {
+		t.Fatalf("ext.rendering = %q, want the same JSON as BidExt.Rendering (%q)", got, *bidExt.Rendering)
+	}
 }
 
 func TestAdUnitToBid_omitsRenderingWhenNil(t *testing.T) {
@@ -727,5 +730,8 @@ func TestAdUnitToBid_omitsRenderingWhenNil(t *testing.T) {
 	}
 	if bidExt.Rendering != nil {
 		t.Fatalf("expected nil rendering, got %q", *bidExt.Rendering)
+	}
+	if got, ok := bidExt.Ext["rendering"]; ok {
+		t.Fatalf("expected no ext.rendering, got %q", got)
 	}
 }

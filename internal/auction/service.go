@@ -346,9 +346,11 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 		Timeout:    storeAdUnit.Timeout,
 		Extra:      ext,
 	}
-	// If the demand response has a bid, set the ad unit rendering configuration
-	if demandResponse.IsBid() {
+	// If the demand response has a bid, nest rendering under ext so shipped SDKs
+	// that only forward ext to the renderer still receive it.
+	if demandResponse.IsBid() && demandResponse.Bid.Rendering != nil {
 		adUnit.Rendering = demandResponse.Bid.Rendering
+		ext["rendering"] = demandResponse.Bid.Rendering
 	}
 
 	return adUnit

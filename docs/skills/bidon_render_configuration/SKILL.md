@@ -1,6 +1,6 @@
 ---
 name: bidon_render_configuration
-metadata.version: "0.0.2"
+metadata.version: "0.0.3"
 description: >-
   Author and validate the JSON rendering configuration DSPs place at
   seatbid.bid.ext.rendering in an OpenRTB bid response to the Bidon ad
@@ -25,9 +25,9 @@ field can silently take an entire section back to its defaults with no
 error reported anywhere. Read "Defaulting rules" before writing any
 config.
 
-On the Bidon auction/SDK response path the same object may appear as
-`ad_units[].rendering` (REST) or a JSON string on the gRPC bid ext — the
-schema is identical either way.
+On the Bidon auction/SDK response path the same object appears as
+`ad_units[].ext.rendering` (REST) or as both `BidExt.ext["rendering"]` and a
+JSON string on the gRPC bid ext — the schema is identical either way.
 
 ## Defaulting rules (read this first)
 
@@ -116,7 +116,7 @@ Rules of thumb:
    anything you touch.
 7. Run the validation self-check **and** the sense-check before
    finalizing.
-8. Emit `seatbid.bid.ext.rendering` (OpenRTB) or `ad_units[].rendering`
+8. Emit `seatbid.bid.ext.rendering` (OpenRTB) or `ad_units[].ext.rendering`
    (auction fixture) — do not wrap the object in anything else.
 
 See [reference.md](reference.md) for the full format × field effect
@@ -212,7 +212,7 @@ those creatives. `impression_tracking` is the banner/mrec-leaning knob.
 
 | Field                        | Type    | Values / Constraint                               | Default        |
 |-------------------------------|---------|------------------------------------------------------|----------------|
-| creative.type                | enum    | mraid, vast, html, static_image, native, playable    | static_image   |
+| creative.type                | enum    | mraid, vast, html, static_image, native, playable    | (empty — SDK detects) |
 | creative.source              | enum    | seatbid.bid.adm, seatbid.bid.nurl                    | seatbid.bid.adm |
 | creative.mraid_version       | enum    | 2.0, 3.0                                              | 3.0            |
 | creative.vast_version        | enum    | 3.0, 4.0, 4.1, 4.2                                    | 4.2            |
@@ -220,10 +220,10 @@ those creatives. `impression_tracking` is the banner/mrec-leaning knob.
 | creative.html_sandbox_policy | string  | HTML iframe `sandbox` attribute value                 | allow-scripts  |
 | creative.preload_strategy    | enum    | eager, lazy, on_demand                                | eager          |
 
-**Always set `creative.type` explicitly.** It defaults to `static_image`
-if omitted, which silently mismatches the renderer against your creative
-if the markup is actually video/HTML/MRAID/native/playable — there is no
-error, just a mis-rendered ad.
+**Set `creative.type` when you know it.** If omitted, Bidon leaves it empty
+so the SDK can detect the type from markup. Do not rely on a server-side
+default — there isn't one, and a guessed `static_image` would mis-render
+video.
 
 ## Store Kit (native in-app install overlay: iOS SKOverlay / Android Inline Install)
 
@@ -257,8 +257,9 @@ regardless of this field.
       absolute URL.
 - [ ] If `store_kit.enabled == true`, `app_store_id` is set.
 - [ ] Every `endcards.assets[].url` is an absolute http(s) URL.
-- [ ] `creative.type` is set explicitly and matches what `seatbid.bid.adm`
-      / `nurl` / auction `payload` actually contains.
+- [ ] `creative.type` matches what `seatbid.bid.adm` / `nurl` / auction
+      `payload` actually contains when you set it. If you omit it, the SDK
+      detects the type from markup.
 - [ ] Sections the request doesn't need are left out entirely rather than
       sent as `{}` or with guessed values — omission already gets full
       defaults (rule 1).

@@ -47,7 +47,7 @@ setup supports it (e.g. video in an MREC, or store kit with a real app id).
 
 | Creative type | Playback fields (`mute_on_start`, duration, skip) | Notes |
 |---------------|-----------------------------------------------------|--------|
-| `static_image` | no-op | Default if `creative.type` omitted — dangerous mismatch for HTML/VAST |
+| `static_image` | no-op | Native image path; omit `type` if unsure — the SDK detects from markup |
 | `html` | no-op unless the markup itself plays media | Common for banners; do not assume video knobs apply |
 | `mraid` | depends on the creative | Expand/resize matter more than mute for many MRAIDs |
 | `vast` | effective | Real home for mute / duration / skip; no separate `autoplay` field |
@@ -64,14 +64,14 @@ fields (close/endcards) require a full-screen container.**
 | mraid          | MRAID 2.0, 3.0                     | WebView with MRAID bridge injection (expand, resize, viewability APIs). Set `creative.mraid_version` to match what the markup was authored against. |
 | vast           | VAST 3.0-4.2, VPAID 2.0 (opt-in)   | Native video player parses the VAST XML. Companion ads and OM SDK verification supported. Set `creative.vpaid_enabled: true` only if the DSP's creative actually requires VPAID — it's an extra attack surface, off by default. |
 | html           | HTML5, CSS3, JS                    | Sandboxed iframe/WebView. `creative.html_sandbox_policy` sets the iframe `sandbox` attribute — tighten it if the creative doesn't need script execution beyond display. |
-| static_image   | JPEG, PNG, GIF, WebP                | Native image rendering, aspect-fit/fill, click-through overlay. This is the fallback default if `creative.type` is left unset — see the warning in SKILL.md. |
+| static_image   | JPEG, PNG, GIF, WebP                | Native image rendering, aspect-fit/fill, click-through overlay. Do not send this as a fallback for unknown markup — omit `creative.type` and the SDK will detect it. |
 | native         | OpenRTB Native 1.2                  | Structured asset delivery (title, icon, image, CTA, rating) rendered into the publisher's template. |
 | playable       | MRAID 3.0 + HTML5                   | Interactive HTML5 in a sandboxed WebView with gesture passthrough. Functionally an HTML creative with `mraid_version: "3.0"` semantics. |
 
 A mismatch between `creative.type` and the actual markup in
 `seatbid.bid.adm`/`nurl` does not raise an error — the renderer just
-applies the wrong rendering strategy to the markup. Always set this
-field to match reality rather than relying on the default.
+applies the wrong rendering strategy to the markup. Set this field to
+match reality, or omit it so the SDK can detect the type from markup.
 
 ## Endcard asset hosting
 

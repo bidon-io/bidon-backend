@@ -27,13 +27,15 @@
     },
     "ext": {
       "type": "object",
-      "description": "Additional properties for the ad unit",
-      "additionalProperties": true
-    },
-    "rendering": {
-      "type": "object",
-      "description": "DSP-controlled rendering configuration for the uSDK renderer",
-      "additionalProperties": true
+      "description": "Additional properties for the ad unit. DSP-controlled rendering configuration is nested at ext.rendering so shipped SDKs forward it to the renderer.",
+      "additionalProperties": true,
+      "properties": {
+        "rendering": {
+          "type": "object",
+          "description": "DSP-controlled rendering configuration for the uSDK renderer",
+          "additionalProperties": true
+        }
+      }
     }
   },
   "required": [

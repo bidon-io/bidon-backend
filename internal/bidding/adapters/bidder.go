@@ -113,7 +113,8 @@ type DemandBid struct {
 	// Ext is the raw OpenRTB seatbid.bid.ext (nil for non-OpenRTB demands).
 	Ext json.RawMessage
 	// Rendering is extracted from seatbid.bid.ext.rendering by the shared OpenRTB
-	// parser (documented defaults when absent). FillRendering covers other paths.
+	// parser (documented defaults when absent, except creative.type which stays
+	// empty so the SDK can detect it). FillRendering covers other paths.
 	Rendering *rendering.Config
 }
 

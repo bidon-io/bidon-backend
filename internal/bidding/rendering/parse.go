@@ -9,7 +9,9 @@ import (
 // Normalize returns a fully defaulted and sanitized config. A nil cfg yields DefaultConfig().
 // When cfg is present, missing fields are backfilled and invalid sections fall back to that
 // section's defaults while valid sections keep the DSP's customization (see sanitize).
-// OpenRTB cannot reject a bid for bad rendering config, so mistakes degrade to defaults.
+// creative.type is the exception: it is never defaulted, so the SDK can detect the type
+// from markup when the DSP omits it. OpenRTB cannot reject a bid for bad rendering
+// config, so mistakes degrade to defaults.
 func Normalize(cfg *Config, demandID adapter.Key) *Config {
 	if cfg == nil {
 		return DefaultConfig()

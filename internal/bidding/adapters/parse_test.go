@@ -113,8 +113,8 @@ func TestParseDemandResponse_mapsOpenRTBBid(t *testing.T) {
 	if bid.Ext != nil {
 		t.Fatalf("expected nil Ext, got %s", string(bid.Ext))
 	}
-	if bid.Rendering == nil || bid.Rendering.Creative.Type != rendering.CreativeTypeStaticImage {
-		t.Fatalf("expected default rendering, got %+v", bid.Rendering)
+	if bid.Rendering == nil || bid.Rendering.Creative == nil || bid.Rendering.Creative.Type != "" {
+		t.Fatalf("expected default rendering with empty creative type, got %+v", bid.Rendering)
 	}
 }
 
@@ -304,8 +304,8 @@ func TestParseDemandResponse_customParser(t *testing.T) {
 	if got.Bid == nil || got.Bid.Payload != "custom" || got.Bid.Price != 1.23 {
 		t.Fatalf("unexpected custom bid: %+v", got.Bid)
 	}
-	if got.Bid.Rendering == nil || got.Bid.Rendering.Creative.Type != rendering.CreativeTypeStaticImage {
-		t.Fatalf("expected default rendering for custom parser, got %+v", got.Bid.Rendering)
+	if got.Bid.Rendering == nil || got.Bid.Rendering.Creative == nil || got.Bid.Rendering.Creative.Type != "" {
+		t.Fatalf("expected default rendering with empty creative type for custom parser, got %+v", got.Bid.Rendering)
 	}
 }
 
