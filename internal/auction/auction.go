@@ -39,14 +39,16 @@ type LineItem struct {
 }
 
 type AdUnit struct {
-	DemandID   string            `json:"demand_id"`
-	UID        string            `json:"uid"`
-	Label      string            `json:"label"`
-	PriceFloor *float64          `json:"pricefloor,omitempty"`
-	BidType    schema.BidType    `json:"bid_type"`
-	Timeout    int32             `json:"timeout"`
-	Extra      map[string]any    `json:"ext"`
-	Rendering  *rendering.Config `json:"rendering,omitempty"`
+	DemandID   string         `json:"demand_id"`
+	UID        string         `json:"uid"`
+	Label      string         `json:"label"`
+	PriceFloor *float64       `json:"pricefloor,omitempty"`
+	BidType    schema.BidType `json:"bid_type"`
+	Timeout    int32          `json:"timeout"`
+	Extra      map[string]any `json:"ext"`
+	// Rendering is nested under ext.rendering in the auction JSON so shipped
+	// SDKs, which only forward ext to the renderer, still receive it.
+	Rendering *rendering.Config `json:"-"`
 }
 
 func (a *AdUnit) GetPriceFloor() float64 {

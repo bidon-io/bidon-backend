@@ -48,6 +48,15 @@ func TestValidate_emptyConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestValidate_emptyCreativeTypeIsAllowed(t *testing.T) {
+	t.Parallel()
+
+	err := rendering.Validate(&rendering.Config{
+		Creative: &rendering.CreativeConfig{},
+	})
+	assert.NoError(t, err)
+}
+
 func TestValidate_errors(t *testing.T) {
 	t.Parallel()
 
@@ -91,14 +100,6 @@ func TestValidate_errors(t *testing.T) {
 			},
 			field: "EndCards.Count",
 			tag:   "lte",
-		},
-		{
-			name: "creative type required",
-			cfg: rendering.Config{
-				Creative: &rendering.CreativeConfig{},
-			},
-			field: "Creative.Type",
-			tag:   "required",
 		},
 		{
 			name: "invalid creative type",
@@ -238,7 +239,7 @@ func TestParseFromBidExt_invalidRenderingFallsBackToDefaults(t *testing.T) {
 	require.NotNil(t, got.CloseButton)
 	assert.Equal(t, rendering.CloseButtonStyleIconX, got.CloseButton.Style)
 	require.NotNil(t, got.Creative)
-	assert.Equal(t, rendering.CreativeTypeStaticImage, got.Creative.Type)
+	assert.Empty(t, got.Creative.Type)
 }
 
 // An invalid section falls back to defaults without discarding a sibling section that did
@@ -261,7 +262,7 @@ func TestParseFromBidExt_invalidSectionPreservesValidSections(t *testing.T) {
 	assert.Equal(t, "#112233", got.CloseButton.Color)
 
 	require.NotNil(t, got.Creative)
-	assert.Equal(t, rendering.CreativeTypeStaticImage, got.Creative.Type)
+	assert.Empty(t, got.Creative.Type)
 }
 
 // StoreKit.AppStoreID's requirement is connected to StoreKit.Enabled (required_if). Sending
@@ -378,7 +379,7 @@ func TestParseFromBidExt_noRendering(t *testing.T) {
 	require.NotNil(t, defaults.Container)
 	assert.Equal(t, rendering.ContainerFormatInterstitial, defaults.Container.Format)
 	require.NotNil(t, defaults.Creative)
-	assert.Equal(t, rendering.CreativeTypeStaticImage, defaults.Creative.Type)
+	assert.Empty(t, defaults.Creative.Type)
 	assert.Equal(t, rendering.CreativeSourceADM, defaults.Creative.Source)
 	assert.Equal(t, rendering.CreateMRaidVersionV3, defaults.Creative.MRAIDVersion)
 	assert.Equal(t, rendering.CreativeVASTVersionV42, defaults.Creative.VASTVersion)
@@ -398,6 +399,8 @@ func TestDefaultConfig_usesTypedEnumValues(t *testing.T) {
 	cfg := rendering.DefaultConfig()
 	require.NotNil(t, cfg.EndCards)
 	assert.Equal(t, rendering.EndCardsLayoutSingle, cfg.EndCards.Layout)
+	require.NotNil(t, cfg.Creative)
+	assert.Empty(t, cfg.Creative.Type)
 	require.NotNil(t, cfg.StoreKit)
 	assert.Equal(t, rendering.StoreKitTriggerOnEndCard, cfg.StoreKit.Trigger)
 	assert.Equal(t, rendering.StoreKitPositionBottom, cfg.StoreKit.Position)

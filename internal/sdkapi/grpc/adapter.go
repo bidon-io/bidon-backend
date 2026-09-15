@@ -414,8 +414,11 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		Cid:   proto.String(a.DemandID),
 	}
 
-	ext := make(map[string]string, len(a.Extra))
+	ext := make(map[string]string, len(a.Extra)+1)
 	for k, v := range a.Extra {
+		if k == "rendering" {
+			continue
+		}
 		ext[k] = fmt.Sprintf("%v", v)
 	}
 	bidExt := &mediation.BidExt{
@@ -429,7 +432,10 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		if err != nil {
 			return nil, fmt.Errorf("marshal rendering: %w", err)
 		}
-		bidExt.Rendering = proto.String(string(renderingJSON))
+		encoded := string(renderingJSON)
+		// Existing SDKs read ext.rendering; the dedicated proto field is for newer clients.
+		ext["rendering"] = encoded
+		bidExt.Rendering = proto.String(encoded)
 	}
 	proto.SetExtension(bid, mediation.E_BidExt, bidExt)
 

@@ -1,10 +1,11 @@
 package rendering
 
 // Config is the DSP-controlled rendering configuration carried in bid.ext.rendering.
-// When rendering is omitted entirely, documented defaults are applied. When the DSP
-// provides rendering, creasty/defaults fills missing fields and go-playground/validator
-// checks constraints. Invalid configs fall back to defaults because OpenRTB cannot
-// reject or correct a bid for rendering problems.
+// When rendering is omitted entirely, documented defaults are applied, except
+// creative.type which stays empty so the SDK can detect the creative from markup.
+// When the DSP provides rendering, creasty/defaults fills missing fields and
+// go-playground/validator checks constraints. Invalid configs fall back to defaults
+// because OpenRTB cannot reject or correct a bid for rendering problems.
 type Config struct {
 	CloseButton *CloseButtonConfig `json:"close_button,omitempty"`
 	EndCards    *EndCardsConfig    `json:"endcards,omitempty"`
@@ -144,7 +145,9 @@ const (
 )
 
 type CreativeConfig struct {
-	Type              CreativeType            `json:"type,omitempty" default:"static_image" validate:"required,oneof=mraid vast html static_image native playable"`
+	// Type is left empty when the DSP omits it so the SDK can detect the creative
+	// from markup. There is no default — static_image would mis-render video.
+	Type              CreativeType            `json:"type,omitempty" validate:"omitempty,oneof=mraid vast html static_image native playable"`
 	Source            CreativeSource          `json:"source,omitempty" default:"seatbid.bid.adm" validate:"omitempty,oneof=seatbid.bid.adm seatbid.bid.nurl"`
 	MRAIDVersion      CreateMRAIDVersion      `json:"mraid_version,omitempty" default:"3.0" validate:"omitempty,oneof=2.0 3.0"`
 	VASTVersion       CreativeVASTVersion     `json:"vast_version,omitempty" default:"4.2" validate:"omitempty,oneof=3.0 4.0 4.1 4.2"`

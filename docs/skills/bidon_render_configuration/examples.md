@@ -98,7 +98,7 @@ What the renderer actually receives (abridged):
   "close_button": { "style": "icon_circle", "...": "rest defaulted" },
   "endcards": { "enabled": false, "...": "all fields defaulted" },
   "container": { "format": "interstitial", "...": "all fields defaulted" },
-  "creative": { "type": "static_image", "...": "all fields defaulted" },
+  "creative": { "...": "all fields defaulted except type, which stays empty" },
   "store_kit": { "enabled": false, "...": "all fields defaulted" }
 }
 ```
