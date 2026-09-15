@@ -48,6 +48,7 @@ type BuildParams struct {
 	PriceFloor           float64
 	AuctionRequest       *schema.AuctionRequest
 	GeoData              geocoder.GeoData
+	Country              string
 	AuctionKey           string
 	AuctionConfiguration *Config
 	AdUnitIDs            []int64
@@ -118,6 +119,10 @@ func (b *Builder) Build(ctx context.Context, params *BuildParams) (*Result, erro
 		AdapterConfigs:  adapterConfigs,
 		BiddingAdapters: biddingAdapters,
 		StartTS:         start.UnixMilli(),
+		Country:         params.Country,
+		SessionID:       params.AuctionRequest.Session.ID,
+		AdType:          string(params.AdType),
+		AdFormat:        string(params.AdFormat),
 	})
 	if err != nil && !errors.Is(err, bidding.ErrNoAdaptersMatched) {
 		return nil, err
