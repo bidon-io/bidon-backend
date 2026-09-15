@@ -37,9 +37,6 @@ func TestConvertBidToAdUnit_PropagatesRendering(t *testing.T) {
 	if got == nil {
 		t.Fatal("convertBidToAdUnit returned nil")
 	}
-	if got.Rendering != renderingCfg {
-		t.Fatalf("Rendering = %+v, want the same pointer as the demand response bid's Rendering (%+v)", got.Rendering, renderingCfg)
-	}
 	if got.Extra["rendering"] != renderingCfg {
 		t.Fatalf("ext.rendering = %+v, want the same pointer as the demand response bid's Rendering", got.Extra["rendering"])
 	}
@@ -120,9 +117,6 @@ func TestConvertBidToAdUnit_NoBidLeavesRenderingNil(t *testing.T) {
 
 	if got == nil {
 		t.Fatal("convertBidToAdUnit returned nil")
-	}
-	if got.Rendering != nil {
-		t.Fatalf("Rendering = %+v, want nil for a no-bid demand response", got.Rendering)
 	}
 	if _, ok := got.Extra["rendering"]; ok {
 		t.Fatalf("ext.rendering = %+v, want absent for a no-bid demand response", got.Extra["rendering"])

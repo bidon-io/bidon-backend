@@ -346,12 +346,6 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 		Timeout:    storeAdUnit.Timeout,
 		Extra:      ext,
 	}
-	// If the demand response has a bid, nest rendering under ext so shipped SDKs
-	// that only forward ext to the renderer still receive it.
-	if demandResponse.IsBid() && demandResponse.Bid.Rendering != nil {
-		adUnit.Rendering = demandResponse.Bid.Rendering
-		ext["rendering"] = demandResponse.Bid.Rendering
-	}
 
 	return adUnit
 }
@@ -492,23 +486,24 @@ func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap
 }
 
 func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandResponse) map[string]any {
+	var extra map[string]any
 	switch demandResponse.DemandID {
 	case adapter.AmazonKey:
-		return map[string]any{}
+		extra = map[string]any{}
 	case adapter.MobileFuseKey:
-		return map[string]any{
+		extra = map[string]any{
 			"signaldata": demandResponse.Bid.Signaldata,
 		}
 	case adapter.YandexKey:
-		return map[string]any{
+		extra = map[string]any{
 			"signaldata": demandResponse.Bid.Signaldata,
 		}
 	case adapter.VKAdsKey:
-		return map[string]any{
+		extra = map[string]any{
 			"bid_id": demandResponse.Bid.ID,
 		}
 	case adapter.BidmachineKey:
-		extra := map[string]any{
+		extra = map[string]any{
 			"payload": demandResponse.Bid.Payload,
 		}
 		if req.GetMediator() != "" {
@@ -516,12 +511,17 @@ func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandRe
 				"mediator": req.GetMediator(),
 			}
 		}
-		return extra
 	default:
-		return map[string]any{
+		extra = map[string]any{
 			"payload": demandResponse.Bid.Payload,
 		}
 	}
+
+	if demandResponse.Bid.Rendering != nil {
+		extra["rendering"] = demandResponse.Bid.Rendering
+	}
+
+	return extra
 }
 
 func addBlockingFields(ext map[string]any, app *sdkapi.App) {

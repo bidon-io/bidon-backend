@@ -414,7 +414,7 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		Cid:   proto.String(a.DemandID),
 	}
 
-	ext := make(map[string]string, len(a.Extra)+1)
+	ext := make(map[string]string, len(a.Extra))
 	for k, v := range a.Extra {
 		if k == "rendering" {
 			continue
@@ -427,13 +427,12 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		Ext:     ext,
 		Timeout: proto.Int32(a.Timeout),
 	}
-	if a.Rendering != nil {
-		renderingJSON, err := json.Marshal(a.Rendering)
+	if raw, ok := a.Extra["rendering"]; ok && raw != nil {
+		renderingJSON, err := json.Marshal(raw)
 		if err != nil {
 			return nil, fmt.Errorf("marshal rendering: %w", err)
 		}
 		encoded := string(renderingJSON)
-		// Existing SDKs read ext.rendering; the dedicated proto field is for newer clients.
 		ext["rendering"] = encoded
 		bidExt.Rendering = proto.String(encoded)
 	}

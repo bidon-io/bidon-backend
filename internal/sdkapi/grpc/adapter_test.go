@@ -686,8 +686,10 @@ func TestAdUnitToBid_serializesRenderingAsJSON(t *testing.T) {
 		Label:    "label",
 		DemandID: "demand",
 		BidType:  schema.RTBBidType,
-		Rendering: &rendering.Config{
-			Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+		Extra: map[string]any{
+			"rendering": &rendering.Config{
+				Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+			},
 		},
 	}
 

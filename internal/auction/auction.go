@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -46,9 +45,6 @@ type AdUnit struct {
 	BidType    schema.BidType `json:"bid_type"`
 	Timeout    int32          `json:"timeout"`
 	Extra      map[string]any `json:"ext"`
-	// Rendering is nested under ext.rendering in the auction JSON so shipped
-	// SDKs, which only forward ext to the renderer, still receive it.
-	Rendering *rendering.Config `json:"-"`
 }
 
 func (a *AdUnit) GetPriceFloor() float64 {
