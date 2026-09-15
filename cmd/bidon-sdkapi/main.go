@@ -107,13 +107,13 @@ func main() {
 		}()
 
 		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
-		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics, Logger: telLog}
+		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
 	} else {
 		loggerEngine = &engine.Log{}
 		telemetryEngine = &telemetry.Log{Logger: telLog}
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
-	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine}
+	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine, Logger: telLog}
 
 	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,
