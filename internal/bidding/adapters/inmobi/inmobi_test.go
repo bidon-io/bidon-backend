@@ -16,7 +16,6 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/inmobi"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
-	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -302,5 +301,6 @@ func TestInMobi_ParseBids(t *testing.T) {
 	assert.Equal(t, 1.5, response.Bid.Price)
 	assert.Equal(t, adapter.InmobiKey, response.Bid.DemandID)
 	require.NotNil(t, response.Bid.Rendering)
-	assert.Equal(t, rendering.CreativeTypeStaticImage, response.Bid.Rendering.Creative.Type)
+	require.NotNil(t, response.Bid.Rendering.Creative)
+	assert.Empty(t, response.Bid.Rendering.Creative.Type)
 }

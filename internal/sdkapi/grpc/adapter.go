@@ -416,6 +416,9 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 
 	ext := make(map[string]string, len(a.Extra))
 	for k, v := range a.Extra {
+		if k == "rendering" {
+			continue
+		}
 		ext[k] = fmt.Sprintf("%v", v)
 	}
 	bidExt := &mediation.BidExt{
@@ -424,12 +427,14 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 		Ext:     ext,
 		Timeout: proto.Int32(a.Timeout),
 	}
-	if a.Rendering != nil {
-		renderingJSON, err := json.Marshal(a.Rendering)
+	if raw, ok := a.Extra["rendering"]; ok && raw != nil {
+		renderingJSON, err := json.Marshal(raw)
 		if err != nil {
 			return nil, fmt.Errorf("marshal rendering: %w", err)
 		}
-		bidExt.Rendering = proto.String(string(renderingJSON))
+		encoded := string(renderingJSON)
+		ext["rendering"] = encoded
+		bidExt.Rendering = proto.String(encoded)
 	}
 	proto.SetExtension(bid, mediation.E_BidExt, bidExt)
 

@@ -21,9 +21,13 @@ var seedMigrations embed.FS
 //go:embed sample_seeds/*.sql
 var sampleSeedMigrations embed.FS
 
+//go:embed dev_sample_seeds/*.sql
+var devSampleSeedMigrations embed.FS
+
 func main() {
 	reset := flag.Bool("reset", false, "run all DOWN migrations before seeding (clears existing seed data)")
 	withSamples := flag.Bool("sample", false, "also run sample test data from sample_seeds/")
+	withDevSamples := flag.Bool("dev", false, "also apply dev overlays from dev_sample_seeds/ (e.g. point Adikteev at bidon-dspsim)")
 	flag.Parse()
 
 	config.LoadEnvFile()
@@ -54,6 +58,10 @@ func main() {
 
 	if *withSamples {
 		runSeeds(ctx, db, sampleSeedMigrations, "sample_seeds", *reset)
+	}
+
+	if *withDevSamples {
+		runSeeds(ctx, db, devSampleSeedMigrations, "dev_sample_seeds", *reset)
 	}
 
 	log.Println("Done.")
