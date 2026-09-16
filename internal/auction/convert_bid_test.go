@@ -99,6 +99,44 @@ func TestConvertBidToAdUnit_NestsRenderingInsideExtJSON(t *testing.T) {
 	}
 }
 
+func TestConvertBidToAdUnit_LineItemRenderingDoesNotOverrideDSP(t *testing.T) {
+	dspRendering := &rendering.Config{
+		Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+	}
+	storeAdUnit := AdUnit{
+		DemandID: string(adapter.InmobiKey),
+		UID:      "uid-1",
+		Label:    "label-1",
+		BidType:  schema.RTBBidType,
+		Timeout:  30,
+		Extra: map[string]any{
+			"payload": "<ad>",
+			"rendering": &rendering.Config{
+				Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeStaticImage},
+			},
+		},
+	}
+	adUnitsMap := buildAdUnitsMap(&[]AdUnit{storeAdUnit})
+
+	demandResponse := adapters.DemandResponse{
+		DemandID: adapter.InmobiKey,
+		Bid: &adapters.DemandBid{
+			DemandID:  adapter.InmobiKey,
+			Price:     1.5,
+			Payload:   "<ad>",
+			Rendering: dspRendering,
+		},
+	}
+
+	got := convertBidToAdUnit(&schema.AuctionRequest{}, demandResponse, adUnitsMap)
+	if got == nil {
+		t.Fatal("convertBidToAdUnit returned nil")
+	}
+	if got.Extra["rendering"] != dspRendering {
+		t.Fatalf("ext.rendering = %+v, want the DSP bid rendering (not the line-item extra.rendering overlay)", got.Extra["rendering"])
+	}
+}
+
 func TestConvertBidToAdUnit_NoBidLeavesRenderingNil(t *testing.T) {
 	storeAdUnit := AdUnit{
 		DemandID: string(adapter.InmobiKey),
