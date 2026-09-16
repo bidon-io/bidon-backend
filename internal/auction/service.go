@@ -334,6 +334,12 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 	}
 
 	for key, value := range storeAdUnit.Extra {
+		// TODO(BAC-70): merge line-item extra.rendering with the DSP bid's rendering
+		// so admin can overlay per-line-item render config without a DSP change.
+		// Until that overlay exists, keep the DSP config and ignore a line-item "rendering" key.
+		if key == "rendering" {
+			continue
+		}
 		ext[key] = value
 	}
 

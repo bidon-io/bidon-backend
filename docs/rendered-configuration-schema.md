@@ -57,13 +57,15 @@ Both options use the same `endcards.assets[]` schema — the uSDK does not disti
 
 | Field                        | Type    | Description                                        | Default             |
 |------------------------------|---------|----------------------------------------------------|---------------------|
-| creative.type                | enum    | mraid, vast, html, static_image, native, playable  | static_image        |
+| creative.type                | enum    | mraid, vast, html, static_image, native, playable  | (empty — SDK detects) |
 | creative.source              | string  | OpenRTB field: seatbid.bid.adm or seatbid.bid.nurl | (from bid response) |
 | creative.mraid_version       | string  | MRAID version (2.0, 3.0)                           | 3.0                 |
 | creative.vast_version        | string  | VAST version (3.0, 4.0, 4.1, 4.2)                  | 4.2                 |
 | creative.vpaid_enabled       | boolean | Allow VPAID inside VAST                            | false               |
 | creative.html_sandbox_policy | string  | Sandbox attribute for HTML iframe                  | allow-scripts       |
 | creative.preload_strategy    | enum    | eager, lazy, on_demand                             | eager               |
+
+Set `creative.type` when you know it. If omitted, Bidon leaves it empty so the SDK can detect the type from markup. Do not send `static_image` as a fallback for unknown markup — that silently mismatches video/HTML/MRAID.
 
 ## In-App Store Kit Configuration
 
@@ -126,7 +128,7 @@ Each `rendering` object below is what a DSP places at `seatbid.bid.ext.rendering
 
 ### Example 1 — Interstitial with a custom close button
 
-Top-left custom icon, no countdown, appears after 3 seconds. `style: "custom"` requires `custom_asset_url` — both are set together. `creative.type` is set explicitly rather than left to default.
+Top-left custom icon, no countdown, appears after 3 seconds. `style: "custom"` requires `custom_asset_url` — both are set together. `creative.type` is set here because the markup is HTML; omit it when the type is unknown so the SDK can detect it from markup.
 
 ```json
 {
