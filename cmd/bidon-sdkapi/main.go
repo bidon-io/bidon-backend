@@ -107,6 +107,9 @@ func main() {
 		}()
 
 		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
+		// Same kgo.Client as ad-events. Confluent Schema Registry serde (when
+		// SCHEMA_REGISTRY_URL is set) attaches here — do not open a second
+		// broker connection. See schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
 	} else {
 		loggerEngine = &engine.Log{}
