@@ -8,8 +8,10 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/config"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 type recordingEngine struct {
@@ -43,7 +45,6 @@ func TestLoggerLogTypedRecord(t *testing.T) {
 	rec.HTTPStatus = 200
 	rec.LatencyMS = 15
 	rec.Price = 1.23
-	rec.PriceFloor = 0.5
 
 	logger.Log(rec, func(err error) {
 		t.Fatalf("unexpected produce error: %v", err)
@@ -57,62 +58,73 @@ func TestLoggerLogTypedRecord(t *testing.T) {
 	if msg.Topic != config.TelemetryEventsTopic {
 		t.Errorf("topic: got %q, want %q", msg.Topic, config.TelemetryEventsTopic)
 	}
-
-	var payload map[string]any
-	if err := json.Unmarshal(msg.Value, &payload); err != nil {
-		t.Fatalf("unmarshal payload: %v", err)
+	if msg.Headers[HeaderEventName] != EventDSPResponseReceived {
+		t.Errorf("event_name header: got %q", msg.Headers[HeaderEventName])
+	}
+	if msg.Headers[HeaderMessageType] != "org.bidon.telemetry.v1.DspResponseReceived" {
+		t.Errorf("protobuf_message header: got %q", msg.Headers[HeaderMessageType])
+	}
+	if json.Valid(msg.Value) {
+		t.Fatal("produced value must be protobuf, not JSON")
 	}
 
-	if _, ok := payload["payload"]; ok {
-		t.Fatal("typed fields must be named columns, not a payload blob")
+	var pb telemetryv1.DspResponseReceived
+	if err := proto.Unmarshal(msg.Value, &pb); err != nil {
+		t.Fatalf("unmarshal proto: %v", err)
+	}
+	if pb.GetEnvelope() == nil {
+		t.Fatal("envelope must be embedded")
 	}
 
-	assertString := func(key, want string) {
-		t.Helper()
-		got, ok := payload[key].(string)
-		if !ok || got != want {
-			t.Errorf("%s: got %#v, want %q", key, payload[key], want)
-		}
+	got, err := DecodeRecord(msg)
+	if err != nil {
+		t.Fatalf("DecodeRecord: %v", err)
 	}
-	assertFloat := func(key string, want float64) {
-		t.Helper()
-		got, ok := payload[key].(float64)
-		if !ok || got != want {
-			t.Errorf("%s: got %#v, want %v", key, payload[key], want)
-		}
+	if got.EventName != EventDSPResponseReceived {
+		t.Errorf("event_name: got %q", got.EventName)
 	}
-
-	for _, key := range []string{"event_id", "event_name", "event_ts", "schema_version", "app_id", "auction_id", "session_id", "sampling_rate"} {
-		if _, ok := payload[key]; !ok {
-			t.Errorf("missing envelope field %q", key)
-		}
+	if got.SchemaVersion != SchemaVersion {
+		t.Errorf("schema_version: got %q", got.SchemaVersion)
 	}
-
-	assertString("event_name", EventDSPResponseReceived)
-	assertString("schema_version", SchemaVersion)
-	assertString("auction_id", "auc-1")
-	assertString("session_id", "sess-1")
-	assertString("ad_type", "banner")
-	assertString("ad_format", "BANNER")
-	assertString("country", "US")
-	assertString("trace_id", "trace-1")
-	assertString("scope", "bidding_round")
-	assertString("dsp", "bidmachine")
-	assertString("outcome", "bid")
-	assertFloat("app_id", 42)
-	assertFloat("sampling_rate", 1.0)
-	assertFloat("http_status", 200)
-	assertFloat("latency_ms", 15)
-	assertFloat("price", 1.23)
-	assertFloat("price_floor", 0.5)
-
-	eventID, _ := payload["event_id"].(string)
-	if eventID == "" {
+	if got.AuctionID != "auc-1" || got.SessionID != "sess-1" {
+		t.Errorf("ids: auction=%q session=%q", got.AuctionID, got.SessionID)
+	}
+	if got.AdType != "banner" || got.AdFormat != "BANNER" {
+		t.Errorf("ad: type=%q format=%q", got.AdType, got.AdFormat)
+	}
+	if got.Country != "US" || got.TraceID != "trace-1" {
+		t.Errorf("country/trace: %q %q", got.Country, got.TraceID)
+	}
+	if got.Scope != "bidding_round" || got.DSP != "bidmachine" || got.Outcome != "bid" {
+		t.Errorf("dsp fields: scope=%q dsp=%q outcome=%q", got.Scope, got.DSP, got.Outcome)
+	}
+	if got.AppID != 42 || got.SamplingRate != 1.0 {
+		t.Errorf("app_id=%d sampling_rate=%v", got.AppID, got.SamplingRate)
+	}
+	if got.HTTPStatus != 200 || got.LatencyMS != 15 || got.Price != 1.23 {
+		t.Errorf("http=%d latency=%d price=%v", got.HTTPStatus, got.LatencyMS, got.Price)
+	}
+	if got.EventID == "" {
 		t.Error("event_id must be a non-empty UUID")
 	}
-	eventTS, ok := payload["event_ts"].(float64)
-	if !ok || eventTS <= 0 {
-		t.Errorf("event_ts: got %#v, want unix ms", payload["event_ts"])
+	if got.EventTS <= 0 {
+		t.Errorf("event_ts: got %d, want unix ms", got.EventTS)
+	}
+}
+
+func TestCatalogEventRegistry(t *testing.T) {
+	for _, name := range CatalogEventNames() {
+		msg, ok := NewMessage(name)
+		if !ok {
+			t.Errorf("NewMessage(%q) missing from proto registry", name)
+			continue
+		}
+		if messageTypeName(msg) == "" {
+			t.Errorf("%s proto full name is empty", name)
+		}
+	}
+	if _, ok := NewMessage("not_a_catalog_event"); ok {
+		t.Fatal("unknown event_name must not resolve")
 	}
 }
 

@@ -24,15 +24,30 @@ func (e *Kafka) Produce(message LogMessage, handleErr func(error)) {
 		return
 	}
 
+	// Value is raw proto (+ type headers). If a Confluent serde is added,
+	// wrap Value here or in Logger.Log — see
+	// schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 	record := &kgo.Record{
-		Topic: topicStr,
-		Value: message.Value,
+		Topic:   topicStr,
+		Value:   message.Value,
+		Headers: kafkaHeaders(message.Headers),
 	}
 	e.Client.Produce(context.Background(), record, func(_ *kgo.Record, err error) {
 		if err != nil && handleErr != nil {
 			handleErr(fmt.Errorf("kafka produce record: %v", err))
 		}
 	})
+}
+
+func kafkaHeaders(headers map[string]string) []kgo.RecordHeader {
+	if len(headers) == 0 {
+		return nil
+	}
+	out := make([]kgo.RecordHeader, 0, len(headers))
+	for key, value := range headers {
+		out = append(out, kgo.RecordHeader{Key: key, Value: []byte(value)})
+	}
+	return out
 }
 
 func (e *Kafka) Ping(ctx context.Context) error {
