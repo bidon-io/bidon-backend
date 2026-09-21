@@ -11,6 +11,9 @@ import (
 	"strconv"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding"
@@ -81,12 +84,20 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	req := params.Req
 	started := time.Now()
 
+	ctx, span := telemetry.Tracer().Start(ctx, telemetry.SpanAuctionRun,
+		trace.WithAttributes(
+			attribute.Int64(telemetry.AttrAppID, params.App.ID),
+			attribute.String(telemetry.AttrAuctionID, req.AdObject.AuctionID),
+		),
+	)
+	defer span.End()
+
 	var auctionConfig *Config
 	var auctionResult *Result
 	var adUnitsMap *AdUnitsMap
 	var err error
 
-	s.Telemetry.Event.AuctionRequestReceived(telemetry.Params{
+	s.Telemetry.Event.AuctionRequestReceived(ctx, telemetry.Params{
 		Request: params.Req,
 		App:     params.App,
 		Country: params.Country,
@@ -95,7 +106,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	// Ensure events are always logged, even on errors
 	defer func() {
 		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
-		s.Telemetry.Event.AuctionCompleted(telemetry.AuctionCompletedParams{
+		s.Telemetry.Event.AuctionCompleted(ctx, telemetry.AuctionCompletedParams{
 			Params: telemetry.Params{
 				Request: params.Req,
 				App:     params.App,

@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -25,7 +26,8 @@ type AuctionCompletedParams struct {
 	Err     error
 }
 
-func (e Event) AuctionRequestReceived(params Params) {
+func (e Event) AuctionRequestReceived(ctx context.Context, params Params) {
+	params = params.withContextTrace(ctx)
 	req := params.Request
 	priceFloor := 0.0
 	if req != nil {
@@ -38,7 +40,8 @@ func (e Event) AuctionRequestReceived(params Params) {
 	}, EventAuctionRequestReceived, "", a)
 }
 
-func (e Event) AuctionCompleted(params AuctionCompletedParams) {
+func (e Event) AuctionCompleted(ctx context.Context, params AuctionCompletedParams) {
+	params.Params = params.withContextTrace(ctx)
 	a := attrsFrom(params.Params)
 	ev := &telemetryv1.AuctionCompleted{
 		Envelope:         newProtoEnvelope(a, EventAuctionCompleted),
@@ -60,7 +63,8 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 	ObserveAuctionCompleted(result)
 }
 
-func (e Event) DSPRequestSent(params Params, dsp string) {
+func (e Event) DSPRequestSent(ctx context.Context, params Params, dsp string) {
+	params = params.withContextTrace(ctx)
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.DspRequestSent{
 		Envelope: newProtoEnvelope(a, EventDSPRequestSent),
@@ -69,10 +73,11 @@ func (e Event) DSPRequestSent(params Params, dsp string) {
 	}, EventDSPRequestSent, dsp, a)
 }
 
-func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
+func (e Event) DSPResponseReceived(ctx context.Context, params Params, dr *adapters.DemandResponse) {
 	if dr == nil {
 		return
 	}
+	params = params.withContextTrace(ctx)
 	a := attrsFrom(params)
 	latencyMS := dr.EndTS - dr.StartTS
 	outcome := OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)

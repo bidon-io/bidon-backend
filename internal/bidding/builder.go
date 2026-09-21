@@ -12,6 +12,8 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 
@@ -236,6 +238,15 @@ func (b *Builder) processAdapter(
 ) {
 	defer wg.Done()
 
+	ctx, span := startDSPSpan(ctx, adapterKey, auctionRequest, params)
+	var outcome telemetry.Outcome
+	defer func() {
+		if outcome != "" {
+			span.SetAttributes(attribute.String(telemetry.AttrOutcome, string(outcome)))
+		}
+		span.End()
+	}()
+
 	tp := telemetry.Params{Request: &auctionRequest, App: params.App, Country: params.Country}
 
 	childLogger := b.log().With(
@@ -248,11 +259,12 @@ func (b *Builder) processAdapter(
 		bidder, err := amazon.Builder(params.AdapterConfigs)
 		if err != nil {
 			childLogger.Debug("build amazon bidder", zap.Error(err))
+			outcome = telemetry.OutcomeFromDemand(err, false, 0)
 			handleError(adapterKey, err)
 			return
 		}
 		sendStart := time.Now().UnixMilli()
-		b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
+		b.Telemetry.Event.DSPRequestSent(ctx, tp, string(adapterKey))
 		demandResponses, err := bidder.FetchBids(&auctionRequest)
 		if err != nil {
 			dr := adapters.DemandResponse{
@@ -261,7 +273,8 @@ func (b *Builder) processAdapter(
 				StartTS:  sendStart,
 				EndTS:    time.Now().UnixMilli(),
 			}
-			b.Telemetry.Event.DSPResponseReceived(tp, &dr)
+			outcome = telemetry.OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
+			b.Telemetry.Event.DSPResponseReceived(ctx, tp, &dr)
 			bids <- dr
 			return
 		}
@@ -270,10 +283,11 @@ func (b *Builder) processAdapter(
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
 			demandResponse.FillRendering()
-			b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
+			b.Telemetry.Event.DSPResponseReceived(ctx, tp, demandResponse)
 
 			bids <- *demandResponse
 		}
+		outcome = amazonDSPOutcome(demandResponses)
 
 		return
 	}
@@ -283,6 +297,7 @@ func (b *Builder) processAdapter(
 	bidder, err := b.AdaptersBuilder.Build(adapterKey, params.AdapterConfigs)
 	if err != nil {
 		childLogger.Debug("build bidder", zap.Error(err))
+		outcome = telemetry.OutcomeFromDemand(err, false, 0)
 		handleError(adapterKey, err)
 		return
 	}
@@ -290,19 +305,21 @@ func (b *Builder) processAdapter(
 	bidRequest, err := adapters.BuildDemandRequest(bidder.Adapter, baseBidRequest, &auctionRequest, adapterKey)
 	if err != nil {
 		childLogger.Debug("create bid request", zap.Error(err))
+		outcome = telemetry.OutcomeFromDemand(err, false, 0)
 		handleError(adapterKey, err)
 		return
 	}
 
 	sendStart := time.Now().UnixMilli()
-	b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
+	b.Telemetry.Event.DSPRequestSent(ctx, tp, string(adapterKey))
 	demandResponse := bidder.Adapter.ExecuteRequest(ctx, bidder.Client, bidRequest)
 	demandResponse.StartTS = sendStart
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
 		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
-		b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
+		outcome = telemetry.OutcomeFromDemand(demandResponse.Error, demandResponse.IsBid(), demandResponse.Status)
+		b.Telemetry.Event.DSPResponseReceived(ctx, tp, demandResponse)
 		bids <- *demandResponse
 		return
 	}
@@ -312,9 +329,36 @@ func (b *Builder) processAdapter(
 		childLogger.Error("parse demand response", zap.Error(err))
 	}
 	demandResponse.Error = err
-	b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
+	outcome = telemetry.OutcomeFromDemand(demandResponse.Error, demandResponse.IsBid(), demandResponse.Status)
+	b.Telemetry.Event.DSPResponseReceived(ctx, tp, demandResponse)
 
 	bids <- *demandResponse
+}
+
+func startDSPSpan(ctx context.Context, adapterKey adapter.Key, auctionRequest schema.AuctionRequest, params *BuildParams) (context.Context, trace.Span) {
+	attrs := []attribute.KeyValue{
+		attribute.String(telemetry.AttrDSP, string(adapterKey)),
+		attribute.String(telemetry.AttrAuctionID, auctionRequest.AdObject.AuctionID),
+	}
+	if params.App != nil {
+		attrs = append(attrs, attribute.Int64(telemetry.AttrAppID, params.App.ID))
+	}
+	return telemetry.Tracer().Start(ctx, telemetry.SpanAuctionDSP, trace.WithAttributes(attrs...))
+}
+
+func amazonDSPOutcome(demandResponses []*adapters.DemandResponse) telemetry.Outcome {
+	outcome := telemetry.OutcomeNoBid
+	for _, dr := range demandResponses {
+		if dr == nil {
+			continue
+		}
+		next := telemetry.OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
+		if next == telemetry.OutcomeBid {
+			return next
+		}
+		outcome = next
+	}
+	return outcome
 }
 
 func (b *Builder) buildApp(schemaApp schema.App, params *BuildParams) *openrtb2.App {
