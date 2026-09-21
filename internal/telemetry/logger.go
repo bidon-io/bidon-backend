@@ -2,9 +2,10 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/config"
 )
@@ -20,8 +21,9 @@ type LoggerEngine interface {
 }
 
 type LogMessage struct {
-	Topic config.Topic
-	Value []byte
+	Topic   config.Topic
+	Value   []byte
+	Headers map[string]string
 }
 
 func (l *Logger) log() *zap.Logger {
@@ -38,7 +40,17 @@ func (l *Logger) Log(ev Event, handleErr func(error)) {
 
 	logger := l.log().With(eventLogFields(ev)...)
 
-	message, err := json.Marshal(ev)
+	rec, ok := eventRecord(ev)
+	if !ok {
+		err := fmt.Errorf("telemetry event is not a catalog Record")
+		logger.Error("marshal telemetry event", zap.Error(err))
+		if handleErr != nil {
+			handleErr(err)
+		}
+		return
+	}
+
+	msg, err := recordToProto(rec)
 	if err != nil {
 		logger.Error("marshal telemetry event", zap.Error(err))
 		if handleErr != nil {
@@ -47,7 +59,22 @@ func (l *Logger) Log(ev Event, handleErr func(error)) {
 		return
 	}
 
-	l.Engine.Produce(LogMessage{Topic: ev.Topic(), Value: message}, func(err error) {
+	// Raw protobuf. Confluent framing (magic + schema id) belongs here when
+	// SCHEMA_REGISTRY_URL is set — see schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
+	message, err := proto.Marshal(msg)
+	if err != nil {
+		logger.Error("marshal telemetry event", zap.Error(err))
+		if handleErr != nil {
+			handleErr(err)
+		}
+		return
+	}
+
+	l.Engine.Produce(LogMessage{
+		Topic:   ev.Topic(),
+		Value:   message,
+		Headers: protoHeaders(rec.EventName, msg),
+	}, func(err error) {
 		logger.Error("produce telemetry event", zap.Error(err))
 		if handleErr != nil {
 			handleErr(err)

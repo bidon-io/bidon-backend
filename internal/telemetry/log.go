@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
 
 	"go.uber.org/zap"
 )
@@ -19,8 +18,8 @@ func (e *Log) log() *zap.Logger {
 }
 
 func (e *Log) Produce(message LogMessage, _ func(error)) {
-	var rec Record
-	if err := json.Unmarshal(message.Value, &rec); err != nil {
+	rec, err := DecodeRecord(message)
+	if err != nil {
 		e.log().Debug("produce telemetry",
 			zap.String("topic", string(message.Topic)),
 			zap.Error(err),
