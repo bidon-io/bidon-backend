@@ -416,20 +416,25 @@ func adUnitToBid(a *auction.AdUnit) (*v3.Bid, error) {
 
 	ext := make(map[string]string, len(a.Extra))
 	for k, v := range a.Extra {
+		if k == "rendering" {
+			continue
+		}
 		ext[k] = fmt.Sprintf("%v", v)
+	}
+	// BidExt.ext is map<string,string>, so rendering is a JSON blob at the same
+	// path as REST (ext.rendering). Do not also set BidExt.rendering.
+	if raw, ok := a.Extra["rendering"]; ok && raw != nil {
+		renderingJSON, err := json.Marshal(raw)
+		if err != nil {
+			return nil, fmt.Errorf("marshal rendering: %w", err)
+		}
+		ext["rendering"] = string(renderingJSON)
 	}
 	bidExt := &mediation.BidExt{
 		Label:   proto.String(a.Label),
 		BidType: proto.String(a.BidType.String()),
 		Ext:     ext,
 		Timeout: proto.Int32(a.Timeout),
-	}
-	if a.Rendering != nil {
-		renderingJSON, err := json.Marshal(a.Rendering)
-		if err != nil {
-			return nil, fmt.Errorf("marshal rendering: %w", err)
-		}
-		bidExt.Rendering = proto.String(string(renderingJSON))
 	}
 	proto.SetExtension(bid, mediation.E_BidExt, bidExt)
 

@@ -334,6 +334,12 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 	}
 
 	for key, value := range storeAdUnit.Extra {
+		// TODO(BAC-70): merge line-item extra.rendering with the DSP bid's rendering
+		// so admin can overlay per-line-item render config without a DSP change.
+		// Until that overlay exists, keep the DSP config and ignore a line-item "rendering" key.
+		if key == "rendering" {
+			continue
+		}
 		ext[key] = value
 	}
 
@@ -345,10 +351,6 @@ func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.Dema
 		PriceFloor: &priceFloor,
 		Timeout:    storeAdUnit.Timeout,
 		Extra:      ext,
-	}
-	// If the demand response has a bid, set the ad unit rendering configuration
-	if demandResponse.IsBid() {
-		adUnit.Rendering = demandResponse.Bid.Rendering
 	}
 
 	return adUnit
@@ -490,23 +492,24 @@ func selectAdUnit(demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap
 }
 
 func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandResponse) map[string]any {
+	var extra map[string]any
 	switch demandResponse.DemandID {
 	case adapter.AmazonKey:
-		return map[string]any{}
+		extra = map[string]any{}
 	case adapter.MobileFuseKey:
-		return map[string]any{
+		extra = map[string]any{
 			"signaldata": demandResponse.Bid.Signaldata,
 		}
 	case adapter.YandexKey:
-		return map[string]any{
+		extra = map[string]any{
 			"signaldata": demandResponse.Bid.Signaldata,
 		}
 	case adapter.VKAdsKey:
-		return map[string]any{
+		extra = map[string]any{
 			"bid_id": demandResponse.Bid.ID,
 		}
 	case adapter.BidmachineKey:
-		extra := map[string]any{
+		extra = map[string]any{
 			"payload": demandResponse.Bid.Payload,
 		}
 		if req.GetMediator() != "" {
@@ -514,12 +517,17 @@ func buildDemandExt(req *schema.AuctionRequest, demandResponse adapters.DemandRe
 				"mediator": req.GetMediator(),
 			}
 		}
-		return extra
 	default:
-		return map[string]any{
+		extra = map[string]any{
 			"payload": demandResponse.Bid.Payload,
 		}
 	}
+
+	if demandResponse.Bid.Rendering != nil {
+		extra["rendering"] = demandResponse.Bid.Rendering
+	}
+
+	return extra
 }
 
 func addBlockingFields(ext map[string]any, app *sdkapi.App) {

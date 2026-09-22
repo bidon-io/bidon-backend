@@ -210,6 +210,7 @@ services:
 
   bidon-seed:
     image: "registry.digitalocean.com/bidon-io/bidon-seed:${BIDON_SEED_TAG}"
+    # Shared sample fixtures; Adikteev uses the real DSP. Do not pass --dev (that retargets dspsim).
     command: ["/bidon-seed", "--sample", "--reset"]
     depends_on:
       migrate:

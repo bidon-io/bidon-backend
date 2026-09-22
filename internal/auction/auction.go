@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
-	"github.com/bidon-io/bidon-backend/internal/bidding/rendering"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
 
@@ -39,14 +38,13 @@ type LineItem struct {
 }
 
 type AdUnit struct {
-	DemandID   string            `json:"demand_id"`
-	UID        string            `json:"uid"`
-	Label      string            `json:"label"`
-	PriceFloor *float64          `json:"pricefloor,omitempty"`
-	BidType    schema.BidType    `json:"bid_type"`
-	Timeout    int32             `json:"timeout"`
-	Extra      map[string]any    `json:"ext"`
-	Rendering  *rendering.Config `json:"rendering,omitempty"`
+	DemandID   string         `json:"demand_id"`
+	UID        string         `json:"uid"`
+	Label      string         `json:"label"`
+	PriceFloor *float64       `json:"pricefloor,omitempty"`
+	BidType    schema.BidType `json:"bid_type"`
+	Timeout    int32          `json:"timeout"`
+	Extra      map[string]any `json:"ext"`
 }
 
 func (a *AdUnit) GetPriceFloor() float64 {

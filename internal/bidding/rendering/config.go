@@ -144,7 +144,7 @@ const (
 )
 
 type CreativeConfig struct {
-	Type              CreativeType            `json:"type,omitempty" default:"static_image" validate:"required,oneof=mraid vast html static_image native playable"`
+	Type              CreativeType            `json:"type,omitempty" validate:"omitempty,oneof=mraid vast html static_image native playable"`
 	Source            CreativeSource          `json:"source,omitempty" default:"seatbid.bid.adm" validate:"omitempty,oneof=seatbid.bid.adm seatbid.bid.nurl"`
 	MRAIDVersion      CreateMRAIDVersion      `json:"mraid_version,omitempty" default:"3.0" validate:"omitempty,oneof=2.0 3.0"`
 	VASTVersion       CreativeVASTVersion     `json:"vast_version,omitempty" default:"4.2" validate:"omitempty,oneof=3.0 4.0 4.1 4.2"`

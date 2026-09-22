@@ -15,7 +15,7 @@ migrate *args="up":
     go run ./cmd/bidon-migrate {{args}}
 
 seed:
-    go run ./cmd/bidon-seed -reset -sample
+    go run ./cmd/bidon-seed -reset -sample -dev
 
 admin:
     go run ./cmd/bidon-admin

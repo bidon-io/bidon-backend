@@ -103,10 +103,11 @@ BEGIN
         '{}'::jsonb,
         false, false, NOW(), NOW(), 'Meta Audience Network', meta_account_id
     ),
+    -- Staging / shared sample uses the real DSP. `bidon-seed --dev` retargets dspsim.
     (
         adikteev_account_id, adikteev_id, owner_id,
         'DemandSourceAccount::adikteev',
-        '{"endpoint": "http://bidon-dspsim:1325/openrtb/bid"}'::jsonb,
+        '{"endpoint": "http://appodeal-eu.dsp.adikteev.com"}'::jsonb,
         true, false, NOW(), NOW(), 'Adikteev Audience Network', adikteev_account_id
     )
     ON CONFLICT (id) DO NOTHING;

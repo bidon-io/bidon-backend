@@ -686,8 +686,10 @@ func TestAdUnitToBid_serializesRenderingAsJSON(t *testing.T) {
 		Label:    "label",
 		DemandID: "demand",
 		BidType:  schema.RTBBidType,
-		Rendering: &rendering.Config{
-			Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+		Extra: map[string]any{
+			"rendering": &rendering.Config{
+				Creative: &rendering.CreativeConfig{Type: rendering.CreativeTypeVAST},
+			},
 		},
 	}
 
@@ -700,11 +702,15 @@ func TestAdUnitToBid_serializesRenderingAsJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get BidExt: %v", err)
 	}
-	if bidExt.Rendering == nil {
-		t.Fatal("expected rendering on BidExt")
+	if bidExt.Rendering != nil {
+		t.Fatalf("BidExt.rendering must be unset; use ext.rendering only, got %q", *bidExt.Rendering)
 	}
-	if !strings.Contains(*bidExt.Rendering, `"type":"vast"`) {
-		t.Fatalf("rendering JSON = %q, want vast creative type", *bidExt.Rendering)
+	got, ok := bidExt.Ext["rendering"]
+	if !ok {
+		t.Fatal("expected ext.rendering JSON blob")
+	}
+	if !strings.Contains(got, `"type":"vast"`) {
+		t.Fatalf("ext.rendering = %q, want vast creative type", got)
 	}
 }
 
@@ -727,5 +733,8 @@ func TestAdUnitToBid_omitsRenderingWhenNil(t *testing.T) {
 	}
 	if bidExt.Rendering != nil {
 		t.Fatalf("expected nil rendering, got %q", *bidExt.Rendering)
+	}
+	if got, ok := bidExt.Ext["rendering"]; ok {
+		t.Fatalf("expected no ext.rendering, got %q", got)
 	}
 }
