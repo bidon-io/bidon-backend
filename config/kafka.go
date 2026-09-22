@@ -15,6 +15,7 @@ type Topic string
 const (
 	AdEventsTopic           Topic = "ad_events"
 	NotificationEventsTopic Topic = "notification_events"
+	TelemetryEventsTopic    Topic = "telemetry_events"
 )
 
 type KafkaConfig struct {
@@ -55,7 +56,13 @@ func Kafka() (conf KafkaConfig, err error) {
 	conf.Topics = map[Topic]string{
 		AdEventsTopic:           os.Getenv("KAFKA_AD_EVENTS_TOPIC"),
 		NotificationEventsTopic: os.Getenv("KAFKA_NOTIFICATION_EVENTS_TOPIC"),
+		TelemetryEventsTopic:    os.Getenv("KAFKA_TELEMETRY_EVENTS_TOPIC"),
 	}
+
+	// SCHEMA_REGISTRY_URL is not read yet. When Confluent framing lands,
+	// parse it here and pass a serde into telemetry.Kafka. Empty must keep
+	// raw proto so auctions stay unchanged.
+	// See schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 
 	return
 }

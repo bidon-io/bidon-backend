@@ -29,6 +29,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/app"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 	pb "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/proto/v1"
 )
 
@@ -82,7 +83,9 @@ func main() {
 		}
 	}
 
+	telLog := logger.Named("telemetry")
 	var loggerEngine event.LoggerEngine
+	var telemetryEngine telemetry.LoggerEngine
 	if os.Getenv("USE_KAFKA") == "true" {
 		conf, err := config.Kafka()
 		if err != nil {
@@ -104,10 +107,16 @@ func main() {
 		}()
 
 		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
+		// Same kgo.Client as ad-events. Confluent Schema Registry serde (when
+		// SCHEMA_REGISTRY_URL is set) attaches here — do not open a second
+		// broker connection. See schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
+		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
 	} else {
 		loggerEngine = &engine.Log{}
+		telemetryEngine = &telemetry.Log{Logger: telLog}
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
+	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine, Logger: telLog}
 
 	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,
@@ -122,6 +131,7 @@ func main() {
 		DB:                    db,
 		Redis:                 rdb,
 		EventLogger:           eventLogger,
+		Telemetry:             telemetryLogger,
 		Logger:                logger,
 		MaxMindDB:             maxMindDB,
 		HTTPClient:            biddingHTTPClient,
