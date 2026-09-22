@@ -23,7 +23,7 @@ const notifyTimeout = 5 * time.Second
 // against a real DSP.
 func TestSDKFlow_Win(t *testing.T) {
 	srv := newServer(t)
-	f := newFixture(t, db.RewardedAdType, 0.1, true)
+	f := newFixture(t, db.RewardedAdType, 0.1)
 
 	var cfg configResponse
 	resp := postJSON(t, srv, "/v2/config", newConfigRequest(t, f), &cfg)
@@ -69,7 +69,7 @@ func TestSDKFlow_Win(t *testing.T) {
 // lurl with the LossLostToHigherBid reason and the right first/second price.
 func TestSDKFlow_Loss(t *testing.T) {
 	srv := newServer(t)
-	f := newFixture(t, db.RewardedAdType, 0.1, true)
+	f := newFixture(t, db.RewardedAdType, 0.1)
 
 	var auc auctionResponse
 	resp := postJSON(t, srv, "/v2/auction/rewarded", newAuctionRequest(t, f, 0.1), &auc)
@@ -103,11 +103,22 @@ func TestSDKFlow_Loss(t *testing.T) {
 // gets a well-formed 200 with no RTB ad unit.
 func TestSDKFlow_NoBid(t *testing.T) {
 	srv := newServer(t)
-	const floor = 30 // above the simulator's default DSPSIM_MAX_PRICE (25)
-	f := newFixture(t, db.RewardedAdType, floor, true)
+	const floor = 30 // above DSPSIM_MAX_PRICE, pinned to 25 in docker-compose.test.yml
+	f := newFixture(t, db.RewardedAdType, floor)
 
 	var auc auctionResponse
 	resp := postJSON(t, srv, "/v2/auction/rewarded", newAuctionRequest(t, f, floor), &auc)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.Empty(t, auc.AdUnits, "a floor above DSPSIM_MAX_PRICE should produce no RTB ad unit")
+
+	// An empty ad_units[] on its own would also be what we'd see if the bid
+	// request never reached dspsim at all. A 204 still yields a no_bids entry,
+	// because selectAdUnit resolves the line item from the demand id alone
+	// (internal/auction/service.go), so this is what distinguishes a declined
+	// bid from a request that never happened.
+	require.Len(t, auc.NoBids, 1, "the declined bid request should surface in no_bids")
+	require.Equal(t, "adikteev", auc.NoBids[0].DemandID)
+	require.Equal(t, "RTB", auc.NoBids[0].BidType)
+
+	require.Empty(t, dspsimBids(t, f.app.PackageName.String), "dspsim should have recorded no bid")
 }
