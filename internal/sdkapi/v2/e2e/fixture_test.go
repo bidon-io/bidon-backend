@@ -28,8 +28,9 @@ type fixture struct {
 
 // newFixture commits a fresh app + Adikteev bidding setup for adType, with
 // the auction configuration's pricefloor set to floor, and tells dspsim to
-// reload its catalog so the fixture is visible immediately.
-func newFixture(t *testing.T, adType db.AdType, floor float64, externalWinNotifications bool) fixture {
+// reload its catalog so the fixture is visible immediately. External win
+// notifications are on, which is what /v2/loss needs to reach the DSP.
+func newFixture(t *testing.T, adType db.AdType, floor float64) fixture {
 	t.Helper()
 
 	app := dbtest.CreateApp(t, testDB, func(a *db.App) {
@@ -54,7 +55,7 @@ func newFixture(t *testing.T, adType db.AdType, floor float64, externalWinNotifi
 		li.IsBidding = sql.NullBool{Bool: true, Valid: true}
 	})
 
-	externalWin := externalWinNotifications
+	externalWin := true
 	config := dbtest.CreateAuctionConfiguration(t, testDB, func(c *db.AuctionConfiguration) {
 		c.App = app
 		c.AdType = adType

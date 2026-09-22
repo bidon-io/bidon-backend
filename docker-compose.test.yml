@@ -59,6 +59,10 @@ services:
       DSPSIM_SEED: 1
       DSPSIM_NO_BID_RATE: 0
       DSPSIM_CATALOG_TTL: 2
+      # Pinned, not left to the default: TestSDKFlow_NoBid picks its floor to
+      # sit above this, so the suite would silently go non-deterministic if
+      # the default ever moved.
+      DSPSIM_MAX_PRICE: 25
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:1325/health_checks || exit 1"]
       interval: 5s

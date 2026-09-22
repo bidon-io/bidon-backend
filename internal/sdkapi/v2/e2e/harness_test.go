@@ -202,11 +202,12 @@ func dspsimBid(t *testing.T, bidID string) (dspsim.BidRecord, bool) {
 	return record, true
 }
 
-// dspsimFindBid returns the Adikteev bid dspsim recorded for bundle. The
-// auction response never exposes dspsim's bid id (only the OpenRTB payload
-// does, buried in ext.payload), so tests correlate by the fixture's unique
-// bundle instead.
-func dspsimFindBid(t *testing.T, bundle string) dspsim.BidRecord {
+// dspsimBids returns every Adikteev bid dspsim recorded for bundle, empty if
+// it recorded none (dspsim only stores bids, so a 204 leaves no trace here).
+// The auction response never exposes dspsim's bid id (only the OpenRTB
+// payload does, buried in ext.payload), so tests correlate by the fixture's
+// unique bundle instead.
+func dspsimBids(t *testing.T, bundle string) []dspsim.BidRecord {
 	t.Helper()
 
 	resp, err := httpClient.Get(dspsimURL + "/debug/bids?dsp=adikteev")
@@ -219,13 +220,23 @@ func dspsimFindBid(t *testing.T, bundle string) dspsim.BidRecord {
 	}
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
 
+	var matched []dspsim.BidRecord
 	for _, b := range body.Bids {
 		if b.Bundle == bundle {
-			return b
+			matched = append(matched, b)
 		}
 	}
-	t.Fatalf("no dspsim bid recorded for bundle %q", bundle)
-	return dspsim.BidRecord{}
+	return matched
+}
+
+// dspsimFindBid returns the single Adikteev bid dspsim recorded for bundle,
+// failing the test if there isn't exactly one.
+func dspsimFindBid(t *testing.T, bundle string) dspsim.BidRecord {
+	t.Helper()
+
+	bids := dspsimBids(t, bundle)
+	require.Lenf(t, bids, 1, "expected exactly one dspsim bid for bundle %q", bundle)
+	return bids[0]
 }
 
 // waitForNotification polls dspsim for bidID until it has recorded a
