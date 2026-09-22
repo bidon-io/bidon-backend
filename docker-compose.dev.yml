@@ -17,6 +17,7 @@ x-dev-kafka-env: &dev-kafka-env
   KAFKA_AD_EVENTS_TOPIC: ad-events
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
   KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
+  SCHEMA_REGISTRY_URL: http://redpanda:8081
 
 x-dev-redis-env: &dev-redis-env
   REDIS_URL: redis://redis:6379/0
@@ -64,12 +65,15 @@ services:
       - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
       - --rpc-addr redpanda:33145
       - --advertise-rpc-addr redpanda:33145
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
       - --mode dev-container
       - --smp 1
       - --default-log-level=warn
     ports:
       - '19092:19092'
       - '9644:9644'
+      - '8081:8081'
+      - '18081:18081'
     volumes:
       - redpanda-data-dev:/var/lib/redpanda/data
     healthcheck:
@@ -88,6 +92,10 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BROKERS: redpanda:9092
+      KAFKA_SCHEMAREGISTRY_ENABLED: "true"
+      KAFKA_SCHEMAREGISTRY_URLS: http://redpanda:8081
+      KAFKA_PROTOBUF_ENABLED: "true"
+      KAFKA_PROTOBUF_SCHEMAREGISTRY_ENABLED: "true"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
       interval: 15s

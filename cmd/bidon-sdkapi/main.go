@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bidon-io/bidon-backend/config"
@@ -86,6 +87,7 @@ func main() {
 	telLog := logger.Named("telemetry")
 	var loggerEngine event.LoggerEngine
 	var telemetryEngine telemetry.LoggerEngine
+	var schemaRegistryURL, telemetryTopic string
 	if os.Getenv("USE_KAFKA") == "true" {
 		conf, err := config.Kafka()
 		if err != nil {
@@ -107,16 +109,18 @@ func main() {
 		}()
 
 		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
-		// Same kgo.Client as ad-events. Confluent Schema Registry serde (when
-		// SCHEMA_REGISTRY_URL is set) attaches here — do not open a second
-		// broker connection. See schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
+		schemaRegistryURL = conf.SchemaRegistryURL
+		telemetryTopic = conf.Topics[config.TelemetryEventsTopic]
 	} else {
 		loggerEngine = &engine.Log{}
 		telemetryEngine = &telemetry.Log{Logger: telLog}
 	}
 	eventLogger := &event.Logger{Engine: loggerEngine}
-	telemetryLogger := &telemetry.Logger{Engine: telemetryEngine, Logger: telLog}
+	telemetryLogger := telemetry.New(telemetryEngine, telLog)
+	if err := telemetryLogger.UseSchemaRegistry(schemaRegistryURL, telemetryTopic); err != nil {
+		telLog.Error("schema registry client", zap.Error(err))
+	}
 
 	biddingHTTPClient := &http.Client{
 		Timeout: 4 * time.Second,

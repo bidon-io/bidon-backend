@@ -26,7 +26,7 @@ func (e *Log) Produce(message LogMessage, _ func(error)) {
 		)
 		return
 	}
-	e.log().Debug("produce telemetry", eventLogFields(rec)...)
+	e.log().Debug("produce telemetry", envelopeLogFields(message.Topic, rec.Envelope, rec.DSP)...)
 }
 
 func (e *Log) Ping(_ context.Context) error {

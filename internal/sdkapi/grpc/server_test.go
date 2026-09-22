@@ -20,6 +20,7 @@ import (
 	handlersmocks "github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers/mocks"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 	v3 "github.com/bidon-io/bidon-backend/pkg/proto/com/iabtechlab/openrtb/v3"
 )
 
@@ -114,6 +115,7 @@ func buildServer(p *serverParams) *Server {
 		AuctionBuilder:     auctionBuilderV2,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        &event.Logger{Engine: &engine.Log{}},
+		Telemetry:          telemetry.Nop,
 	}
 
 	return NewServer(auctionService, appFetcher, gcoder)
