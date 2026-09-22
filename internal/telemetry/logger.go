@@ -36,6 +36,7 @@ var Nop = New(nil, nil)
 type Event struct {
 	engine LoggerEngine
 	log    *zap.Logger
+	serde  *confluentSerde
 }
 
 func (e Event) logf() *zap.Logger {
@@ -52,13 +53,12 @@ func (e Event) emit(msg proto.Message, eventName, dsp string, a attrs) {
 
 	logger := e.logf().With(attrsLogFields(eventName, dsp, a)...)
 
-	// Raw protobuf. Confluent framing (magic + schema id) belongs here when
-	// SCHEMA_REGISTRY_URL is set — see schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 	message, err := proto.Marshal(msg)
 	if err != nil {
 		logger.Error("marshal telemetry event", zap.Error(err))
 		return
 	}
+	message = e.serde.frame(msg, message)
 
 	e.engine.Produce(LogMessage{
 		Topic:   config.TelemetryEventsTopic,

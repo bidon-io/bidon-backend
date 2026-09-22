@@ -19,8 +19,9 @@ const (
 )
 
 type KafkaConfig struct {
-	ClientOpts []kgo.Opt
-	Topics     map[Topic]string
+	ClientOpts        []kgo.Opt
+	Topics            map[Topic]string
+	SchemaRegistryURL string
 }
 
 func Kafka() (conf KafkaConfig, err error) {
@@ -59,10 +60,7 @@ func Kafka() (conf KafkaConfig, err error) {
 		TelemetryEventsTopic:    os.Getenv("KAFKA_TELEMETRY_EVENTS_TOPIC"),
 	}
 
-	// SCHEMA_REGISTRY_URL is not read yet. When Confluent framing lands,
-	// parse it here and pass a serde into telemetry.Kafka. Empty must keep
-	// raw proto so auctions stay unchanged.
-	// See schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
+	conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
 
 	return
 }
