@@ -94,6 +94,8 @@ services:
       KAFKA_BROKERS: redpanda:9092
       KAFKA_SCHEMAREGISTRY_ENABLED: "true"
       KAFKA_SCHEMAREGISTRY_URLS: http://redpanda:8081
+      KAFKA_PROTOBUF_ENABLED: "true"
+      KAFKA_PROTOBUF_SCHEMAREGISTRY_ENABLED: "true"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
       interval: 15s
