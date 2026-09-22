@@ -25,9 +25,10 @@ field can silently take an entire section back to its defaults with no
 error reported anywhere. Read "Defaulting rules" before writing any
 config.
 
-On the Bidon auction/SDK response path the same object appears as
-`ad_units[].ext.rendering` (REST) or as both `BidExt.ext["rendering"]` and a
-JSON string on the gRPC bid ext — the schema is identical either way.
+On the Bidon auction/SDK response path the same object appears at
+`ext.rendering`: a JSON object on REST (`ad_units[].ext.rendering`), and a
+JSON string in the gRPC `BidExt.ext` map (because that map is
+`map<string,string>`). One path on both transports.
 
 ## Defaulting rules (read this first)
 
