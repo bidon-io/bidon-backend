@@ -65,7 +65,7 @@ func DecodeRecord(msg LogMessage) (Record, error) {
 	if !ok {
 		return Record{}, fmt.Errorf("unknown event_name %q", name)
 	}
-	if err := proto.Unmarshal(msg.Value, protoMsg); err != nil {
+	if err := proto.Unmarshal(stripConfluentPrefix(msg.Value), protoMsg); err != nil {
 		return Record{}, err
 	}
 	return recordFromProto(protoMsg), nil
