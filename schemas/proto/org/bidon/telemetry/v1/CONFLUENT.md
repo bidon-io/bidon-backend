@@ -29,6 +29,7 @@ of each type.
 | [`config/kafka.go`](../../../../../config/kafka.go) `Kafka()` | Reads `SCHEMA_REGISTRY_URL`. |
 | [`cmd/bidon-sdkapi/main.go`](../../../../../cmd/bidon-sdkapi/main.go) | `Logger.UseSchemaRegistry` next to `telemetry.Kafka` (same `kgo.Client`). |
 | [`docker-compose.dev.yml`](../../../../../docker-compose.dev.yml) | Redpanda Schema Registry on `:8081` / host `:18081`. Console `KAFKA_SCHEMAREGISTRY_*`. sdkapi `SCHEMA_REGISTRY_URL=http://redpanda:8081`. |
+| [`docker-compose.staging.yml`](../../../../../docker-compose.staging.yml) | Same registry on Redpanda `:8081` (in-compose only). sdkapi + Console use `${SERVICE_NAME_REDPANDA:-redpanda}`. |
 
 ## Out of this change
 
