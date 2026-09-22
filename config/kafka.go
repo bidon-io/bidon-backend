@@ -57,10 +57,17 @@ func Kafka() (conf KafkaConfig, err error) {
 	conf.Topics = map[Topic]string{
 		AdEventsTopic:           os.Getenv("KAFKA_AD_EVENTS_TOPIC"),
 		NotificationEventsTopic: os.Getenv("KAFKA_NOTIFICATION_EVENTS_TOPIC"),
-		TelemetryEventsTopic:    os.Getenv("KAFKA_TELEMETRY_EVENTS_TOPIC"),
+		TelemetryEventsTopic:    envOr("KAFKA_TELEMETRY_EVENTS_TOPIC", "telemetry-events"),
 	}
 
 	conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
 
 	return
+}
+
+func envOr(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
 }
