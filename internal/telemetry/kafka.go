@@ -24,9 +24,6 @@ func (e *Kafka) Produce(message LogMessage, handleErr func(error)) {
 		return
 	}
 
-	// Value is raw proto (+ type headers). If a Confluent serde is added,
-	// wrap Value here or in Logger.Log — see
-	// schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md.
 	record := &kgo.Record{
 		Topic:   topicStr,
 		Value:   message.Value,
