@@ -13,12 +13,15 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
-	"github.com/gofrs/uuid/v5"
 	"github.com/prebid/openrtb/v19/adcom1"
 	"github.com/prebid/openrtb/v19/openrtb2"
 )
 
+// defaultEndpoint is used when the demand source account has no endpoint configured.
+const defaultEndpoint = "https://bon-use1.smadex.com/hyperad/rtb/437617/bid"
+
 type SmadexAdapter struct {
+	Endpoint string
 }
 
 var bannerFormats = map[ad.Format][2]int64{
@@ -85,13 +88,7 @@ func (a *SmadexAdapter) sdkInstanceID(auctionRequest *schema.AuctionRequest) []b
 	return raw
 }
 
-func getEndpoint() string {
-	return "https://bon-use1.smadex.com/hyperad/rtb/437617/bid"
-}
-
-func (a *SmadexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (openrtb.BidRequest, error) {
-	secure := int8(1)
-
+func (a *SmadexAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
 	var imp *openrtb2.Imp
 	switch auctionRequest.AdObject.Type() {
 	case ad.BannerType:
@@ -101,22 +98,18 @@ func (a *SmadexAdapter) CreateRequest(request openrtb.BidRequest, auctionRequest
 	case ad.RewardedType:
 		imp = a.rewarded(auctionRequest)
 	default:
-		return request, errors.New("unknown impression type")
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
+	}
+	if imp == nil {
+		return nil, adapters.RTBRequestOptions{}, errors.New("unknown impression type")
 	}
 
-	impId, _ := uuid.NewV4()
-	imp.ID = impId.String()
-	imp.DisplayManager = string(adapter.SmadexKey)
-	imp.DisplayManagerVer = auctionRequest.Adapters[adapter.SmadexKey].SDKVersion
-	imp.Secure = &secure
-	imp.BidFloor = adapters.CalculatePriceFloor(&request, auctionRequest)
+	return imp, adapters.RTBRequestOptions{OmitBidFloorCur: true}, nil
+}
 
+func (a *SmadexAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctionRequest *schema.AuctionRequest) error {
 	request.App.Ext = a.sdkInstanceID(auctionRequest)
-
-	request.Imp = []openrtb2.Imp{*imp}
-	request.Cur = []string{"USD"}
-
-	return request, nil
+	return nil
 }
 
 func (a *SmadexAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
@@ -131,8 +124,7 @@ func (a *SmadexAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 	}
 	dr.RawRequest = string(requestBody)
 
-	url := getEndpoint()
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.Endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		dr.Error = err
 		return dr
@@ -159,7 +151,16 @@ func (a *SmadexAdapter) ExecuteRequest(ctx context.Context, client *http.Client,
 }
 
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
-	adpt := &SmadexAdapter{}
+	smadexCfg := cfg[adapter.SmadexKey]
+
+	endpoint, ok := smadexCfg["endpoint"].(string)
+	if !ok || endpoint == "" {
+		endpoint = defaultEndpoint
+	}
+
+	adpt := &SmadexAdapter{
+		Endpoint: endpoint,
+	}
 
 	bidder := &adapters.Bidder{
 		Adapter: adpt,
