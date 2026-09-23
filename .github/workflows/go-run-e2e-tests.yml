@@ -1,0 +1,24 @@
+name: Go / Run E2E Tests
+
+on:
+  workflow_dispatch:
+
+# Serialised rather than isolated per run: docker-compose.test.yml publishes
+# fixed host ports (5436/6380/1326), so two concurrent stacks would collide.
+concurrency:
+  group: go-e2e-tests
+
+jobs:
+  test:
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: docker compose -f docker-compose.test.yml run --rm go-e2e
+
+      # No -v: the module and build caches are volumes, and dropping them
+      # would make every dispatch recompile the world. The database volume
+      # survives too, which is safe because TestMain truncates the fixture
+      # tables and migrations are idempotent.
+      - run: docker compose -f docker-compose.test.yml down --remove-orphans
+        if: always()

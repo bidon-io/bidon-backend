@@ -2,6 +2,7 @@ ignore:
   - "**/*.pb.go"
   - "**/*.gen.go"
   - "**/*mocks.go"
+  - "internal/db/dbtest" # test factories, not product code
 component_management:
   individual_components:
     - component_id: go-api
