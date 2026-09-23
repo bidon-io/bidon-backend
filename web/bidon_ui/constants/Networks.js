@@ -87,6 +87,11 @@ export const NETWORK_DEFS = [
     accountType: "DemandSourceAccount::Moloco",
   },
   {
+    key: "smadex",
+    label: "Smadex",
+    accountType: "DemandSourceAccount::Smadex",
+  },
+  {
     key: "startio",
     label: "Start.io",
     accountType: "DemandSourceAccount::StartIO",
@@ -131,6 +136,7 @@ export const BIDDING_NETWORK_KEYS = [
   "mintegral",
   "mobilefuse",
   "moloco",
+  "smadex",
   "startio",
   "taurusx",
   "vungle",

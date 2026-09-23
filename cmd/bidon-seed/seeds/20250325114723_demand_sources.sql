@@ -23,7 +23,8 @@ VALUES
 ('vungle', 'Vungle', NOW(), NOW()),
 ('yandex', 'Yandex', NOW(), NOW()),
 ('zmaticoo', 'Zmaticoo', NOW(), NOW()),
-('adikteev', 'Adikteev', NOW(), NOW())
+('adikteev', 'Adikteev', NOW(), NOW()),
+('smadex', 'Smadex', NOW(), NOW())
 ON CONFLICT (api_key) DO NOTHING;
 -- +goose StatementEnd
 
