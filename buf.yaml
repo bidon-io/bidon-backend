@@ -1,9 +1,16 @@
 version: v2
 modules:
+  # Vendored submodules: lint only what breaks the build, not upstream style.
   - path: proto/adcom/proto
-  - path: proto/openrtb/proto
-  - path: proto/proto
-  - path: schemas/proto
     lint:
       use:
-        - STANDARD
+        - MINIMAL
+  - path: proto/openrtb/proto
+    lint:
+      use:
+        - MINIMAL
+  - path: proto/proto
+    lint:
+      use:
+        - MINIMAL
+  - path: schemas/proto
