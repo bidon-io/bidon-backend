@@ -77,21 +77,21 @@ WITH (
 --   src_dsp_response_received   message = 'org.bidon.telemetry.v1.DspResponseReceived'
 ```
 
-Columns come from the descriptor: `envelope` is a struct (`(envelope).app_id`, `(envelope).auction_id`, `(envelope).event_ts`), enums decode as their value names (`OUTCOME_TIMEOUT`, `ERROR_CODE_NO_ADS_FOUND`), and proto3 unset strings arrive as `''`, not `NULL`. Header values are `bytea`.
+Columns come from the descriptor: `envelope` is a struct (`(envelope).app_id`, `(envelope).auction_id`, `(envelope).event_ts`), enums decode as their value names (`OUTCOME_TIMEOUT`, `ERROR_CODE_NO_ADS_FOUND`), and proto3 unset strings arrive as `''`, not `NULL`. Header values are `bytea`. `price_floor` is the effective floor (a bid counts only when `price > price_floor`); `requested_price_floor` is what the SDK sent. `participant_count` equals the DSP sent and received counts for that auction (Amazon reports one received per request).
 
 Typed views over the sources, then the funnel views (joins always `(app_id, auction_id)`):
 
 ```sql
 CREATE MATERIALIZED VIEW IF NOT EXISTS auction_requests AS
 SELECT (envelope).app_id AS app_id, (envelope).auction_id AS auction_id,
-       (envelope).event_ts AS event_ts, price_floor
+       (envelope).event_ts AS event_ts, requested_price_floor
 FROM src_auction_request_received
 WHERE convert_from(msg_type, 'utf8') = 'org.bidon.telemetry.v1.AuctionRequestReceived';
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS auctions_completed AS
 SELECT (envelope).app_id AS app_id, (envelope).auction_id AS auction_id,
-       (envelope).event_ts AS event_ts, winner_dsp, price, participant_count,
-       total_latency_ms, error_code
+       (envelope).event_ts AS event_ts, winner_dsp, price, price_floor,
+       participant_count, total_latency_ms, error_code
 FROM src_auction_completed
 WHERE convert_from(msg_type, 'utf8') = 'org.bidon.telemetry.v1.AuctionCompleted';
 
