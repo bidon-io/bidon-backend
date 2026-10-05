@@ -20,6 +20,6 @@ Linear issue only (epic / parent). No MR.
 - Optional close-out (issue 5): same `auction_id` joins to impression and an **observed** notice HTTP status.
 - When telemetry infra (RisingWave / VM / VT) is down: `/v2/auction` still succeeds; `ad-events` still written.
 
-**Out of scope.** Lake, protobuf bus, client ingest, sampling, staging deploy, waterfall fill, bid-match-by-price fix, reporting product.
+**Out of scope.** Lake (Connect / Parquet sink), client ingest, sampling, staging deploy, waterfall fill, bid-match-by-price fix, reporting product.
 
 **Children.** Issues 1–5 in [README.md](./README.md).

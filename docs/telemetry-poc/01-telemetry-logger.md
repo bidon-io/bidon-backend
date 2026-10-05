@@ -6,102 +6,76 @@
 
 **User story.** As a backend engineer, I need a logger that writes **typed** catalog events (shared envelope + event-specific fields) to `telemetry-events`, instead of the unstructured JSON `AdEvent` blobs on `ad-events`.
 
-**Goal.** `bidon-sdkapi` can fire-and-forget a typed record onto `telemetry-events`. No auction call sites in this issue — that is issue 2. `ad-events` stays as it is.
+**Goal.** `bidon-sdkapi` can fire-and-forget a typed catalog event onto `telemetry-events`. `ad-events` stays as it is.
+
+> **Shipped with issue 2.** This issue was folded into the BAC-61 MR: the catalog went straight to protobuf with Confluent Schema Registry framing instead of the JSON `Record` first drafted here, because the warehouse (TRD) is protobuf on the bus anyway and the JSON shape would have been thrown away one MR later. The sections below describe what landed.
 
 **Definition of done.**
 
-- `internal/telemetry` logger: envelope + typed payload, enqueue, do not await Kafka.
-- Topic `telemetry-events` wired (`KAFKA_TELEMETRY_EVENTS_TOPIC`).
-- Marshalled JSON always has the envelope fields (`event_id`, `event_name`, `event_ts`, `schema_version`, `app_id`, `auction_id`, …).
-- Missing topic env: log, no panic, caller not blocked.
+- `internal/telemetry` logger: envelope + typed message per event, enqueue, do not await Kafka.
+- Topic `telemetry-events` wired (`KAFKA_TELEMETRY_EVENTS_TOPIC`, default `telemetry-events`).
+- Every catalog message embeds the `Envelope` (`event_id`, `event_name`, `event_ts`, `schema_version`, `app_id`, `auction_id`, …).
+- Values are `proto.Marshal` of the catalog message; when `SCHEMA_REGISTRY_URL` is set they are Confluent-framed. Every record carries headers `event_name` and `protobuf_message`.
+- Missing topic env, registry down, or produce error: log, no panic, caller not blocked.
 - `ad-events` producer unchanged.
 
-**Out of scope.** Auction/bidding emit sites, protobuf, ingest HTTP API.
+**Out of scope.** Ingest HTTP API, sampling, Connect / Parquet sink, framing in prod compose.
 
 ---
 
 ## MR instructions
 
-Produce plumbing only. Do not instrument `auction.Service` or `bidding.Builder`.
-
 ### Do not
 
 - Extend `internal/sdkapi/event.AdEvent` or `NotificationEvent`.
-- Add Schema Registry / protobuf.
 - Add a feature flag or `Enabled` switch — if Kafka is on, this logger is on.
+- Put a `map[string]any` or opaque `payload` field on any catalog message.
+- Block `/v2/auction` on Kafka or the Schema Registry.
+
+### Schema
+
+`schemas/proto/org/bidon/telemetry/v1/events.proto` (package `org.bidon.telemetry.v1`), generated into `pkg/proto/org/bidon/telemetry/v1`. Embedded as `schemas/proto.EventsProto` so the logger can register it.
+
+- `Envelope` — identity header embedded as field 1 of every event.
+- One message per event: `AuctionRequestReceived`, `AuctionCompleted`, `DspRequestSent`, `DspResponseReceived`, `DspResponseRejected`.
+- Closed sets are enums: `Scope`, `Outcome`, `RejectReason`, `ErrorCode` (each with a `*_UNSPECIFIED = 0`).
+
+`event_id` = UUID v4. `event_ts` = `time.Now().UnixMilli()`. `schema_version` = `"0.1"`. `sampling_rate` = `1.0`.
+
+Lint with `buf lint schemas/proto` (STANDARD).
 
 ### Package layout
 
 ```
 internal/telemetry/
-  envelope.go      // Envelope + EventName constants
-  event.go         // Record (envelope + typed fields), Topic(), json tags
-  logger.go        // Logger / LoggerEngine / LogMessage — same shape as internal/sdkapi/event
-  logger_test.go
+  envelope.go         // EventName constants, attrs, Envelope (decode view)
+  catalog.go          // Event.AuctionRequestReceived / AuctionCompleted / DSPRequestSent / DSPResponseReceived
+  outcome.go          // Outcome / Scope / ErrorCode / RejectReason / AuctionResult Go types
+  event.go            // proto <-> Go mapping, Record (decode-only view for tests and the log engine)
+  logger.go           // Logger, Event.emit, LoggerEngine / LogMessage
+  registry.go         // event name -> message type, headers, DecodeRecord
+  confluent.go        // Confluent wire framing, schema id cache, fail-open
+  schema_registry.go  // franz-go sr client, BACKWARD compatibility
+  kafka.go log.go memory.go  // engines: Kafka, no-Kafka zap log, in-memory for tests
+  metrics.go          // Prometheus counters (issue 2)
 ```
 
-Reuse the existing Kafka engine if you can without an import cycle:
+### Logger
 
-- `internal/telemetry.Logger` with `Log(ev Event, handleErr func(error))`.
-- One `kgo.Client` in `cmd/bidon-sdkapi/main.go`. Either extend `engine.Kafka`’s topics map or a thin sibling wrapper that takes `map[config.Topic]string`.
-- Do not open a second broker connection.
-
-### Envelope (v0)
+Callers use typed methods on `Logger.Event`, which build the generated `telemetryv1` structs directly — no intermediate mapper layer:
 
 ```go
-type Envelope struct {
-    EventID       string  `json:"event_id"`
-    EventName     string  `json:"event_name"`
-    EventTS       int64   `json:"event_ts"`       // unix ms
-    SchemaVersion string  `json:"schema_version"` // "0.1"
-    AppID         int64   `json:"app_id"`
-    AuctionID     string  `json:"auction_id"`
-    SessionID     string  `json:"session_id"`
-    AdType        string  `json:"ad_type,omitempty"`
-    AdFormat      string  `json:"ad_format,omitempty"`
-    Country       string  `json:"country,omitempty"`
-    TraceID       string  `json:"trace_id,omitempty"`
-    SamplingRate  float64 `json:"sampling_rate"`    // 1.0 for this POC
-}
-
-const SchemaVersion = "0.1"
-
-const (
-    EventAuctionRequestReceived = "auction_request_received"
-    EventAuctionCompleted       = "auction_completed"
-    EventDSPRequestSent         = "dsp_request_sent"
-    EventDSPResponseReceived    = "dsp_response_received"
-    EventDSPResponseRejected    = "dsp_response_rejected"
-)
+tel.Event.AuctionRequestReceived(params)
+tel.Event.DSPResponseReceived(params, demandResponse)
 ```
 
-`event_id` = UUID v4. `event_ts` = `time.Now().UnixMilli()`.
+`Event.emit` does `proto.Marshal` → optional Confluent frame → `Engine.Produce` with headers. Never wait on Kafka. Produce errors go to zap with the envelope fields.
 
-### Record (typed, one JSON object)
+When `USE_KAFKA` is false, use the `Log` engine (zap, decodes the record for readable output). `telemetry.Nop` discards.
 
-Typed fields on the same struct so RisingWave can `ENCODE JSON`. Unused fields `omitempty` — they are still first-class columns, not a `map[string]any` or a JSON `payload` blob.
+### Schema Registry
 
-```go
-type Record struct {
-    Envelope
-    Scope            string  `json:"scope,omitempty"` // e.g. "bidding_round"
-    DSP              string  `json:"dsp,omitempty"`
-    Outcome          string  `json:"outcome,omitempty"`
-    HTTPStatus       int     `json:"http_status,omitempty"`
-    LatencyMS        int64   `json:"latency_ms,omitempty"`
-    Price            float64 `json:"price,omitempty"`
-    PriceFloor       float64 `json:"price_floor,omitempty"`
-    WinnerDSP        string  `json:"winner_dsp,omitempty"`
-    ParticipantCount int     `json:"participant_count,omitempty"`
-    TotalLatencyMS   int64   `json:"total_latency_ms,omitempty"`
-    ErrorCode        string  `json:"error_code,omitempty"`
-    RejectReason     string  `json:"reject_reason,omitempty"`
-}
-
-func (r Record) Topic() config.Topic { return config.TelemetryEventsTopic }
-```
-
-Constructor `NewRecord(name string, env Envelope) Record` sets `EventName`, `SchemaVersion`, `SamplingRate`.
+See `schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md`. Summary: subject strategy **TopicRecordNameStrategy** (`telemetry-events-org.bidon.telemetry.v1.<Message>`), compatibility **BACKWARD**, ids cached per subject, registry failures fail open to raw protobuf. Dev compose enables Redpanda’s registry on `:8081` (host `:18081`) and Console decodes from it.
 
 ### Kafka config
 
@@ -112,51 +86,32 @@ const TelemetryEventsTopic Topic = "telemetry_events"
 ```
 
 ```go
-TelemetryEventsTopic: os.Getenv("KAFKA_TELEMETRY_EVENTS_TOPIC"),
+TelemetryEventsTopic: envOr("KAFKA_TELEMETRY_EVENTS_TOPIC", "telemetry-events"),
+conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
 ```
 
-`.env.sample` + compose.dev / staging kafka env:
+`.env.sample` + compose dev / staging:
 
 ```
 KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
+SCHEMA_REGISTRY_URL: http://redpanda:8081
 ```
-
-### Logger
-
-```go
-type Event interface {
-    Topic() config.Topic
-}
-
-type Logger struct {
-    Engine LoggerEngine
-}
-
-func (l *Logger) Log(ev Event, handleErr func(error)) {
-    if l == nil || l.Engine == nil {
-        return
-    }
-    // json.Marshal + Engine.Produce, same as event.Logger
-}
-```
-
-Never wait on Kafka. `Produce` callback like `internal/sdkapi/event/engine/kafka.go`.
-
-When `USE_KAFKA` is false, use a log/no-op engine (same split as today’s `event.Logger`).
 
 ### Wire-up (`cmd/bidon-sdkapi/main.go`)
 
-Construct `telemetry.Logger` next to `event.Logger`. Do **not** call it from `auction.Service` / `bidding.Builder` yet (issue 2). Pass it into `auction.Service` as `Telemetry *telemetry.Logger` unused if that is the cleanest way to keep the binary compiling.
+Construct `telemetry.Logger` next to `event.Logger` on the same `kgo.Client` — do not open a second broker connection. Call `Logger.UseSchemaRegistry(url, topic)` when the URL is set. Pass it into `auction.Service` as `Telemetry`.
 
 ### Tests
 
-- `logger_test.go`: mock engine records one JSON blob on `TelemetryEventsTopic`; envelope fields present; type fields are named columns.
-- Empty topic string: `handleErr`, no panic.
+- `logger_test.go`: memory engine records one value per emit on `TelemetryEventsTopic`; headers present; `DecodeRecord` round-trips framed and raw values; envelope fields populated.
+- `confluent_test.go`: framing, message index, id caching, fail-open on registry error.
+- Nil engine / `Nop`: no panic.
 
 ### Files to touch
 
+- `schemas/proto/` (new), `pkg/proto/org/bidon/telemetry/v1/` (generated), `buf.yaml`
 - `internal/telemetry/` (new)
 - `config/kafka.go`
 - `cmd/bidon-sdkapi/main.go`
 - `.env.sample`
-- `docker-compose.dev.yml`, staging/prod compose: topic env only
+- `docker-compose.dev.yml`, staging/prod compose: topic + registry env

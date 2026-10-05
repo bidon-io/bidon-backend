@@ -23,7 +23,7 @@
 
 ## MR instructions
 
-Blocked on issue 1 (topic + JSON shape). Useful after issue 2. Do not add `depends_on: risingwave` to `bidon-sdkapi`.
+Blocked on issue 1 (topic + catalog protobuf). Useful after issue 2. Do not add `depends_on: risingwave` to `bidon-sdkapi`.
 
 ### Compose (`docker-compose.dev.yml`)
 
@@ -54,62 +54,64 @@ OTEL_EXPORTER_OTLP_ENDPOINT: http://otelcol:4318
 
 ### RisingWave SQL (`docker/telemetry/risingwave-init.sql`)
 
-One wide source. Column list **must match** issue 1 JSON keys (snake_case). Idempotent (`CREATE SOURCE IF NOT EXISTS` / drop-if exists if the image’s SQL requires it).
+`telemetry-events` carries one protobuf message type per event (`schemas/proto/org/bidon/telemetry/v1/events.proto`), not one wide JSON object. Each value is Confluent-framed (magic byte + schema id + message index) and registered under **TopicRecordNameStrategy**: `telemetry-events-org.bidon.telemetry.v1.<Message>`. Every record also carries Kafka headers `event_name` (e.g. `dsp_response_received`) and `protobuf_message` (the message full name). See `schemas/proto/org/bidon/telemetry/v1/CONFLUENT.md`.
+
+So: **one source per message type** the views need, each pinned to its message via the registry. A source decodes every record on the topic with its one descriptor — a `DspRequestSent` read as `DspResponseReceived` decodes without error into wrong columns — so every source keeps the `protobuf_message` header and the views filter on it. Idempotent (`CREATE SOURCE IF NOT EXISTS` / drop-if exists if the image’s SQL requires it).
 
 ```sql
-CREATE SOURCE IF NOT EXISTS telemetry_events (
-    event_id VARCHAR,
-    event_name VARCHAR,
-    event_ts BIGINT,
-    schema_version VARCHAR,
-    app_id BIGINT,
-    auction_id VARCHAR,
-    session_id VARCHAR,
-    ad_type VARCHAR,
-    ad_format VARCHAR,
-    country VARCHAR,
-    trace_id VARCHAR,
-    sampling_rate DOUBLE,
-    scope VARCHAR,
-    dsp VARCHAR,
-    outcome VARCHAR,
-    http_status INT,
-    latency_ms BIGINT,
-    price DOUBLE,
-    price_floor DOUBLE,
-    winner_dsp VARCHAR,
-    participant_count INT,
-    total_latency_ms BIGINT,
-    error_code VARCHAR,
-    reject_reason VARCHAR
-) WITH (
+CREATE SOURCE IF NOT EXISTS src_auction_request_received
+INCLUDE header 'protobuf_message' AS msg_type
+WITH (
     connector = 'kafka',
     topic = 'telemetry-events',
     properties.bootstrap.server = 'redpanda:9092',
     scan.startup.mode = 'earliest'
-) FORMAT PLAIN ENCODE JSON;
+) FORMAT PLAIN ENCODE PROTOBUF (
+    message = 'org.bidon.telemetry.v1.AuctionRequestReceived',
+    schema.registry = 'http://redpanda:8081',
+    schema.registry.name.strategy = 'topic_record_name_strategy'
+);
+
+-- Same shape for:
+--   src_auction_completed       message = 'org.bidon.telemetry.v1.AuctionCompleted'
+--   src_dsp_response_received   message = 'org.bidon.telemetry.v1.DspResponseReceived'
 ```
 
-Views (joins always `(app_id, auction_id)`):
+Columns come from the descriptor: `envelope` is a struct (`(envelope).app_id`, `(envelope).auction_id`, `(envelope).event_ts`), enums decode as their value names (`OUTCOME_TIMEOUT`, `ERROR_CODE_NO_ADS_FOUND`), and proto3 unset strings arrive as `''`, not `NULL`. Header values are `bytea`.
+
+Typed views over the sources, then the funnel views (joins always `(app_id, auction_id)`):
 
 ```sql
+CREATE MATERIALIZED VIEW IF NOT EXISTS auction_requests AS
+SELECT (envelope).app_id AS app_id, (envelope).auction_id AS auction_id,
+       (envelope).event_ts AS event_ts, price_floor
+FROM src_auction_request_received
+WHERE convert_from(msg_type, 'utf8') = 'org.bidon.telemetry.v1.AuctionRequestReceived';
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS auctions_completed AS
+SELECT (envelope).app_id AS app_id, (envelope).auction_id AS auction_id,
+       (envelope).event_ts AS event_ts, winner_dsp, price, participant_count,
+       total_latency_ms, error_code
+FROM src_auction_completed
+WHERE convert_from(msg_type, 'utf8') = 'org.bidon.telemetry.v1.AuctionCompleted';
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS dsp_responses AS
+SELECT (envelope).app_id AS app_id, (envelope).auction_id AS auction_id,
+       (envelope).event_ts AS event_ts, dsp, outcome, http_status, latency_ms, price
+FROM src_dsp_response_received
+WHERE convert_from(msg_type, 'utf8') = 'org.bidon.telemetry.v1.DspResponseReceived';
+
 CREATE MATERIALIZED VIEW IF NOT EXISTS auctions_in_flight AS
 SELECT r.app_id, r.auction_id, r.event_ts AS started_ts
-FROM telemetry_events r
-LEFT JOIN telemetry_events c
-  ON c.event_name = 'auction_completed'
- AND r.app_id = c.app_id AND r.auction_id = c.auction_id
-WHERE r.event_name = 'auction_request_received'
-  AND c.auction_id IS NULL;
+FROM auction_requests r
+LEFT JOIN auctions_completed c
+  ON r.app_id = c.app_id AND r.auction_id = c.auction_id
+WHERE c.auction_id IS NULL;
 
 -- Tumble 5 minutes on event_ts (ms → timestamptz). Adjust syntax to the pinned RW version.
 CREATE MATERIALIZED VIEW IF NOT EXISTS dsp_outcomes_5m AS
 SELECT window_start, dsp, outcome, COUNT(*) AS n
-FROM TUMBLE(
-    (SELECT * FROM telemetry_events WHERE event_name = 'dsp_response_received'),
-    to_timestamp(event_ts / 1000.0),
-    INTERVAL '5 minutes'
-)
+FROM TUMBLE(dsp_responses, to_timestamp(event_ts / 1000.0), INTERVAL '5 minutes')
 GROUP BY window_start, dsp, outcome;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS funnel_5m AS
@@ -117,21 +119,18 @@ SELECT
     window_start,
     COUNT(DISTINCT r.auction_id) AS requests,
     COUNT(DISTINCT c.auction_id) AS completed,
-    COUNT(DISTINCT c.auction_id) FILTER (WHERE c.winner_dsp IS NOT NULL AND c.winner_dsp <> '') AS server_fills
-FROM TUMBLE(
-    (SELECT * FROM telemetry_events WHERE event_name = 'auction_request_received'),
-    to_timestamp(event_ts / 1000.0),
-    INTERVAL '5 minutes'
-) r
-LEFT JOIN telemetry_events c
-  ON c.event_name = 'auction_completed'
- AND r.app_id = c.app_id AND r.auction_id = c.auction_id
+    COUNT(DISTINCT c.auction_id) FILTER (WHERE c.winner_dsp <> '') AS server_fills
+FROM TUMBLE(auction_requests, to_timestamp(event_ts / 1000.0), INTERVAL '5 minutes') r
+LEFT JOIN auctions_completed c
+  ON r.app_id = c.app_id AND r.auction_id = c.auction_id
 GROUP BY window_start;
 ```
 
-If `TUMBLE` / `to_timestamp` differs on the pinned version, fix to that version’s docs — do not add extra views. Issue 5 will extend `funnel_5m`; keep the name stable.
+Confirm `INCLUDE header`, `schema.registry.name.strategy` and `TUMBLE` / `to_timestamp` against the pinned RisingWave version’s docs and fix the syntax there — do not add extra views beyond the three typed ones and the three funnel views. Issue 5 will extend `funnel_5m`; keep the name stable.
 
-`CREATE SOURCE` may fail if the topic does not exist yet. Create `telemetry-events` explicitly (rpk in an init container, or document `rpk topic create`) because `AllowAutoTopicCreation` only fires on first produce. Init order: redpanda healthy → topic create → RW → SQL.
+Registry failures fail open in sdkapi: the record is produced as raw protobuf without the Confluent frame. A registry-backed source cannot decode those; treat them as dropped rows in the POC and check sdkapi logs for `schema registry register` if counts look low.
+
+`CREATE SOURCE` may fail if the topic does not exist yet. Create `telemetry-events` explicitly (rpk in an init container, or document `rpk topic create`) because `AllowAutoTopicCreation` only fires on first produce. Registry subjects only exist after sdkapi’s first emit of each type, so run one auction before the SQL, or have the init container retry. Init order: redpanda healthy → topic create → one auction (or retry loop) → RW → SQL.
 
 ### How-to
 
@@ -140,7 +139,7 @@ Add `docs/telemetry-poc.md` (short):
 - Console: `http://localhost:8080` → `telemetry-events`
 - `psql -h localhost -p 4566 -U root -d dev` then `TABLE funnel_5m;`
 - Grafana `http://localhost:3001` (set admin password in compose; do not commit a real secret — `admin`/`admin` is fine for dev)
-- VT: how to open a `trace_id` from an event JSON
+- VT: how to open a `trace_id` from an event (Console decodes the protobuf via the registry; or `SELECT (envelope).trace_id` in `psql`)
 
 ### Accept / fail
 

@@ -25,4 +25,6 @@ Six Linear issues, five MRs. File the parent as the project/epic; file `01`–`0
 
 Labels: `telemetry`, `poc`. Team: backend.
 
-**Not in this POC:** Parquet / S3 / DuckDB, protobuf + Schema Registry, `/v2/telemetry`, sampling, Coolify, product UI.
+Issues 1 and 2 ship as one MR (BAC-61). `telemetry-events` is protobuf from the start (`schemas/proto/org/bidon/telemetry/v1/events.proto`), Confluent-framed via Redpanda’s Schema Registry — the same bus format the warehouse TRD targets, so the POC does not build a JSON shape to throw away.
+
+**Not in this POC:** Parquet / S3 / DuckDB, `/v2/telemetry`, sampling, Coolify, product UI.

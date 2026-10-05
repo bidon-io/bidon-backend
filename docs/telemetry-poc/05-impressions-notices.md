@@ -67,7 +67,7 @@ Map `Params.NotificationType`:
 
 On failure after retries: emit `notice_delivery_failed` **instead of or in addition to** the `*_sent` event. Prefer **both**: `*_sent` with `success=false` *or* only `notice_delivery_failed` with `dsp`, notice kind in `error_code` / a new `notice_type` field. RisingWave issue 4 SQL should use one convention — document it in `risingwave-init.sql` comments and follow it here.
 
-Add to `Record` if missing: `Success *bool` / `success`, `RetryCount`, `NoticeType`.
+Add new messages to `schemas/proto/org/bidon/telemetry/v1/events.proto` (`AdImpression`, `NoticeSent`, `NoticeDeliveryFailed` — each embeds `Envelope` as field 1) with `success`, `retry_count`, `notice_type` (enum), `http_status`, `latency_ms`. Additive only — registry compatibility is BACKWARD. Register the event names in `internal/telemetry/registry.go` and add typed `Event.*` methods in `catalog.go`.
 
 `EventSender` needs `Telemetry *telemetry.Logger` and enough envelope fields (`AppID` is not on `Params` today). Add `AppID`, `SessionID`, `Country`, `AdFormat` to `notification.Params` **or** look up only what you have (`Bundle`, `AuctionID`, `AdType`, `DemandID`). Minimum for joins: `app_id` + `auction_id`. Thread `AppID` from callers (`HandleShow`, `HandleBiddingRound`, stats/win/loss handlers). If a caller cannot supply `AppID` without a wide refactor, put `0` and log once — but `/v2/show` **must** pass the real app id (`req` has it via `BaseHandler`).
 
@@ -88,7 +88,7 @@ AdImpressionTotal   = Counter
 
 ### RisingWave (`docker/telemetry/risingwave-init.sql`)
 
-Add columns to the source if you added JSON fields (`success`, `retry_count`, `notice_type`). Recreate source/views if standalone cannot `ALTER` easily (POC: drop + create in init is OK).
+Add one protobuf source + typed view per new message, same pattern as issue 4 (pinned `message`, `topic_record_name_strategy`, filter on the `protobuf_message` header). Recreate source/views if standalone cannot `ALTER` easily (POC: drop + create in init is OK).
 
 Extend `funnel_5m` with left joins:
 

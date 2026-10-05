@@ -22,7 +22,7 @@
 
 ## MR instructions
 
-Blocked on issue 1 (`internal/telemetry` Logger + `Record`).
+Blocked on issue 1 (`internal/telemetry` Logger + catalog protobuf). Shipped together with issue 1 as BAC-61.
 
 ### Call sites
 
@@ -40,7 +40,7 @@ Today `Run` defers `logEvents` (old `AdEvent`s). Keep that. Also:
    - `total_latency_ms`: now − a `started` timestamp taken at the beginning of `Run`.
    - `error_code` if `err != nil` (short; do not put raw DSP bodies in it).
 
-Use `telemetryLogger.Log` with the same `params.LogErr` style as `EventLogger`.
+Use the typed `Telemetry.Event.AuctionRequestReceived` / `AuctionCompleted` methods; they log produce errors themselves and never block.
 
 **`bidding.Builder.processAdapter`** (`internal/bidding/builder.go`)
 
