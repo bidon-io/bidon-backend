@@ -42,6 +42,7 @@ just compose-down   # tear down
 | Redis            | localhost:6379        |                |
 | Redpanda         | localhost:19092       |                |
 | Redpanda Console | http://localhost:8080 |                |
+| VictoriaMetrics  | http://localhost:8428 |                |
 
 ```bash
 just admin          # admin API only (localhost:1323)
