@@ -201,6 +201,8 @@ services:
         condition: service_healthy
     environment:
       <<: [*staging-db-env, *staging-bidon-app-env, *staging-redis-env]
+      # sdkapi defaults to 1324 (SDKAPI_PORT); staging stays on 1323 because the
+      # Coolify domain routing for sdkapi and its PR previews targets that port.
       PORT: 1323
       APP_SECRET: ${APP_SECRET}
     volumes:

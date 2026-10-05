@@ -47,6 +47,8 @@ go run ./cmd/bidon-coolify create-app \
 
 For public repositories, omit `--github-app-uuid`.
 
+Ports: `bidon-admin` defaults to 1323 and `bidon-sdkapi` to 1324 (`ADMIN_PORT` / `SDKAPI_PORT`, falling back to `PORT`). Staging pins sdkapi to `PORT=1323`, so `--ports-exposes` / `--health-check-port` must match whatever `PORT` the app is given.
+
 ### 3) Configure app environment variables
 
 Inline:

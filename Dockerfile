@@ -89,20 +89,22 @@ RUN apk add --no-cache ca-certificates
 RUN adduser -D -u 1000 deploy
 USER deploy
 
-EXPOSE 1323
-EXPOSE 50051
-
 FROM deploy AS bidon-admin
 
 COPY --from=bidon-admin-builder --chown=deploy /bidon-admin /bidon-admin
 
 CMD [ "/bidon-admin" ]
 
+EXPOSE 1323
+
 FROM deploy AS bidon-sdkapi
 
 COPY --from=bidon-sdkapi-builder --chown=deploy /bidon-sdkapi /bidon-sdkapi
 
 CMD [ "/bidon-sdkapi" ]
+
+EXPOSE 1324
+EXPOSE 50051
 
 FROM deploy AS bidon-migrate
 
