@@ -1,12 +1,9 @@
 package inmobi
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/prebid/openrtb/v19/adcom1"
@@ -93,46 +90,12 @@ func (a *InMobiAdapter) BuildImpression(_ openrtb.BidRequest, auctionRequest *sc
 	return imp, opts, nil
 }
 
-func (a *InMobiAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:    adapter.InmobiKey,
-		RequestID:   request.ID,
+func (a *InMobiAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL:         "https://api.w.inmobi.com/ortb/imsdk",
 		PlacementID: a.PlacementID,
-	}
-
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	url := "https://api.w.inmobi.com/ortb/imsdk"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("X-OpenRTB-Version", "2.5")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	dr.Status = httpResp.StatusCode
-	responseBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawResponse = string(responseBody)
-
-	return dr
+		Headers:     http.Header{"X-OpenRTB-Version": {"2.5"}},
+	}, nil
 }
 
 // Builder builds a new instance of the InMobi adapter for the given bidder with the given config.
