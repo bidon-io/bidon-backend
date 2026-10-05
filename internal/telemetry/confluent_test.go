@@ -118,9 +118,9 @@ func TestStripConfluentPrefixRawProtoUnchanged(t *testing.T) {
 func TestEventEmitFramesWhenRegistrySet(t *testing.T) {
 	engine := &recordingEngine{}
 	logger := New(engine, nil)
-	logger.Event.serde = newConfluentSerde(&fakeRegistry{id: 11}, "telemetry-events", nil)
+	logger.event.serde = newConfluentSerde(&fakeRegistry{id: 11}, "telemetry-events", nil)
 
-	logger.Event.DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
+	logger.Event().DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
 		DemandID: adapter.BidmachineKey,
 		Status:   http.StatusOK,
 		Bid:      &adapters.DemandBid{Price: 1.23},

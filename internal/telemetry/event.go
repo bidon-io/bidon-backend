@@ -127,11 +127,12 @@ func recordFromProto(msg proto.Message) Record {
 	switch m := msg.(type) {
 	case *telemetryv1.AuctionRequestReceived:
 		rec := recordFromEnvelope(m.GetEnvelope())
-		rec.PriceFloor = m.GetPriceFloor()
+		rec.PriceFloor = m.GetRequestedPriceFloor()
 		return rec
 	case *telemetryv1.AuctionCompleted:
 		rec := recordFromEnvelope(m.GetEnvelope())
 		rec.Scope = scopeFromProto(m.GetScope())
+		rec.PriceFloor = m.GetPriceFloor()
 		rec.WinnerDSP = m.GetWinnerDsp()
 		rec.Price = m.GetPrice()
 		rec.ParticipantCount = int(m.GetParticipantCount())

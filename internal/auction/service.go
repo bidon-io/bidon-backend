@@ -86,7 +86,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	var adUnitsMap *AdUnitsMap
 	var err error
 
-	s.Telemetry.Event.AuctionRequestReceived(telemetry.Params{
+	s.Telemetry.Event().AuctionRequestReceived(telemetry.Params{
 		Request: params.Req,
 		App:     params.App,
 		Country: params.Country,
@@ -95,7 +95,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	// Ensure events are always logged, even on errors
 	defer func() {
 		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
-		s.Telemetry.Event.AuctionCompleted(telemetry.AuctionCompletedParams{
+		s.Telemetry.Event().AuctionCompleted(telemetry.AuctionCompletedParams{
 			Params: telemetry.Params{
 				Request: params.Req,
 				App:     params.App,

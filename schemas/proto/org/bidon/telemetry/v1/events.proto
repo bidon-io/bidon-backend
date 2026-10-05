@@ -48,10 +48,15 @@ enum ErrorCode {
   ERROR_CODE_ERROR = 3;
 }
 
+// price_floor on any event is the effective auction floor: the larger of the
+// SDK floor and the auction configuration floor. A bid counts only when
+// price > price_floor; otherwise it is rejected below_floor.
+
 // AuctionRequestReceived is emitted when /v2/auction is accepted.
 message AuctionRequestReceived {
   Envelope envelope = 1;
-  double price_floor = 2;
+  // Floor the SDK sent, before the auction configuration floor is applied.
+  double requested_price_floor = 2;
 }
 
 // AuctionCompleted is emitted when the server bidding round finishes.
@@ -60,9 +65,13 @@ message AuctionCompleted {
   Scope scope = 2;
   string winner_dsp = 3;
   double price = 4;
+  // Distinct DSPs a request was sent to; equals the dsp_request_sent and
+  // dsp_response_received count. Adapters that fail to build and cached bids
+  // are excluded.
   int32 participant_count = 5;
   int64 total_latency_ms = 6;
   ErrorCode error_code = 7;
+  double price_floor = 8;
 }
 
 // DspRequestSent is emitted immediately before the adapter HTTP call.
@@ -72,7 +81,8 @@ message DspRequestSent {
   string dsp = 3;
 }
 
-// DspResponseReceived is emitted after the adapter returns.
+// DspResponseReceived is emitted after the adapter returns, once per
+// dsp_request_sent. Multi-slot DSPs (Amazon) report their best slot.
 message DspResponseReceived {
   Envelope envelope = 1;
   Scope scope = 2;
@@ -83,7 +93,7 @@ message DspResponseReceived {
   double price = 7;
 }
 
-// DspResponseRejected is emitted when a bid exists but is below floor.
+// DspResponseRejected is emitted when a bid exists but price <= price_floor.
 message DspResponseRejected {
   Envelope envelope = 1;
   Scope scope = 2;

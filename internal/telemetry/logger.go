@@ -20,13 +20,21 @@ type LogMessage struct {
 	Headers map[string]string
 }
 
-// Logger is the sdkapi telemetry handle. Catalog emits go through Event.
+// Logger is the sdkapi telemetry handle. Catalog emits go through Event().
 type Logger struct {
-	Event Event
+	event Event
 }
 
 func New(engine LoggerEngine, log *zap.Logger) *Logger {
-	return &Logger{Event: Event{engine: engine, log: log}}
+	return &Logger{event: Event{engine: engine, log: log}}
+}
+
+// Event returns the catalog emitter. A nil Logger yields a no-op Event.
+func (l *Logger) Event() Event {
+	if l == nil {
+		return Event{}
+	}
+	return l.event
 }
 
 // Nop discards catalog events. Use it when no engine is configured.

@@ -53,7 +53,7 @@ func TestEventDSPResponseReceived(t *testing.T) {
 	engine := &recordingEngine{}
 	logger := New(engine, nil)
 
-	logger.Event.DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
+	logger.Event().DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
 		DemandID: adapter.BidmachineKey,
 		Status:   http.StatusOK,
 		Bid:      &adapters.DemandBid{Price: 1.23},
@@ -137,7 +137,7 @@ func TestLoggerNilSafe(t *testing.T) {
 	params := testAuctionParams()
 
 	Event{}.AuctionRequestReceived(params)
-	New(nil, nil).Event.AuctionRequestReceived(params)
+	New(nil, nil).Event().AuctionRequestReceived(params)
 }
 
 func TestKafkaProduceEmptyTopic(t *testing.T) {
@@ -163,7 +163,7 @@ func TestLoggerEmptyTopicStructured(t *testing.T) {
 	core, logs := observer.New(zap.ErrorLevel)
 	logger := New(&Kafka{Topics: map[config.Topic]string{}}, zap.New(core))
 
-	logger.Event.AuctionRequestReceived(Params{
+	logger.Event().AuctionRequestReceived(Params{
 		Request: &schema.AuctionRequest{
 			AdObject: schema.AdObject{AuctionID: "auc-structured"},
 			BaseRequest: schema.BaseRequest{
@@ -199,7 +199,7 @@ func TestLogEngineStructured(t *testing.T) {
 	engine := &Log{Logger: zap.New(core)}
 	logger := New(engine, nil)
 
-	logger.Event.DSPResponseReceived(Params{
+	logger.Event().DSPResponseReceived(Params{
 		Request: &schema.AuctionRequest{
 			AdObject: schema.AdObject{AuctionID: "auc-log"},
 			BaseRequest: schema.BaseRequest{

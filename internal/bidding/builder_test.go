@@ -269,7 +269,7 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 	}
 
 	auctionStart := time.Now().Add(-30 * time.Second).UnixMilli()
-	_, err := builder.HoldAuction(context.Background(), &bidding.BuildParams{
+	result, err := builder.HoldAuction(context.Background(), &bidding.BuildParams{
 		App:             testApp(4),
 		AdapterConfigs:  cfgs,
 		BiddingAdapters: keys,
@@ -290,6 +290,15 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("HoldAuction() error = %v", err)
+	}
+
+	for _, bid := range result.Bids {
+		if bid.StartTS != auctionStart {
+			t.Errorf("%s StartTS = %d, want auction start %d (ad-events timing_map must not change)", bid.DemandID, bid.StartTS, auctionStart)
+		}
+		if bid.SendTS < auctionStart {
+			t.Errorf("%s SendTS = %d, want set at send", bid.DemandID, bid.SendTS)
+		}
 	}
 
 	recs := engine.Records()

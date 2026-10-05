@@ -33,8 +33,8 @@ func (e Event) AuctionRequestReceived(params Params) {
 	}
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.AuctionRequestReceived{
-		Envelope:   newProtoEnvelope(a, EventAuctionRequestReceived),
-		PriceFloor: priceFloor,
+		Envelope:            newProtoEnvelope(a, EventAuctionRequestReceived),
+		RequestedPriceFloor: priceFloor,
 	}, EventAuctionRequestReceived, "", a)
 }
 
@@ -44,10 +44,11 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 		Envelope:         newProtoEnvelope(a, EventAuctionCompleted),
 		Scope:            telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		TotalLatencyMs:   time.Since(params.Started).Milliseconds(),
-		ParticipantCount: int32(len(params.Bids)),
+		ParticipantCount: int32(participantCount(params.Bids)),
 	}
 	if params.Request != nil {
-		winner, price := roundWinner(params.Bids, params.Request.AdObject.PriceFloor)
+		ev.PriceFloor = params.Request.AdObject.PriceFloor
+		winner, price := roundWinner(params.Bids, ev.PriceFloor)
 		ev.WinnerDsp = winner
 		ev.Price = price
 	}
@@ -75,6 +76,9 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	}
 	a := attrsFrom(params)
 	latencyMS := dr.EndTS - dr.StartTS
+	if dr.SendTS != 0 {
+		latencyMS = dr.EndTS - dr.SendTS
+	}
 	outcome := OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
 	ev := &telemetryv1.DspResponseReceived{
 		Envelope:   newProtoEnvelope(a, EventDSPResponseReceived),
@@ -97,8 +101,8 @@ func (e Event) dspResponseRejectedIfBelowFloor(params Params, dr *adapters.Deman
 	if dr == nil || !dr.IsBid() || params.Request == nil {
 		return
 	}
-	floor := params.Request.AdObject.GetBidFloorForBidding()
-	if dr.Price() >= floor {
+	floor := params.Request.AdObject.PriceFloor
+	if dr.Price() > floor {
 		return
 	}
 	a := attrsFrom(params)
@@ -130,6 +134,16 @@ func attrsFrom(params Params) attrs {
 		Country:   params.Country,
 		TraceID:   params.TraceID,
 	}
+}
+
+func participantCount(bids []adapters.DemandResponse) int {
+	sent := make(map[string]struct{}, len(bids))
+	for _, bid := range bids {
+		if bid.SendTS != 0 {
+			sent[string(bid.DemandID)] = struct{}{}
+		}
+	}
+	return len(sent)
 }
 
 func roundWinner(bids []adapters.DemandResponse, floor float64) (string, float64) {

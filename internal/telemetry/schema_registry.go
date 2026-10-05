@@ -45,6 +45,6 @@ func (l *Logger) UseSchemaRegistry(url, topic string) error {
 	if err != nil {
 		return err
 	}
-	l.Event.serde = newConfluentSerde(reg, topic, l.Event.logf())
+	l.event.serde = newConfluentSerde(reg, topic, l.event.logf())
 	return nil
 }

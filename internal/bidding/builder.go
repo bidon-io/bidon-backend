@@ -252,28 +252,30 @@ func (b *Builder) processAdapter(
 			return
 		}
 		sendStart := time.Now().UnixMilli()
-		b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
+		b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey))
 		demandResponses, err := bidder.FetchBids(&auctionRequest)
 		if err != nil {
 			dr := adapters.DemandResponse{
 				DemandID: adapterKey,
 				Error:    err,
-				StartTS:  sendStart,
+				StartTS:  params.StartTS,
+				SendTS:   sendStart,
 				EndTS:    time.Now().UnixMilli(),
 			}
-			b.Telemetry.Event.DSPResponseReceived(tp, &dr)
+			b.Telemetry.Event().DSPResponseReceived(tp, &dr)
 			bids <- dr
 			return
 		}
 		for _, demandResponse := range demandResponses {
-			demandResponse.StartTS = sendStart
+			demandResponse.StartTS = params.StartTS
+			demandResponse.SendTS = sendStart
 			demandResponse.EndTS = time.Now().UnixMilli()
 			b.setTokenResponse(demandResponse, &auctionRequest)
 			demandResponse.FillRendering()
-			b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
 
 			bids <- *demandResponse
 		}
+		b.Telemetry.Event().DSPResponseReceived(tp, bestSlotResponse(adapterKey, demandResponses, params.StartTS, sendStart))
 
 		return
 	}
@@ -295,14 +297,15 @@ func (b *Builder) processAdapter(
 	}
 
 	sendStart := time.Now().UnixMilli()
-	b.Telemetry.Event.DSPRequestSent(tp, string(adapterKey))
+	b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey))
 	demandResponse := adapters.ExecuteDemandRequest(ctx, bidder.Client, bidder.Adapter, bidRequest, adapterKey)
-	demandResponse.StartTS = sendStart
+	demandResponse.StartTS = params.StartTS
+	demandResponse.SendTS = sendStart
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
 		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
-		b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
+		b.Telemetry.Event().DSPResponseReceived(tp, demandResponse)
 		bids <- *demandResponse
 		return
 	}
@@ -312,9 +315,25 @@ func (b *Builder) processAdapter(
 		childLogger.Error("parse demand response", zap.Error(err))
 	}
 	demandResponse.Error = err
-	b.Telemetry.Event.DSPResponseReceived(tp, demandResponse)
+	b.Telemetry.Event().DSPResponseReceived(tp, demandResponse)
 
 	bids <- *demandResponse
+}
+
+// bestSlotResponse folds Amazon's per-slot responses into the one
+// dsp_response_received that pairs with its single dsp_request_sent:
+// the highest bid, else the first slot, else a no-bid.
+func bestSlotResponse(key adapter.Key, slots []*adapters.DemandResponse, startTS, sendTS int64) *adapters.DemandResponse {
+	var best *adapters.DemandResponse
+	for _, slot := range slots {
+		if best == nil || (slot.IsBid() && (!best.IsBid() || slot.Price() > best.Price())) {
+			best = slot
+		}
+	}
+	if best == nil {
+		return &adapters.DemandResponse{DemandID: key, StartTS: startTS, SendTS: sendTS, EndTS: time.Now().UnixMilli()}
+	}
+	return best
 }
 
 func (b *Builder) buildApp(schemaApp schema.App, params *BuildParams) *openrtb2.App {
