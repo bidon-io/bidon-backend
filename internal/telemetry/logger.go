@@ -60,11 +60,10 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 	}
 
 	eventName := EventName(msg)
-	logger := e.logf().With(attrsLogFields(eventName, dsp, a)...)
 
 	env := msg.GetEnvelope()
 	if eventName == "" || env == nil {
-		logger.Error("telemetry message missing (event_name) option or envelope",
+		e.logError("telemetry message missing (event_name) option or envelope", eventName, dsp, a,
 			zap.String(HeaderMessageType, messageTypeName(msg)),
 		)
 		return
@@ -73,7 +72,7 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 
 	message, err := proto.Marshal(msg)
 	if err != nil {
-		logger.Error("marshal telemetry event", zap.Error(err))
+		e.logError("marshal telemetry event", eventName, dsp, a, zap.Error(err))
 		return
 	}
 	message = e.serde.frame(msg, message)
@@ -83,8 +82,14 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		Value:   message,
 		Headers: protoHeaders(eventName, msg),
 	}, func(err error) {
-		logger.Error("produce telemetry event", zap.Error(err))
+		e.logError("produce telemetry event", eventName, dsp, a, zap.Error(err))
 	})
+}
+
+// logError builds the context fields only when there is something to log;
+// emit runs per DSP per auction.
+func (e Event) logError(msg, eventName, dsp string, a attrs, fields ...zap.Field) {
+	e.logf().Error(msg, append(attrsLogFields(eventName, dsp, a), fields...)...)
 }
 
 func attrsLogFields(eventName, dsp string, a attrs) []zap.Field {
