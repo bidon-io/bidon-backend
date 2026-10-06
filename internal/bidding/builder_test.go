@@ -213,6 +213,12 @@ func (a scriptedAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequ
 	return &openrtb2.Imp{ID: "imp-1"}, adapters.RTBRequestOptions{}, nil
 }
 
+func (a scriptedAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{}, nil
+}
+
+// ExecuteRequest makes scriptedAdapter a CustomRequestExecutor, so
+// ExecuteDemandRequest returns the scripted response without HTTP.
 func (a scriptedAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {
 	return a.response
 }
