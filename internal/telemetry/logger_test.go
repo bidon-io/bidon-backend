@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -193,6 +194,21 @@ func TestLoggerEmptyTopicStructured(t *testing.T) {
 	}
 	if _, ok := fields["error"]; !ok {
 		t.Error("expected error field")
+	}
+	for _, key := range []string{"dsp", "trace_id"} {
+		if _, ok := fields[key]; ok {
+			t.Errorf("%s: empty value must be omitted", key)
+		}
+	}
+}
+
+func TestAttrsLogFieldsOmitsEmpty(t *testing.T) {
+	enc := zapcore.NewMapObjectEncoder()
+	for _, f := range attrsLogFields("", "", attrs{}) {
+		f.AddTo(enc)
+	}
+	if len(enc.Fields) != 1 || enc.Fields["topic"] != string(config.TelemetryEventsTopic) {
+		t.Errorf("fields: got %v, want only topic", enc.Fields)
 	}
 }
 

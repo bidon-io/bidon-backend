@@ -88,18 +88,20 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 }
 
 func attrsLogFields(eventName, dsp string, a attrs) []zap.Field {
-	fields := []zap.Field{
-		zap.String("topic", string(config.TelemetryEventsTopic)),
-		zap.String("event_name", eventName),
-		zap.String("auction_id", a.AuctionID),
-		zap.Int64("app_id", a.AppID),
-		zap.String("session_id", a.SessionID),
+	fields := []zap.Field{zap.String("topic", string(config.TelemetryEventsTopic))}
+	for _, f := range []struct{ key, value string }{
+		{"event_name", eventName},
+		{"auction_id", a.AuctionID},
+		{"session_id", a.SessionID},
+		{"dsp", dsp},
+		{"trace_id", a.TraceID},
+	} {
+		if f.value != "" {
+			fields = append(fields, zap.String(f.key, f.value))
+		}
 	}
-	if dsp != "" {
-		fields = append(fields, zap.String("dsp", dsp))
-	}
-	if a.TraceID != "" {
-		fields = append(fields, zap.String("trace_id", a.TraceID))
+	if a.AppID != 0 {
+		fields = append(fields, zap.Int64("app_id", a.AppID))
 	}
 	return fields
 }
