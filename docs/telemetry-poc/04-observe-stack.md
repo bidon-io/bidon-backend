@@ -128,6 +128,8 @@ GROUP BY window_start;
 
 Confirm `INCLUDE header`, `schema.registry.name.strategy` and `TUMBLE` / `to_timestamp` against the pinned RisingWave version’s docs and fix the syntax there — do not add extra views beyond the three typed ones and the three funnel views. Issue 5 will extend `funnel_5m`; keep the name stable.
 
+The views assume unsampled events: they count rows rather than `sum(1 / sampling_rate)`, and the funnel joins expect every event of an auction to be present. sdkapi emits `sampling_rate = 1.0` until sampling lands; revisit these views then, and key sampling on `(app_id, auction_id)` so an auction's events are kept or dropped together ([requirements G11](../telemetry-requirements.md)).
+
 Registry failures fail open in sdkapi: the record is produced as raw protobuf without the Confluent frame. A registry-backed source cannot decode those; treat them as dropped rows in the POC and check sdkapi logs for `schema registry register` if counts look low.
 
 `CREATE SOURCE` may fail if the topic does not exist yet. Create `telemetry-events` explicitly (rpk in an init container, or document `rpk topic create`) because `AllowAutoTopicCreation` only fires on first produce. Registry subjects only exist after sdkapi’s first emit of each type, so run one auction before the SQL, or have the init container retry. Init order: redpanda healthy → topic create → one auction (or retry loop) → RW → SQL.
