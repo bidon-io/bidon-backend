@@ -154,6 +154,13 @@ func main() {
 	e.Use(echoprometheus.NewMiddleware("sdkapi"))  // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
 
+	config.UseHealthCheckHandler(e, config.HealthCheckParams{
+		"db":        db,
+		"redis":     config.NewRedisPinger(rdb),
+		"events":    loggerEngine,
+		"telemetry": telemetryEngine,
+	})
+
 	port := config.HTTPPort("SDKAPI_PORT", "1324")
 	addr := fmt.Sprintf(":%s", port)
 
