@@ -23,6 +23,10 @@ func newProtoEnvelope(a attrs) *telemetryv1.Envelope {
 		AdFormat:      a.AdFormat,
 		Country:       a.Country,
 		TraceId:       a.TraceID,
-		SamplingRate:  1.0,
+		// Every event is emitted (100% sample) until sampling lands.
+		// TODO: set the real rate once sampling exists. It must keep or drop an
+		// auction's diagnostic events together, keyed on (app_id, auction_id),
+		// and never sample funnel stages, errors, impressions or notices.
+		SamplingRate: 1.0,
 	}
 }
