@@ -1,15 +1,3 @@
-# Build UI
-FROM node:22-alpine AS frontend-deps
-
-WORKDIR /app
-
-COPY web/bidon_ui/package.json web/bidon_ui/yarn.lock ./
-RUN yarn install --frozen-lockfile
-
-ARG APP_ENV=production
-COPY web/bidon_ui .
-RUN VITE_APP_ENV=${APP_ENV} yarn generate
-
 FROM node:22-alpine AS bidon-ui-builder
 
 WORKDIR /app
@@ -42,7 +30,6 @@ COPY . .
 
 FROM base AS bidon-admin-builder
 
-COPY --from=frontend-deps /app/.output/public ./cmd/bidon-admin/web/ui
 RUN go build -o /bidon-admin ./cmd/bidon-admin
 
 FROM base AS bidon-sdkapi-builder
