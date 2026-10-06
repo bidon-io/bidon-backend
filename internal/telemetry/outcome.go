@@ -3,16 +3,9 @@ package telemetry
 import (
 	"context"
 	"errors"
-)
+	"strings"
 
-type Outcome string
-
-const (
-	OutcomeBid       Outcome = "bid"
-	OutcomeNoBid     Outcome = "nobid"
-	OutcomeTimeout   Outcome = "timeout"
-	OutcomeHTTPError Outcome = "http_error"
-	OutcomeMalformed Outcome = "malformed"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 type AuctionResult string
@@ -22,31 +15,29 @@ const (
 	AuctionResultError AuctionResult = "error"
 )
 
-type ErrorCode string
-
-const (
-	ErrorCodeNoAdsFound        ErrorCode = "no_ads_found"
-	ErrorCodeInvalidAuctionKey ErrorCode = "invalid_auction_key"
-	ErrorCodeError             ErrorCode = "error"
-)
-
 // OutcomeFromDemand maps a demand response to a catalog outcome.
 // Precedence: timeout → http_error (4xx/5xx or status 0 with err) → malformed → bid → nobid.
-func OutcomeFromDemand(err error, isBid bool, status int) Outcome {
+func OutcomeFromDemand(err error, isBid bool, status int) telemetryv1.Outcome {
 	if errors.Is(err, context.DeadlineExceeded) {
-		return OutcomeTimeout
+		return telemetryv1.Outcome_OUTCOME_TIMEOUT
 	}
 	if status >= 400 {
-		return OutcomeHTTPError
+		return telemetryv1.Outcome_OUTCOME_HTTP_ERROR
 	}
 	if err != nil && status == 0 {
-		return OutcomeHTTPError
+		return telemetryv1.Outcome_OUTCOME_HTTP_ERROR
 	}
 	if err != nil {
-		return OutcomeMalformed
+		return telemetryv1.Outcome_OUTCOME_MALFORMED
 	}
 	if isBid {
-		return OutcomeBid
+		return telemetryv1.Outcome_OUTCOME_BID
 	}
-	return OutcomeNoBid
+	return telemetryv1.Outcome_OUTCOME_NOBID
+}
+
+// outcomeLabel is the dsp_response_total outcome label: the enum value name
+// without its prefix, lower-cased (OUTCOME_HTTP_ERROR → http_error).
+func outcomeLabel(o telemetryv1.Outcome) string {
+	return strings.ToLower(strings.TrimPrefix(o.String(), "OUTCOME_"))
 }

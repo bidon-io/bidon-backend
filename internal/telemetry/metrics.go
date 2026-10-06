@@ -3,6 +3,8 @@ package telemetry
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 var (
@@ -23,8 +25,8 @@ var (
 	}, []string{"result"})
 )
 
-func ObserveDSP(dsp string, outcome Outcome, seconds float64) {
-	DSPResponseTotal.WithLabelValues(dsp, string(outcome)).Inc()
+func ObserveDSP(dsp string, outcome telemetryv1.Outcome, seconds float64) {
+	DSPResponseTotal.WithLabelValues(dsp, outcomeLabel(outcome)).Inc()
 	DSPRequestDuration.WithLabelValues(dsp).Observe(seconds)
 }
 

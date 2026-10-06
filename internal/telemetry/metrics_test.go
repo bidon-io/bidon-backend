@@ -5,16 +5,18 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
+
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 func TestObserveDSPAndAuction(t *testing.T) {
 	dsp := "bac61_metrics_dsp"
-	ObserveDSP(dsp, OutcomeBid, 0.12)
-	ObserveDSP(dsp, OutcomeTimeout, 4.0)
+	ObserveDSP(dsp, telemetryv1.Outcome_OUTCOME_BID, 0.12)
+	ObserveDSP(dsp, telemetryv1.Outcome_OUTCOME_TIMEOUT, 4.0)
 	ObserveAuctionCompleted(AuctionResultOK)
 	ObserveAuctionCompleted(AuctionResultError)
 
-	bid, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, string(OutcomeBid))
+	bid, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, "bid")
 	if err != nil {
 		t.Fatalf("dsp_response_total bid: %v", err)
 	}
@@ -22,7 +24,7 @@ func TestObserveDSPAndAuction(t *testing.T) {
 		t.Errorf("dsp_response_total{outcome=bid} = %v, want >= 1", got)
 	}
 
-	timeout, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, string(OutcomeTimeout))
+	timeout, err := DSPResponseTotal.GetMetricWithLabelValues(dsp, "timeout")
 	if err != nil {
 		t.Fatalf("dsp_response_total timeout: %v", err)
 	}

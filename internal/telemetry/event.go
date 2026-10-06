@@ -26,33 +26,3 @@ func newProtoEnvelope(a attrs) *telemetryv1.Envelope {
 		SamplingRate:  1.0,
 	}
 }
-
-func protoOutcome(o Outcome) telemetryv1.Outcome {
-	switch o {
-	case OutcomeBid:
-		return telemetryv1.Outcome_OUTCOME_BID
-	case OutcomeNoBid:
-		return telemetryv1.Outcome_OUTCOME_NOBID
-	case OutcomeTimeout:
-		return telemetryv1.Outcome_OUTCOME_TIMEOUT
-	case OutcomeHTTPError:
-		return telemetryv1.Outcome_OUTCOME_HTTP_ERROR
-	case OutcomeMalformed:
-		return telemetryv1.Outcome_OUTCOME_MALFORMED
-	default:
-		return telemetryv1.Outcome_OUTCOME_UNSPECIFIED
-	}
-}
-
-func protoErrorCode(c ErrorCode) telemetryv1.ErrorCode {
-	switch c {
-	case ErrorCodeNoAdsFound:
-		return telemetryv1.ErrorCode_ERROR_CODE_NO_ADS_FOUND
-	case ErrorCodeInvalidAuctionKey:
-		return telemetryv1.ErrorCode_ERROR_CODE_INVALID_AUCTION_KEY
-	case ErrorCodeError:
-		return telemetryv1.ErrorCode_ERROR_CODE_ERROR
-	default:
-		return telemetryv1.ErrorCode_ERROR_CODE_UNSPECIFIED
-	}
-}

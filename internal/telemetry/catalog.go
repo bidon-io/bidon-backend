@@ -54,7 +54,7 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 	}
 	result := AuctionResultOK
 	if params.Err != nil {
-		ev.ErrorCode = protoErrorCode(errorCode(params.Err))
+		ev.ErrorCode = errorCode(params.Err)
 		result = AuctionResultError
 	}
 	e.emit(ev, "", a)
@@ -84,7 +84,7 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 		Envelope:   newProtoEnvelope(a),
 		Scope:      telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		Dsp:        string(dr.DemandID),
-		Outcome:    protoOutcome(outcome),
+		Outcome:    outcome,
 		HttpStatus: int32(dr.Status),
 		LatencyMs:  latencyMS,
 	}
@@ -161,13 +161,13 @@ func roundWinner(bids []adapters.DemandResponse, floor float64) (string, float64
 	return winner, price
 }
 
-func errorCode(err error) ErrorCode {
+func errorCode(err error) telemetryv1.ErrorCode {
 	switch {
 	case errors.Is(err, sdkapi.ErrNoAdsFound):
-		return ErrorCodeNoAdsFound
+		return telemetryv1.ErrorCode_ERROR_CODE_NO_ADS_FOUND
 	case errors.Is(err, sdkapi.ErrInvalidAuctionKey):
-		return ErrorCodeInvalidAuctionKey
+		return telemetryv1.ErrorCode_ERROR_CODE_INVALID_AUCTION_KEY
 	default:
-		return ErrorCodeError
+		return telemetryv1.ErrorCode_ERROR_CODE_ERROR
 	}
 }
