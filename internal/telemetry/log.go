@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type Log struct {
@@ -18,15 +19,21 @@ func (e *Log) log() *zap.Logger {
 }
 
 func (e *Log) Produce(message LogMessage, _ func(error)) {
-	rec, err := DecodeRecord(message)
+	fields := []zap.Field{
+		zap.String("topic", string(message.Topic)),
+		zap.String(HeaderEventName, message.Headers[HeaderEventName]),
+	}
+	msg, err := DecodeMessage(message)
 	if err != nil {
-		e.log().Debug("produce telemetry",
-			zap.String("topic", string(message.Topic)),
-			zap.Error(err),
-		)
+		e.log().Debug("produce telemetry", append(fields, zap.Error(err))...)
 		return
 	}
-	e.log().Debug("produce telemetry", envelopeLogFields(message.Topic, rec.Envelope, rec.DSP)...)
+	event, err := protojson.MarshalOptions{UseProtoNames: true}.Marshal(msg)
+	if err != nil {
+		e.log().Debug("produce telemetry", append(fields, zap.Error(err))...)
+		return
+	}
+	e.log().Debug("produce telemetry", append(fields, zap.ByteString("event", event))...)
 }
 
 func (e *Log) Ping(_ context.Context) error {

@@ -54,12 +54,22 @@ func (e Event) logf() *zap.Logger {
 	return e.log
 }
 
-func (e Event) emit(msg proto.Message, eventName, dsp string, a attrs) {
+func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 	if e.engine == nil {
 		return
 	}
 
+	eventName := EventName(msg)
 	logger := e.logf().With(attrsLogFields(eventName, dsp, a)...)
+
+	env := msg.GetEnvelope()
+	if eventName == "" || env == nil {
+		logger.Error("telemetry message missing (event_name) option or envelope",
+			zap.String(HeaderMessageType, messageTypeName(msg)),
+		)
+		return
+	}
+	env.EventName = eventName
 
 	message, err := proto.Marshal(msg)
 	if err != nil {
@@ -90,24 +100,6 @@ func attrsLogFields(eventName, dsp string, a attrs) []zap.Field {
 	}
 	if a.TraceID != "" {
 		fields = append(fields, zap.String("trace_id", a.TraceID))
-	}
-	return fields
-}
-
-func envelopeLogFields(topic config.Topic, env Envelope, dsp string) []zap.Field {
-	fields := []zap.Field{
-		zap.String("topic", string(topic)),
-		zap.String("event_name", env.EventName),
-		zap.String("event_id", env.EventID),
-		zap.String("auction_id", env.AuctionID),
-		zap.Int64("app_id", env.AppID),
-		zap.String("session_id", env.SessionID),
-	}
-	if dsp != "" {
-		fields = append(fields, zap.String("dsp", dsp))
-	}
-	if env.TraceID != "" {
-		fields = append(fields, zap.String("trace_id", env.TraceID))
 	}
 	return fields
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/bidon-io/bidon-backend/config"
 )
 
@@ -21,19 +23,31 @@ func (e *MemoryEngine) Produce(message LogMessage, _ func(error)) {
 
 func (e *MemoryEngine) Ping(_ context.Context) error { return nil }
 
-func (e *MemoryEngine) Records() []Record {
+// Events decodes every telemetry-events message produced so far, in order.
+func (e *MemoryEngine) Events() []proto.Message {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	out := make([]Record, 0, len(e.Messages))
+	out := make([]proto.Message, 0, len(e.Messages))
 	for _, msg := range e.Messages {
 		if msg.Topic != config.TelemetryEventsTopic {
 			continue
 		}
-		rec, err := DecodeRecord(msg)
+		decoded, err := DecodeMessage(msg)
 		if err != nil {
 			continue
 		}
-		out = append(out, rec)
+		out = append(out, decoded)
+	}
+	return out
+}
+
+// EventsOf returns the produced events of type T, in order.
+func EventsOf[T proto.Message](e *MemoryEngine) []T {
+	var out []T
+	for _, msg := range e.Events() {
+		if typed, ok := msg.(T); ok {
+			out = append(out, typed)
+		}
 	}
 	return out
 }

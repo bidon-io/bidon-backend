@@ -34,7 +34,7 @@ func (f *fakeRegistry) Register(_ context.Context, subject, schema string) (int,
 
 func TestConfluentFrameRoundTrip(t *testing.T) {
 	msg := &telemetryv1.DspResponseReceived{
-		Envelope: &telemetryv1.Envelope{EventName: EventDSPResponseReceived, AuctionId: "auc-1"},
+		Envelope: &telemetryv1.Envelope{EventName: "dsp_response_received", AuctionId: "auc-1"},
 		Dsp:      "bidmachine",
 	}
 	payload, err := proto.Marshal(msg)
@@ -66,20 +66,20 @@ func TestConfluentFrameRoundTrip(t *testing.T) {
 		t.Fatal("stripConfluentPrefix must restore proto payload")
 	}
 
-	rec, err := DecodeRecord(LogMessage{
+	decoded, err := DecodeMessage(LogMessage{
 		Value:   framed,
-		Headers: protoHeaders(EventDSPResponseReceived, msg),
+		Headers: protoHeaders(EventName(msg), msg),
 	})
 	if err != nil {
-		t.Fatalf("DecodeRecord framed: %v", err)
+		t.Fatalf("DecodeMessage framed: %v", err)
 	}
-	if rec.AuctionID != "auc-1" || rec.DSP != "bidmachine" {
-		t.Fatalf("decoded record: %+v", rec)
+	if !proto.Equal(decoded, msg) {
+		t.Fatalf("decoded = %v, want %v", decoded, msg)
 	}
 }
 
 func TestConfluentSerdeFailOpen(t *testing.T) {
-	msg := &telemetryv1.AuctionRequestReceived{Envelope: &telemetryv1.Envelope{EventName: EventAuctionRequestReceived}}
+	msg := &telemetryv1.AuctionRequestReceived{Envelope: &telemetryv1.Envelope{EventName: "auction_request_received"}}
 	payload, err := proto.Marshal(msg)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestConfluentSerdeFailOpen(t *testing.T) {
 }
 
 func TestConfluentSerdeCachesID(t *testing.T) {
-	msg := &telemetryv1.DspRequestSent{Envelope: &telemetryv1.Envelope{EventName: EventDSPRequestSent}}
+	msg := &telemetryv1.DspRequestSent{Envelope: &telemetryv1.Envelope{EventName: "dsp_request_sent"}}
 	payload, err := proto.Marshal(msg)
 	if err != nil {
 		t.Fatal(err)
@@ -134,11 +134,15 @@ func TestEventEmitFramesWhenRegistrySet(t *testing.T) {
 	if msg.Value[0] != 0 {
 		t.Fatal("produced value must be Confluent-framed")
 	}
-	rec, err := DecodeRecord(msg)
+	decoded, err := DecodeMessage(msg)
 	if err != nil {
-		t.Fatalf("DecodeRecord: %v", err)
+		t.Fatalf("DecodeMessage: %v", err)
 	}
-	if rec.EventName != EventDSPResponseReceived {
-		t.Fatalf("event_name: %q", rec.EventName)
+	pb, ok := decoded.(*telemetryv1.DspResponseReceived)
+	if !ok {
+		t.Fatalf("decoded type = %T", decoded)
+	}
+	if pb.GetEnvelope().GetEventName() != "dsp_response_received" {
+		t.Fatalf("event_name: %q", pb.GetEnvelope().GetEventName())
 	}
 }

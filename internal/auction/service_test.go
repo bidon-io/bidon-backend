@@ -23,6 +23,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
 	"github.com/bidon-io/bidon-backend/internal/telemetry"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 // MockEventLogger captures logged events for testing
@@ -1305,38 +1306,39 @@ func TestService_Run_EmitsAuctionTelemetry(t *testing.T) {
 		t.Fatalf("Run() error = %v", err)
 	}
 
-	recs := telEngine.Records()
-	if len(recs) != 2 {
-		t.Fatalf("auction telemetry events: got %d, want 2 (request + completed); DSP send/receive are emitted by bidding.Builder", len(recs))
+	events := telEngine.Events()
+	if len(events) != 2 {
+		t.Fatalf("auction telemetry events: got %d, want 2 (request + completed); DSP send/receive are emitted by bidding.Builder", len(events))
 	}
-	if recs[0].EventName != telemetry.EventAuctionRequestReceived {
-		t.Errorf("first event = %q, want %q", recs[0].EventName, telemetry.EventAuctionRequestReceived)
+	received, ok := events[0].(*telemetryv1.AuctionRequestReceived)
+	if !ok {
+		t.Fatalf("first event = %T, want AuctionRequestReceived", events[0])
 	}
-	if recs[0].AuctionID != "auc-telemetry" || recs[0].AppID != 9 || recs[0].Country != "US" {
-		t.Errorf("request envelope = %+v", recs[0].Envelope)
+	if env := received.GetEnvelope(); env.GetAuctionId() != "auc-telemetry" || env.GetAppId() != 9 || env.GetCountry() != "US" {
+		t.Errorf("request envelope = %v", env)
 	}
-	if recs[0].PriceFloor != 0.01 {
-		t.Errorf("price_floor = %v, want 0.01", recs[0].PriceFloor)
+	if received.GetRequestedPriceFloor() != 0.01 {
+		t.Errorf("requested_price_floor = %v, want 0.01", received.GetRequestedPriceFloor())
 	}
 
-	completed := recs[1]
-	if completed.EventName != telemetry.EventAuctionCompleted {
-		t.Errorf("second event = %q, want %q", completed.EventName, telemetry.EventAuctionCompleted)
+	completed, ok := events[1].(*telemetryv1.AuctionCompleted)
+	if !ok {
+		t.Fatalf("second event = %T, want AuctionCompleted", events[1])
 	}
-	if completed.Scope != telemetry.ScopeBiddingRound {
-		t.Errorf("scope = %q", completed.Scope)
+	if completed.GetScope() != telemetryv1.Scope_SCOPE_BIDDING_ROUND {
+		t.Errorf("scope = %v", completed.GetScope())
 	}
-	if completed.ParticipantCount != 3 {
-		t.Errorf("participant_count = %d, want 3", completed.ParticipantCount)
+	if completed.GetParticipantCount() != 3 {
+		t.Errorf("participant_count = %d, want 3", completed.GetParticipantCount())
 	}
-	if completed.WinnerDSP != string(adapter.BidmachineKey) || completed.Price != 1.5 {
-		t.Errorf("winner = %s price = %v", completed.WinnerDSP, completed.Price)
+	if completed.GetWinnerDsp() != string(adapter.BidmachineKey) || completed.GetPrice() != 1.5 {
+		t.Errorf("winner = %s price = %v", completed.GetWinnerDsp(), completed.GetPrice())
 	}
-	if completed.PriceFloor != 0.05 {
-		t.Errorf("auction_completed price_floor = %v, want effective floor 0.05", completed.PriceFloor)
+	if completed.GetPriceFloor() != 0.05 {
+		t.Errorf("auction_completed price_floor = %v, want effective floor 0.05", completed.GetPriceFloor())
 	}
-	if completed.TotalLatencyMS < 0 {
-		t.Errorf("total_latency_ms = %d", completed.TotalLatencyMS)
+	if completed.GetTotalLatencyMs() < 0 {
+		t.Errorf("total_latency_ms = %d", completed.GetTotalLatencyMs())
 	}
 }
 

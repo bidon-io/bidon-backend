@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/bidon-io/bidon-backend/config"
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -69,7 +70,7 @@ func TestEventDSPResponseReceived(t *testing.T) {
 	if msg.Topic != config.TelemetryEventsTopic {
 		t.Errorf("topic: got %q, want %q", msg.Topic, config.TelemetryEventsTopic)
 	}
-	if msg.Headers[HeaderEventName] != EventDSPResponseReceived {
+	if msg.Headers[HeaderEventName] != "dsp_response_received" {
 		t.Errorf("event_name header: got %q", msg.Headers[HeaderEventName])
 	}
 	if msg.Headers[HeaderMessageType] != "org.bidon.telemetry.v1.DspResponseReceived" {
@@ -87,49 +88,50 @@ func TestEventDSPResponseReceived(t *testing.T) {
 		t.Fatal("envelope must be embedded")
 	}
 
-	rec, err := DecodeRecord(msg)
-	if err != nil {
-		t.Fatalf("DecodeRecord: %v", err)
+	env := pb.GetEnvelope()
+	if env.GetEventName() != "dsp_response_received" {
+		t.Errorf("event_name: got %q", env.GetEventName())
 	}
-
-	if rec.EventName != EventDSPResponseReceived {
-		t.Errorf("event_name: got %q", rec.EventName)
+	if env.GetSchemaVersion() != SchemaVersion {
+		t.Errorf("schema_version: got %q", env.GetSchemaVersion())
 	}
-	if rec.SchemaVersion != SchemaVersion {
-		t.Errorf("schema_version: got %q", rec.SchemaVersion)
+	if env.GetAuctionId() != "auc-1" || env.GetSessionId() != "sess-1" {
+		t.Errorf("ids: auction=%q session=%q", env.GetAuctionId(), env.GetSessionId())
 	}
-	if rec.AuctionID != "auc-1" || rec.SessionID != "sess-1" {
-		t.Errorf("ids: auction=%q session=%q", rec.AuctionID, rec.SessionID)
+	if env.GetAdType() != string(ad.BannerType) || env.GetAdFormat() != string(ad.BannerFormat) {
+		t.Errorf("ad: type=%q format=%q", env.GetAdType(), env.GetAdFormat())
 	}
-	if rec.AdType != string(ad.BannerType) || rec.AdFormat != string(ad.BannerFormat) {
-		t.Errorf("ad: type=%q format=%q", rec.AdType, rec.AdFormat)
+	if env.GetCountry() != "US" || env.GetTraceId() != "trace-1" {
+		t.Errorf("country/trace: %q %q", env.GetCountry(), env.GetTraceId())
 	}
-	if rec.Country != "US" || rec.TraceID != "trace-1" {
-		t.Errorf("country/trace: %q %q", rec.Country, rec.TraceID)
+	if env.GetAppId() != 42 || env.GetSamplingRate() != 1.0 {
+		t.Errorf("app_id=%d sampling_rate=%v", env.GetAppId(), env.GetSamplingRate())
 	}
-	if rec.Scope != ScopeBiddingRound {
-		t.Errorf("scope: got %q", rec.Scope)
-	}
-	if rec.DSP != string(adapter.BidmachineKey) {
-		t.Errorf("dsp: got %q", rec.DSP)
-	}
-	if rec.Outcome != OutcomeBid {
-		t.Errorf("outcome: got %q", rec.Outcome)
-	}
-	if rec.AppID != 42 || rec.SamplingRate != 1.0 {
-		t.Errorf("app_id=%d sampling_rate=%v", rec.AppID, rec.SamplingRate)
-	}
-	if rec.HTTPStatus != 200 || rec.LatencyMS != 15 || rec.Price != 1.23 {
-		t.Errorf("http=%d latency=%d price=%v", rec.HTTPStatus, rec.LatencyMS, rec.Price)
-	}
-	if rec.PriceFloor != 0 {
-		t.Errorf("dsp_response_received must not set price_floor, got %v", rec.PriceFloor)
-	}
-	if rec.EventID == "" {
+	if env.GetEventId() == "" {
 		t.Error("event_id must be a non-empty UUID")
 	}
-	if rec.EventTS <= 0 {
-		t.Errorf("event_ts: got %d, want unix ms", rec.EventTS)
+	if env.GetEventTs() <= 0 {
+		t.Errorf("event_ts: got %d, want unix ms", env.GetEventTs())
+	}
+	if pb.GetScope() != telemetryv1.Scope_SCOPE_BIDDING_ROUND {
+		t.Errorf("scope: got %v", pb.GetScope())
+	}
+	if pb.GetDsp() != string(adapter.BidmachineKey) {
+		t.Errorf("dsp: got %q", pb.GetDsp())
+	}
+	if pb.GetOutcome() != telemetryv1.Outcome_OUTCOME_BID {
+		t.Errorf("outcome: got %v", pb.GetOutcome())
+	}
+	if pb.GetHttpStatus() != 200 || pb.GetLatencyMs() != 15 || pb.GetPrice() != 1.23 {
+		t.Errorf("http=%d latency=%d price=%v", pb.GetHttpStatus(), pb.GetLatencyMs(), pb.GetPrice())
+	}
+
+	decoded, err := DecodeMessage(msg)
+	if err != nil {
+		t.Fatalf("DecodeMessage: %v", err)
+	}
+	if !proto.Equal(decoded, &pb) {
+		t.Errorf("DecodeMessage = %v, want %v", decoded, &pb)
 	}
 }
 
@@ -183,7 +185,7 @@ func TestLoggerEmptyTopicStructured(t *testing.T) {
 
 	fields := entries[0].ContextMap()
 	assertField(t, fields, "topic", string(config.TelemetryEventsTopic))
-	assertField(t, fields, "event_name", EventAuctionRequestReceived)
+	assertField(t, fields, "event_name", "auction_request_received")
 	assertField(t, fields, "auction_id", "auc-structured")
 	assertField(t, fields, "session_id", "sess-structured")
 	if fields["app_id"] != int64(7) {
@@ -216,30 +218,94 @@ func TestLogEngineStructured(t *testing.T) {
 	}
 
 	fields := entries[0].ContextMap()
-	assertField(t, fields, "event_name", EventDSPResponseReceived)
-	assertField(t, fields, "auction_id", "auc-log")
-	assertField(t, fields, "dsp", string(adapter.BidmachineKey))
-	assertField(t, fields, "trace_id", "trace-log")
-	if _, ok := fields["value"]; ok {
-		t.Error("raw blob must not be logged; use named fields")
+	assertField(t, fields, "event_name", "dsp_response_received")
+	raw, ok := fields["event"].(string)
+	if !ok {
+		t.Fatalf("event field: got %#v, want protojson string", fields["event"])
+	}
+	var event struct {
+		Envelope struct {
+			AuctionID string `json:"auction_id"`
+			TraceID   string `json:"trace_id"`
+		} `json:"envelope"`
+		DSP string `json:"dsp"`
+	}
+	if err := json.Unmarshal([]byte(raw), &event); err != nil {
+		t.Fatalf("event is not JSON: %v (%s)", err, raw)
+	}
+	if event.Envelope.AuctionID != "auc-log" || event.Envelope.TraceID != "trace-log" || event.DSP != string(adapter.BidmachineKey) {
+		t.Errorf("event = %s", raw)
 	}
 }
 
-func TestCatalogEventRegistry(t *testing.T) {
-	for _, name := range CatalogEventNames() {
-		msg, ok := NewMessage(name)
-		if !ok {
-			t.Errorf("NewMessage(%q) missing from proto registry", name)
-			continue
-		}
-		if messageTypeName(msg) == "" {
-			t.Errorf("%s proto full name is empty", name)
-		}
+// TestCatalogEventNames pins every catalog message to its declared
+// (event_name). A new message with an envelope must be added here.
+func TestCatalogEventNames(t *testing.T) {
+	want := map[string]string{
+		"org.bidon.telemetry.v1.AuctionRequestReceived": "auction_request_received",
+		"org.bidon.telemetry.v1.AuctionCompleted":       "auction_completed",
+		"org.bidon.telemetry.v1.DspRequestSent":         "dsp_request_sent",
+		"org.bidon.telemetry.v1.DspResponseReceived":    "dsp_response_received",
+		"org.bidon.telemetry.v1.DspResponseRejected":    "dsp_response_rejected",
 	}
 
-	unknown, ok := NewMessage("not_a_catalog_event")
-	if ok || unknown != nil {
-		t.Fatal("unknown event_name must not resolve")
+	got := map[string]string{}
+	seen := map[string]string{}
+	msgs := telemetryv1.File_org_bidon_telemetry_v1_events_proto.Messages()
+	for i := 0; i < msgs.Len(); i++ {
+		d := msgs.Get(i)
+		if d.Fields().ByName("envelope") == nil {
+			continue
+		}
+		mt, err := protoregistry.GlobalTypes.FindMessageByName(d.FullName())
+		if err != nil {
+			t.Fatalf("%s not registered: %v", d.FullName(), err)
+		}
+		msg := mt.New().Interface()
+		if _, ok := msg.(catalogEvent); !ok {
+			t.Errorf("%s does not satisfy catalogEvent", d.FullName())
+		}
+		name := EventName(msg)
+		if name == "" {
+			t.Errorf("%s has an envelope but no (event_name) option", d.FullName())
+			continue
+		}
+		if other, dup := seen[name]; dup {
+			t.Errorf("event_name %q declared by both %s and %s", name, other, d.FullName())
+		}
+		seen[name] = string(d.FullName())
+		got[string(d.FullName())] = name
+	}
+
+	for typ, name := range want {
+		if got[typ] != name {
+			t.Errorf("%s event_name = %q, want %q", typ, got[typ], name)
+		}
+	}
+	for typ := range got {
+		if _, ok := want[typ]; !ok {
+			t.Errorf("%s is a catalog message missing from this test", typ)
+		}
+	}
+	if EventName(&telemetryv1.Envelope{}) != "" {
+		t.Error("Envelope is not an event and must not declare event_name")
+	}
+}
+
+func TestEmitDropsMessageWithoutEnvelope(t *testing.T) {
+	engine := &recordingEngine{}
+	New(engine, nil).Event().emit(&telemetryv1.DspRequestSent{}, "", attrs{})
+	if len(engine.messages) != 0 {
+		t.Fatalf("emit without envelope produced %d messages", len(engine.messages))
+	}
+}
+
+func TestDecodeMessageErrors(t *testing.T) {
+	if _, err := DecodeMessage(LogMessage{}); err == nil {
+		t.Error("missing protobuf_message header must error")
+	}
+	if _, err := DecodeMessage(LogMessage{Headers: map[string]string{HeaderMessageType: "org.bidon.telemetry.v1.Nope"}}); err == nil {
+		t.Error("unknown message type must error")
 	}
 }
 

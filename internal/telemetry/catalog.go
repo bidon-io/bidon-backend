@@ -33,15 +33,15 @@ func (e Event) AuctionRequestReceived(params Params) {
 	}
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.AuctionRequestReceived{
-		Envelope:            newProtoEnvelope(a, EventAuctionRequestReceived),
+		Envelope:            newProtoEnvelope(a),
 		RequestedPriceFloor: priceFloor,
-	}, EventAuctionRequestReceived, "", a)
+	}, "", a)
 }
 
 func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 	a := attrsFrom(params.Params)
 	ev := &telemetryv1.AuctionCompleted{
-		Envelope:         newProtoEnvelope(a, EventAuctionCompleted),
+		Envelope:         newProtoEnvelope(a),
 		Scope:            telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		TotalLatencyMs:   time.Since(params.Started).Milliseconds(),
 		ParticipantCount: int32(participantCount(params.Bids)),
@@ -57,17 +57,17 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 		ev.ErrorCode = protoErrorCode(errorCode(params.Err))
 		result = AuctionResultError
 	}
-	e.emit(ev, EventAuctionCompleted, "", a)
+	e.emit(ev, "", a)
 	ObserveAuctionCompleted(result)
 }
 
 func (e Event) DSPRequestSent(params Params, dsp string) {
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.DspRequestSent{
-		Envelope: newProtoEnvelope(a, EventDSPRequestSent),
+		Envelope: newProtoEnvelope(a),
 		Scope:    telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		Dsp:      dsp,
-	}, EventDSPRequestSent, dsp, a)
+	}, dsp, a)
 }
 
 func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
@@ -81,7 +81,7 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	}
 	outcome := OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
 	ev := &telemetryv1.DspResponseReceived{
-		Envelope:   newProtoEnvelope(a, EventDSPResponseReceived),
+		Envelope:   newProtoEnvelope(a),
 		Scope:      telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		Dsp:        string(dr.DemandID),
 		Outcome:    protoOutcome(outcome),
@@ -91,7 +91,7 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	if dr.IsBid() {
 		ev.Price = dr.Price()
 	}
-	e.emit(ev, EventDSPResponseReceived, ev.Dsp, a)
+	e.emit(ev, ev.Dsp, a)
 	ObserveDSP(string(dr.DemandID), outcome, float64(latencyMS)/1000)
 
 	e.dspResponseRejectedIfBelowFloor(params, dr)
@@ -107,13 +107,13 @@ func (e Event) dspResponseRejectedIfBelowFloor(params Params, dr *adapters.Deman
 	}
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.DspResponseRejected{
-		Envelope:     newProtoEnvelope(a, EventDSPResponseRejected),
+		Envelope:     newProtoEnvelope(a),
 		Scope:        telemetryv1.Scope_SCOPE_BIDDING_ROUND,
 		Dsp:          string(dr.DemandID),
 		Price:        dr.Price(),
 		PriceFloor:   floor,
 		RejectReason: telemetryv1.RejectReason_REJECT_REASON_BELOW_FLOOR,
-	}, EventDSPResponseRejected, string(dr.DemandID), a)
+	}, string(dr.DemandID), a)
 }
 
 func attrsFrom(params Params) attrs {

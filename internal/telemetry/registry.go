@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
@@ -13,33 +15,17 @@ const (
 	HeaderMessageType = "protobuf_message"
 )
 
-// NewMessage returns an empty proto message for a catalog event_name.
-func NewMessage(eventName string) (proto.Message, bool) {
-	switch eventName {
-	case EventAuctionRequestReceived:
-		return &telemetryv1.AuctionRequestReceived{}, true
-	case EventAuctionCompleted:
-		return &telemetryv1.AuctionCompleted{}, true
-	case EventDSPRequestSent:
-		return &telemetryv1.DspRequestSent{}, true
-	case EventDSPResponseReceived:
-		return &telemetryv1.DspResponseReceived{}, true
-	case EventDSPResponseRejected:
-		return &telemetryv1.DspResponseRejected{}, true
-	default:
-		return nil, false
-	}
+// catalogEvent is a telemetry-events message: it embeds the Envelope and
+// declares its event_name with the (event_name) option in events.proto.
+type catalogEvent interface {
+	proto.Message
+	GetEnvelope() *telemetryv1.Envelope
 }
 
-// CatalogEventNames is the proto registry order for catalog emits.
-func CatalogEventNames() []string {
-	return []string{
-		EventAuctionRequestReceived,
-		EventAuctionCompleted,
-		EventDSPRequestSent,
-		EventDSPResponseReceived,
-		EventDSPResponseRejected,
-	}
+// EventName returns the (event_name) option declared on msg's type, or "".
+func EventName(msg proto.Message) string {
+	name, _ := proto.GetExtension(msg.ProtoReflect().Descriptor().Options(), telemetryv1.E_EventName).(string)
+	return name
 }
 
 func messageTypeName(msg proto.Message) string {
@@ -53,20 +39,20 @@ func protoHeaders(eventName string, msg proto.Message) map[string]string {
 	}
 }
 
-func DecodeRecord(msg LogMessage) (Record, error) {
-	name := ""
-	if msg.Headers != nil {
-		name = msg.Headers[HeaderEventName]
-	}
+// DecodeMessage decodes a produced telemetry-events value into the message
+// type named by its protobuf_message header. Framed and raw values both work.
+func DecodeMessage(msg LogMessage) (proto.Message, error) {
+	name := msg.Headers[HeaderMessageType]
 	if name == "" {
-		return Record{}, fmt.Errorf("missing %s header", HeaderEventName)
+		return nil, fmt.Errorf("missing %s header", HeaderMessageType)
 	}
-	protoMsg, ok := NewMessage(name)
-	if !ok {
-		return Record{}, fmt.Errorf("unknown event_name %q", name)
+	mt, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
+	if err != nil {
+		return nil, fmt.Errorf("unknown %s %q: %w", HeaderMessageType, name, err)
 	}
-	if err := proto.Unmarshal(stripConfluentPrefix(msg.Value), protoMsg); err != nil {
-		return Record{}, err
+	out := mt.New().Interface()
+	if err := proto.Unmarshal(stripConfluentPrefix(msg.Value), out); err != nil {
+		return nil, err
 	}
-	return recordFromProto(protoMsg), nil
+	return out, nil
 }

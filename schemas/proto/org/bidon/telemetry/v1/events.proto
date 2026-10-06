@@ -2,6 +2,14 @@ syntax = "proto3";
 
 package org.bidon.telemetry.v1;
 
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  // Catalog event_name for a telemetry-events message. Every message that
+  // embeds Envelope must declare it; the emitter reads it from the type.
+  string event_name = 50000;
+}
+
 // Envelope is the identity header embedded in every catalog event.
 message Envelope {
   string event_id = 1;
@@ -54,6 +62,8 @@ enum ErrorCode {
 
 // AuctionRequestReceived is emitted when /v2/auction is accepted.
 message AuctionRequestReceived {
+  option (event_name) = "auction_request_received";
+
   Envelope envelope = 1;
   // Floor the SDK sent, before the auction configuration floor is applied.
   double requested_price_floor = 2;
@@ -61,6 +71,8 @@ message AuctionRequestReceived {
 
 // AuctionCompleted is emitted when the server bidding round finishes.
 message AuctionCompleted {
+  option (event_name) = "auction_completed";
+
   Envelope envelope = 1;
   Scope scope = 2;
   string winner_dsp = 3;
@@ -76,6 +88,8 @@ message AuctionCompleted {
 
 // DspRequestSent is emitted immediately before the adapter HTTP call.
 message DspRequestSent {
+  option (event_name) = "dsp_request_sent";
+
   Envelope envelope = 1;
   Scope scope = 2;
   string dsp = 3;
@@ -84,6 +98,8 @@ message DspRequestSent {
 // DspResponseReceived is emitted after the adapter returns, once per
 // dsp_request_sent. Multi-slot DSPs (Amazon) report their best slot.
 message DspResponseReceived {
+  option (event_name) = "dsp_response_received";
+
   Envelope envelope = 1;
   Scope scope = 2;
   string dsp = 3;
@@ -95,6 +111,8 @@ message DspResponseReceived {
 
 // DspResponseRejected is emitted when a bid exists but price <= price_floor.
 message DspResponseRejected {
+  option (event_name) = "dsp_response_rejected";
+
   Envelope envelope = 1;
   Scope scope = 2;
   string dsp = 3;

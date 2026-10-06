@@ -15,14 +15,6 @@ const (
 	OutcomeMalformed Outcome = "malformed"
 )
 
-type Scope string
-
-const ScopeBiddingRound Scope = "bidding_round"
-
-type RejectReason string
-
-const RejectReasonBelowFloor RejectReason = "below_floor"
-
 type AuctionResult string
 
 const (

@@ -6,6 +6,7 @@ import (
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 func TestFloorRuleIsConsistentAcrossEvents(t *testing.T) {
@@ -35,27 +36,24 @@ func TestFloorRuleIsConsistentAcrossEvents(t *testing.T) {
 			ev.DSPResponseReceived(params, &bid)
 			ev.AuctionCompleted(AuctionCompletedParams{Params: params, Bids: []adapters.DemandResponse{bid}, Started: time.Now()})
 
-			var rejected bool
-			var completed Record
-			for _, rec := range engine.Records() {
-				switch rec.EventName {
-				case EventDSPResponseRejected:
-					rejected = true
-					if rec.PriceFloor != 1.0 {
-						t.Errorf("rejected price_floor = %v, want 1.0", rec.PriceFloor)
-					}
-				case EventAuctionCompleted:
-					completed = rec
-				}
+			rejectedEvents := EventsOf[*telemetryv1.DspResponseRejected](engine)
+			rejected := len(rejectedEvents) > 0
+			if rejected && rejectedEvents[0].GetPriceFloor() != 1.0 {
+				t.Errorf("rejected price_floor = %v, want 1.0", rejectedEvents[0].GetPriceFloor())
 			}
 			if rejected != tt.wantRejected {
 				t.Errorf("rejected = %v, want %v", rejected, tt.wantRejected)
 			}
-			if won := completed.WinnerDSP != ""; won == rejected {
-				t.Errorf("winner_dsp = %q while rejected = %v; a bid must be exactly one of the two", completed.WinnerDSP, rejected)
+			completedEvents := EventsOf[*telemetryv1.AuctionCompleted](engine)
+			if len(completedEvents) != 1 {
+				t.Fatalf("auction_completed events = %d, want 1", len(completedEvents))
 			}
-			if completed.PriceFloor != 1.0 {
-				t.Errorf("completed price_floor = %v, want 1.0", completed.PriceFloor)
+			completed := completedEvents[0]
+			if won := completed.GetWinnerDsp() != ""; won == rejected {
+				t.Errorf("winner_dsp = %q while rejected = %v; a bid must be exactly one of the two", completed.GetWinnerDsp(), rejected)
+			}
+			if completed.GetPriceFloor() != 1.0 {
+				t.Errorf("completed price_floor = %v, want 1.0", completed.GetPriceFloor())
 			}
 		})
 	}

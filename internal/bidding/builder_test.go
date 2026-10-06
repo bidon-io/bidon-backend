@@ -19,6 +19,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/telemetry"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 func testApp(id int64) *sdkapi.App {
@@ -307,38 +308,31 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 		}
 	}
 
-	recs := engine.Records()
-	var sent, received, rejected int
-	outcomes := map[string]telemetry.Outcome{}
-	for _, rec := range recs {
-		switch rec.EventName {
-		case telemetry.EventDSPRequestSent:
-			sent++
-		case telemetry.EventDSPResponseReceived:
-			received++
-			outcomes[rec.DSP] = rec.Outcome
-			if rec.LatencyMS < 0 || rec.LatencyMS > 5_000 {
-				t.Errorf("%s latency_ms = %d; want send→return, not auction-start→return", rec.DSP, rec.LatencyMS)
-			}
-			if rec.AuctionID != "auc-dsp" || rec.Country != "DE" {
-				t.Errorf("envelope = %+v", rec.Envelope)
-			}
-		case telemetry.EventDSPResponseRejected:
-			rejected++
+	sent := telemetry.EventsOf[*telemetryv1.DspRequestSent](engine)
+	received := telemetry.EventsOf[*telemetryv1.DspResponseReceived](engine)
+	rejected := telemetry.EventsOf[*telemetryv1.DspResponseRejected](engine)
+	outcomes := map[string]telemetryv1.Outcome{}
+	for _, ev := range received {
+		outcomes[ev.GetDsp()] = ev.GetOutcome()
+		if ev.GetLatencyMs() < 0 || ev.GetLatencyMs() > 5_000 {
+			t.Errorf("%s latency_ms = %d; want send→return, not auction-start→return", ev.GetDsp(), ev.GetLatencyMs())
+		}
+		if env := ev.GetEnvelope(); env.GetAuctionId() != "auc-dsp" || env.GetCountry() != "DE" {
+			t.Errorf("envelope = %v", env)
 		}
 	}
 
-	if sent != 3 || received != 3 {
-		t.Fatalf("DSP events sent=%d received=%d rejected=%d (want 3+3); full auction is 1+3+3+1 with Service.Run", sent, received, rejected)
+	if len(sent) != 3 || len(received) != 3 {
+		t.Fatalf("DSP events sent=%d received=%d rejected=%d (want 3+3); full auction is 1+3+3+1 with Service.Run", len(sent), len(received), len(rejected))
 	}
-	if outcomes[string(adapter.BidmachineKey)] != telemetry.OutcomeBid {
-		t.Errorf("bidmachine outcome = %q", outcomes[string(adapter.BidmachineKey)])
+	if outcomes[string(adapter.BidmachineKey)] != telemetryv1.Outcome_OUTCOME_BID {
+		t.Errorf("bidmachine outcome = %v", outcomes[string(adapter.BidmachineKey)])
 	}
-	if outcomes[string(adapter.MetaKey)] != telemetry.OutcomeNoBid {
-		t.Errorf("meta outcome = %q", outcomes[string(adapter.MetaKey)])
+	if outcomes[string(adapter.MetaKey)] != telemetryv1.Outcome_OUTCOME_NOBID {
+		t.Errorf("meta outcome = %v", outcomes[string(adapter.MetaKey)])
 	}
-	if outcomes[string(adapter.VungleKey)] != telemetry.OutcomeTimeout {
-		t.Errorf("vungle outcome = %q", outcomes[string(adapter.VungleKey)])
+	if outcomes[string(adapter.VungleKey)] != telemetryv1.Outcome_OUTCOME_TIMEOUT {
+		t.Errorf("vungle outcome = %v", outcomes[string(adapter.VungleKey)])
 	}
 }
 
@@ -388,21 +382,15 @@ func TestBuilder_HoldAuction_EmitsDSPRejectedBelowFloor(t *testing.T) {
 		t.Fatalf("HoldAuction() error = %v", err)
 	}
 
-	var rejected *telemetry.Record
-	for _, rec := range engine.Records() {
-		if rec.EventName == telemetry.EventDSPResponseRejected {
-			r := rec
-			rejected = &r
-			break
-		}
-	}
-	if rejected == nil {
+	rejectedEvents := telemetry.EventsOf[*telemetryv1.DspResponseRejected](engine)
+	if len(rejectedEvents) == 0 {
 		t.Fatal("expected dsp_response_rejected for a bid below floor")
 	}
-	if rejected.RejectReason != telemetry.RejectReasonBelowFloor {
-		t.Errorf("reject_reason = %q, want %q", rejected.RejectReason, telemetry.RejectReasonBelowFloor)
+	rejected := rejectedEvents[0]
+	if rejected.GetRejectReason() != telemetryv1.RejectReason_REJECT_REASON_BELOW_FLOOR {
+		t.Errorf("reject_reason = %v, want below_floor", rejected.GetRejectReason())
 	}
-	if rejected.Price != 0.01 || rejected.PriceFloor <= rejected.Price {
-		t.Errorf("price = %v floor = %v", rejected.Price, rejected.PriceFloor)
+	if rejected.GetPrice() != 0.01 || rejected.GetPriceFloor() <= rejected.GetPrice() {
+		t.Errorf("price = %v floor = %v", rejected.GetPrice(), rejected.GetPriceFloor())
 	}
 }
