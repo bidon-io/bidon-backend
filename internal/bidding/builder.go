@@ -284,7 +284,11 @@ func (b *Builder) processAdapter(
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
-		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		if errors.Is(demandResponse.Error, adapters.ErrExecuteOptions) {
+			childLogger.Error("execute bid request", zap.Error(demandResponse.Error))
+		} else {
+			childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		}
 		bids <- *demandResponse
 		return
 	}

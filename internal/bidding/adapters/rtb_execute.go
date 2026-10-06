@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -12,16 +13,14 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 )
 
-// CustomRequestExecutor is implemented by non-OpenRTB adapters that fully own
-// HTTP execution. Type-asserted by ExecuteDemandRequest. Amazon uses FetchBids
-// and never reaches this path.
-type CustomRequestExecutor interface {
-	ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *DemandResponse
-}
+// ErrExecuteOptions wraps BidderInterface.ExecuteOptions failures. These point
+// at adapter misconfiguration (missing endpoint, credentials) rather than a
+// transient demand-side failure, so callers should surface them loudly.
+var ErrExecuteOptions = errors.New("execute options")
 
 // ExecuteDemandRequest sends the outbound OpenRTB request at the builder call
-// site. Custom executors take precedence; otherwise the shared HTTP transport
-// runs around BidderInterface.ExecuteOptions.
+// site through the shared HTTP transport, configured by
+// BidderInterface.ExecuteOptions.
 // Failures are returned on DemandResponse.Error, not as a Go error.
 func ExecuteDemandRequest(
 	ctx context.Context,
@@ -30,21 +29,21 @@ func ExecuteDemandRequest(
 	request openrtb.BidRequest,
 	demandKey adapter.Key,
 ) *DemandResponse {
-	if c, ok := bidder.(CustomRequestExecutor); ok {
-		return c.ExecuteRequest(ctx, client, request)
-	}
-
 	opts, err := bidder.ExecuteOptions(request)
 	if err != nil {
-		return &DemandResponse{
+		dr := &DemandResponse{
 			DemandID:    demandKey,
 			RequestID:   request.ID,
 			TagID:       opts.TagID,
 			PlacementID: opts.PlacementID,
 			TimeoutURL:  opts.TimeoutURL,
 			ImpID:       opts.ImpID,
-			Error:       err,
+			Error:       fmt.Errorf("%w: %w", ErrExecuteOptions, err),
 		}
+		if requestBody, marshalErr := json.Marshal(request); marshalErr == nil {
+			dr.RawRequest = string(requestBody)
+		}
+		return dr
 	}
 
 	opts.DemandID = demandKey
