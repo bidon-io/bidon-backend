@@ -162,6 +162,24 @@ services:
       <<: [*dev-db-env, *dev-bidon-app-env]
       DSPSIM_PORT: 1325
 
+  # Scrapes bidon-sdkapi /metrics. Nothing depends on it; stopping it never affects auctions.
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.153.0
+    command:
+      - -promscrape.config=/etc/vm/scrape.yml
+      - -storageDataPath=/storage
+      - -retentionPeriod=7d
+    ports:
+      - '8428:8428'
+    volumes:
+      - ./docker/telemetry/victoriametrics/scrape.yml:/etc/vm/scrape.yml:ro
+      - victoriametrics-data-dev:/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8428/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
   bidon-ui:
     image: node:22-alpine
     working_dir: /workspace/web/bidon_ui
@@ -205,4 +223,5 @@ volumes:
   gomodcache-dev:
   gocache-dev:
   redpanda-data-dev:
+  victoriametrics-data-dev:
   bidon-ui-node-modules-dev:
