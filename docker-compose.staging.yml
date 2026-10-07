@@ -117,16 +117,18 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
-    # Schema Registry serves HTTP on 8081, then handles each request by calling
-    # Kafka at the advertised PLAINTEXT address. That name is the Coolify service
-    # (redpanda-pr-N), which other containers resolve but this container does not,
-    # so /subjects accepts the connection and never responds. The alias makes the
-    # advertised name resolve here too.
+    # Schema Registry handles each request by calling Kafka at the advertised
+    # PLAINTEXT host. On a Coolify preview that name is redpanda-pr-N: other
+    # containers resolve it, this one does not (a compose alias does not fix
+    # that under Coolify's DNS), so /subjects accepts the TCP connection and
+    # never responds. /etc/hosts wins over that DNS and points the name at
+    # the broker itself, where Kafka is bound.
+    extra_hosts:
+      - "${SERVICE_NAME_REDPANDA:-redpanda}:127.0.0.1"
     networks:
       default:
         aliases:
           - redpanda
-          - ${SERVICE_NAME_REDPANDA:-redpanda}
     logging: *default-logging
     <<: *restart-policy
 
