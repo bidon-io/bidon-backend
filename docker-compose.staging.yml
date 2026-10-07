@@ -117,10 +117,16 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    # Schema Registry serves HTTP on 8081, then handles each request by calling
+    # Kafka at the advertised PLAINTEXT address. That name is the Coolify service
+    # (redpanda-pr-N), which other containers resolve but this container does not,
+    # so /subjects accepts the connection and never responds. The alias makes the
+    # advertised name resolve here too.
     networks:
       default:
         aliases:
           - redpanda
+          - ${SERVICE_NAME_REDPANDA:-redpanda}
     logging: *default-logging
     <<: *restart-policy
 
