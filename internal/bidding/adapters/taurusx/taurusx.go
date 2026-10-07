@@ -111,12 +111,7 @@ func (a *TaurusXAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.Ex
 	opts := adapters.ExecuteRTBOptions{
 		TagID: a.TagID,
 	}
-	url := getEndpoint(adapters.CountryFromRequest(request))
-	if url == "" {
-		return opts, errors.New("taurusx endpoint is empty")
-	}
-
-	opts.URL = url
+	opts.URL = getEndpoint(adapters.CountryFromRequest(request))
 	opts.Headers = http.Header{"X-OpenRTB-Version": {"2.5"}}
 	return opts, nil
 }

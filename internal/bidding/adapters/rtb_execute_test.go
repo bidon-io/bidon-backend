@@ -247,7 +247,7 @@ func TestExecuteDemandRequest_fillsDemandIDAndPosts(t *testing.T) {
 func TestExecuteDemandRequest_optionsError(t *testing.T) {
 	t.Parallel()
 
-	wantErr := errors.New("moloco endpoint is empty")
+	wantErr := errors.New("moloco API key is empty")
 	dr := adapters.ExecuteDemandRequest(
 		context.Background(),
 		http.DefaultClient,
@@ -262,6 +262,9 @@ func TestExecuteDemandRequest_optionsError(t *testing.T) {
 	if !errors.Is(dr.Error, wantErr) {
 		t.Fatalf("Error = %v, want %v", dr.Error, wantErr)
 	}
+	if !errors.Is(dr.Error, adapters.ErrExecuteOptions) {
+		t.Fatalf("Error = %v, want wrapped ErrExecuteOptions", dr.Error)
+	}
 	if dr.DemandID != adapter.MolocoKey {
 		t.Fatalf("DemandID = %q, want %q", dr.DemandID, adapter.MolocoKey)
 	}
@@ -271,24 +274,8 @@ func TestExecuteDemandRequest_optionsError(t *testing.T) {
 	if dr.TagID != "tag-1" {
 		t.Fatalf("TagID = %q, want tag-1", dr.TagID)
 	}
-	if dr.RawRequest != "" {
-		t.Fatalf("RawRequest = %q, want empty on options error", dr.RawRequest)
-	}
-}
-
-func TestExecuteDemandRequest_customExecutor(t *testing.T) {
-	t.Parallel()
-
-	want := &adapters.DemandResponse{DemandID: adapter.AmazonKey, Status: 204}
-	dr := adapters.ExecuteDemandRequest(
-		context.Background(),
-		http.DefaultClient,
-		customExecutorAdapter{dr: want},
-		openrtb.BidRequest{ID: "req-1"},
-		adapter.VungleKey,
-	)
-	if dr != want {
-		t.Fatalf("got %+v, want custom executor response", dr)
+	if !strings.Contains(dr.RawRequest, `"id":"req-1"`) {
+		t.Fatalf("RawRequest = %q, want marshalled request on options error", dr.RawRequest)
 	}
 }
 
@@ -300,13 +287,4 @@ type executeOptionsAdapter struct {
 
 func (a executeOptionsAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
 	return a.opts, a.err
-}
-
-type customExecutorAdapter struct {
-	stubAdapter
-	dr *adapters.DemandResponse
-}
-
-func (a customExecutorAdapter) ExecuteRequest(context.Context, *http.Client, openrtb.BidRequest) *adapters.DemandResponse {
-	return a.dr
 }
