@@ -31,25 +31,30 @@ just compose        # full dev stack: Postgres, Redis, Redpanda,
 just compose-down   # tear down
 ```
 
-| Service          | URL                   |
-|------------------|-----------------------|
-| bidon-ui         | http://localhost:3010 |
-| bidon-admin      | http://localhost:1323 |
-| bidon-sdkapi     | http://localhost:1324 |
-| bidon-dspsim     | http://localhost:1325 |
-| Postgres         | localhost:5434        |
-| Redis            | localhost:6379        |
-| Redpanda         | localhost:19092       |
-| Redpanda Console | http://localhost:8080 |
+| Service          | URL                   | Port env       |
+|------------------|-----------------------|----------------|
+| bidon-ui         | http://localhost:3010 |                |
+| bidon-admin      | http://localhost:1323 | `ADMIN_PORT`   |
+| bidon-sdkapi     | http://localhost:1324 | `SDKAPI_PORT`  |
+| sdkapi gRPC      | localhost:50051       | `GRPC_PORT`    |
+| bidon-dspsim     | http://localhost:1325 | `DSPSIM_PORT`  |
+| Postgres         | localhost:5434        |                |
+| Redis            | localhost:6379        |                |
+| Redpanda         | localhost:19092       |                |
+| Redpanda Console | http://localhost:8080 |                |
 
 ```bash
-just admin          # admin API only
-just sdk-api        # SDK API only
+just admin          # admin API only (localhost:1323)
+just sdk-api        # SDK API only (localhost:1324)
 just dsp-sim        # OpenRTB DSP simulator (localhost:1325)
 just seed           # reset + load sample data
 just migrate        # apply migrations (also: just migrate down)
 just config-diff    # ensure .env.local exists, list keys missing vs .env.sample
 ```
+
+Host and container ports match. Admin and sdkapi read their own port var, then
+`PORT`, then the default above (`config.HTTPPort`); staging pins sdkapi to
+`PORT=1323` for Coolify routing, prod sets `PORT` explicitly.
 
 `bidon-dspsim` is a standalone OpenRTB DSP simulator: reads auction config from
 Postgres, answers bid requests from a JSON creative library, and records the

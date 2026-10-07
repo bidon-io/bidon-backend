@@ -19,20 +19,22 @@ We use Nix to ensure reproducible development environments.
 
 ### Full local stack (recommended)
 
-Runs Postgres, Redis, Kafka, migrations, seed data, both API services, and the Nuxt frontend in one command:
+Runs Postgres, Redis, Redpanda (Kafka API), migrations, seed data, both API services, the DSP simulator, and the Nuxt frontend in one command:
 
 ```shell
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-| Service     | URL                        |
-|-------------|----------------------------|
-| bidon-ui    | http://localhost:3010      |
-| bidon-admin | http://localhost:1323      |
-| bidon-sdkapi| http://localhost:1324      |
-| Postgres    | localhost:5434             |
-| Redis       | localhost:6379             |
-| Kafka       | localhost:9092             |
+| Service           | URL                        |
+|-------------------|----------------------------|
+| bidon-ui          | http://localhost:3010      |
+| bidon-admin       | http://localhost:1323      |
+| bidon-sdkapi      | http://localhost:1324 (gRPC localhost:50051) |
+| bidon-dspsim      | http://localhost:1325      |
+| Postgres          | localhost:5434             |
+| Redis             | localhost:6379             |
+| Redpanda (Kafka)  | localhost:19092            |
+| Redpanda Console  | http://localhost:8080      |
 
 **First run** requires internet access to pull images and download Go modules. Subsequent runs work offline once the module cache is warm.
 Frontend (`bidon-ui`) runs with file watching enabled for Docker and hot-reloads on changes under `web/bidon_ui/`.
@@ -66,13 +68,18 @@ go run ./cmd/bidon-migrate -help
 
 ### Start admin backend
 ```shell
-go run ./cmd/bidon-admin
+go run ./cmd/bidon-admin   # :1323 (ADMIN_PORT)
 ```
 
 ### Start sdkapi backend
 ```shell
-go run ./cmd/bidon-sdkapi
+go run ./cmd/bidon-sdkapi  # :1324 (SDKAPI_PORT), gRPC :50051 (GRPC_PORT)
 ```
+
+Each service reads its own port variable first, then the shared `PORT`, then its
+default, so admin and sdkapi can run side by side. If your `.env.local` still has
+`PORT=1323` from an older `.env.sample`, add `ADMIN_PORT` / `SDKAPI_PORT`
+(`just config-diff` lists them) or remove `PORT`.
 
 ### Run tests
 ```shell
@@ -135,6 +142,12 @@ docker compose down --volumes --rmi local --remove-orphans || true
 ```
 
 ### Read from kafka
+Full local stack (Redpanda) — or browse topics in Redpanda Console at http://localhost:8080:
 ```shell
-docker compose exec -it kafka kafka-console-consumer --bootstrap-server=localhost:9092 --topic=bidon-ad-events --from-beginning
+docker compose -f docker-compose.dev.yml exec redpanda rpk topic consume ad-events
+```
+
+Manual setup (`docker-compose.yml`, Kafka on localhost:9092):
+```shell
+docker compose exec -it kafka kafka-console-consumer --bootstrap-server=localhost:9092 --topic=ad-events --from-beginning
 ```

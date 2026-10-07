@@ -112,7 +112,8 @@ go run ./cmd/bidon-coolify configure-github-repo \
   --webhook-secret <webhook_secret> \
   --private-key-uuid <coolify_private_key_uuid>
 
-# Create application (repeat for bidon-sdkapi etc.)
+# Create application (repeat for bidon-sdkapi etc.). sdkapi defaults to 1324;
+# staging pins it to 1323 via PORT, so use the port you set in its env.
 go run ./cmd/bidon-coolify create-app \
   --project-uuid <project_uuid> \
   --server-uuid <server_uuid> \

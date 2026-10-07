@@ -140,10 +140,7 @@ func main() {
 	e.Use(echoprometheus.NewMiddleware("sdkapi"))  // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "1323"
-	}
+	port := config.HTTPPort("SDKAPI_PORT", "1324")
 	addr := fmt.Sprintf(":%s", port)
 
 	go func() {

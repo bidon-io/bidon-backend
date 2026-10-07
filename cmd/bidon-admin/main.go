@@ -136,10 +136,7 @@ func main() {
 		}
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "1323"
-	}
+	port := config.HTTPPort("ADMIN_PORT", "1323")
 	addr := fmt.Sprintf(":%s", port)
 
 	go func() {

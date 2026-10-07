@@ -120,7 +120,6 @@ services:
     command: go run ./cmd/bidon-admin
     ports:
       - '1323:1323'
-      - '50051:50051'
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -128,8 +127,7 @@ services:
         condition: service_healthy
     environment:
       <<: [*dev-db-env, *dev-bidon-app-env, *dev-superuser-env]
-      PORT: 1323
-      GRPC_PORT: 50051
+      ADMIN_PORT: 1323
       APP_SECRET: app_secret
 
   bidon-sdkapi:
@@ -137,7 +135,8 @@ services:
     <<: *golang-dev-app-base
     command: go run ./cmd/bidon-sdkapi
     ports:
-      - '1324:1323'
+      - '1324:1324'
+      - '50051:50051'
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -147,7 +146,7 @@ services:
         condition: service_healthy
     environment:
       <<: [*dev-db-env, *dev-bidon-app-env, *dev-redis-env]
-      PORT: 1323
+      SDKAPI_PORT: 1324
       APP_SECRET: app_secret
 
   bidon-dspsim:
