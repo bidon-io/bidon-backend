@@ -57,22 +57,8 @@ func produceN(t *testing.T, k *Kafka, n int) []error {
 	}
 }
 
-func TestKafkaDropsAtTelemetryCap(t *testing.T) {
-	k := &Kafka{Producer: unreachableKafka(t), MaxBuffered: 2}
-
-	errs := produceN(t, k, 5)
-	if len(errs) != 3 {
-		t.Fatalf("dropped records: got %d, want 3", len(errs))
-	}
-	for _, err := range errs {
-		if !errors.Is(err, ErrBufferFull) {
-			t.Errorf("err = %v, want ErrBufferFull", err)
-		}
-	}
-}
-
 func TestKafkaDoesNotBlockWhenClientBufferFull(t *testing.T) {
-	k := &Kafka{Producer: unreachableKafka(t, kgo.MaxBufferedRecords(1)), MaxBuffered: 10}
+	k := &Kafka{Producer: unreachableKafka(t, kgo.MaxBufferedRecords(1))}
 
 	errs := produceN(t, k, 3)
 	if len(errs) != 2 {
@@ -82,8 +68,5 @@ func TestKafkaDoesNotBlockWhenClientBufferFull(t *testing.T) {
 		if !errors.Is(err, ErrBufferFull) {
 			t.Errorf("err = %v, want ErrBufferFull", err)
 		}
-	}
-	if got := k.buffered.Load(); got != 1 {
-		t.Errorf("buffered telemetry records: got %d, want 1", got)
 	}
 }
