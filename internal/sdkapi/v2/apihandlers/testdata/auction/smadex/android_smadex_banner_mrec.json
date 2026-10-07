@@ -1,0 +1,75 @@
+{
+  "adapters": {
+    "smadex": {
+      "version": "1",
+      "sdk_version": "11.8.2"
+    }
+  },
+  "device": {
+    "connection_type": "WIFI",
+    "model": "SM-G998B",
+    "hwv": "SM-G998B",
+    "h": 2400,
+    "js": 1,
+    "language": "en_US",
+    "make": "Samsung",
+    "os": "android",
+    "osv": "13",
+    "ppi": 515,
+    "pxratio": 3.5,
+    "type": "PHONE",
+    "ua": "Mozilla/5.0 (Linux; Android 13; SM-G998B Build/TP1A.220624.014) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+    "w": 1080
+  },
+  "app": {
+    "bundle": "com.demo.snake",
+    "key": "snake_2006",
+    "framework": "native",
+    "version": "1.0"
+  },
+  "token": "{}",
+  "session": {
+    "battery": 80,
+    "cpu_usage": 0.2,
+    "id": "d0b9ec0e-60e9-4301-bcbc-67712562dab9",
+    "launch_monotonic_ts": 68406545,
+    "launch_ts": 1687863971253,
+    "memory_warnings_monotonic_ts": [],
+    "memory_warnings_ts": [],
+    "start_monotonic_ts": 68406545,
+    "monotonic_ts": 68471084,
+    "ram_size": 8000000000,
+    "ram_used": 3000000000,
+    "start_ts": 1687863971253,
+    "storage_free": 50000000000,
+    "storage_used": 30000000000,
+    "ts": 1687864035792
+  },
+  "user": {
+    "idg": "8020a0a6-5e55-4b7f-af1a-7b01a9aad4fc",
+    "coppa": false,
+    "idfa": "A40EF18F-02DD-4053-A657-061EC2DB55DD",
+    "tracking_authorization_status": "AUTHORIZED"
+  },
+  "regs": {
+    "coppa": false,
+    "gdpr": false,
+    "iab": {}
+  },
+  "test": false,
+  "tmax": 500,
+  "ad_object": {
+    "auction_id": "6060",
+    "auction_pricefloor": 0.001,
+    "demands": {
+      "smadex": {
+        "token": "sdk-instance-id"
+      }
+    },
+    "id": "f2d0dc19-b43f-33c1-8ca1-8e895ec7521b",
+    "banner": {
+      "format": "MREC"
+    },
+    "orientation": "PORTRAIT"
+  }
+}

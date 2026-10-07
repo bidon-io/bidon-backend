@@ -69,6 +69,8 @@ func ValidAppDemandProfileData(t *testing.T, key adapter.Key, appID int64) []byt
 	switch key {
 	case adapter.AdikteevKey:
 		return []byte(`{"sdk_instance_id": "sdk_instance_id"}`)
+	case adapter.SmadexKey:
+		return []byte(`{"sdk_instance_id": "sdk_instance_id"}`)
 	case adapter.AdmobKey:
 		return []byte(fmt.Sprintf(`{"app_id": "admob_app_%d", "foo": "bar"}`, appID))
 	case adapter.ApplovinKey:

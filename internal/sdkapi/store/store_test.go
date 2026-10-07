@@ -226,6 +226,10 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 				&sdkapi.MolocoInitConfig{
 					AppKey: fmt.Sprintf("moloco_app_%d", apps[1].ID),
 				},
+				&sdkapi.SmadexInitConfig{
+					SdkInstanceID: "sdk_instance_id",
+					Order:         0,
+				},
 				&sdkapi.StartIOInitConfig{
 					AppID: fmt.Sprintf("startio_app_%d", apps[1].ID),
 				},
@@ -290,6 +294,7 @@ func TestAdapterInitConfigsFetcher_FetchAdapterInitConfigs_Valid(t *testing.T) {
 					AppKey: fmt.Sprintf("moloco_app_%d", apps[1].ID),
 					Order:  0,
 				},
+				&sdkapi.SmadexInitConfig{SdkInstanceID: "sdk_instance_id"},
 				&sdkapi.StartIOInitConfig{
 					AppID: fmt.Sprintf("startio_app_%d", apps[1].ID),
 					Order: 0,
