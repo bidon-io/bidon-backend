@@ -18,8 +18,9 @@ type LoggerEngine interface {
 }
 
 type LogMessage struct {
-	Topic config.Topic
-	Value []byte
+	Topic   config.Topic
+	Value   []byte
+	Headers map[string]string
 }
 
 func (l *Logger) Log(event Event, handleErr func(error)) {

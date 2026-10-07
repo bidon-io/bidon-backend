@@ -17,6 +17,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
@@ -144,10 +145,10 @@ func TestLoggerNilSafe(t *testing.T) {
 }
 
 func TestKafkaProduceEmptyTopic(t *testing.T) {
-	engine := &Kafka{Topics: map[config.Topic]string{}}
+	producer := &Kafka{Producer: &engine.Kafka{Topics: map[config.Topic]string{}}}
 	called := false
 
-	engine.Produce(LogMessage{
+	producer.Produce(LogMessage{
 		Topic: config.TelemetryEventsTopic,
 		Value: []byte{0x00},
 	}, func(err error) {
@@ -164,7 +165,7 @@ func TestKafkaProduceEmptyTopic(t *testing.T) {
 
 func TestLoggerEmptyTopicStructured(t *testing.T) {
 	core, logs := observer.New(zap.ErrorLevel)
-	logger := New(&Kafka{Topics: map[config.Topic]string{}}, zap.New(core))
+	logger := New(&Kafka{Producer: &engine.Kafka{Topics: map[config.Topic]string{}}}, zap.New(core))
 
 	logger.Event().AuctionRequestReceived(Params{
 		Request: &schema.AuctionRequest{

@@ -108,8 +108,9 @@ func main() {
 			}
 		}()
 
-		loggerEngine = &engine.Kafka{Client: client, Topics: conf.Topics}
-		telemetryEngine = &telemetry.Kafka{Client: client, Topics: conf.Topics}
+		eventKafka := &engine.Kafka{Client: client, Topics: conf.Topics}
+		loggerEngine = eventKafka
+		telemetryEngine = &telemetry.Kafka{Producer: eventKafka}
 		schemaRegistryURL = conf.SchemaRegistryURL
 		telemetryTopic = conf.Topics[config.TelemetryEventsTopic]
 	} else {

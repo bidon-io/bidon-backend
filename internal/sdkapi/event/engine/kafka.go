@@ -24,14 +24,26 @@ func (e *Kafka) Produce(message event.LogMessage, handleErr func(error)) {
 	}
 
 	record := &kgo.Record{
-		Topic: topicStr,
-		Value: message.Value,
+		Topic:   topicStr,
+		Value:   message.Value,
+		Headers: kafkaHeaders(message.Headers),
 	}
 	e.Client.Produce(context.Background(), record, func(r *kgo.Record, err error) {
 		if err != nil {
 			handleErr(fmt.Errorf("kafka produce record: %v", err))
 		}
 	})
+}
+
+func kafkaHeaders(headers map[string]string) []kgo.RecordHeader {
+	if len(headers) == 0 {
+		return nil
+	}
+	out := make([]kgo.RecordHeader, 0, len(headers))
+	for key, value := range headers {
+		out = append(out, kgo.RecordHeader{Key: key, Value: []byte(value)})
+	}
+	return out
 }
 
 func (e *Kafka) Ping(ctx context.Context) error {
