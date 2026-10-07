@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
@@ -63,6 +64,7 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 
 	env := msg.GetEnvelope()
 	if eventName == "" || env == nil {
+		TelemetryDroppedTotal.WithLabelValues(DropReasonInvalid).Inc()
 		e.logError("telemetry message missing (event_name) option or envelope", eventName, dsp, a,
 			zap.String(HeaderMessageType, messageTypeName(msg)),
 		)
@@ -72,6 +74,7 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 
 	message, err := proto.Marshal(msg)
 	if err != nil {
+		TelemetryDroppedTotal.WithLabelValues(DropReasonMarshal).Inc()
 		e.logError("marshal telemetry event", eventName, dsp, a, zap.Error(err))
 		return
 	}
@@ -82,6 +85,13 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		Value:   message,
 		Headers: protoHeaders(eventName, msg),
 	}, func(err error) {
+		// A full buffer means Kafka is slow or down; logging every dropped
+		// event would flood the log at auction rate, so it is only counted.
+		if errors.Is(err, ErrBufferFull) {
+			TelemetryDroppedTotal.WithLabelValues(DropReasonBufferFull).Inc()
+			return
+		}
+		TelemetryDroppedTotal.WithLabelValues(DropReasonProduce).Inc()
 		e.logError("produce telemetry event", eventName, dsp, a, zap.Error(err))
 	})
 }

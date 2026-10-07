@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -314,6 +315,46 @@ func TestEmitDropsMessageWithoutEnvelope(t *testing.T) {
 	New(engine, nil).Event().emit(&telemetryv1.DspRequestSent{}, "", attrs{})
 	if len(engine.messages) != 0 {
 		t.Fatalf("emit without envelope produced %d messages", len(engine.messages))
+	}
+}
+
+type failingEngine struct {
+	err error
+}
+
+func (e failingEngine) Produce(_ LogMessage, handleErr func(error)) {
+	handleErr(e.err)
+}
+
+func (e failingEngine) Ping(_ context.Context) error {
+	return nil
+}
+
+func TestEmitCountsDrops(t *testing.T) {
+	tests := []struct {
+		name    string
+		err     error
+		reason  string
+		wantLog bool
+	}{
+		{name: "buffer full is counted, not logged", err: ErrBufferFull, reason: DropReasonBufferFull},
+		{name: "produce error is counted and logged", err: errors.New("broker said no"), reason: DropReasonProduce, wantLog: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			counter := TelemetryDroppedTotal.WithLabelValues(tt.reason)
+			before := counterValue(t, counter)
+			core, logs := observer.New(zap.ErrorLevel)
+
+			New(failingEngine{err: tt.err}, zap.New(core)).Event().AuctionRequestReceived(testAuctionParams())
+
+			if got := counterValue(t, counter) - before; got != 1 {
+				t.Errorf("telemetry_dropped_total{reason=%q} delta = %v, want 1", tt.reason, got)
+			}
+			if gotLog := logs.Len() > 0; gotLog != tt.wantLog {
+				t.Errorf("logged = %v, want %v", gotLog, tt.wantLog)
+			}
+		})
 	}
 }
 

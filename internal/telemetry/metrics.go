@@ -23,6 +23,18 @@ var (
 		Name: "auction_completed_total",
 		Help: "Auction Run completions.",
 	}, []string{"result"})
+
+	TelemetryDroppedTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "telemetry_dropped_total",
+		Help: "Catalog events not delivered to telemetry-events.",
+	}, []string{"reason"})
+)
+
+const (
+	DropReasonInvalid    = "invalid"
+	DropReasonMarshal    = "marshal"
+	DropReasonBufferFull = "buffer_full"
+	DropReasonProduce    = "produce_error"
 )
 
 func ObserveDSP(dsp string, outcome telemetryv1.Outcome, seconds float64) {
