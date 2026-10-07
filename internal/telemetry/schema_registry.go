@@ -47,6 +47,9 @@ func (c *srClient) Register(ctx context.Context, subject, schema string) (int, e
 	return ss.ID, nil
 }
 
+// UseSchemaRegistry frames telemetry-events values for the registry at url.
+// Subjects register in the background; events emitted before a subject has
+// an id are produced as raw protobuf.
 func (l *Logger) UseSchemaRegistry(url, topic string) error {
 	if l == nil {
 		return nil
@@ -61,5 +64,6 @@ func (l *Logger) UseSchemaRegistry(url, topic string) error {
 		return err
 	}
 	l.event.serde = newConfluentSerde(reg, topic, l.event.logf())
+	go l.event.serde.registerAll(context.Background())
 	return nil
 }

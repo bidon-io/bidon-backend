@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
@@ -20,16 +21,26 @@ import (
 type fakeRegistry struct {
 	id         int
 	err        error
+	failFirst  int32
 	calls      atomic.Int32
 	subjects   []string
 	lastSchema string
 }
 
 func (f *fakeRegistry) Register(_ context.Context, subject, schema string) (int, error) {
-	f.calls.Add(1)
+	if f.calls.Add(1) <= f.failFirst {
+		return 0, errors.New("registry unavailable")
+	}
 	f.subjects = append(f.subjects, subject)
 	f.lastSchema = schema
 	return f.id, f.err
+}
+
+func registeredSerde(t *testing.T, reg *fakeRegistry) *confluentSerde {
+	t.Helper()
+	serde := newConfluentSerde(reg, "telemetry-events", nil)
+	serde.registerAll(context.Background())
+	return serde
 }
 
 func TestConfluentFrameRoundTrip(t *testing.T) {
@@ -42,8 +53,7 @@ func TestConfluentFrameRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	reg := &fakeRegistry{id: 7}
-	serde := newConfluentSerde(reg, "telemetry-events", nil)
+	serde := registeredSerde(t, &fakeRegistry{id: 7})
 	framed := serde.frame(msg, payload)
 	if bytes.Equal(framed, payload) {
 		t.Fatal("expected Confluent prefix")
@@ -85,26 +95,60 @@ func TestConfluentSerdeFailOpen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	reg := &fakeRegistry{err: errors.New("registry down")}
-	framed := newConfluentSerde(reg, "telemetry-events", nil).frame(msg, payload)
+	reg := &fakeRegistry{id: 3}
+	serde := newConfluentSerde(reg, "telemetry-events", nil)
+	framed := serde.frame(msg, payload)
 	if !bytes.Equal(framed, payload) {
-		t.Fatal("registry errors must fail open to raw proto")
+		t.Fatal("an unregistered subject must fail open to raw proto")
+	}
+	if got := reg.calls.Load(); got != 0 {
+		t.Fatalf("frame must never call the registry, got %d calls", got)
 	}
 }
 
-func TestConfluentSerdeCachesID(t *testing.T) {
+func TestConfluentSerdeRegisterAllRetries(t *testing.T) {
 	msg := &telemetryv1.DspRequestSent{Envelope: &telemetryv1.Envelope{EventName: "dsp_request_sent"}}
 	payload, err := proto.Marshal(msg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	reg := &fakeRegistry{id: 3}
+	reg := &fakeRegistry{id: 3, failFirst: 7}
 	serde := newConfluentSerde(reg, "telemetry-events", nil)
+	serde.retryMin = time.Millisecond
+	serde.registerAll(context.Background())
+
+	n := len(catalogTypes())
+	if n != 5 {
+		t.Fatalf("catalog types: got %d, want 5", n)
+	}
+	if got := len(reg.subjects); got != n {
+		t.Fatalf("registered subjects: got %d, want %d", got, n)
+	}
+	if framed := serde.frame(msg, payload); framed[0] != 0 {
+		t.Fatal("frame must use the id registered after retries")
+	}
 	_ = serde.frame(msg, payload)
-	_ = serde.frame(msg, payload)
-	if got := reg.calls.Load(); got != 1 {
-		t.Fatalf("Register calls: got %d, want 1", got)
+	if got := reg.calls.Load(); got != int32(n)+reg.failFirst {
+		t.Fatalf("Register calls: got %d, want %d", got, int32(n)+reg.failFirst)
+	}
+}
+
+func TestConfluentSerdeRegisterAllStopsOnCancel(t *testing.T) {
+	reg := &fakeRegistry{err: errors.New("registry down")}
+	serde := newConfluentSerde(reg, "telemetry-events", nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	done := make(chan struct{})
+	go func() {
+		serde.registerAll(ctx)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("registerAll must return once ctx is done")
 	}
 }
 
@@ -118,7 +162,7 @@ func TestStripConfluentPrefixRawProtoUnchanged(t *testing.T) {
 func TestEventEmitFramesWhenRegistrySet(t *testing.T) {
 	engine := &recordingEngine{}
 	logger := New(engine, nil)
-	logger.event.serde = newConfluentSerde(&fakeRegistry{id: 11}, "telemetry-events", nil)
+	logger.event.serde = registeredSerde(t, &fakeRegistry{id: 11})
 
 	logger.Event().DSPResponseReceived(testAuctionParams(), &adapters.DemandResponse{
 		DemandID: adapter.BidmachineKey,

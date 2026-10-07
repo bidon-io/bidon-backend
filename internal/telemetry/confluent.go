@@ -13,7 +13,11 @@ import (
 	telemetryproto "github.com/bidon-io/bidon-backend/schemas/proto"
 )
 
-const schemaRegisterTimeout = 2 * time.Second
+const (
+	schemaRegisterTimeout = 2 * time.Second
+	registerRetryMin      = time.Second
+	registerRetryMax      = 30 * time.Second
+)
 
 var confluentHeader sr.ConfluentHeader
 
@@ -22,13 +26,17 @@ type SchemaRegistry interface {
 	Register(ctx context.Context, subject, schema string) (id int, err error)
 }
 
+// confluentSerde frames values with schema ids registered off the request
+// path by registerAll. frame only reads the cache, so a slow or down registry
+// never delays an emit.
 type confluentSerde struct {
 	registry SchemaRegistry
 	topic    string
 	schema   string
 	log      *zap.Logger
+	retryMin time.Duration
 
-	mu  sync.Mutex
+	mu  sync.RWMutex
 	ids map[string]int
 }
 
@@ -41,12 +49,17 @@ func newConfluentSerde(registry SchemaRegistry, topic string, log *zap.Logger) *
 		topic:    topic,
 		schema:   telemetryproto.EventsProto,
 		log:      log,
+		retryMin: registerRetryMin,
 		ids:      make(map[string]int),
 	}
 }
 
 func schemaSubject(topic string, msg proto.Message) string {
-	return topic + "-" + messageTypeName(msg)
+	return subjectFor(topic, msg.ProtoReflect().Descriptor())
+}
+
+func subjectFor(topic string, d protoreflect.MessageDescriptor) string {
+	return topic + "-" + string(d.FullName())
 }
 
 func protoMessageIndex(msg proto.Message) []int {
@@ -64,18 +77,16 @@ func protoMessageIndex(msg proto.Message) []int {
 	return path
 }
 
+// frame prefixes payload with the Confluent header, or returns it raw when
+// the subject has no schema id yet.
 func (s *confluentSerde) frame(msg proto.Message, payload []byte) []byte {
 	if s == nil || s.registry == nil {
 		return payload
 	}
 
 	subject := schemaSubject(s.topic, msg)
-	id, err := s.lookup(subject)
-	if err != nil {
-		s.log.Error("schema registry register",
-			zap.Error(err),
-			zap.String("subject", subject),
-		)
+	id, ok := s.id(subject)
+	if !ok {
 		return payload
 	}
 
@@ -87,26 +98,55 @@ func (s *confluentSerde) frame(msg proto.Message, payload []byte) []byte {
 	return append(header, payload...)
 }
 
-func (s *confluentSerde) lookup(subject string) (int, error) {
-	s.mu.Lock()
-	if id, ok := s.ids[subject]; ok {
+func (s *confluentSerde) id(subject string) (int, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	id, ok := s.ids[subject]
+	return id, ok
+}
+
+// registerAll registers every catalog subject, retrying failures with
+// exponential backoff until all have an id or ctx is done.
+func (s *confluentSerde) registerAll(ctx context.Context) {
+	pending := make([]string, 0, len(catalogTypes()))
+	for _, d := range catalogTypes() {
+		pending = append(pending, subjectFor(s.topic, d))
+	}
+
+	backoff := s.retryMin
+	for {
+		pending = s.registerPending(ctx, pending)
+		if len(pending) == 0 {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(backoff):
+		}
+		backoff = min(backoff*2, registerRetryMax)
+	}
+}
+
+func (s *confluentSerde) registerPending(ctx context.Context, subjects []string) []string {
+	var failed []string
+	for _, subject := range subjects {
+		regCtx, cancel := context.WithTimeout(ctx, schemaRegisterTimeout)
+		id, err := s.registry.Register(regCtx, subject, s.schema)
+		cancel()
+		if err != nil {
+			s.log.Warn("schema registry register; producing raw protobuf until it succeeds",
+				zap.Error(err),
+				zap.String("subject", subject),
+			)
+			failed = append(failed, subject)
+			continue
+		}
+		s.mu.Lock()
+		s.ids[subject] = id
 		s.mu.Unlock()
-		return id, nil
 	}
-	s.mu.Unlock()
-
-	ctx, cancel := context.WithTimeout(context.Background(), schemaRegisterTimeout)
-	defer cancel()
-
-	id, err := s.registry.Register(ctx, subject, s.schema)
-	if err != nil {
-		return 0, err
-	}
-
-	s.mu.Lock()
-	s.ids[subject] = id
-	s.mu.Unlock()
-	return id, nil
+	return failed
 }
 
 // stripConfluentPrefix removes the Confluent protobuf header when present.

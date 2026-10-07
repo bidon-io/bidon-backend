@@ -28,6 +28,18 @@ func EventName(msg proto.Message) string {
 	return name
 }
 
+// catalogTypes returns every message in events.proto that embeds the Envelope.
+func catalogTypes() []protoreflect.MessageDescriptor {
+	msgs := telemetryv1.File_org_bidon_telemetry_v1_events_proto.Messages()
+	var out []protoreflect.MessageDescriptor
+	for i := 0; i < msgs.Len(); i++ {
+		if d := msgs.Get(i); d.Fields().ByName("envelope") != nil {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
 func messageTypeName(msg proto.Message) string {
 	return string(msg.ProtoReflect().Descriptor().FullName())
 }
