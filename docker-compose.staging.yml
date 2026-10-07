@@ -97,18 +97,28 @@ services:
 
   redpanda:
     image: redpandadata/redpanda:v26.1.9
+    # Coolify sets the container hostname to redpanda-pr-N, so /etc/hosts maps
+    # that name to this container's bridge IP. Schema Registry dials the
+    # advertised PLAINTEXT host, and on Coolify a connection to the container's
+    # own bridge IP never completes. extra_hosts cannot replace that line, so
+    # drop it and leave only 127.0.0.1, where Kafka is bound. Other containers
+    # still use Docker DNS and are unaffected.
+    user: "0:0"
+    entrypoint: ["/bin/bash", "-ce"]
     command:
-      - redpanda
-      - start
-      - --smp 1
-      - --memory 1G
-      - --overprovisioned
-      - --node-id 0
-      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
-      # Coolify previews rename the service (redpanda-pr-N). Kafka clients connect to
-      # KAFKA_BROKERS then reconnect to this advertised host — it must match SERVICE_NAME_REDPANDA.
-      - --advertise-kafka-addr PLAINTEXT://${SERVICE_NAME_REDPANDA:-redpanda}:29092,OUTSIDE://localhost:9092
-      - --schema-registry-addr internal://0.0.0.0:8081
+      - |
+        host="${SERVICE_NAME_REDPANDA:-redpanda}"
+        grep -v "$$host" /etc/hosts > /tmp/hosts
+        printf '127.0.0.1\t%s\n' "$$host" >> /tmp/hosts
+        cat /tmp/hosts > /etc/hosts
+        exec runuser -u redpanda -- /entrypoint.sh redpanda start \
+          --smp 1 \
+          --memory 1G \
+          --overprovisioned \
+          --node-id 0 \
+          --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092 \
+          --advertise-kafka-addr PLAINTEXT://$$host:29092,OUTSIDE://localhost:9092 \
+          --schema-registry-addr internal://0.0.0.0:8081
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -117,14 +127,6 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
-    # Schema Registry handles each request by calling Kafka at the advertised
-    # PLAINTEXT host. On a Coolify preview that name is redpanda-pr-N: other
-    # containers resolve it, this one does not (a compose alias does not fix
-    # that under Coolify's DNS), so /subjects accepts the TCP connection and
-    # never responds. /etc/hosts wins over that DNS and points the name at
-    # the broker itself, where Kafka is bound.
-    extra_hosts:
-      - "${SERVICE_NAME_REDPANDA:-redpanda}:127.0.0.1"
     networks:
       default:
         aliases:
