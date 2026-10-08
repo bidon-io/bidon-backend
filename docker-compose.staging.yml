@@ -28,9 +28,10 @@ x-logging: &default-logging
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
+#   VICTORIAMETRICS_BA_USERS  — Traefik basicAuth.users for victoriametrics /vmui only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
-#     Coolify: reference this var under redpanda-console.environment (below) so it is in the
-#     deployment .env and ${REDPANDA_CONSOLE_BA_USERS} in labels is interpolated — labels-only refs can stay literal.
+#     Coolify: reference this var under the service environment so it is in the
+#     deployment .env and the ${..._BA_USERS} label is interpolated — labels-only refs can stay literal.
 #     For bcrypt, mark the value “literal” in Coolify if $ characters get stripped.
 #     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 
@@ -45,6 +46,8 @@ x-staging-kafka-env: &staging-kafka-env
   KAFKA_DELIVERY_INTERVAL: 5
   KAFKA_AD_EVENTS_TOPIC: ad-events
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
+  KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
+  SCHEMA_REGISTRY_URL: http://${SERVICE_NAME_REDPANDA:-redpanda}:8081
 
 x-staging-redis-env: &staging-redis-env
   REDIS_URL: redis://${SERVICE_NAME_REDIS:-redis}:6379/0
@@ -95,17 +98,28 @@ services:
 
   redpanda:
     image: redpandadata/redpanda:v26.1.9
+    # Coolify sets the container hostname to redpanda-pr-N, so /etc/hosts maps
+    # that name to this container's bridge IP. Schema Registry dials the
+    # advertised PLAINTEXT host, and on Coolify a connection to the container's
+    # own bridge IP never completes. extra_hosts cannot replace that line, so
+    # drop it and leave only 127.0.0.1, where Kafka is bound. Other containers
+    # still use Docker DNS and are unaffected.
+    user: "0:0"
+    entrypoint: ["/bin/bash", "-ce"]
     command:
-      - redpanda
-      - start
-      - --smp 1
-      - --memory 1G
-      - --overprovisioned
-      - --node-id 0
-      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
-      # Coolify previews rename the service (redpanda-pr-N). Kafka clients connect to
-      # KAFKA_BROKERS then reconnect to this advertised host — it must match SERVICE_NAME_REDPANDA.
-      - --advertise-kafka-addr PLAINTEXT://${SERVICE_NAME_REDPANDA:-redpanda}:29092,OUTSIDE://localhost:9092
+      - |
+        host="${SERVICE_NAME_REDPANDA:-redpanda}"
+        grep -v "$$host" /etc/hosts > /tmp/hosts
+        printf '127.0.0.1\t%s\n' "$$host" >> /tmp/hosts
+        cat /tmp/hosts > /etc/hosts
+        exec runuser -u redpanda -- /entrypoint.sh redpanda start \
+          --smp 1 \
+          --memory 1G \
+          --overprovisioned \
+          --node-id 0 \
+          --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092 \
+          --advertise-kafka-addr PLAINTEXT://$$host:29092,OUTSIDE://localhost:9092 \
+          --schema-registry-addr internal://0.0.0.0:8081
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -133,6 +147,10 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BROKERS: ${SERVICE_NAME_REDPANDA:-redpanda}:29092
+      KAFKA_SCHEMAREGISTRY_ENABLED: "true"
+      KAFKA_SCHEMAREGISTRY_URLS: http://${SERVICE_NAME_REDPANDA:-redpanda}:8081
+      KAFKA_PROTOBUF_ENABLED: "true"
+      KAFKA_PROTOBUF_SCHEMAREGISTRY_ENABLED: "true"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/admin/health || exit 1"]
       interval: 15s
@@ -207,6 +225,45 @@ services:
       APP_SECRET: ${APP_SECRET}
     volumes:
       - geodb:/public/system
+    logging: *default-logging
+    <<: *restart-policy
+
+  # vmui: expose publicly via Coolify → Traefik; same Basic Auth middleware pattern as
+  # redpanda-console, with its own VICTORIAMETRICS_BA_USERS. vmui is served at /vmui on port 8428.
+  # Scrapes bidon-sdkapi /metrics. Nothing depends on it; stopping it never affects auctions.
+  # Scrape config is inlined: Coolify preview deploys rewrite bind mounts, so the dev
+  # scrape.yml mount would be missing. Staging sdkapi listens on 1323 (dev targets 1324).
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.153.0
+    expose:
+      - "8428"
+    entrypoint: ["/bin/sh", "-ce"]
+    command:
+      - |
+        cat > /tmp/scrape.yml <<'EOF'
+        global:
+          scrape_interval: 15s
+
+        scrape_configs:
+          - job_name: bidon-sdkapi
+            static_configs:
+              - targets: ["${SERVICE_NAME_BIDON_SDKAPI:-bidon-sdkapi}:1323"]
+        EOF
+        exec /victoria-metrics-prod \
+          -promscrape.config=/tmp/scrape.yml \
+          -storageDataPath=/storage \
+          -retentionPeriod=7d
+    volumes:
+      - victoriametrics-data:/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8428/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "traefik.http.middlewares.victoriametrics-ba.basicauth.users=${VICTORIAMETRICS_BA_USERS}"
+      - "coolify.traefik.middlewares=victoriametrics-ba"
     logging: *default-logging
     <<: *restart-policy
 
@@ -295,3 +352,4 @@ volumes:
   postgres-data:
   redpanda-data:
   redis-data:
+  victoriametrics-data:

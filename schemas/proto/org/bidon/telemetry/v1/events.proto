@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package org.bidon.telemetry.v1;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  // Catalog event_name for a telemetry-events message. Every message that
+  // embeds Envelope must declare it; the emitter reads it from the type.
+  string event_name = 50000;
+}
+
+// Envelope is the identity header embedded in every catalog event.
+message Envelope {
+  string event_id = 1;
+  string event_name = 2;
+  int64 event_ts = 3;
+  string schema_version = 4;
+  int64 app_id = 5;
+  string auction_id = 6;
+  string session_id = 7;
+  string ad_type = 8;
+  string ad_format = 9;
+  string country = 10;
+  string trace_id = 11;
+  double sampling_rate = 12;
+}
+
+// Scope is the auction phase an event describes.
+enum Scope {
+  SCOPE_UNSPECIFIED = 0;
+  SCOPE_BIDDING_ROUND = 1;
+}
+
+// Outcome is the DSP-leg result after send/return.
+enum Outcome {
+  OUTCOME_UNSPECIFIED = 0;
+  OUTCOME_BID = 1;
+  OUTCOME_NOBID = 2;
+  OUTCOME_TIMEOUT = 3;
+  OUTCOME_HTTP_ERROR = 4;
+  OUTCOME_MALFORMED = 5;
+}
+
+// RejectReason is why a received bid was discarded.
+enum RejectReason {
+  REJECT_REASON_UNSPECIFIED = 0;
+  REJECT_REASON_BELOW_FLOOR = 1;
+}
+
+// ErrorCode is a short auction-level failure class.
+enum ErrorCode {
+  ERROR_CODE_UNSPECIFIED = 0;
+  ERROR_CODE_NO_ADS_FOUND = 1;
+  ERROR_CODE_INVALID_AUCTION_KEY = 2;
+  ERROR_CODE_ERROR = 3;
+}
+
+// price_floor on any event is the effective auction floor: the larger of the
+// SDK floor and the auction configuration floor. A bid counts only when
+// price > price_floor; otherwise it is rejected below_floor.
+
+// AuctionRequestReceived is emitted when /v2/auction is accepted.
+message AuctionRequestReceived {
+  option (event_name) = "auction_request_received";
+
+  Envelope envelope = 1;
+  // Floor the SDK sent, before the auction configuration floor is applied.
+  double requested_price_floor = 2;
+}
+
+// AuctionCompleted is emitted when the server bidding round finishes.
+message AuctionCompleted {
+  option (event_name) = "auction_completed";
+
+  Envelope envelope = 1;
+  Scope scope = 2;
+  string winner_dsp = 3;
+  double price = 4;
+  // Distinct DSPs a request was sent to; equals the dsp_request_sent and
+  // dsp_response_received count. Adapters that fail to build and cached bids
+  // are excluded.
+  int32 participant_count = 5;
+  int64 total_latency_ms = 6;
+  ErrorCode error_code = 7;
+  double price_floor = 8;
+}
+
+// DspRequestSent is emitted immediately before the adapter HTTP call.
+message DspRequestSent {
+  option (event_name) = "dsp_request_sent";
+
+  Envelope envelope = 1;
+  Scope scope = 2;
+  string dsp = 3;
+}
+
+// DspResponseReceived is emitted after the adapter returns, once per
+// dsp_request_sent. Multi-slot DSPs (Amazon) report their best slot.
+message DspResponseReceived {
+  option (event_name) = "dsp_response_received";
+
+  Envelope envelope = 1;
+  Scope scope = 2;
+  string dsp = 3;
+  Outcome outcome = 4;
+  int32 http_status = 5;
+  int64 latency_ms = 6;
+  double price = 7;
+}
+
+// DspResponseRejected is emitted when a bid exists but price <= price_floor.
+message DspResponseRejected {
+  option (event_name) = "dsp_response_rejected";
+
+  Envelope envelope = 1;
+  Scope scope = 2;
+  string dsp = 3;
+  double price = 4;
+  double price_floor = 5;
+  RejectReason reject_reason = 6;
+}

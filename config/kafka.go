@@ -15,11 +15,13 @@ type Topic string
 const (
 	AdEventsTopic           Topic = "ad_events"
 	NotificationEventsTopic Topic = "notification_events"
+	TelemetryEventsTopic    Topic = "telemetry_events"
 )
 
 type KafkaConfig struct {
-	ClientOpts []kgo.Opt
-	Topics     map[Topic]string
+	ClientOpts        []kgo.Opt
+	Topics            map[Topic]string
+	SchemaRegistryURL string
 }
 
 func Kafka() (conf KafkaConfig, err error) {
@@ -55,7 +57,17 @@ func Kafka() (conf KafkaConfig, err error) {
 	conf.Topics = map[Topic]string{
 		AdEventsTopic:           os.Getenv("KAFKA_AD_EVENTS_TOPIC"),
 		NotificationEventsTopic: os.Getenv("KAFKA_NOTIFICATION_EVENTS_TOPIC"),
+		TelemetryEventsTopic:    envOr("KAFKA_TELEMETRY_EVENTS_TOPIC", "telemetry-events"),
 	}
 
+	conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
+
 	return
+}
+
+func envOr(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
 }

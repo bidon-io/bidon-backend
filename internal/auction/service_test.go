@@ -22,6 +22,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentmocks "github.com/bidon-io/bidon-backend/internal/segment/mocks"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 // MockEventLogger captures logged events for testing
@@ -124,6 +126,7 @@ func TestService_Run(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	t.Run("Successful Run", func(t *testing.T) {
@@ -571,6 +574,7 @@ func TestService_Run_BidmachineWithMediator(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -698,6 +702,7 @@ func TestService_Run_BiddingWithDemandExt(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -814,6 +819,7 @@ func TestService_Run_BidmachineWithMediatorInBidding(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -1026,6 +1032,7 @@ func TestService_Run_BuildDemandExtVariousAdapters(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	params := &auction.ExecutionParams{
@@ -1178,6 +1185,7 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 		AuctionBuilder:     auctionBuilder,
 		SegmentMatcher:     segmentMatcher,
 		EventLogger:        eventLogger,
+		Telemetry:          telemetry.Nop,
 	}
 
 	app := testApp(1)
@@ -1216,5 +1224,260 @@ func TestBidmachineWithPlacementID(t *testing.T) {
 
 	if diff := cmp.Diff(want, bidmachineAdUnit.Extra); diff != "" {
 		t.Errorf("Extra mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestService_Run_EmitsAuctionTelemetry(t *testing.T) {
+	ctx := context.Background()
+	auctionConfig := &auction.Config{
+		ID:         1,
+		UID:        "config_uid",
+		PriceFloor: 0.05,
+		Timeout:    15000,
+	}
+	request := &schema.AuctionRequest{
+		AdObject: schema.AdObject{
+			AuctionID:  "auc-telemetry",
+			AuctionKey: "1ERNSV33K4000",
+			PriceFloor: 0.01,
+		},
+		BaseRequest: schema.BaseRequest{
+			Device: schema.Device{
+				OS:   "android",
+				Type: "phone",
+			},
+			Session: schema.Session{ID: "sess-telemetry"},
+		},
+		AdType: ad.BannerType,
+	}
+
+	telEngine := &telemetry.MemoryEngine{}
+	service := &auction.Service{
+		AdapterKeysFetcher: &mocks.AdapterKeysFetcherMock{
+			FetchEnabledAdapterKeysFunc: func(_ context.Context, _ int64, keys []adapter.Key) ([]adapter.Key, error) {
+				return keys, nil
+			},
+		},
+		ConfigFetcher: &mocks.ConfigFetcherMock{
+			FetchByUIDCachedFunc: func(_ context.Context, _ int64, _, _ string) *auction.Config {
+				return auctionConfig
+			},
+			MatchFunc: func(_ context.Context, _ int64, _ ad.Type, _ int64, _ string) (*auction.Config, error) {
+				return auctionConfig, nil
+			},
+		},
+		AuctionBuilder: &mocks.AuctionBuilderMock{
+			BuildFunc: func(_ context.Context, _ *auction.BuildParams) (*auction.Result, error) {
+				return &auction.Result{
+					AuctionConfiguration: auctionConfig,
+					CPMAdUnits:           &[]auction.AdUnit{},
+					BiddingAuctionResult: &bidding.AuctionResult{
+						Bids: []adapters.DemandResponse{
+							{DemandID: adapter.BidmachineKey, Bid: &adapters.DemandBid{Price: 1.5}, Status: 200, SendTS: 1},
+							{DemandID: adapter.MetaKey, Status: 204, SendTS: 1},
+							{DemandID: adapter.VungleKey, Error: context.DeadlineExceeded, SendTS: 1},
+							// Build failure: never sent, so not a participant.
+							{DemandID: adapter.MintegralKey, Error: errors.New("build bidder")},
+						},
+					},
+				}, nil
+			},
+		},
+		SegmentMatcher: &segment.Matcher{
+			Fetcher: &segmentmocks.FetcherMock{
+				FetchCachedFunc: func(_ context.Context, _ int64) ([]segment.Segment, error) {
+					return nil, nil
+				},
+			},
+		},
+		EventLogger: &event.Logger{Engine: &engine.Log{}},
+		Telemetry:   telemetry.New(telEngine, nil),
+	}
+
+	_, err := service.Run(ctx, &auction.ExecutionParams{
+		Req:     request,
+		App:     testApp(9),
+		Country: "US",
+		GeoData: geocoder.GeoData{},
+		Log:     func(string) {},
+		LogErr:  func(error) {},
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+
+	events := telEngine.Events()
+	if len(events) != 2 {
+		t.Fatalf("auction telemetry events: got %d, want 2 (request + completed); DSP send/receive are emitted by bidding.Builder", len(events))
+	}
+	received, ok := events[0].(*telemetryv1.AuctionRequestReceived)
+	if !ok {
+		t.Fatalf("first event = %T, want AuctionRequestReceived", events[0])
+	}
+	if env := received.GetEnvelope(); env.GetAuctionId() != "auc-telemetry" || env.GetAppId() != 9 || env.GetCountry() != "US" {
+		t.Errorf("request envelope = %v", env)
+	}
+	if received.GetRequestedPriceFloor() != 0.01 {
+		t.Errorf("requested_price_floor = %v, want 0.01", received.GetRequestedPriceFloor())
+	}
+
+	completed, ok := events[1].(*telemetryv1.AuctionCompleted)
+	if !ok {
+		t.Fatalf("second event = %T, want AuctionCompleted", events[1])
+	}
+	if completed.GetScope() != telemetryv1.Scope_SCOPE_BIDDING_ROUND {
+		t.Errorf("scope = %v", completed.GetScope())
+	}
+	if completed.GetParticipantCount() != 3 {
+		t.Errorf("participant_count = %d, want 3", completed.GetParticipantCount())
+	}
+	if completed.GetWinnerDsp() != string(adapter.BidmachineKey) || completed.GetPrice() != 1.5 {
+		t.Errorf("winner = %s price = %v", completed.GetWinnerDsp(), completed.GetPrice())
+	}
+	if completed.GetPriceFloor() != 0.05 {
+		t.Errorf("auction_completed price_floor = %v, want effective floor 0.05", completed.GetPriceFloor())
+	}
+	if completed.GetTotalLatencyMs() < 0 {
+		t.Errorf("total_latency_ms = %d", completed.GetTotalLatencyMs())
+	}
+}
+
+func TestService_Run_NilTelemetryDoesNotPanic(t *testing.T) {
+	auctionConfig := &auction.Config{ID: 1, UID: "config_uid", PriceFloor: 0.05}
+	service := &auction.Service{
+		AdapterKeysFetcher: &mocks.AdapterKeysFetcherMock{
+			FetchEnabledAdapterKeysFunc: func(_ context.Context, _ int64, keys []adapter.Key) ([]adapter.Key, error) {
+				return keys, nil
+			},
+		},
+		ConfigFetcher: &mocks.ConfigFetcherMock{
+			MatchFunc: func(_ context.Context, _ int64, _ ad.Type, _ int64, _ string) (*auction.Config, error) {
+				return auctionConfig, nil
+			},
+		},
+		AuctionBuilder: &mocks.AuctionBuilderMock{
+			BuildFunc: func(_ context.Context, _ *auction.BuildParams) (*auction.Result, error) {
+				return &auction.Result{
+					AuctionConfiguration: auctionConfig,
+					CPMAdUnits:           &[]auction.AdUnit{},
+					BiddingAuctionResult: &bidding.AuctionResult{},
+				}, nil
+			},
+		},
+		SegmentMatcher: &segment.Matcher{
+			Fetcher: &segmentmocks.FetcherMock{
+				FetchCachedFunc: func(_ context.Context, _ int64) ([]segment.Segment, error) {
+					return nil, nil
+				},
+			},
+		},
+		EventLogger: &event.Logger{Engine: &engine.Log{}},
+	}
+
+	_, _ = service.Run(context.Background(), &auction.ExecutionParams{
+		Req: &schema.AuctionRequest{
+			AdObject:    schema.AdObject{AuctionID: "auc-nil-telemetry"},
+			BaseRequest: schema.BaseRequest{Device: schema.Device{OS: "android"}},
+			AdType:      ad.BannerType,
+		},
+		App:    testApp(9),
+		Log:    func(string) {},
+		LogErr: func(error) {},
+	})
+}
+
+type failingTelemetryEngine struct{}
+
+func (failingTelemetryEngine) Produce(_ telemetry.LogMessage, handleErr func(error)) {
+	if handleErr != nil {
+		handleErr(errors.New("telemetry kafka down"))
+	}
+}
+
+func (failingTelemetryEngine) Ping(context.Context) error { return nil }
+
+func TestService_Run_TelemetryFailureKeepsAdEvents(t *testing.T) {
+	ctx := context.Background()
+	auctionConfig := &auction.Config{
+		ID:         1,
+		UID:        "config_uid",
+		PriceFloor: 0.05,
+		Timeout:    15000,
+	}
+	request := &schema.AuctionRequest{
+		AdObject: schema.AdObject{
+			AuctionID:  "auc-telemetry-fail",
+			AuctionKey: "1ERNSV33K4000",
+			PriceFloor: 0.01,
+		},
+		BaseRequest: schema.BaseRequest{
+			Device: schema.Device{
+				OS:   "android",
+				Type: "phone",
+			},
+			Session: schema.Session{ID: "sess-telemetry-fail"},
+		},
+		AdType: ad.BannerType,
+	}
+
+	mockEventLogger := &MockEventLogger{}
+	service := &auction.Service{
+		AdapterKeysFetcher: &mocks.AdapterKeysFetcherMock{
+			FetchEnabledAdapterKeysFunc: func(_ context.Context, _ int64, keys []adapter.Key) ([]adapter.Key, error) {
+				return keys, nil
+			},
+		},
+		ConfigFetcher: &mocks.ConfigFetcherMock{
+			FetchByUIDCachedFunc: func(_ context.Context, _ int64, _, _ string) *auction.Config {
+				return auctionConfig
+			},
+			MatchFunc: func(_ context.Context, _ int64, _ ad.Type, _ int64, _ string) (*auction.Config, error) {
+				return auctionConfig, nil
+			},
+		},
+		AuctionBuilder: &mocks.AuctionBuilderMock{
+			BuildFunc: func(_ context.Context, _ *auction.BuildParams) (*auction.Result, error) {
+				return &auction.Result{
+					AuctionConfiguration: auctionConfig,
+					CPMAdUnits:           &[]auction.AdUnit{},
+					BiddingAuctionResult: &bidding.AuctionResult{},
+				}, nil
+			},
+		},
+		SegmentMatcher: &segment.Matcher{
+			Fetcher: &segmentmocks.FetcherMock{
+				FetchCachedFunc: func(_ context.Context, _ int64) ([]segment.Segment, error) {
+					return nil, nil
+				},
+			},
+		},
+		EventLogger: &event.Logger{Engine: mockEventLogger},
+		Telemetry:   telemetry.New(failingTelemetryEngine{}, nil),
+	}
+
+	resp, err := service.Run(ctx, &auction.ExecutionParams{
+		Req:     request,
+		App:     testApp(9),
+		Country: "US",
+		GeoData: geocoder.GeoData{},
+		Log:     func(string) {},
+		LogErr:  func(error) {},
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if resp == nil {
+		t.Fatal("Run() response is nil")
+	}
+
+	var auctionEvent *event.AdEvent
+	for _, ev := range mockEventLogger.LoggedEvents {
+		if adEvent, ok := ev.(*event.AdEvent); ok && adEvent.EventType == "auction_request" {
+			auctionEvent = adEvent
+			break
+		}
+	}
+	if auctionEvent == nil {
+		t.Fatal("expected auction_request ad-event to be written when telemetry fails")
 	}
 }

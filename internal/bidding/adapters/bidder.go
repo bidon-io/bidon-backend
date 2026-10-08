@@ -49,7 +49,10 @@ type DemandResponse struct {
 	TimeoutURL  string
 	StartTS     int64
 	EndTS       int64
-	Token       Token
+	// SendTS is when the DSP request left (unix ms); zero when none was sent.
+	// Telemetry only — StartTS stays auction start for ad-events and the bid cache.
+	SendTS int64
+	Token  Token
 }
 
 func (dr *DemandResponse) IsBid() bool {

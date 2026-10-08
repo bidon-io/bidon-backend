@@ -36,6 +36,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/openapi"
 	"github.com/bidon-io/bidon-backend/internal/segment"
 	segmentstore "github.com/bidon-io/bidon-backend/internal/segment/store"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 	"github.com/bidon-io/bidon-backend/pkg/clock"
 )
 
@@ -46,6 +47,7 @@ type Deps struct {
 	DB          *dbpkg.DB
 	Redis       redis.UniversalClient
 	EventLogger *event.Logger
+	Telemetry   *telemetry.Logger
 	Logger      *zap.Logger
 
 	// MaxMindDB is optional. A nil reader disables geo lookups; BaseHandler
@@ -158,6 +160,7 @@ func New(deps Deps) (*App, error) {
 		NotificationHandler: notificationHandler,
 		BidCacher:           &bidding.BidCache{Redis: rdb, Clock: clock.New()},
 		Logger:              logger.Named("bidding"),
+		Telemetry:           deps.Telemetry,
 	}
 	biddingAdaptersCfgCache := config.NewRedisCacheOf[adapter.RawConfigsMap](rdb, cacheTTL, "bidding_adapters_cfg")
 	if err := biddingAdaptersCfgCache.Monitor(meter); err != nil {
@@ -211,6 +214,7 @@ func New(deps Deps) (*App, error) {
 			BiddingAdaptersConfigBuilder: biddingAdaptersCfgBuilder,
 		},
 		EventLogger: eventLogger,
+		Telemetry:   deps.Telemetry,
 	}
 
 	e := config.Echo()
