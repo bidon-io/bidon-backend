@@ -8,6 +8,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -18,6 +19,135 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+)
+
+// Defines values for AdFilledAdType.
+const (
+	AdFilledAdTypeBanner       AdFilledAdType = "banner"
+	AdFilledAdTypeInterstitial AdFilledAdType = "interstitial"
+	AdFilledAdTypeRewarded     AdFilledAdType = "rewarded"
+)
+
+// Defines values for AdFilledBidType.
+const (
+	Bidding   AdFilledBidType = "bidding"
+	Waterfall AdFilledBidType = "waterfall"
+)
+
+// Defines values for AdFilledEventName.
+const (
+	AdFilledEventNameAdFilled AdFilledEventName = "ad_filled"
+)
+
+// Defines values for AdLoadFailedAdType.
+const (
+	AdLoadFailedAdTypeBanner       AdLoadFailedAdType = "banner"
+	AdLoadFailedAdTypeInterstitial AdLoadFailedAdType = "interstitial"
+	AdLoadFailedAdTypeRewarded     AdLoadFailedAdType = "rewarded"
+)
+
+// Defines values for AdLoadFailedEventName.
+const (
+	AdLoadFailedEventNameAdLoadFailed AdLoadFailedEventName = "ad_load_failed"
+)
+
+// Defines values for AdRequestStartedAdType.
+const (
+	AdRequestStartedAdTypeBanner       AdRequestStartedAdType = "banner"
+	AdRequestStartedAdTypeInterstitial AdRequestStartedAdType = "interstitial"
+	AdRequestStartedAdTypeRewarded     AdRequestStartedAdType = "rewarded"
+)
+
+// Defines values for AdRequestStartedEventName.
+const (
+	AdRequestStartedEventNameAdRequestStarted AdRequestStartedEventName = "ad_request_started"
+)
+
+// Defines values for AuctionNoDemandAdType.
+const (
+	AuctionNoDemandAdTypeBanner       AuctionNoDemandAdType = "banner"
+	AuctionNoDemandAdTypeInterstitial AuctionNoDemandAdType = "interstitial"
+	AuctionNoDemandAdTypeRewarded     AuctionNoDemandAdType = "rewarded"
+)
+
+// Defines values for AuctionNoDemandEventName.
+const (
+	AuctionNoDemandEventNameAuctionNoDemand AuctionNoDemandEventName = "auction_no_demand"
+)
+
+// Defines values for AuctionNoDemandReason.
+const (
+	AuctionError AuctionNoDemandReason = "auction_error"
+	NoFills      AuctionNoDemandReason = "no_fills"
+	Timeout      AuctionNoDemandReason = "timeout"
+)
+
+// Defines values for AuctionRequestedAdType.
+const (
+	AuctionRequestedAdTypeBanner       AuctionRequestedAdType = "banner"
+	AuctionRequestedAdTypeInterstitial AuctionRequestedAdType = "interstitial"
+	AuctionRequestedAdTypeRewarded     AuctionRequestedAdType = "rewarded"
+)
+
+// Defines values for AuctionRequestedEventName.
+const (
+	AuctionRequestedEventNameAuctionRequested AuctionRequestedEventName = "auction_requested"
+)
+
+// Defines values for AuctionResponseReceivedAdType.
+const (
+	AuctionResponseReceivedAdTypeBanner       AuctionResponseReceivedAdType = "banner"
+	AuctionResponseReceivedAdTypeInterstitial AuctionResponseReceivedAdType = "interstitial"
+	AuctionResponseReceivedAdTypeRewarded     AuctionResponseReceivedAdType = "rewarded"
+)
+
+// Defines values for AuctionResponseReceivedEventName.
+const (
+	AuctionResponseReceivedEventNameAuctionResponseReceived AuctionResponseReceivedEventName = "auction_response_received"
+)
+
+// Defines values for ClientEventEnvelopeAdType.
+const (
+	ClientEventEnvelopeAdTypeBanner       ClientEventEnvelopeAdType = "banner"
+	ClientEventEnvelopeAdTypeInterstitial ClientEventEnvelopeAdType = "interstitial"
+	ClientEventEnvelopeAdTypeRewarded     ClientEventEnvelopeAdType = "rewarded"
+)
+
+// Defines values for ClientEventName.
+const (
+	ClientEventNameAdFilled                 ClientEventName = "ad_filled"
+	ClientEventNameAdLoadFailed             ClientEventName = "ad_load_failed"
+	ClientEventNameAdRequestStarted         ClientEventName = "ad_request_started"
+	ClientEventNameAuctionNoDemand          ClientEventName = "auction_no_demand"
+	ClientEventNameAuctionRequested         ClientEventName = "auction_requested"
+	ClientEventNameAuctionResponseReceived  ClientEventName = "auction_response_received"
+	ClientEventNameTokenCollectionCompleted ClientEventName = "token_collection_completed"
+)
+
+// Defines values for ClientMetricName.
+const (
+	ClientAdLoadDurationSeconds          ClientMetricName = "client_ad_load_duration_seconds"
+	ClientAuctionDurationSeconds         ClientMetricName = "client_auction_duration_seconds"
+	ClientTokenCollectionDurationSeconds ClientMetricName = "client_token_collection_duration_seconds"
+)
+
+// Defines values for MetricObservationType.
+const (
+	Counter   MetricObservationType = "counter"
+	Gauge     MetricObservationType = "gauge"
+	Histogram MetricObservationType = "histogram"
+)
+
+// Defines values for TokenCollectionCompletedAdType.
+const (
+	TokenCollectionCompletedAdTypeBanner       TokenCollectionCompletedAdType = "banner"
+	TokenCollectionCompletedAdTypeInterstitial TokenCollectionCompletedAdType = "interstitial"
+	TokenCollectionCompletedAdTypeRewarded     TokenCollectionCompletedAdType = "rewarded"
+)
+
+// Defines values for TokenCollectionCompletedEventName.
+const (
+	TokenCollectionCompletedEventNameTokenCollectionCompleted TokenCollectionCompletedEventName = "token_collection_completed"
 )
 
 // Defines values for AdType.
@@ -400,6 +530,484 @@ const (
 	CPM PostWinJSONBodyShowBidType = "CPM"
 	RTB PostWinJSONBodyShowBidType = "RTB"
 )
+
+// AdFilled defines model for AdFilled.
+type AdFilled struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AdFilledAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// BidType Proposed.
+	BidType *AdFilledBidType `json:"bid_type,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// DemandId Proposed. Winning adapter / DSP key.
+	DemandId *string `json:"demand_id,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID `json:"event_id"`
+	EventName AdFilledEventName  `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// Price Proposed. Clearing price the SDK will show.
+	Price *float64 `json:"price,omitempty"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AdFilledAdType Ad type
+type AdFilledAdType string
+
+// AdFilledBidType Proposed.
+type AdFilledBidType string
+
+// AdFilledEventName defines model for AdFilled.EventName.
+type AdFilledEventName string
+
+// AdLoadFailed defines model for AdLoadFailed.
+type AdLoadFailed struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AdLoadFailedAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country  *string `json:"country,omitempty"`
+	DemandId *string `json:"demand_id,omitempty"`
+
+	// ErrorCode Banded / catalogued. Errors are never sampled (G6).
+	ErrorCode string `json:"error_code"`
+
+	// ErrorDomain Proposed. Stable domain (sdk / adapter / network). Foreign code preserved separately later.
+	ErrorDomain *string `json:"error_domain,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID    `json:"event_id"`
+	EventName AdLoadFailedEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AdLoadFailedAdType Ad type
+type AdLoadFailedAdType string
+
+// AdLoadFailedEventName defines model for AdLoadFailed.EventName.
+type AdLoadFailedEventName string
+
+// AdRequestStarted defines model for AdRequestStarted.
+type AdRequestStarted struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AdRequestStartedAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// AuctionKey Proposed. Auction configuration key if the SDK has one.
+	AuctionKey *string `json:"auction_key,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID        `json:"event_id"`
+	EventName AdRequestStartedEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// PriceFloor Proposed. Client-side floor at request start.
+	PriceFloor *float64 `json:"price_floor,omitempty"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AdRequestStartedAdType Ad type
+type AdRequestStartedAdType string
+
+// AdRequestStartedEventName defines model for AdRequestStarted.EventName.
+type AdRequestStartedEventName string
+
+// AuctionNoDemand defines model for AuctionNoDemand.
+type AuctionNoDemand struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AuctionNoDemandAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID       `json:"event_id"`
+	EventName AuctionNoDemandEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// Reason Proposed, banded — not a free string in the shipped proto.
+	Reason *AuctionNoDemandReason `json:"reason,omitempty"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AuctionNoDemandAdType Ad type
+type AuctionNoDemandAdType string
+
+// AuctionNoDemandEventName defines model for AuctionNoDemand.EventName.
+type AuctionNoDemandEventName string
+
+// AuctionNoDemandReason Proposed, banded — not a free string in the shipped proto.
+type AuctionNoDemandReason string
+
+// AuctionRequested defines model for AuctionRequested.
+type AuctionRequested struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AuctionRequestedAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID        `json:"event_id"`
+	EventName AuctionRequestedEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AuctionRequestedAdType Ad type
+type AuctionRequestedAdType string
+
+// AuctionRequestedEventName defines model for AuctionRequested.EventName.
+type AuctionRequestedEventName string
+
+// AuctionResponseReceived defines model for AuctionResponseReceived.
+type AuctionResponseReceived struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *AuctionResponseReceivedAdType `json:"ad_type,omitempty"`
+
+	// AdUnitCount Proposed. Ranked units returned.
+	AdUnitCount *int `json:"ad_unit_count,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// DurationMs Proposed. Client-observed `/v2/auction` RTT.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID               `json:"event_id"`
+	EventName AuctionResponseReceivedEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// AuctionResponseReceivedAdType Ad type
+type AuctionResponseReceivedAdType string
+
+// AuctionResponseReceivedEventName defines model for AuctionResponseReceived.EventName.
+type AuctionResponseReceivedEventName string
+
+// ClientEventEnvelope defines model for ClientEventEnvelope.
+type ClientEventEnvelope struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *ClientEventEnvelopeAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId openapi_types.UUID `json:"event_id"`
+
+	// EventName POC discussion set — funnel-safe client names that are **not** impression /
+	// billing and **not** server-minted DSP/auction rows.
+	//
+	// Linear BAC-74 minimum is `ad_request_started` + `ad_filled`. The rest is
+	// proposed so the funnel and no-fill path are discussable.
+	EventName ClientEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// ClientEventEnvelopeAdType Ad type
+type ClientEventEnvelopeAdType string
+
+// ClientEventName POC discussion set — funnel-safe client names that are **not** impression /
+// billing and **not** server-minted DSP/auction rows.
+//
+// Linear BAC-74 minimum is `ad_request_started` + `ad_filled`. The rest is
+// proposed so the funnel and no-fill path are discussable.
+type ClientEventName string
+
+// ClientMetricName POC discussion set. Additive only — new series = proto + OpenAPI change.
+type ClientMetricName string
+
+// MetricObservation One observation against a **catalogued** series. Label keys must be in that
+// series' allow-list. Do **not** send `auction_id`, `session_id`, or `event_id`
+// as labels (cardinality).
+type MetricObservation struct {
+	// Labels Only keys listed for that series. Extra key → drop the observation.
+	Labels *map[string]string `json:"labels,omitempty"`
+
+	// Name POC discussion set. Additive only — new series = proto + OpenAPI change.
+	Name ClientMetricName `json:"name"`
+
+	// Type Must match the catalogue row for `name`.
+	Type MetricObservationType `json:"type"`
+
+	// Value Counter increment, histogram observation, or gauge set.
+	Value float64 `json:"value"`
+}
+
+// MetricObservationType Must match the catalogue row for `name`.
+type MetricObservationType string
+
+// TelemetryApp Identity only. Not the full `app` object from BaseRequest.
+type TelemetryApp struct {
+	Bundle string `json:"bundle"`
+
+	// Key Publisher app key. Server resolves `app_id` from this + bundle.
+	Key string `json:"key"`
+}
+
+// TelemetryEvent Discriminated on `event_name`. Shared envelope fields are client-settable
+// except `app_id`, `country`, `schema_version`, `trace_id` (server overwrite).
+type TelemetryEvent struct {
+	union json.RawMessage
+}
+
+// TelemetryRequest WIP caps — **100 events, 50 observations, 256 KiB** body. Over any cap → 413.
+// Extra properties are dropped, not stored (G3 / PRD rationale 5).
+type TelemetryRequest struct {
+	// App Identity only. Not the full `app` object from BaseRequest.
+	App TelemetryApp `json:"app"`
+
+	// Events Catalogued client events. At least one of `events` / `metrics` should
+	// be present in practice; empty arrays are valid (202, accepted 0).
+	Events *[]TelemetryEvent `json:"events,omitempty"`
+
+	// Metrics Allow-listed observations. Not OTLP. Not Prometheus remote-write.
+	Metrics *[]MetricObservation `json:"metrics,omitempty"`
+
+	// Session Session id only. No RAM / battery / timestamps (those are BaseRequest).
+	Session TelemetrySession `json:"session"`
+}
+
+// TelemetryResponse defines model for TelemetryResponse.
+type TelemetryResponse struct {
+	// Accepted Items enqueued after allow-list. Not a delivery ack.
+	Accepted int `json:"accepted"`
+}
+
+// TelemetrySession Session id only. No RAM / battery / timestamps (those are BaseRequest).
+type TelemetrySession struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+// TokenCollectionCompleted defines model for TokenCollectionCompleted.
+type TokenCollectionCompleted struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *TokenCollectionCompletedAdType `json:"ad_type,omitempty"`
+
+	// AdapterCount Proposed. How many adapters were asked.
+	AdapterCount *int `json:"adapter_count,omitempty"`
+
+	// AppId Ignored if sent. Server stamps from resolved app.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Required for auction-scoped events; omit on session-only types if we add those.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind when needed.
+	Country *string `json:"country,omitempty"`
+
+	// DurationMs Proposed. Wall time of the token round.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId   openapi_types.UUID                `json:"event_id"`
+	EventName TokenCollectionCompletedEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel / error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// TokenCollectionCompletedAdType Ad type
+type TokenCollectionCompletedAdType string
+
+// TokenCollectionCompletedEventName defines model for TokenCollectionCompleted.EventName.
+type TokenCollectionCompletedEventName string
 
 // AdType defines model for AdType.
 type AdType string
@@ -2788,6 +3396,12 @@ type PostStatsJSONBody_Stats struct {
 	union json.RawMessage
 }
 
+// PostTelemetryParams defines parameters for PostTelemetry.
+type PostTelemetryParams struct {
+	// XBidonVersion Version of the Bidon SDK
+	XBidonVersion XBidonVersion `json:"X-Bidon-Version"`
+}
+
 // PostWinJSONBody defines parameters for PostWin.
 type PostWinJSONBody struct {
 	App struct {
@@ -3192,8 +3806,250 @@ type PostShowJSONRequestBody PostShowJSONBody
 // PostStatsJSONRequestBody defines body for PostStats for application/json ContentType.
 type PostStatsJSONRequestBody PostStatsJSONBody
 
+// PostTelemetryJSONRequestBody defines body for PostTelemetry for application/json ContentType.
+type PostTelemetryJSONRequestBody = TelemetryRequest
+
 // PostWinJSONRequestBody defines body for PostWin for application/json ContentType.
 type PostWinJSONRequestBody PostWinJSONBody
+
+// AsAdRequestStarted returns the union data inside the TelemetryEvent as a AdRequestStarted
+func (t TelemetryEvent) AsAdRequestStarted() (AdRequestStarted, error) {
+	var body AdRequestStarted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdRequestStarted overwrites any union data inside the TelemetryEvent as the provided AdRequestStarted
+func (t *TelemetryEvent) FromAdRequestStarted(v AdRequestStarted) error {
+	v.EventName = "ad_request_started"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdRequestStarted performs a merge with any union data inside the TelemetryEvent, using the provided AdRequestStarted
+func (t *TelemetryEvent) MergeAdRequestStarted(v AdRequestStarted) error {
+	v.EventName = "ad_request_started"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTokenCollectionCompleted returns the union data inside the TelemetryEvent as a TokenCollectionCompleted
+func (t TelemetryEvent) AsTokenCollectionCompleted() (TokenCollectionCompleted, error) {
+	var body TokenCollectionCompleted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTokenCollectionCompleted overwrites any union data inside the TelemetryEvent as the provided TokenCollectionCompleted
+func (t *TelemetryEvent) FromTokenCollectionCompleted(v TokenCollectionCompleted) error {
+	v.EventName = "token_collection_completed"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTokenCollectionCompleted performs a merge with any union data inside the TelemetryEvent, using the provided TokenCollectionCompleted
+func (t *TelemetryEvent) MergeTokenCollectionCompleted(v TokenCollectionCompleted) error {
+	v.EventName = "token_collection_completed"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionRequested returns the union data inside the TelemetryEvent as a AuctionRequested
+func (t TelemetryEvent) AsAuctionRequested() (AuctionRequested, error) {
+	var body AuctionRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionRequested overwrites any union data inside the TelemetryEvent as the provided AuctionRequested
+func (t *TelemetryEvent) FromAuctionRequested(v AuctionRequested) error {
+	v.EventName = "auction_requested"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionRequested performs a merge with any union data inside the TelemetryEvent, using the provided AuctionRequested
+func (t *TelemetryEvent) MergeAuctionRequested(v AuctionRequested) error {
+	v.EventName = "auction_requested"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionResponseReceived returns the union data inside the TelemetryEvent as a AuctionResponseReceived
+func (t TelemetryEvent) AsAuctionResponseReceived() (AuctionResponseReceived, error) {
+	var body AuctionResponseReceived
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionResponseReceived overwrites any union data inside the TelemetryEvent as the provided AuctionResponseReceived
+func (t *TelemetryEvent) FromAuctionResponseReceived(v AuctionResponseReceived) error {
+	v.EventName = "auction_response_received"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionResponseReceived performs a merge with any union data inside the TelemetryEvent, using the provided AuctionResponseReceived
+func (t *TelemetryEvent) MergeAuctionResponseReceived(v AuctionResponseReceived) error {
+	v.EventName = "auction_response_received"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdFilled returns the union data inside the TelemetryEvent as a AdFilled
+func (t TelemetryEvent) AsAdFilled() (AdFilled, error) {
+	var body AdFilled
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdFilled overwrites any union data inside the TelemetryEvent as the provided AdFilled
+func (t *TelemetryEvent) FromAdFilled(v AdFilled) error {
+	v.EventName = "ad_filled"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdFilled performs a merge with any union data inside the TelemetryEvent, using the provided AdFilled
+func (t *TelemetryEvent) MergeAdFilled(v AdFilled) error {
+	v.EventName = "ad_filled"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionNoDemand returns the union data inside the TelemetryEvent as a AuctionNoDemand
+func (t TelemetryEvent) AsAuctionNoDemand() (AuctionNoDemand, error) {
+	var body AuctionNoDemand
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionNoDemand overwrites any union data inside the TelemetryEvent as the provided AuctionNoDemand
+func (t *TelemetryEvent) FromAuctionNoDemand(v AuctionNoDemand) error {
+	v.EventName = "auction_no_demand"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionNoDemand performs a merge with any union data inside the TelemetryEvent, using the provided AuctionNoDemand
+func (t *TelemetryEvent) MergeAuctionNoDemand(v AuctionNoDemand) error {
+	v.EventName = "auction_no_demand"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdLoadFailed returns the union data inside the TelemetryEvent as a AdLoadFailed
+func (t TelemetryEvent) AsAdLoadFailed() (AdLoadFailed, error) {
+	var body AdLoadFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdLoadFailed overwrites any union data inside the TelemetryEvent as the provided AdLoadFailed
+func (t *TelemetryEvent) FromAdLoadFailed(v AdLoadFailed) error {
+	v.EventName = "ad_load_failed"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdLoadFailed performs a merge with any union data inside the TelemetryEvent, using the provided AdLoadFailed
+func (t *TelemetryEvent) MergeAdLoadFailed(v AdLoadFailed) error {
+	v.EventName = "ad_load_failed"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t TelemetryEvent) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"event_name"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t TelemetryEvent) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "ad_filled":
+		return t.AsAdFilled()
+	case "ad_load_failed":
+		return t.AsAdLoadFailed()
+	case "ad_request_started":
+		return t.AsAdRequestStarted()
+	case "auction_no_demand":
+		return t.AsAuctionNoDemand()
+	case "auction_requested":
+		return t.AsAuctionRequested()
+	case "auction_response_received":
+		return t.AsAuctionResponseReceived()
+	case "token_collection_completed":
+		return t.AsTokenCollectionCompleted()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t TelemetryEvent) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *TelemetryEvent) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -3221,6 +4077,9 @@ type ServerInterface interface {
 	// Stats
 	// (POST /v2/stats/{ad_type})
 	PostStats(ctx echo.Context, adType PostStatsParamsAdType, params PostStatsParams) error
+	// Submit a batch of catalogued client events and metric observations
+	// (POST /v2/telemetry)
+	PostTelemetry(ctx echo.Context, params PostTelemetryParams) error
 	// Win
 	// (POST /v2/win/{ad_type})
 	PostWin(ctx echo.Context, adType PostWinParamsAdType, params PostWinParams) error
@@ -3499,6 +4358,37 @@ func (w *ServerInterfaceWrapper) PostStats(ctx echo.Context) error {
 	return err
 }
 
+// PostTelemetry converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTelemetry(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostTelemetryParams
+
+	headers := ctx.Request().Header
+	// ------------- Required header parameter "X-Bidon-Version" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Bidon-Version")]; found {
+		var XBidonVersion XBidonVersion
+		n := len(valueList)
+		if n != 1 {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-Bidon-Version, got %d", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Bidon-Version", valueList[0], &XBidonVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-Bidon-Version: %s", err))
+		}
+
+		params.XBidonVersion = XBidonVersion
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-Bidon-Version is required, but not found"))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostTelemetry(ctx, params)
+	return err
+}
+
 // PostWin converts echo context to params.
 func (w *ServerInterfaceWrapper) PostWin(ctx echo.Context) error {
 	var err error
@@ -3573,6 +4463,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/v2/reward/:ad_type", wrapper.PostReward)
 	router.POST(baseURL+"/v2/show/:ad_type", wrapper.PostShow)
 	router.POST(baseURL+"/v2/stats/:ad_type", wrapper.PostStats)
+	router.POST(baseURL+"/v2/telemetry", wrapper.PostTelemetry)
 	router.POST(baseURL+"/v2/win/:ad_type", wrapper.PostWin)
 
 }
@@ -3580,82 +4471,134 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
