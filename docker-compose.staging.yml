@@ -28,9 +28,10 @@ x-logging: &default-logging
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
+#   VICTORIAMETRICS_BA_USERS  — Traefik basicAuth.users for victoriametrics /vmui only (never commit).
 #     Generate: htpasswd -nbBC 10 <user> '<password>'  →  one line: user:$2y$10$...
-#     Coolify: reference this var under redpanda-console.environment (below) so it is in the
-#     deployment .env and ${REDPANDA_CONSOLE_BA_USERS} in labels is interpolated — labels-only refs can stay literal.
+#     Coolify: reference this var under the service environment so it is in the
+#     deployment .env and the ${..._BA_USERS} label is interpolated — labels-only refs can stay literal.
 #     For bcrypt, mark the value “literal” in Coolify if $ characters get stripped.
 #     Gitignored .env beside compose: if Compose treats $ inside values as substitution, escape with $$ per $ in the hash segment.
 
@@ -227,6 +228,45 @@ services:
     logging: *default-logging
     <<: *restart-policy
 
+  # vmui: expose publicly via Coolify → Traefik; same Basic Auth middleware pattern as
+  # redpanda-console, with its own VICTORIAMETRICS_BA_USERS. vmui is served at /vmui on port 8428.
+  # Scrapes bidon-sdkapi /metrics. Nothing depends on it; stopping it never affects auctions.
+  # Scrape config is inlined: Coolify preview deploys rewrite bind mounts, so the dev
+  # scrape.yml mount would be missing. Staging sdkapi listens on 1323 (dev targets 1324).
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.153.0
+    expose:
+      - "8428"
+    entrypoint: ["/bin/sh", "-ce"]
+    command:
+      - |
+        cat > /tmp/scrape.yml <<'EOF'
+        global:
+          scrape_interval: 15s
+
+        scrape_configs:
+          - job_name: bidon-sdkapi
+            static_configs:
+              - targets: ["${SERVICE_NAME_BIDON_SDKAPI:-bidon-sdkapi}:1323"]
+        EOF
+        exec /victoria-metrics-prod \
+          -promscrape.config=/tmp/scrape.yml \
+          -storageDataPath=/storage \
+          -retentionPeriod=7d
+    volumes:
+      - victoriametrics-data:/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8428/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "traefik.http.middlewares.victoriametrics-ba.basicauth.users=${VICTORIAMETRICS_BA_USERS}"
+      - "coolify.traefik.middlewares=victoriametrics-ba"
+    logging: *default-logging
+    <<: *restart-policy
+
   bidon-seed:
     image: "registry.digitalocean.com/bidon-io/bidon-seed:${BIDON_SEED_TAG}"
     # Shared sample fixtures; Adikteev uses the real DSP. Do not pass --dev (that retargets dspsim).
@@ -312,3 +352,4 @@ volumes:
   postgres-data:
   redpanda-data:
   redis-data:
+  victoriametrics-data:
