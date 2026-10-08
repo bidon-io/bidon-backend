@@ -2,6 +2,7 @@ package v2
 
 import (
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 
 	adapterstore "github.com/bidon-io/bidon-backend/internal/adapter/store"
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -30,6 +31,7 @@ type Router struct {
 	BiddingBuilder            *bidding.Builder
 	AuctionService            *auction.Service
 	AdUnitLookup              *sdkapistore.AdUnitLookup
+	Logger                    *zap.Logger
 }
 
 func (r *Router) RegisterRoutes(g *echo.Group) {
@@ -104,15 +106,19 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 	}
+	telemetryHandler := apihandlers.TelemetryHandler{
+		Logger: r.Logger,
+	}
 
 	api.RegisterHandlers(g, &api.Server{
-		AuctionHandler: &auctionHandler,
-		ClickHandler:   &clickHandler,
-		ConfigHandler:  &configHandler,
-		LossHandler:    &lossHandler,
-		StatsHandler:   &statsHandler,
-		ShowHandler:    &showHandler,
-		RewardHandler:  &rewardHandler,
-		WinHandler:     &winHandler,
+		AuctionHandler:   &auctionHandler,
+		ClickHandler:     &clickHandler,
+		ConfigHandler:    &configHandler,
+		LossHandler:      &lossHandler,
+		StatsHandler:     &statsHandler,
+		ShowHandler:      &showHandler,
+		RewardHandler:    &rewardHandler,
+		WinHandler:       &winHandler,
+		TelemetryHandler: &telemetryHandler,
 	})
 }

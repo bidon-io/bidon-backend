@@ -44,6 +44,7 @@ func TestNew_RegistersExpectedRoutes(t *testing.T) {
 		"POST /v2/reward/:ad_type":  true,
 		"POST /v2/show/:ad_type":    true,
 		"POST /v2/stats/:ad_type":   true,
+		"POST /v2/telemetry":        true,
 		"POST /v2/win/:ad_type":     true,
 		"GET /docs/*":               true,
 		"GET /health_checks":        true,
