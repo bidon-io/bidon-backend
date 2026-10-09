@@ -255,21 +255,23 @@ paths:
                   session:
                     id: 550e8400-e29b-41d4-a716-446655440000
                   events:
-                    - event_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
-                      event_name: ad_request_started
-                      event_ts: 1710000000123
-                      auction_id: auc_01J8Z3K4N5
-                      ad_type: banner
-                      ad_format: BANNER
-                      sampling_rate: 1
+                    - envelope:
+                        event_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                        event_name: ad_request_started
+                        event_ts: 1710000000123
+                        auction_id: auc_01J8Z3K4N5
+                        ad_type: banner
+                        ad_format: BANNER
+                        sampling_rate: 1
                       price_floor: 0.05
-                    - event_id: 0f14d0ab-9605-4a62-a9e4-90e086941e9f
-                      event_name: ad_filled
-                      event_ts: 1710000000450
-                      auction_id: auc_01J8Z3K4N5
-                      ad_type: banner
-                      ad_format: BANNER
-                      sampling_rate: 1
+                    - envelope:
+                        event_id: 0f14d0ab-9605-4a62-a9e4-90e086941e9f
+                        event_name: ad_filled
+                        event_ts: 1710000000450
+                        auction_id: auc_01J8Z3K4N5
+                        ad_type: banner
+                        ad_format: BANNER
+                        sampling_rate: 1
                       demand_id: bidmachine
                       price: 1.24
                       bid_type: bidding
@@ -288,10 +290,11 @@ paths:
                   session:
                     id: 550e8400-e29b-41d4-a716-446655440000
                   events:
-                    - event_id: 11111111-1111-4111-8111-111111111111
-                      event_name: not_in_catalogue
-                      event_ts: 1710000000000
-                      sampling_rate: 1
+                    - envelope:
+                        event_id: 11111111-1111-4111-8111-111111111111
+                        event_name: not_in_catalogue
+                        event_ts: 1710000000000
+                        sampling_rate: 1
       responses:
         '202':
           description: |
@@ -421,29 +424,61 @@ components:
           format: uuid
     TelemetryEvent:
       description: |
-        Discriminated on `event_name`. Shared envelope fields are client-settable
-        except `app_id`, `country`, `schema_version`, `trace_id` (server overwrite).
-      discriminator:
-        propertyName: event_name
-        mapping:
-          ad_request_started: '#/components/schemas/AdRequestStarted'
-          token_collection_completed: '#/components/schemas/TokenCollectionCompleted'
-          auction_requested: '#/components/schemas/AuctionRequested'
-          auction_response_received: '#/components/schemas/AuctionResponseReceived'
-          ad_filled: '#/components/schemas/AdFilled'
-          auction_no_demand: '#/components/schemas/AuctionNoDemand'
-          ad_load_failed: '#/components/schemas/AdLoadFailed'
+        One catalog message as protojson. The shared fields live in a nested
+        `envelope`, the same shape as `org.bidon.telemetry.v1.Envelope` in
+        BAC-61. `event_name` is inside the envelope. OpenAPI 3.0 cannot
+        discriminate on a nested property, so this is a oneOf without a
+        discriminator.
       oneOf:
-        - $ref: '#/components/schemas/AdRequestStarted'
+        - $ref: '#/components/schemas/SdkInitStarted'
+        - $ref: '#/components/schemas/SdkInitCompleted'
+        - $ref: '#/components/schemas/SdkInitFailed'
+        - $ref: '#/components/schemas/AdapterInitResult'
+        - $ref: '#/components/schemas/ConfigFetchResult'
+        - $ref: '#/components/schemas/AdapterTokenRequested'
+        - $ref: '#/components/schemas/AdapterTokenResult'
         - $ref: '#/components/schemas/TokenCollectionCompleted'
+        - $ref: '#/components/schemas/AdRequestStarted'
         - $ref: '#/components/schemas/AuctionRequested'
         - $ref: '#/components/schemas/AuctionResponseReceived'
         - $ref: '#/components/schemas/AdFilled'
+        - $ref: '#/components/schemas/AuctionFailed'
         - $ref: '#/components/schemas/AuctionNoDemand'
+        - $ref: '#/components/schemas/AdLoadRequested'
+        - $ref: '#/components/schemas/AdmParseResult'
+        - $ref: '#/components/schemas/RendererSelected'
+        - $ref: '#/components/schemas/AdLoaded'
         - $ref: '#/components/schemas/AdLoadFailed'
+        - $ref: '#/components/schemas/AdExpired'
+        - $ref: '#/components/schemas/AdShowRequested'
+        - $ref: '#/components/schemas/AdImpression'
+        - $ref: '#/components/schemas/AdShowFailed'
+        - $ref: '#/components/schemas/AdViewable'
+        - $ref: '#/components/schemas/AdClicked'
+        - $ref: '#/components/schemas/AdClosed'
+        - $ref: '#/components/schemas/AdRewardGranted'
+        - $ref: '#/components/schemas/WebviewError'
+        - $ref: '#/components/schemas/RenderCrashed'
+        - $ref: '#/components/schemas/VideoStart'
+        - $ref: '#/components/schemas/VideoQ1'
+        - $ref: '#/components/schemas/VideoMidpoint'
+        - $ref: '#/components/schemas/VideoQ3'
+        - $ref: '#/components/schemas/VideoComplete'
+        - $ref: '#/components/schemas/VideoSkipped'
+        - $ref: '#/components/schemas/VideoError'
+        - $ref: '#/components/schemas/AdapterLoadBudgetExceeded'
+        - $ref: '#/components/schemas/NoFillReturnedToMax'
+        - $ref: '#/components/schemas/SignalRequested'
+        - $ref: '#/components/schemas/SignalProvided'
+        - $ref: '#/components/schemas/SignalFailed'
+        - $ref: '#/components/schemas/SignalTimeoutSuspected'
     ClientEventEnvelope:
       type: object
       additionalProperties: false
+      description: |
+        Identity header embedded in every catalog event. Same fields as the
+        protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
+        are server-stamped and ignored if the client sends them.
       required:
         - event_id
         - event_name
@@ -452,19 +487,25 @@ components:
         event_id:
           type: string
           format: uuid
-          description: Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is
-            a follow-up.
+          description: Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
         event_name:
           $ref: '#/components/schemas/ClientEventName'
         event_ts:
           type: integer
           format: int64
           description: Client event time, Unix milliseconds
+        schema_version:
+          type: string
+          description: Ignored if sent. Server writes the current version. Never a 4xx.
+        app_id:
+          type: integer
+          format: int64
+          description: Ignored if sent. Server stamps from the resolved app.
         auction_id:
           type: string
           description: |
             Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
-            Required for auction-scoped events; omit on session-only types if we add those.
+            Omit on session-only events.
         session_id:
           type: string
           format: uuid
@@ -478,9 +519,14 @@ components:
             - rewarded
         ad_format:
           type: string
-          description: Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` /
-            `MREC` / `ADAPTIVE`).
+          description: Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
           example: BANNER
+        country:
+          type: string
+          description: Ignored if sent. Server stamps from MaxMind.
+        trace_id:
+          type: string
+          description: Ignored if sent on ingest. Server-minted on the auction path.
         sampling_rate:
           type: number
           format: double
@@ -488,154 +534,1144 @@ components:
           maximum: 1
           default: 1
           description: |
-            Rate the SDK applied (G11 coherent per auction). Funnel / error events
+            Rate the SDK applied (G11 coherent per auction). Funnel and error events
             should be `1`. Server does not re-sample.
-        schema_version:
-          type: string
-          description: Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
-        app_id:
-          type: integer
-          format: int64
-          description: Ignored if sent. Server stamps from resolved app.
-        country:
-          type: string
-          description: Ignored if sent. Server stamps from MaxMind when needed.
-        trace_id:
-          type: string
-          description: Ignored if sent on ingest. Server-minted on the auction path.
     ClientEventName:
       type: string
       description: |
-        POC discussion set — funnel-safe client names that are **not** impression /
-        billing and **not** server-minted DSP/auction rows.
-
-        Linear BAC-74 minimum is `ad_request_started` + `ad_filled`. The rest is
-        proposed so the funnel and no-fill path are discussable.
+        PRD client catalogue (M1, M2, M3 client events, and video quartiles).
+        Server-minted rows (`auction_request_received`, `dsp_*`, `auction_completed`,
+        notice events) are not accepted here. Billing stays on `/v2/show`.
       enum:
-        - ad_request_started
+        - sdk_init_started
+        - sdk_init_completed
+        - sdk_init_failed
+        - adapter_init_result
+        - config_fetch_result
+        - adapter_token_requested
+        - adapter_token_result
         - token_collection_completed
+        - ad_request_started
         - auction_requested
         - auction_response_received
         - ad_filled
+        - auction_failed
         - auction_no_demand
+        - ad_load_requested
+        - adm_parse_result
+        - renderer_selected
+        - ad_loaded
         - ad_load_failed
-    AdRequestStarted:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - ad_request_started
-            price_floor:
-              type: number
-              format: double
-              description: Proposed. Client-side floor at request start.
-            auction_key:
-              type: string
-              description: Proposed. Auction configuration key if the SDK has one.
+        - ad_expired
+        - ad_show_requested
+        - ad_impression
+        - ad_show_failed
+        - ad_viewable
+        - ad_clicked
+        - ad_closed
+        - ad_reward_granted
+        - webview_error
+        - render_crashed
+        - video_start
+        - video_q1
+        - video_midpoint
+        - video_q3
+        - video_complete
+        - video_skipped
+        - video_error
+        - adapter_load_budget_exceeded
+        - no_fill_returned_to_max
+        - signal_requested
+        - signal_provided
+        - signal_failed
+        - signal_timeout_suspected
+    SdkInitStarted:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: BidonSdk.initialize() entered.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - sdk_init_started
+        init_trigger:
+          type: string
+          description: Why init ran.
+    SdkInitCompleted:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Init finished.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - sdk_init_completed
+        duration_ms:
+          type: integer
+          format: int64
+          description: Wall time of init.
+        adapters_registered:
+          type: array
+          items:
+            type: string
+          description: Adapters registered during init.
+        config_source:
+          type: string
+          description: Where init config came from.
+    SdkInitFailed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: Init threw or timed out.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - sdk_init_failed
+        error_code:
+          type: string
+          description: Banded error. Errors are never sampled.
+        failed_phase:
+          type: string
+          description: Init phase that failed.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Wall time until failure.
+    AdapterInitResult:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Per-adapter init result.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - adapter_init_result
+        adapter_name:
+          type: string
+          description: Adapter key.
+        adapter_version:
+          type: string
+          description: Adapter SDK version.
+        success:
+          type: boolean
+          description: Whether init succeeded.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Wall time of this adapter init.
+        error_code:
+          type: string
+          description: Banded error.
+        external_error_code:
+          type: string
+          description: Adapter-reported code, preserved raw.
+    ConfigFetchResult:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Remote config call.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - config_fetch_result
+        success:
+          type: boolean
+          description: Whether the config call succeeded.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Wall time of the config call.
+        http_status:
+          type: integer
+          format: int64
+          description: HTTP status when the call reached the server.
+        from_cache:
+          type: boolean
+          description: Served from the SDK cache.
+    AdapterTokenRequested:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Bidding adapter asked for a token.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - adapter_token_requested
+        adapter_name:
+          type: string
+          description: Adapter key.
+        timeout_budget_ms:
+          type: integer
+          format: int64
+          description: Time the adapter was given.
+    AdapterTokenResult:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Bidding adapter token settled.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - adapter_token_result
+        adapter_name:
+          type: string
+          description: Adapter key.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Wall time of the token call.
+        outcome:
+          type: string
+          enum:
+            - ok
+            - timeout
+            - error
+            - null_token
+          description: Token outcome.
+        token_size_bytes:
+          type: integer
+          format: int64
+          description: Token size when one was returned.
+        error_code:
+          type: string
+          description: Banded error.
+        external_error_code:
+          type: string
+          description: Adapter-reported code, preserved raw.
     TokenCollectionCompleted:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - token_collection_completed
-            duration_ms:
-              type: integer
-              format: int64
-              description: Proposed. Wall time of the token round.
-            adapter_count:
-              type: integer
-              description: Proposed. How many adapters were asked.
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: All token adapters settled or the budget was hit.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - token_collection_completed
+        total_duration_ms:
+          type: integer
+          format: int64
+          description: Wall time of the token round.
+        adapters_requested:
+          type: integer
+          format: int64
+          description: Adapters asked.
+        adapters_returned:
+          type: integer
+          format: int64
+          description: Adapters that returned a token.
+        adapters_timed_out:
+          type: integer
+          format: int64
+          description: Adapters that timed out.
+    AdRequestStarted:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Publisher calls load().
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_request_started
+        placement:
+          type: string
+          description: Bidon placement.
+        price_floor:
+          type: number
+          format: double
+          description: Client-side floor at request start. Server stores this as requested_price_floor; price_floor on server events is the effective floor.
+        is_autorefresh:
+          type: boolean
+          description: Refresh of an already-shown banner.
+        cached_ad_available:
+          type: boolean
+          description: A cached ad was already available.
+        trigger:
+          type: string
+          description: What started the request.
+        auction_key:
+          type: string
+          description: Auction configuration key if the SDK has one.
     AuctionRequested:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - auction_requested
-          description: Client is about to call `/v2/auction`. Payload TBD.
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: SDK is about to call /v2/auction.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - auction_requested
+        price_floor:
+          type: number
+          format: double
+          description: Client-side floor sent on the auction request.
+        token_count:
+          type: integer
+          format: int64
+          description: Tokens included on the request.
+        adapters_included:
+          type: array
+          items:
+            type: string
+          description: Adapters included on the request.
     AuctionResponseReceived:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - auction_response_received
-            duration_ms:
-              type: integer
-              format: int64
-              description: Proposed. Client-observed `/v2/auction` RTT.
-            ad_unit_count:
-              type: integer
-              description: Proposed. Ranked units returned.
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: SDK received the /v2/auction response.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - auction_response_received
+        duration_ms:
+          type: integer
+          format: int64
+          description: Client-observed /v2/auction RTT.
+        demand_count:
+          type: integer
+          format: int64
+          description: Demand entries returned.
+        top_ecpm:
+          type: number
+          format: double
+          description: Highest price in the response.
+        response_size_bytes:
+          type: integer
+          format: int64
+          description: Response body size.
     AdFilled:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - ad_filled
-            demand_id:
-              type: string
-              description: Proposed. Winning adapter / DSP key.
-              example: bidmachine
-            price:
-              type: number
-              format: double
-              description: Proposed. Clearing price the SDK will show.
-            bid_type:
-              type: string
-              enum:
-                - bidding
-                - waterfall
-              description: Proposed.
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Auction filled. Distinct from ad_loaded, which is creative load completion.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_filled
+        demand_id:
+          type: string
+          description: Winning adapter or DSP key.
+          example: bidmachine
+        price:
+          type: number
+          format: double
+          description: Clearing price the SDK will show.
+        bid_type:
+          type: string
+          enum:
+            - bidding
+            - waterfall
+          description: How the fill was won.
+    AuctionFailed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: No auction response, or the call errored.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - auction_failed
+        duration_ms:
+          type: integer
+          format: int64
+          description: Client-observed RTT until failure.
+        error_code:
+          type: string
+          description: Banded error.
+        http_status:
+          type: integer
+          format: int64
+          description: HTTP status when a response arrived.
     AuctionNoDemand:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          properties:
-            event_name:
-              type: string
-              enum:
-                - auction_no_demand
-            reason:
-              type: string
-              description: Proposed, banded — not a free string in the shipped proto.
-              enum:
-                - no_fills
-                - auction_error
-                - timeout
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Valid auction response with zero eligible demand.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - auction_no_demand
+        price_floor:
+          type: number
+          format: double
+          description: Floor in effect for the empty result.
+        reason:
+          type: string
+          enum:
+            - no_fills
+            - auction_error
+            - timeout
+          description: Banded reason.
+    AdLoadRequested:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: SDK starts loading the returned ad.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_load_requested
+        caller:
+          type: string
+          enum:
+            - publisher_api
+            - max_adapter
+          description: Who asked for the load.
+        has_bid_response:
+          type: boolean
+          description: A bid response was already in hand.
+    AdmParseResult:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Creative payload parsed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - adm_parse_result
+        success:
+          type: boolean
+          description: Whether parsing succeeded.
+        bid_id:
+          type: string
+          description: Bid id from the payload.
+        dsp_id:
+          type: string
+          description: DSP id from the payload.
+        crtype:
+          type: string
+          description: Creative type.
+        envelope_version:
+          type: string
+          description: adm envelope version.
+        unknown_fields:
+          type: array
+          items:
+            type: string
+          description: Fields the parser did not recognise.
+        fallback_applied:
+          type: boolean
+          description: A fallback renderer or parse path was used.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Parse time.
+    RendererSelected:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Renderer chosen for the creative.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - renderer_selected
+        renderer:
+          type: string
+          enum:
+            - html
+            - vast
+            - mraid
+          description: Renderer.
+        crtype:
+          type: string
+          description: Creative type.
+        selection_reason:
+          type: string
+          description: Why this renderer was chosen.
+    AdLoaded:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Creative finished loading.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_loaded
+        total_duration_ms:
+          type: integer
+          format: int64
+          description: Load time.
+        renderer:
+          type: string
+          description: Renderer that loaded it.
+        creative_size_bytes:
+          type: integer
+          format: int64
+          description: Creative size.
     AdLoadFailed:
-      allOf:
-        - $ref: '#/components/schemas/ClientEventEnvelope'
-        - type: object
-          required:
-            - error_code
-          properties:
-            event_name:
-              type: string
-              enum:
-                - ad_load_failed
-            demand_id:
-              type: string
-            error_domain:
-              type: string
-              description: Proposed. Stable domain (sdk / adapter / network). Foreign
-                code preserved separately later.
-            error_code:
-              type: string
-              description: Banded / catalogued. Errors are never sampled (G6).
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: Creative load failed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_load_failed
+        demand_id:
+          type: string
+          description: Adapter or DSP that failed to load.
+        error_domain:
+          type: string
+          description: Stable domain (sdk / adapter / network / publisher).
+        error_code:
+          type: string
+          description: Banded error. Errors are never sampled.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Time until failure.
+        failed_stage:
+          type: string
+          enum:
+            - parse
+            - renderer_select
+            - asset_fetch
+            - webview_init
+            - webview_load
+            - timeout
+          description: Where load failed.
+    AdExpired:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: A loaded ad passed its TTL.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_expired
+        ttl_ms:
+          type: integer
+          format: int64
+          description: Configured TTL.
+        age_at_expiry_ms:
+          type: integer
+          format: int64
+          description: Age when it expired.
+    AdShowRequested:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: SDK is asked to show a loaded ad.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_show_requested
+        time_since_loaded_ms:
+          type: integer
+          format: int64
+          description: Age of the loaded ad.
+    AdImpression:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Creative was shown. Billing stays on /v2/show; this is the client copy.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_impression
+        render_duration_ms:
+          type: integer
+          format: int64
+          description: Time from show request to impression.
+        om_enabled:
+          type: boolean
+          description: OM SDK was active for this impression.
+    AdShowFailed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: Show failed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_show_failed
+        error_code:
+          type: string
+          description: Banded error.
+        failed_stage:
+          type: string
+          description: Where show failed.
+    AdViewable:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Impression became viewable.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_viewable
+        time_to_viewable_ms:
+          type: integer
+          format: int64
+          description: Time from impression to viewable.
+        om_enabled:
+          type: boolean
+          description: OM SDK was active.
+        om_partner_name:
+          type: string
+          description: OM partner name.
+    AdClicked:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Click on the shown ad.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_clicked
+        click_target:
+          type: string
+          description: Click target.
+        time_since_impression_ms:
+          type: integer
+          format: int64
+          description: Time from impression to click.
+    AdClosed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Shown ad closed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_closed
+        time_visible_ms:
+          type: integer
+          format: int64
+          description: Time the ad was visible.
+        close_method:
+          type: string
+          enum:
+            - user
+            - auto
+            - app_backgrounded
+          description: How it closed.
+    AdRewardGranted:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Rewarded ad granted the reward.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - ad_reward_granted
+    WebviewError:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: WebView error while rendering.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - webview_error
+        error_code:
+          type: string
+          description: Banded error.
+        description:
+          type: string
+          description: Scrubbed error description. No PII.
+        failing_url_host:
+          type: string
+          description: Host of the failing URL only.
+        is_main_frame:
+          type: boolean
+          description: Error was on the main frame.
+    RenderCrashed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Renderer crashed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - render_crashed
+        renderer:
+          type: string
+          description: Renderer that crashed.
+        crtype:
+          type: string
+          description: Creative type.
+    VideoStart:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video started.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_start
+    VideoQ1:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video reached the first quartile.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_q1
+    VideoMidpoint:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video reached the midpoint.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_midpoint
+    VideoQ3:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video reached the third quartile.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_q3
+    VideoComplete:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video completed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_complete
+    VideoSkipped:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Video was skipped.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_skipped
+    VideoError:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: Video playback error.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - video_error
+        error_code:
+          type: string
+          description: Banded error.
+    AdapterLoadBudgetExceeded:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: MAX adapter load budget elapsed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - adapter_load_budget_exceeded
+        elapsed_ms:
+          type: integer
+          format: int64
+          description: Time spent when the budget fired.
+        budget_ms:
+          type: integer
+          format: int64
+          description: Configured budget.
+        stage_at_overrun:
+          type: string
+          description: Token collection, auction round trip, or waterfall.
+        attempts_made:
+          type: integer
+          format: int64
+          description: Load attempts made before overrun.
+    NoFillReturnedToMax:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Bidon returns no-fill so MAX can fall through.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - no_fill_returned_to_max
+        reason:
+          type: string
+          description: Banded reason.
+        attempts_made:
+          type: integer
+          format: int64
+          description: Load attempts made.
+        total_duration_ms:
+          type: integer
+          format: int64
+          description: Time until no-fill was returned.
+    SignalRequested:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: MAX called collectSignal().
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - signal_requested
+    SignalProvided:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: A signal token was returned to MAX.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - signal_provided
+        duration_ms:
+          type: integer
+          format: int64
+          description: Time to produce the token.
+        token_id:
+          type: string
+          description: Token id.
+        token_size_bytes:
+          type: integer
+          format: int64
+          description: Token size.
+        gaid_available:
+          type: boolean
+          description: A GAID was available under consent and LMT.
+        token_source:
+          type: string
+          enum:
+            - fresh
+            - cached
+          description: Whether the token was fresh or cached.
+    SignalFailed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+        - error_code
+      description: collectSignal() failed.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - signal_failed
+        duration_ms:
+          type: integer
+          format: int64
+          description: Time until failure.
+        error_code:
+          type: string
+          description: Banded error.
+    SignalTimeoutSuspected:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: Own timer exceeded MAX's signal budget.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - signal_timeout_suspected
+        duration_ms:
+          type: integer
+          format: int64
+          description: Time observed.
+        budget_ms:
+          type: integer
+          format: int64
+          description: MAX budget.
     MetricObservation:
       type: object
       additionalProperties: false

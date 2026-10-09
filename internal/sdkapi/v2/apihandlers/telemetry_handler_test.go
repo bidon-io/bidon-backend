@@ -38,7 +38,7 @@ func TestTelemetryHandler_Handle(t *testing.T) {
 		},
 		{
 			name:         "unknown event name is dropped",
-			body:         `{"app":{"key":"app_abc123","bundle":"com.example.game"},"session":{"id":"550e8400-e29b-41d4-a716-446655440000"},"events":[{"event_id":"11111111-1111-4111-8111-111111111111","event_name":"not_in_catalogue","event_ts":1710000000000,"sampling_rate":1}]}`,
+			body:         `{"app":{"key":"app_abc123","bundle":"com.example.game"},"session":{"id":"550e8400-e29b-41d4-a716-446655440000"},"events":[{"envelope":{"event_id":"11111111-1111-4111-8111-111111111111","event_name":"not_in_catalogue","event_ts":1710000000000,"sampling_rate":1}}]}`,
 			expectedCode: http.StatusAccepted,
 			accepted:     0,
 		},
@@ -97,7 +97,7 @@ func tooManyEvents(t *testing.T) string {
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		fmt.Fprintf(&b, `{"event_id":"%s","event_name":"auction_requested","event_ts":1}`, eventUUID(i))
+		fmt.Fprintf(&b, `{"envelope":{"event_id":"%s","event_name":"auction_requested","event_ts":1}}`, eventUUID(i))
 	}
 	b.WriteString(`]}`)
 	return b.String()
