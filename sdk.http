@@ -6,7 +6,19 @@ X-Bidon-Version: 0.6.0
 
 < ./internal/sdkapi/v2/apihandlers/testdata/auction/adikteev/adikteev_config_request.json
 
+### Telemetry
+POST {{sdkapiHost}}/v2/telemetry
+Content-Type: application/json
+X-Bidon-Version: 0.6.0
 
+< ./internal/sdkapi/v2/apihandlers/testdata/telemetry/valid_request.json
+
+### Telemetry — unrecognized event and metric
+POST {{sdkapiHost}}/v2/telemetry
+Content-Type: application/json
+X-Bidon-Version: 0.6.0
+
+< ./internal/sdkapi/v2/apihandlers/testdata/telemetry/unrecognized_request.json
 
 ### Auction banner Adikteev — iOS
 POST {{sdkapiHost}}/v2/auction/banner
