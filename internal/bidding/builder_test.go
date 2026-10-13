@@ -2,10 +2,15 @@ package bidding_test
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 
+	"github.com/prebid/openrtb/v19/openrtb2"
 	"go.uber.org/goleak"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/bidon-io/bidon-backend/internal/adapter"
 	"github.com/bidon-io/bidon-backend/internal/auction"
@@ -13,6 +18,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters"
 	"github.com/bidon-io/bidon-backend/internal/bidding/adapters/bidmachine"
 	"github.com/bidon-io/bidon-backend/internal/bidding/mocks"
+	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 )
@@ -197,5 +203,123 @@ func TestBuilder_Build(t *testing.T) {
 				t.Errorf("expected result: %+v, but got %+v", tt.expectedResult, result)
 			}
 		})
+	}
+}
+
+// optionsErrorAdapter fails in ExecuteOptions, the misconfiguration path.
+type optionsErrorAdapter struct {
+	err error
+}
+
+func (a optionsErrorAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return &openrtb2.Imp{}, adapters.RTBRequestOptions{}, nil
+}
+
+func (a optionsErrorAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{TagID: "tag"}, a.err
+}
+
+func TestBuilder_ExecuteOptionsMisconfigurationLogsOnce(t *testing.T) {
+	core, logs := observer.New(zap.DebugLevel)
+	const cause = "moloco API key is empty"
+
+	adaptersBuilder := &mocks.AdaptersBuilderMock{
+		BuildFunc: func(adapter.Key, adapter.ProcessedConfigsMap) (*adapters.Bidder, error) {
+			return &adapters.Bidder{
+				Adapter: optionsErrorAdapter{err: errors.New(cause)},
+				Client:  http.DefaultClient,
+			}, nil
+		},
+	}
+	notificationHandler := &mocks.NotificationHandlerMock{
+		HandleBiddingRoundFunc: func(context.Context, *schema.AdObject, bidding.AuctionResult, string, string) error {
+			return nil
+		},
+	}
+	bidCacher := &mocks.BidCacherMock{
+		ApplyBidCacheFunc: func(_ context.Context, _ *schema.AuctionRequest, aucRes *bidding.AuctionResult) []adapters.DemandResponse {
+			return aucRes.Bids
+		},
+	}
+	builder := &bidding.Builder{
+		AdaptersBuilder:     adaptersBuilder,
+		NotificationHandler: notificationHandler,
+		BidCacher:           bidCacher,
+		Logger:              zap.New(core),
+	}
+
+	hold := func(t *testing.T, key adapter.Key) adapters.DemandResponse {
+		t.Helper()
+		result, err := builder.HoldAuction(context.Background(), misconfigParams(key))
+		if err != nil {
+			t.Fatalf("HoldAuction: %v", err)
+		}
+		if len(result.Bids) != 1 {
+			t.Fatalf("bids: got %d, want 1", len(result.Bids))
+		}
+		bid := result.Bids[0]
+		if !errors.Is(bid.Error, adapters.ErrExecuteOptions) {
+			t.Fatalf("error: got %v, want ErrExecuteOptions", bid.Error)
+		}
+		if bid.Error.Error() != "execute options: "+cause {
+			t.Fatalf("error text: got %q", bid.Error.Error())
+		}
+		if !json.Valid([]byte(bid.RawRequest)) {
+			t.Fatalf("RawRequest: got %q, want marshaled bid request", bid.RawRequest)
+		}
+		return bid
+	}
+
+	hold(t, adapter.MolocoKey)
+
+	errorLogs := logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
+	if len(errorLogs) != 1 {
+		t.Fatalf("error logs: got %d, want 1", len(errorLogs))
+	}
+	fields := errorLogs[0].ContextMap()
+	if fields["demand_id"] != string(adapter.MolocoKey) {
+		t.Fatalf("demand_id: got %#v", fields["demand_id"])
+	}
+	if fields["error"] != "execute options: "+cause {
+		t.Fatalf("error field: got %#v", fields["error"])
+	}
+
+	hold(t, adapter.MolocoKey)
+
+	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
+	if len(errorLogs) != 1 {
+		t.Fatalf("error logs after repeat: got %d, want 1", len(errorLogs))
+	}
+	debugLogs := logs.FilterLevelExact(zap.DebugLevel).FilterMessage("execute bid request").All()
+	if len(debugLogs) != 1 {
+		t.Fatalf("debug logs: got %d, want 1", len(debugLogs))
+	}
+
+	hold(t, adapter.BidmachineKey)
+
+	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
+	if len(errorLogs) != 2 {
+		t.Fatalf("error logs for a second adapter: got %d, want 2", len(errorLogs))
+	}
+}
+
+func misconfigParams(key adapter.Key) *bidding.BuildParams {
+	return &bidding.BuildParams{
+		App: testApp(1),
+		AdapterConfigs: adapter.ProcessedConfigsMap{
+			key: {"api_key": ""},
+		},
+		AuctionRequest: schema.AuctionRequest{
+			AdObject: schema.AdObject{
+				AuctionID: "auc-misconfig",
+				Demands: map[adapter.Key]map[string]any{
+					key: {"token": "token"},
+				},
+			},
+			Adapters: schema.Adapters{
+				key: {Version: "1.0.0", SDKVersion: "1.0.0"},
+			},
+		},
+		BiddingAdapters: []adapter.Key{key},
 	}
 }

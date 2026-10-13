@@ -30,6 +30,11 @@ type Builder struct {
 	NotificationHandler NotificationHandler
 	BidCacher           BidCacher
 	Logger              *zap.Logger
+
+	// misconfigLogged records adapter keys that have already emitted the Error
+	// log for an ExecuteOptions failure. LoadOrStore makes that line once per
+	// adapter: a bad config fails on every auction for as long as it lasts.
+	misconfigLogged sync.Map
 }
 
 // log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
@@ -285,7 +290,7 @@ func (b *Builder) processAdapter(
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
 		if errors.Is(demandResponse.Error, adapters.ErrExecuteOptions) {
-			childLogger.Error("execute bid request", zap.Error(demandResponse.Error))
+			b.logMisconfiguration(childLogger, adapterKey, demandResponse.Error)
 		} else {
 			childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
 		}
@@ -300,6 +305,17 @@ func (b *Builder) processAdapter(
 	demandResponse.Error = err
 
 	bids <- *demandResponse
+}
+
+// logMisconfiguration emits one Error log per adapter, then Debug for later
+// auctions. The store is atomic so concurrent auctions for the same adapter
+// still produce a single Error line.
+func (b *Builder) logMisconfiguration(logger *zap.Logger, key adapter.Key, err error) {
+	if _, loaded := b.misconfigLogged.LoadOrStore(key, struct{}{}); loaded {
+		logger.Debug("execute bid request", zap.Error(err))
+		return
+	}
+	logger.Error("adapter misconfigured", zap.Error(err))
 }
 
 func (b *Builder) buildApp(schemaApp schema.App, params *BuildParams) *openrtb2.App {

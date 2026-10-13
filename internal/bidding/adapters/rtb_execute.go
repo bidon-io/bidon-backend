@@ -14,8 +14,9 @@ import (
 )
 
 // ErrExecuteOptions wraps BidderInterface.ExecuteOptions failures. These point
-// at adapter misconfiguration (missing endpoint, credentials) rather than a
-// transient demand-side failure, so callers should surface them loudly.
+// at adapter misconfiguration (missing credentials or invalid adapter config)
+// rather than a transient demand-side failure, so callers should surface them
+// loudly.
 var ErrExecuteOptions = errors.New("execute options")
 
 // ExecuteDemandRequest sends the outbound OpenRTB request at the builder call
