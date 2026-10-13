@@ -86,6 +86,8 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	var adUnitsMap *AdUnitsMap
 	var err error
 
+	// Before priceFloor() overwrites AdObject.PriceFloor, so this records
+	// requested_price_floor (what the SDK sent), not the effective price_floor.
 	s.Telemetry.Event().AuctionRequestReceived(telemetry.Params{
 		Request: params.Req,
 		App:     params.App,
@@ -150,6 +152,8 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	}
 	req.AdObject.AuctionConfigurationID = auctionConfig.ID
 	req.AdObject.AuctionConfigurationUID = auctionConfig.UID
+	// From here AdObject.PriceFloor is the effective price_floor on
+	// auction_completed and dsp_response_rejected, not requested_price_floor.
 	req.AdObject.PriceFloor = priceFloor(req, auctionConfig)
 
 	bp := &BuildParams{
@@ -196,6 +200,7 @@ var disabledFloorAuctionKeys = [...]string{
 	"1LQP7A4UG0400", // Rewarded
 }
 
+// priceFloor returns the effective auction floor. It is not requested_price_floor.
 func priceFloor(req *schema.AuctionRequest, auctionConfig *Config) float64 {
 	// Check if price floor should be disabled for this auction key with custom adapter
 	isCustomAdapter := slices.Contains(adapter.CustomAdapters[:], req.GetMediator())

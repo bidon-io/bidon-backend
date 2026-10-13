@@ -364,13 +364,15 @@ func (x *Envelope) GetSamplingRate() float64 {
 }
 
 // AuctionRequestReceived is emitted when /v2/auction is accepted.
+// requested_price_floor is the SDK floor, a different field from the effective
+// price_floor on AuctionCompleted and DspResponseRejected. It is not a rename.
 type AuctionRequestReceived struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Envelope *Envelope `protobuf:"bytes,1,opt,name=envelope,proto3" json:"envelope,omitempty"`
-	// Floor the SDK sent, before the auction configuration floor is applied.
+	// SDK floor only. Not the effective price_floor used to accept or reject bids.
 	RequestedPriceFloor float64 `protobuf:"fixed64,2,opt,name=requested_price_floor,json=requestedPriceFloor,proto3" json:"requested_price_floor,omitempty"`
 }
 
@@ -421,6 +423,9 @@ func (x *AuctionRequestReceived) GetRequestedPriceFloor() float64 {
 }
 
 // AuctionCompleted is emitted when the server bidding round finishes.
+// price_floor here is the effective floor (SDK floor, cached prices, and the
+// auction configuration floor). A bid counts only when price > price_floor.
+// It is not requested_price_floor.
 type AuctionCompleted struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -436,7 +441,8 @@ type AuctionCompleted struct {
 	ParticipantCount int32     `protobuf:"varint,5,opt,name=participant_count,json=participantCount,proto3" json:"participant_count,omitempty"`
 	TotalLatencyMs   int64     `protobuf:"varint,6,opt,name=total_latency_ms,json=totalLatencyMs,proto3" json:"total_latency_ms,omitempty"`
 	ErrorCode        ErrorCode `protobuf:"varint,7,opt,name=error_code,json=errorCode,proto3,enum=org.bidon.telemetry.v1.ErrorCode" json:"error_code,omitempty"`
-	PriceFloor       float64   `protobuf:"fixed64,8,opt,name=price_floor,json=priceFloor,proto3" json:"price_floor,omitempty"`
+	// Effective floor for this auction. Not requested_price_floor.
+	PriceFloor float64 `protobuf:"fixed64,8,opt,name=price_floor,json=priceFloor,proto3" json:"price_floor,omitempty"`
 }
 
 func (x *AuctionCompleted) Reset() {
@@ -689,15 +695,18 @@ func (x *DspResponseReceived) GetPrice() float64 {
 }
 
 // DspResponseRejected is emitted when a bid exists but price <= price_floor.
+// price_floor is the effective floor, the same value as AuctionCompleted, not
+// requested_price_floor.
 type DspResponseRejected struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Envelope     *Envelope    `protobuf:"bytes,1,opt,name=envelope,proto3" json:"envelope,omitempty"`
-	Scope        Scope        `protobuf:"varint,2,opt,name=scope,proto3,enum=org.bidon.telemetry.v1.Scope" json:"scope,omitempty"`
-	Dsp          string       `protobuf:"bytes,3,opt,name=dsp,proto3" json:"dsp,omitempty"`
-	Price        float64      `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
+	Envelope *Envelope `protobuf:"bytes,1,opt,name=envelope,proto3" json:"envelope,omitempty"`
+	Scope    Scope     `protobuf:"varint,2,opt,name=scope,proto3,enum=org.bidon.telemetry.v1.Scope" json:"scope,omitempty"`
+	Dsp      string    `protobuf:"bytes,3,opt,name=dsp,proto3" json:"dsp,omitempty"`
+	Price    float64   `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
+	// Effective floor this bid failed to beat. Not requested_price_floor.
 	PriceFloor   float64      `protobuf:"fixed64,5,opt,name=price_floor,json=priceFloor,proto3" json:"price_floor,omitempty"`
 	RejectReason RejectReason `protobuf:"varint,6,opt,name=reject_reason,json=rejectReason,proto3,enum=org.bidon.telemetry.v1.RejectReason" json:"reject_reason,omitempty"`
 }

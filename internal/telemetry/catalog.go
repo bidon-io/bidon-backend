@@ -25,16 +25,19 @@ type AuctionCompletedParams struct {
 	Err     error
 }
 
+// AuctionRequestReceived records requested_price_floor, the SDK floor still on
+// the request. Callers must emit this before Run replaces AdObject.PriceFloor
+// with the effective price_floor.
 func (e Event) AuctionRequestReceived(params Params) {
 	req := params.Request
-	priceFloor := 0.0
+	requestedFloor := 0.0
 	if req != nil {
-		priceFloor = req.AdObject.PriceFloor
+		requestedFloor = req.AdObject.PriceFloor
 	}
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.AuctionRequestReceived{
 		Envelope:            newProtoEnvelope(a),
-		RequestedPriceFloor: priceFloor,
+		RequestedPriceFloor: requestedFloor,
 	}, "", a)
 }
 
@@ -47,6 +50,7 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 		ParticipantCount: int32(participantCount(params.Bids)),
 	}
 	if params.Request != nil {
+		// Effective price_floor, already written onto the request. Not requested_price_floor.
 		ev.PriceFloor = params.Request.AdObject.PriceFloor
 		winner, price := roundWinner(params.Bids, ev.PriceFloor)
 		ev.WinnerDsp = winner
@@ -101,6 +105,7 @@ func (e Event) dspResponseRejectedIfBelowFloor(params Params, dr *adapters.Deman
 	if dr == nil || !dr.IsBid() || params.Request == nil {
 		return
 	}
+	// Effective price_floor, the same value AuctionCompleted records.
 	floor := params.Request.AdObject.PriceFloor
 	if dr.Price() > floor {
 		return

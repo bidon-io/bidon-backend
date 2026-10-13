@@ -56,20 +56,21 @@ enum ErrorCode {
   ERROR_CODE_ERROR = 3;
 }
 
-// price_floor on any event is the effective auction floor: the larger of the
-// SDK floor and the auction configuration floor. A bid counts only when
-// price > price_floor; otherwise it is rejected below_floor.
-
 // AuctionRequestReceived is emitted when /v2/auction is accepted.
+// requested_price_floor is the SDK floor, a different field from the effective
+// price_floor on AuctionCompleted and DspResponseRejected. It is not a rename.
 message AuctionRequestReceived {
   option (event_name) = "auction_request_received";
 
   Envelope envelope = 1;
-  // Floor the SDK sent, before the auction configuration floor is applied.
+  // SDK floor only. Not the effective price_floor used to accept or reject bids.
   double requested_price_floor = 2;
 }
 
 // AuctionCompleted is emitted when the server bidding round finishes.
+// price_floor here is the effective floor (SDK floor, cached prices, and the
+// auction configuration floor). A bid counts only when price > price_floor.
+// It is not requested_price_floor.
 message AuctionCompleted {
   option (event_name) = "auction_completed";
 
@@ -83,6 +84,7 @@ message AuctionCompleted {
   int32 participant_count = 5;
   int64 total_latency_ms = 6;
   ErrorCode error_code = 7;
+  // Effective floor for this auction. Not requested_price_floor.
   double price_floor = 8;
 }
 
@@ -110,6 +112,8 @@ message DspResponseReceived {
 }
 
 // DspResponseRejected is emitted when a bid exists but price <= price_floor.
+// price_floor is the effective floor, the same value as AuctionCompleted, not
+// requested_price_floor.
 message DspResponseRejected {
   option (event_name) = "dsp_response_rejected";
 
@@ -117,6 +121,7 @@ message DspResponseRejected {
   Scope scope = 2;
   string dsp = 3;
   double price = 4;
+  // Effective floor this bid failed to beat. Not requested_price_floor.
   double price_floor = 5;
   RejectReason reject_reason = 6;
 }
