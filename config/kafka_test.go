@@ -25,3 +25,27 @@ func TestKafkaTelemetryTopicOverride(t *testing.T) {
 		t.Fatalf("override topic: got %q, want custom-telemetry", got)
 	}
 }
+
+func TestKafkaProduceAdEvents(t *testing.T) {
+	tests := []struct {
+		name string
+		env  string
+		want bool
+	}{
+		{name: "unset", env: "", want: false},
+		{name: "false", env: "false", want: false},
+		{name: "true", env: "true", want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("KAFKA_PRODUCE_AD_EVENTS", tt.env)
+			conf, err := Kafka()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if conf.ProduceAdEvents != tt.want {
+				t.Fatalf("ProduceAdEvents = %v, want %v", conf.ProduceAdEvents, tt.want)
+			}
+		})
+	}
+}

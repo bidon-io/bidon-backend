@@ -27,6 +27,7 @@ import (
 	"github.com/bidon-io/bidon-backend/config"
 	dbpkg "github.com/bidon-io/bidon-backend/internal/db"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
+	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/adevents"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event/engine"
 	grpcserver "github.com/bidon-io/bidon-backend/internal/sdkapi/grpc"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/app"
@@ -86,6 +87,7 @@ func main() {
 
 	telLog := logger.Named("telemetry")
 	var loggerEngine event.LoggerEngine
+	var adEvents event.LoggerEngine
 	var telemetryEngine telemetry.LoggerEngine
 	var schemaRegistryURL, telemetryTopic string
 	if os.Getenv("USE_KAFKA") == "true" {
@@ -110,6 +112,7 @@ func main() {
 
 		eventKafka := &engine.Kafka{Client: client, Topics: conf.Topics}
 		loggerEngine = eventKafka
+		adEvents = &adevents.Kafka{Producer: eventKafka, Enabled: conf.ProduceAdEvents}
 		telemetryEngine = &telemetry.Kafka{Producer: eventKafka}
 		schemaRegistryURL = conf.SchemaRegistryURL
 		telemetryTopic = conf.Topics[config.TelemetryEventsTopic]
@@ -117,7 +120,7 @@ func main() {
 		loggerEngine = &engine.Log{}
 		telemetryEngine = &telemetry.Log{Logger: telLog}
 	}
-	eventLogger := &event.Logger{Engine: loggerEngine}
+	eventLogger := &event.Logger{Engine: loggerEngine, AdEvents: adEvents}
 	telemetryLogger := telemetry.New(telemetryEngine, telLog)
 	if err := telemetryLogger.UseSchemaRegistry(schemaRegistryURL, telemetryTopic); err != nil {
 		telLog.Error("schema registry client", zap.Error(err))

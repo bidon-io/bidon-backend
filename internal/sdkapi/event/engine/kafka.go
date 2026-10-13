@@ -16,21 +16,17 @@ type Kafka struct {
 }
 
 func (e *Kafka) Produce(message event.LogMessage, handleErr func(error)) {
-	record, err := e.record(message)
-	if err != nil {
-		handleErr(err)
-		return
-	}
-	e.Client.Produce(context.Background(), record, func(_ *kgo.Record, err error) {
+	e.TryProduce(message, func(err error) {
 		if err != nil {
-			handleErr(fmt.Errorf("kafka produce record: %v", err))
+			handleErr(err)
 		}
 	})
 }
 
-// TryProduce is Produce without blocking: when the client buffer is full the
-// record fails at once with kgo.ErrMaxBuffered. done runs exactly once per
-// message, with a nil error on delivery.
+// TryProduce enqueues a record without blocking the caller. done runs exactly
+// once: nil after the broker accepts the record, or an error if the record
+// cannot be built or the client buffer is full (an error wrapping
+// kgo.ErrMaxBuffered).
 func (e *Kafka) TryProduce(message event.LogMessage, done func(error)) {
 	record, err := e.record(message)
 	if err != nil {

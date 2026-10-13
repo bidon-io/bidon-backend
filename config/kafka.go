@@ -22,6 +22,9 @@ type KafkaConfig struct {
 	ClientOpts        []kgo.Opt
 	Topics            map[Topic]string
 	SchemaRegistryURL string
+	// ProduceAdEvents is set only when KAFKA_PRODUCE_AD_EVENTS=true.
+	// The ad-events client reads this; the shared Kafka producer does not.
+	ProduceAdEvents bool
 }
 
 func Kafka() (conf KafkaConfig, err error) {
@@ -61,6 +64,7 @@ func Kafka() (conf KafkaConfig, err error) {
 	}
 
 	conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
+	conf.ProduceAdEvents = os.Getenv("KAFKA_PRODUCE_AD_EVENTS") == "true"
 
 	return
 }

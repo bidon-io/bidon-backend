@@ -45,6 +45,7 @@ x-staging-kafka-env: &staging-kafka-env
   KAFKA_CLIENT_ID: bidon_staging
   KAFKA_DELIVERY_INTERVAL: 5
   KAFKA_AD_EVENTS_TOPIC: ad-events
+  KAFKA_PRODUCE_AD_EVENTS: "false"
   KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
   KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
   SCHEMA_REGISTRY_URL: http://${SERVICE_NAME_REDPANDA:-redpanda}:8081

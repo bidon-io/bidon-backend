@@ -9,7 +9,10 @@ import (
 )
 
 type Logger struct {
+	// Engine produces every topic. Ad events use AdEvents instead when it is set.
 	Engine LoggerEngine
+	// AdEvents produces ad events. Nil sends them through Engine.
+	AdEvents LoggerEngine
 }
 
 type LoggerEngine interface {
@@ -36,7 +39,14 @@ func (l *Logger) Log(event Event, handleErr func(error)) {
 		Value: message,
 	}
 
-	l.Engine.Produce(logMessage, func(err error) {
+	l.engine(topic).Produce(logMessage, func(err error) {
 		handleErr(fmt.Errorf("produce %q message: %v", logMessage.Topic, err))
 	})
+}
+
+func (l *Logger) engine(topic config.Topic) LoggerEngine {
+	if topic == config.AdEventsTopic && l.AdEvents != nil {
+		return l.AdEvents
+	}
+	return l.Engine
 }

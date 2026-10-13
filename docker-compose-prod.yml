@@ -216,6 +216,7 @@ services:
       KAFKA_BATCH_MAX_BYTES:
       KAFKA_DELIVERY_INTERVAL: 5
       KAFKA_AD_EVENTS_TOPIC: ad-events
+      KAFKA_PRODUCE_AD_EVENTS: "false"
       KAFKA_NOTIFICATION_EVENTS_TOPIC: notification-events
       KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
       USE_GEOCODING: "true"

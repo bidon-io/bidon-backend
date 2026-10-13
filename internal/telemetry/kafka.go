@@ -15,10 +15,10 @@ import (
 var ErrBufferFull = errors.New("telemetry buffer full")
 
 // Kafka produces telemetry through the sdkapi event producer, so both share
-// one produce path and kgo client. It never blocks: when the client buffer is
-// full, TryProduce drops the record with ErrBufferFull instead of waiting.
+// one produce path and kgo client. Produces never block: when the client
+// buffer is full, the record is dropped with ErrBufferFull.
 // There is no separate telemetry quota; the client's MaxBufferedRecords
-// (10,000 by default, shared with ad-events) is the only limit.
+// (10,000 by default, shared with other topics on this client) is the only limit.
 type Kafka struct {
 	Producer *engine.Kafka
 }
