@@ -1,0 +1,40 @@
+[package]
+name = "bidon-telemetry"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "SDK telemetry ingest proxy"
+
+[[bin]]
+name = "bidon-telemetry"
+path = "src/main.rs"
+
+[features]
+default = []
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+futures-util = "0.3"
+http-body-util = "0.1"
+prometheus = "0.13"
+prost = "0.13"
+prost-reflect = "0.14"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+rskafka = { version = "0.5", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+uuid = { version = "1", features = ["serde"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tower = { version = "0.5", features = ["util"] }
+http = "1"
+
+[build-dependencies]
+prost-build = "0.13"
+protoc-bin-vendored = "3"

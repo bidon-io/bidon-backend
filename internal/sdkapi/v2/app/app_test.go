@@ -59,6 +59,9 @@ func TestNew_RegistersExpectedRoutes(t *testing.T) {
 			t.Errorf("missing expected route %q", route)
 		}
 	}
+	if got["POST /v2/telemetry"] {
+		t.Error("POST /v2/telemetry is served by bidon-telemetry, not sdkapi")
+	}
 
 	if a.AuctionService == nil {
 		t.Error("AuctionService is nil")

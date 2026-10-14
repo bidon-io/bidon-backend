@@ -229,6 +229,30 @@ services:
     logging: *default-logging
     <<: *restart-policy
 
+  bidon-telemetry:
+    image: ghcr.io/bidon-io/bidon-telemetry:latest
+    depends_on:
+      kafka:
+        condition: service_started
+      schema-registry:
+        condition: service_started
+    environment:
+      TELEMETRY_PORT: 1326
+      KAFKA_BROKERS_LIST: kafka:9092
+      KAFKA_CLIENT_ID: bidon_telemetry
+      KAFKA_TELEMETRY_EVENTS_TOPIC: telemetry-events
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "1326:1326"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1326/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *default-logging
+    <<: *restart-policy
+
   bidon-proxy:
     image: ghcr.io/bidon-io/bidon-proxy:latest
     depends_on:
