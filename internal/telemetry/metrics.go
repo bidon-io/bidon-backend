@@ -1,0 +1,47 @@
+package telemetry
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
+)
+
+var (
+	DSPResponseTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "dsp_response_total",
+		Help: "Bidding-round DSP outcomes.",
+	}, []string{"dsp", "outcome"})
+
+	DSPRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "dsp_request_duration_seconds",
+		Help:    "DSP send-to-return latency.",
+		Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8},
+	}, []string{"dsp"})
+
+	AuctionCompletedTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "auction_completed_total",
+		Help: "Auction Run completions.",
+	}, []string{"result"})
+
+	TelemetryDroppedTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "telemetry_dropped_total",
+		Help: "Catalog events not delivered to telemetry-events.",
+	}, []string{"reason"})
+)
+
+const (
+	DropReasonInvalid    = "invalid"
+	DropReasonMarshal    = "marshal"
+	DropReasonBufferFull = "buffer_full"
+	DropReasonProduce    = "produce_error"
+)
+
+func ObserveDSP(dsp string, outcome telemetryv1.Outcome, seconds float64) {
+	DSPResponseTotal.WithLabelValues(dsp, outcomeLabel(outcome)).Inc()
+	DSPRequestDuration.WithLabelValues(dsp).Observe(seconds)
+}
+
+func ObserveAuctionCompleted(result AuctionResult) {
+	AuctionCompletedTotal.WithLabelValues(string(result)).Inc()
+}

@@ -15,11 +15,16 @@ type Topic string
 const (
 	AdEventsTopic           Topic = "ad_events"
 	NotificationEventsTopic Topic = "notification_events"
+	TelemetryEventsTopic    Topic = "telemetry_events"
 )
 
 type KafkaConfig struct {
-	ClientOpts []kgo.Opt
-	Topics     map[Topic]string
+	ClientOpts        []kgo.Opt
+	Topics            map[Topic]string
+	SchemaRegistryURL string
+	// ProduceAdEvents is set only when KAFKA_PRODUCE_AD_EVENTS=true.
+	// The ad-events client reads this; the shared Kafka producer does not.
+	ProduceAdEvents bool
 }
 
 func Kafka() (conf KafkaConfig, err error) {
@@ -55,7 +60,18 @@ func Kafka() (conf KafkaConfig, err error) {
 	conf.Topics = map[Topic]string{
 		AdEventsTopic:           os.Getenv("KAFKA_AD_EVENTS_TOPIC"),
 		NotificationEventsTopic: os.Getenv("KAFKA_NOTIFICATION_EVENTS_TOPIC"),
+		TelemetryEventsTopic:    envOr("KAFKA_TELEMETRY_EVENTS_TOPIC", "telemetry-events"),
 	}
 
+	conf.SchemaRegistryURL = strings.TrimSpace(os.Getenv("SCHEMA_REGISTRY_URL"))
+	conf.ProduceAdEvents = os.Getenv("KAFKA_PRODUCE_AD_EVENTS") == "true"
+
 	return
+}
+
+func envOr(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
 }

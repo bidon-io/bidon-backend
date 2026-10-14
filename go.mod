@@ -38,11 +38,13 @@ require (
 	github.com/prebid/openrtb/v19 v19.0.0
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_model v0.6.1
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/shopspring/decimal v1.4.0
 	github.com/spazzymoto/echo-scs-session v1.0.0
 	github.com/stretchr/testify v1.10.0
 	github.com/twmb/franz-go v1.18.1
+	github.com/twmb/franz-go/pkg/sr v1.0.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.2
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.59.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.59.0
@@ -106,7 +108,6 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
