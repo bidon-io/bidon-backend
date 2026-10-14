@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
+	dto "github.com/prometheus/client_model/go"
 	"go.uber.org/goleak"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
@@ -248,9 +249,9 @@ func TestBuilder_ExecuteOptionsMisconfigurationLogsOnce(t *testing.T) {
 		Logger:              zap.New(core),
 	}
 
-	hold := func(t *testing.T, key adapter.Key) adapters.DemandResponse {
+	hold := func(t *testing.T, appID int64, key adapter.Key) adapters.DemandResponse {
 		t.Helper()
-		result, err := builder.HoldAuction(context.Background(), misconfigParams(key))
+		result, err := builder.HoldAuction(context.Background(), misconfigParams(appID, key))
 		if err != nil {
 			t.Fatalf("HoldAuction: %v", err)
 		}
@@ -270,21 +271,21 @@ func TestBuilder_ExecuteOptionsMisconfigurationLogsOnce(t *testing.T) {
 		return bid
 	}
 
-	hold(t, adapter.MolocoKey)
+	molocoBefore := optionsErrorCount(t, adapter.MolocoKey)
+	bidmachineBefore := optionsErrorCount(t, adapter.BidmachineKey)
+
+	hold(t, 1, adapter.MolocoKey)
 
 	errorLogs := logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
 	if len(errorLogs) != 1 {
 		t.Fatalf("error logs: got %d, want 1", len(errorLogs))
 	}
-	fields := errorLogs[0].ContextMap()
-	if fields["demand_id"] != string(adapter.MolocoKey) {
-		t.Fatalf("demand_id: got %#v", fields["demand_id"])
-	}
-	if fields["error"] != "execute options: "+cause {
-		t.Fatalf("error field: got %#v", fields["error"])
+	assertMisconfigLog(t, errorLogs[0], 1, adapter.MolocoKey, cause)
+	if got := optionsErrorCount(t, adapter.MolocoKey); got != molocoBefore+1 {
+		t.Fatalf("moloco options errors: got %v, want %v", got, molocoBefore+1)
 	}
 
-	hold(t, adapter.MolocoKey)
+	hold(t, 1, adapter.MolocoKey)
 
 	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
 	if len(errorLogs) != 1 {
@@ -294,18 +295,73 @@ func TestBuilder_ExecuteOptionsMisconfigurationLogsOnce(t *testing.T) {
 	if len(debugLogs) != 1 {
 		t.Fatalf("debug logs: got %d, want 1", len(debugLogs))
 	}
+	if got := optionsErrorCount(t, adapter.MolocoKey); got != molocoBefore+2 {
+		t.Fatalf("moloco options errors after repeat: got %v, want %v", got, molocoBefore+2)
+	}
 
-	hold(t, adapter.BidmachineKey)
+	hold(t, 1, adapter.BidmachineKey)
 
 	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
 	if len(errorLogs) != 2 {
 		t.Fatalf("error logs for a second adapter: got %d, want 2", len(errorLogs))
 	}
+	assertMisconfigLog(t, errorLogs[1], 1, adapter.BidmachineKey, cause)
+	if got := optionsErrorCount(t, adapter.BidmachineKey); got != bidmachineBefore+1 {
+		t.Fatalf("bidmachine options errors: got %v, want %v", got, bidmachineBefore+1)
+	}
+
+	hold(t, 2, adapter.MolocoKey)
+
+	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
+	if len(errorLogs) != 3 {
+		t.Fatalf("error logs for a second app: got %d, want 3", len(errorLogs))
+	}
+	assertMisconfigLog(t, errorLogs[2], 2, adapter.MolocoKey, cause)
+	if got := optionsErrorCount(t, adapter.MolocoKey); got != molocoBefore+3 {
+		t.Fatalf("moloco options errors for a second app: got %v, want %v", got, molocoBefore+3)
+	}
+
+	hold(t, 2, adapter.MolocoKey)
+
+	errorLogs = logs.FilterLevelExact(zap.ErrorLevel).FilterMessage("adapter misconfigured").All()
+	if len(errorLogs) != 3 {
+		t.Fatalf("error logs after second app repeat: got %d, want 3", len(errorLogs))
+	}
+	if got := optionsErrorCount(t, adapter.MolocoKey); got != molocoBefore+4 {
+		t.Fatalf("moloco options errors after second app repeat: got %v, want %v", got, molocoBefore+4)
+	}
 }
 
-func misconfigParams(key adapter.Key) *bidding.BuildParams {
+func assertMisconfigLog(t *testing.T, entry observer.LoggedEntry, appID int64, key adapter.Key, cause string) {
+	t.Helper()
+	fields := entry.ContextMap()
+	if fields["app_id"] != appID {
+		t.Fatalf("app_id: got %#v, want %d", fields["app_id"], appID)
+	}
+	if fields["demand_id"] != string(key) {
+		t.Fatalf("demand_id: got %#v, want %s", fields["demand_id"], key)
+	}
+	if fields["error"] != "execute options: "+cause {
+		t.Fatalf("error field: got %#v", fields["error"])
+	}
+}
+
+func optionsErrorCount(t *testing.T, key adapter.Key) float64 {
+	t.Helper()
+	metric, err := bidding.AdapterOptionsErrors.GetMetricWithLabelValues(string(key))
+	if err != nil {
+		t.Fatalf("adapter_options_errors_total: %v", err)
+	}
+	pb := &dto.Metric{}
+	if err := metric.Write(pb); err != nil {
+		t.Fatalf("write metric: %v", err)
+	}
+	return pb.GetCounter().GetValue()
+}
+
+func misconfigParams(appID int64, key adapter.Key) *bidding.BuildParams {
 	return &bidding.BuildParams{
-		App: testApp(1),
+		App: testApp(appID),
 		AdapterConfigs: adapter.ProcessedConfigsMap{
 			key: {"api_key": ""},
 		},
