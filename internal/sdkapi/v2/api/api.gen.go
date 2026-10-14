@@ -1040,12 +1040,18 @@ type AdClicked struct {
 		// AdType Ad type
 		AdType *AdClickedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1092,12 +1098,18 @@ type AdClosed struct {
 		// AdType Ad type
 		AdType *AdClosedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1147,12 +1159,18 @@ type AdExpired struct {
 		// AdType Ad type
 		AdType *AdExpiredEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1202,12 +1220,18 @@ type AdFilled struct {
 		// AdType Ad type
 		AdType *AdFilledEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1255,12 +1279,18 @@ type AdImpression struct {
 		// AdType Ad type
 		AdType *AdImpressionEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1313,12 +1343,18 @@ type AdLoadFailed struct {
 		// AdType Ad type
 		AdType *AdLoadFailedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1374,12 +1410,18 @@ type AdLoadRequested struct {
 		// AdType Ad type
 		AdType *AdLoadRequestedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1429,12 +1471,18 @@ type AdLoaded struct {
 		// AdType Ad type
 		AdType *AdLoadedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1487,12 +1535,18 @@ type AdRequestStarted struct {
 		// AdType Ad type
 		AdType *AdRequestStartedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1546,12 +1600,18 @@ type AdRewardGranted struct {
 		// AdType Ad type
 		AdType *AdRewardGrantedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1593,12 +1653,18 @@ type AdShowFailed struct {
 		// AdType Ad type
 		AdType *AdShowFailedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1646,12 +1712,18 @@ type AdShowRequested struct {
 		// AdType Ad type
 		AdType *AdShowRequestedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1696,12 +1768,18 @@ type AdViewable struct {
 		// AdType Ad type
 		AdType *AdViewableEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1760,12 +1838,18 @@ type AdapterInitResult struct {
 		// AdType Ad type
 		AdType *AdapterInitResultEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1824,12 +1908,18 @@ type AdapterLoadBudgetExceeded struct {
 		// AdType Ad type
 		AdType *AdapterLoadBudgetExceededEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1876,12 +1966,18 @@ type AdapterTokenRequested struct {
 		// AdType Ad type
 		AdType *AdapterTokenRequestedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -1931,12 +2027,18 @@ type AdapterTokenResult struct {
 		// AdType Ad type
 		AdType *AdapterTokenResultEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2004,12 +2106,18 @@ type AdmParseResult struct {
 		// AdType Ad type
 		AdType *AdmParseResultEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2065,12 +2173,18 @@ type AuctionFailed struct {
 		// AdType Ad type
 		AdType *AuctionFailedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2118,12 +2232,18 @@ type AuctionNoDemand struct {
 		// AdType Ad type
 		AdType *AuctionNoDemandEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2176,12 +2296,18 @@ type AuctionRequested struct {
 		// AdType Ad type
 		AdType *AuctionRequestedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2234,12 +2360,18 @@ type AuctionResponseReceived struct {
 		// AdType Ad type
 		AdType *AuctionResponseReceivedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2280,7 +2412,8 @@ type AuctionResponseReceivedEnvelopeEventName string
 
 // ClientEventEnvelope Identity header embedded in every catalog event. Same fields as the
 // protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
-// are server-stamped and ignored if the client sends them.
+// are ignored if the client sends them. `app_key` and `bundle` are copied
+// from the request.
 type ClientEventEnvelope struct {
 	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
 	AdFormat *string `json:"ad_format,omitempty"`
@@ -2288,12 +2421,18 @@ type ClientEventEnvelope struct {
 	// AdType Ad type
 	AdType *ClientEventEnvelopeAdType `json:"ad_type,omitempty"`
 
-	// AppId Ignored if sent. Server stamps from the resolved app.
+	// AppId Ignored if sent. Client ingest leaves this unset.
 	AppId *int64 `json:"app_id,omitempty"`
+
+	// AppKey Ignored if sent. Server copies `app.key`.
+	AppKey *string `json:"app_key,omitempty"`
 
 	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 	// Omit on session-only events.
 	AuctionId *string `json:"auction_id,omitempty"`
+
+	// Bundle Ignored if sent. Server copies `app.bundle`.
+	Bundle *string `json:"bundle,omitempty"`
 
 	// Country Ignored if sent. Server stamps from MaxMind.
 	Country *string `json:"country,omitempty"`
@@ -2345,12 +2484,18 @@ type ConfigFetchResult struct {
 		// AdType Ad type
 		AdType *ConfigFetchResultEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2423,12 +2568,18 @@ type NoFillReturnedToMax struct {
 		// AdType Ad type
 		AdType *NoFillReturnedToMaxEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2478,12 +2629,18 @@ type RenderCrashed struct {
 		// AdType Ad type
 		AdType *RenderCrashedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2530,12 +2687,18 @@ type RendererSelected struct {
 		// AdType Ad type
 		AdType *RendererSelectedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2594,12 +2757,18 @@ type SdkInitCompleted struct {
 		// AdType Ad type
 		AdType *SdkInitCompletedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2643,12 +2812,18 @@ type SdkInitFailed struct {
 		// AdType Ad type
 		AdType *SdkInitFailedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2696,12 +2871,18 @@ type SdkInitStarted struct {
 		// AdType Ad type
 		AdType *SdkInitStartedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2748,12 +2929,18 @@ type SignalFailed struct {
 		// AdType Ad type
 		AdType *SignalFailedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2800,12 +2987,18 @@ type SignalProvided struct {
 		// AdType Ad type
 		AdType *SignalProvidedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2862,12 +3055,18 @@ type SignalRequested struct {
 		// AdType Ad type
 		AdType *SignalRequestedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2914,12 +3113,18 @@ type SignalTimeoutSuspected struct {
 		// AdType Ad type
 		AdType *SignalTimeoutSuspectedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -2954,9 +3159,10 @@ type SignalTimeoutSuspectedEnvelopeEventName string
 
 // TelemetryApp Identity only. Not the full `app` object from BaseRequest.
 type TelemetryApp struct {
+	// Bundle Package name. Copied onto `envelope.bundle`.
 	Bundle string `json:"bundle"`
 
-	// Key Publisher app key. Server resolves `app_id` from this + bundle.
+	// Key Publisher app key. Copied onto `envelope.app_key`.
 	Key string `json:"key"`
 }
 
@@ -3014,12 +3220,18 @@ type TokenCollectionCompleted struct {
 		// AdType Ad type
 		AdType *TokenCollectionCompletedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3064,12 +3276,18 @@ type VideoComplete struct {
 		// AdType Ad type
 		AdType *VideoCompleteEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3111,12 +3329,18 @@ type VideoError struct {
 		// AdType Ad type
 		AdType *VideoErrorEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3161,12 +3385,18 @@ type VideoMidpoint struct {
 		// AdType Ad type
 		AdType *VideoMidpointEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3208,12 +3438,18 @@ type VideoQ1 struct {
 		// AdType Ad type
 		AdType *VideoQ1EnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3255,12 +3491,18 @@ type VideoQ3 struct {
 		// AdType Ad type
 		AdType *VideoQ3EnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3302,12 +3544,18 @@ type VideoSkipped struct {
 		// AdType Ad type
 		AdType *VideoSkippedEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3349,12 +3597,18 @@ type VideoStart struct {
 		// AdType Ad type
 		AdType *VideoStartEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -3398,12 +3652,18 @@ type WebviewError struct {
 		// AdType Ad type
 		AdType *WebviewErrorEnvelopeAdType `json:"ad_type,omitempty"`
 
-		// AppId Ignored if sent. Server stamps from the resolved app.
+		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
 		Country *string `json:"country,omitempty"`
@@ -5832,12 +6092,6 @@ type PostStatsJSONBody_Stats struct {
 	union json.RawMessage
 }
 
-// PostTelemetryParams defines parameters for PostTelemetry.
-type PostTelemetryParams struct {
-	// XBidonVersion Version of the Bidon SDK
-	XBidonVersion XBidonVersion `json:"X-Bidon-Version"`
-}
-
 // PostWinJSONBody defines parameters for PostWin.
 type PostWinJSONBody struct {
 	App struct {
@@ -6241,9 +6495,6 @@ type PostShowJSONRequestBody PostShowJSONBody
 
 // PostStatsJSONRequestBody defines body for PostStats for application/json ContentType.
 type PostStatsJSONRequestBody PostStatsJSONBody
-
-// PostTelemetryJSONRequestBody defines body for PostTelemetry for application/json ContentType.
-type PostTelemetryJSONRequestBody = TelemetryRequest
 
 // PostWinJSONRequestBody defines body for PostWin for application/json ContentType.
 type PostWinJSONRequestBody PostWinJSONBody
@@ -7376,9 +7627,6 @@ type ServerInterface interface {
 	// Stats
 	// (POST /v2/stats/{ad_type})
 	PostStats(ctx echo.Context, adType PostStatsParamsAdType, params PostStatsParams) error
-	// Submit a batch of catalogued client events and metric observations
-	// (POST /v2/telemetry)
-	PostTelemetry(ctx echo.Context, params PostTelemetryParams) error
 	// Win
 	// (POST /v2/win/{ad_type})
 	PostWin(ctx echo.Context, adType PostWinParamsAdType, params PostWinParams) error
@@ -7657,37 +7905,6 @@ func (w *ServerInterfaceWrapper) PostStats(ctx echo.Context) error {
 	return err
 }
 
-// PostTelemetry converts echo context to params.
-func (w *ServerInterfaceWrapper) PostTelemetry(ctx echo.Context) error {
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params PostTelemetryParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-Bidon-Version" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-Bidon-Version")]; found {
-		var XBidonVersion XBidonVersion
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-Bidon-Version, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-Bidon-Version", valueList[0], &XBidonVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-Bidon-Version: %s", err))
-		}
-
-		params.XBidonVersion = XBidonVersion
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-Bidon-Version is required, but not found"))
-	}
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostTelemetry(ctx, params)
-	return err
-}
-
 // PostWin converts echo context to params.
 func (w *ServerInterfaceWrapper) PostWin(ctx echo.Context) error {
 	var err error
@@ -7762,7 +7979,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/v2/reward/:ad_type", wrapper.PostReward)
 	router.POST(baseURL+"/v2/show/:ad_type", wrapper.PostShow)
 	router.POST(baseURL+"/v2/stats/:ad_type", wrapper.PostStats)
-	router.POST(baseURL+"/v2/telemetry", wrapper.PostTelemetry)
 	router.POST(baseURL+"/v2/win/:ad_type", wrapper.PostWin)
 
 }
@@ -7770,184 +7986,169 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"AAA=",
+	"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",
+	"BugAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

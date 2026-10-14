@@ -24,6 +24,10 @@ message Envelope {
   string country = 10;
   string trace_id = 11;
   double sampling_rate = 12;
+  // Client ingest copies these from the request and leaves app_id unset.
+  // Auction events keep app_id and leave these empty.
+  string app_key = 13;
+  string bundle = 14;
 }
 
 // Scope is the auction phase an event describes.
@@ -124,4 +128,420 @@ message DspResponseRejected {
   // Effective floor this bid failed to beat. Not requested_price_floor.
   double price_floor = 5;
   RejectReason reject_reason = 6;
+}
+
+// Client catalog for POST /v2/telemetry. Append-only: Confluent message
+// indexes follow file order, so do not insert messages above this line.
+// Server auction and DSP messages are not accepted on this endpoint.
+// error_code on client events is a banded string, not ErrorCode.
+
+// SdkInitStarted is emitted when BidonSdk.initialize() is entered.
+message SdkInitStarted {
+  option (event_name) = "sdk_init_started";
+
+  Envelope envelope = 1;
+  string init_trigger = 2;
+}
+
+// SdkInitCompleted is emitted when init finishes.
+message SdkInitCompleted {
+  option (event_name) = "sdk_init_completed";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  repeated string adapters_registered = 3;
+  string config_source = 4;
+}
+
+// SdkInitFailed is emitted when init throws or times out.
+message SdkInitFailed {
+  option (event_name) = "sdk_init_failed";
+
+  Envelope envelope = 1;
+  string error_code = 2;
+  string failed_phase = 3;
+  int64 duration_ms = 4;
+}
+
+// AdapterInitResult is one adapter's init result.
+message AdapterInitResult {
+  option (event_name) = "adapter_init_result";
+
+  Envelope envelope = 1;
+  string adapter_name = 2;
+  string adapter_version = 3;
+  bool success = 4;
+  int64 duration_ms = 5;
+  string error_code = 6;
+  string external_error_code = 7;
+}
+
+// ConfigFetchResult is the remote config call.
+message ConfigFetchResult {
+  option (event_name) = "config_fetch_result";
+
+  Envelope envelope = 1;
+  bool success = 2;
+  int64 duration_ms = 3;
+  int32 http_status = 4;
+  bool from_cache = 5;
+}
+
+// AdapterTokenRequested is emitted when a bidding adapter is asked for a token.
+message AdapterTokenRequested {
+  option (event_name) = "adapter_token_requested";
+
+  Envelope envelope = 1;
+  string adapter_name = 2;
+  int64 timeout_budget_ms = 3;
+}
+
+// AdapterTokenResult is emitted when a bidding adapter token settles.
+message AdapterTokenResult {
+  option (event_name) = "adapter_token_result";
+
+  Envelope envelope = 1;
+  string adapter_name = 2;
+  int64 duration_ms = 3;
+  string outcome = 4;
+  int64 token_size_bytes = 5;
+  string error_code = 6;
+  string external_error_code = 7;
+}
+
+// TokenCollectionCompleted is emitted when every token adapter settles or the budget is hit.
+message TokenCollectionCompleted {
+  option (event_name) = "token_collection_completed";
+
+  Envelope envelope = 1;
+  int64 total_duration_ms = 2;
+  int64 adapters_requested = 3;
+  int64 adapters_returned = 4;
+  int64 adapters_timed_out = 5;
+}
+
+// AdRequestStarted is emitted when the publisher calls load().
+message AdRequestStarted {
+  option (event_name) = "ad_request_started";
+
+  Envelope envelope = 1;
+  string placement = 2;
+  double price_floor = 3;
+  bool is_autorefresh = 4;
+  bool cached_ad_available = 5;
+  string trigger = 6;
+  string auction_key = 7;
+}
+
+// AuctionRequested is emitted when the SDK is about to call /v2/auction.
+message AuctionRequested {
+  option (event_name) = "auction_requested";
+
+  Envelope envelope = 1;
+  double price_floor = 2;
+  int64 token_count = 3;
+  repeated string adapters_included = 4;
+}
+
+// AuctionResponseReceived is emitted when the SDK receives the /v2/auction response.
+message AuctionResponseReceived {
+  option (event_name) = "auction_response_received";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  int64 demand_count = 3;
+  double top_ecpm = 4;
+  int64 response_size_bytes = 5;
+}
+
+// AdFilled is emitted when the auction fills. Distinct from ad_loaded.
+message AdFilled {
+  option (event_name) = "ad_filled";
+
+  Envelope envelope = 1;
+  string demand_id = 2;
+  double price = 3;
+  string bid_type = 4;
+}
+
+// AuctionFailed is emitted when there is no auction response, or the call errors.
+message AuctionFailed {
+  option (event_name) = "auction_failed";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  string error_code = 3;
+  int32 http_status = 4;
+}
+
+// AuctionNoDemand is a valid auction response with zero eligible demand.
+message AuctionNoDemand {
+  option (event_name) = "auction_no_demand";
+
+  Envelope envelope = 1;
+  double price_floor = 2;
+  string reason = 3;
+}
+
+// AdLoadRequested is emitted when the SDK starts loading the returned ad.
+message AdLoadRequested {
+  option (event_name) = "ad_load_requested";
+
+  Envelope envelope = 1;
+  string caller = 2;
+  bool has_bid_response = 3;
+}
+
+// AdmParseResult is emitted when the creative payload is parsed.
+message AdmParseResult {
+  option (event_name) = "adm_parse_result";
+
+  Envelope envelope = 1;
+  bool success = 2;
+  string bid_id = 3;
+  string dsp_id = 4;
+  string crtype = 5;
+  string envelope_version = 6;
+  repeated string unknown_fields = 7;
+  bool fallback_applied = 8;
+  int64 duration_ms = 9;
+}
+
+// RendererSelected is emitted when a renderer is chosen.
+message RendererSelected {
+  option (event_name) = "renderer_selected";
+
+  Envelope envelope = 1;
+  string renderer = 2;
+  string crtype = 3;
+  string selection_reason = 4;
+}
+
+// AdLoaded is emitted when the creative finishes loading.
+message AdLoaded {
+  option (event_name) = "ad_loaded";
+
+  Envelope envelope = 1;
+  int64 total_duration_ms = 2;
+  string renderer = 3;
+  int64 creative_size_bytes = 4;
+}
+
+// AdLoadFailed is emitted when creative load fails.
+message AdLoadFailed {
+  option (event_name) = "ad_load_failed";
+
+  Envelope envelope = 1;
+  string demand_id = 2;
+  string error_domain = 3;
+  string error_code = 4;
+  int64 duration_ms = 5;
+  string failed_stage = 6;
+}
+
+// AdExpired is emitted when a loaded ad passes its TTL.
+message AdExpired {
+  option (event_name) = "ad_expired";
+
+  Envelope envelope = 1;
+  int64 ttl_ms = 2;
+  int64 age_at_expiry_ms = 3;
+}
+
+// AdShowRequested is emitted when the SDK is asked to show a loaded ad.
+message AdShowRequested {
+  option (event_name) = "ad_show_requested";
+
+  Envelope envelope = 1;
+  int64 time_since_loaded_ms = 2;
+}
+
+// AdImpression is the client impression. Billing stays on /v2/show.
+message AdImpression {
+  option (event_name) = "ad_impression";
+
+  Envelope envelope = 1;
+  int64 render_duration_ms = 2;
+  bool om_enabled = 3;
+}
+
+// AdShowFailed is emitted when show fails.
+message AdShowFailed {
+  option (event_name) = "ad_show_failed";
+
+  Envelope envelope = 1;
+  string error_code = 2;
+  string failed_stage = 3;
+}
+
+// AdViewable is emitted when an impression becomes viewable.
+message AdViewable {
+  option (event_name) = "ad_viewable";
+
+  Envelope envelope = 1;
+  int64 time_to_viewable_ms = 2;
+  bool om_enabled = 3;
+  string om_partner_name = 4;
+}
+
+// AdClicked is a click on the shown ad.
+message AdClicked {
+  option (event_name) = "ad_clicked";
+
+  Envelope envelope = 1;
+  string click_target = 2;
+  int64 time_since_impression_ms = 3;
+}
+
+// AdClosed is emitted when the shown ad closes.
+message AdClosed {
+  option (event_name) = "ad_closed";
+
+  Envelope envelope = 1;
+  int64 time_visible_ms = 2;
+  string close_method = 3;
+}
+
+// AdRewardGranted is emitted when a rewarded ad grants the reward.
+message AdRewardGranted {
+  option (event_name) = "ad_reward_granted";
+
+  Envelope envelope = 1;
+}
+
+// WebviewError is a WebView error while rendering.
+message WebviewError {
+  option (event_name) = "webview_error";
+
+  Envelope envelope = 1;
+  string error_code = 2;
+  string description = 3;
+  string failing_url_host = 4;
+  bool is_main_frame = 5;
+}
+
+// RenderCrashed is emitted when the renderer crashes.
+message RenderCrashed {
+  option (event_name) = "render_crashed";
+
+  Envelope envelope = 1;
+  string renderer = 2;
+  string crtype = 3;
+}
+
+// VideoStart is emitted when video starts.
+message VideoStart {
+  option (event_name) = "video_start";
+
+  Envelope envelope = 1;
+}
+
+// VideoQ1 is the first quartile.
+message VideoQ1 {
+  option (event_name) = "video_q1";
+
+  Envelope envelope = 1;
+}
+
+// VideoMidpoint is the midpoint.
+message VideoMidpoint {
+  option (event_name) = "video_midpoint";
+
+  Envelope envelope = 1;
+}
+
+// VideoQ3 is the third quartile.
+message VideoQ3 {
+  option (event_name) = "video_q3";
+
+  Envelope envelope = 1;
+}
+
+// VideoComplete is emitted when video completes.
+message VideoComplete {
+  option (event_name) = "video_complete";
+
+  Envelope envelope = 1;
+}
+
+// VideoSkipped is emitted when video is skipped.
+message VideoSkipped {
+  option (event_name) = "video_skipped";
+
+  Envelope envelope = 1;
+}
+
+// VideoError is a video playback error.
+message VideoError {
+  option (event_name) = "video_error";
+
+  Envelope envelope = 1;
+  string error_code = 2;
+}
+
+// AdapterLoadBudgetExceeded is emitted when the MAX adapter load budget elapses.
+message AdapterLoadBudgetExceeded {
+  option (event_name) = "adapter_load_budget_exceeded";
+
+  Envelope envelope = 1;
+  int64 elapsed_ms = 2;
+  int64 budget_ms = 3;
+  string stage_at_overrun = 4;
+  int64 attempts_made = 5;
+}
+
+// NoFillReturnedToMax is emitted when Bidon returns no-fill so MAX can fall through.
+message NoFillReturnedToMax {
+  option (event_name) = "no_fill_returned_to_max";
+
+  Envelope envelope = 1;
+  string reason = 2;
+  int64 attempts_made = 3;
+  int64 total_duration_ms = 4;
+}
+
+// SignalRequested is emitted when MAX calls collectSignal().
+message SignalRequested {
+  option (event_name) = "signal_requested";
+
+  Envelope envelope = 1;
+}
+
+// SignalProvided is emitted when a signal token is returned to MAX.
+message SignalProvided {
+  option (event_name) = "signal_provided";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  string token_id = 3;
+  int64 token_size_bytes = 4;
+  bool gaid_available = 5;
+  string token_source = 6;
+}
+
+// SignalFailed is emitted when collectSignal() fails.
+message SignalFailed {
+  option (event_name) = "signal_failed";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  string error_code = 3;
+}
+
+// SignalTimeoutSuspected is emitted when our timer exceeds MAX's signal budget.
+message SignalTimeoutSuspected {
+  option (event_name) = "signal_timeout_suspected";
+
+  Envelope envelope = 1;
+  int64 duration_ms = 2;
+  int64 budget_ms = 3;
+}
+
+// MetricObservation is one client metric sample. It is applied to /metrics
+// and is not a telemetry-events row, so it does not embed Envelope.
+message MetricObservation {
+  string name = 1;
+  string type = 2;
+  double value = 3;
+  map<string, string> labels = 4;
 }

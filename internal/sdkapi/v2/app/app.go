@@ -239,7 +239,6 @@ func New(deps Deps) (*App, error) {
 		ConfigurationFetcher:      configurationFetcher,
 		AuctionService:            auctionService,
 		AdUnitLookup:              adUnitLookup,
-		Logger:                    logger,
 	}
 	routerV2.RegisterRoutes(v2Group)
 

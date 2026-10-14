@@ -44,7 +44,6 @@ func TestNew_RegistersExpectedRoutes(t *testing.T) {
 		"POST /v2/reward/:ad_type":  true,
 		"POST /v2/show/:ad_type":    true,
 		"POST /v2/stats/:ad_type":   true,
-		"POST /v2/telemetry":        true,
 		"POST /v2/win/:ad_type":     true,
 		"GET /docs/*":               true,
 		"GET /health_checks":        true,
@@ -59,6 +58,9 @@ func TestNew_RegistersExpectedRoutes(t *testing.T) {
 		if !got[route] {
 			t.Errorf("missing expected route %q", route)
 		}
+	}
+	if got["POST /v2/telemetry"] {
+		t.Error("POST /v2/telemetry is served by bidon-telemetry, not sdkapi")
 	}
 
 	if a.AuctionService == nil {

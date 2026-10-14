@@ -7,3 +7,6 @@ generate:
 output: api.gen.go
 output-options:
   skip-prune: true
+  # POST /v2/telemetry stays in openapi.yaml as the contract. bidon-telemetry serves it.
+  exclude-operation-ids:
+    - postTelemetry

@@ -17,15 +17,14 @@ type Handler interface {
 //go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/mocks.go -pkg mocks . Handler
 
 type Server struct {
-	AuctionHandler   Handler
-	ClickHandler     Handler
-	ConfigHandler    Handler
-	LossHandler      Handler
-	StatsHandler     Handler
-	ShowHandler      Handler
-	RewardHandler    Handler
-	WinHandler       Handler
-	TelemetryHandler Handler
+	AuctionHandler Handler
+	ClickHandler   Handler
+	ConfigHandler  Handler
+	LossHandler    Handler
+	StatsHandler   Handler
+	ShowHandler    Handler
+	RewardHandler  Handler
+	WinHandler     Handler
 }
 
 func (s *Server) GetAuction(c echo.Context, _ GetAuctionParamsAdType, _ GetAuctionParams) error {
@@ -58,10 +57,6 @@ func (s *Server) PostReward(c echo.Context, _ PostRewardParamsAdType, _ PostRewa
 
 func (s *Server) PostWin(c echo.Context, _ PostWinParamsAdType, _ PostWinParams) error {
 	return s.WinHandler.Handle(c)
-}
-
-func (s *Server) PostTelemetry(c echo.Context, _ PostTelemetryParams) error {
-	return s.TelemetryHandler.Handle(c)
 }
 
 func (s *Server) GetOpenAPISpec(c echo.Context) error {

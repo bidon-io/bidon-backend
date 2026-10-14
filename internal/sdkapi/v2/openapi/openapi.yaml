@@ -230,9 +230,11 @@ paths:
       operationId: postTelemetry
       summary: Submit a batch of catalogued client events and metric observations
       description: |
-        Resolve app by `app.key` + `app.bundle`, allow-list each item, stamp server
-        envelope fields, fire-and-forget produce to `telemetry-events`, apply
-        observations to process `/metrics`, return **202**.
+        Served by bidon-telemetry, not bidon-sdkapi.
+        Copy `app.key` and `app.bundle` onto the envelope, allow-list each item,
+        stamp server envelope fields, fire-and-forget produce to `telemetry-events`,
+        apply observations to process `/metrics`, return **202**. `app_id` is left
+        unset so it can be joined from key and bundle later.
 
         Unknown `event_name` / metric `name` / extra label key: drop that item,
         increment `ingest_total{result="dropped_name"|"dropped_metric"}`, do not 400.
@@ -408,9 +410,10 @@ components:
       properties:
         key:
           type: string
-          description: Publisher app key. Server resolves `app_id` from this + bundle.
+          description: Publisher app key. Copied onto `envelope.app_key`.
         bundle:
           type: string
+          description: Package name. Copied onto `envelope.bundle`.
           example: com.example.game
     TelemetrySession:
       type: object
@@ -478,7 +481,8 @@ components:
       description: |
         Identity header embedded in every catalog event. Same fields as the
         protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
-        are server-stamped and ignored if the client sends them.
+        are ignored if the client sends them. `app_key` and `bundle` are copied
+        from the request.
       required:
         - event_id
         - event_name
@@ -500,7 +504,13 @@ components:
         app_id:
           type: integer
           format: int64
-          description: Ignored if sent. Server stamps from the resolved app.
+          description: Ignored if sent. Client ingest leaves this unset.
+        app_key:
+          type: string
+          description: Ignored if sent. Server copies `app.key`.
+        bundle:
+          type: string
+          description: Ignored if sent. Server copies `app.bundle`.
         auction_id:
           type: string
           description: |
