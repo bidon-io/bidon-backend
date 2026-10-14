@@ -83,15 +83,11 @@ func (a *MolocoAdapter) ExecuteOptions(request openrtb.BidRequest) (adapters.Exe
 	opts := adapters.ExecuteRTBOptions{
 		TagID: a.TagID,
 	}
-	url := getEndpoint(adapters.CountryFromRequest(request))
-	if url == "" {
-		return opts, errors.New("moloco endpoint is empty")
-	}
 	if a.APIKey == "" {
 		return opts, errors.New("moloco API key is empty")
 	}
 
-	opts.URL = url
+	opts.URL = getEndpoint(adapters.CountryFromRequest(request))
 	opts.Headers = http.Header{"Authorization": {a.APIKey}}
 	return opts, nil
 }

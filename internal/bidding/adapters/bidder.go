@@ -15,7 +15,7 @@ import (
 // BidderInterface is the required surface for a demand adapter on the shared
 // bidding path: build impression, supply execute options, then parse at the
 // call site. Optional extras are type-asserted: OpenRTBRequestEnricher,
-// OpenRTBBidEnricher, CustomBidParser, CustomRequestBuilder, CustomRequestExecutor.
+// OpenRTBBidEnricher, CustomBidParser, CustomRequestBuilder.
 type BidderInterface interface {
 	// BuildImpression supplies the OpenRTB impression, shell options, and
 	// request validation. BidRequest is the base request so adapters can
