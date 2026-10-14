@@ -8,8 +8,8 @@ import (
 )
 
 // Kafka produces ad events through the shared sdkapi Kafka client.
-// Enabled is off unless set; Produce then drops the record.
-// Notification and telemetry records use their own clients.
+// Enabled is off unless KAFKA_PRODUCE_AD_EVENTS=true; Produce then drops the record.
+// Notification and telemetry records wrap this same client and share its buffer.
 type Kafka struct {
 	Producer *engine.Kafka
 	Enabled  bool

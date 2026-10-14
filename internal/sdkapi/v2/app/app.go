@@ -145,6 +145,7 @@ func New(deps Deps) (*App, error) {
 		Sender: notification.EventSender{
 			HttpClient:  deps.HTTPClient,
 			EventLogger: eventLogger,
+			Logger:      logger.Named("notification"),
 		},
 	}
 	adUnitsCache := config.NewRedisCacheOf[[]auction.AdUnit](rdb, cacheTTL, "ad_units")
