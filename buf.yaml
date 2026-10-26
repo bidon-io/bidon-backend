@@ -3,3 +3,4 @@ modules:
   - path: proto/adcom/proto
   - path: proto/openrtb/proto
   - path: proto/proto
+  - path: schemas/proto

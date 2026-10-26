@@ -44,6 +44,7 @@ require (
 	github.com/spazzymoto/echo-scs-session v1.0.0
 	github.com/stretchr/testify v1.10.0
 	github.com/twmb/franz-go v1.18.1
+	github.com/twmb/franz-go/pkg/sr v1.0.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.2
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.59.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.59.0

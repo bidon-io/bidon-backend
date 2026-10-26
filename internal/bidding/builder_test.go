@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/prebid/openrtb/v19/openrtb2"
 	dto "github.com/prometheus/client_model/go"
@@ -22,6 +25,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/bidding/openrtb"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 func testApp(id int64) *sdkapi.App {
@@ -188,6 +193,7 @@ func TestBuilder_Build(t *testing.T) {
 				AdaptersBuilder:     tt.adaptersBuilder,
 				NotificationHandler: tt.notificationHandler,
 				BidCacher:           bidCacher,
+				Telemetry:           telemetry.Nop,
 			}
 
 			result, err := builder.HoldAuction(context.Background(), tt.buildParams)
@@ -204,6 +210,210 @@ func TestBuilder_Build(t *testing.T) {
 				t.Errorf("expected result: %+v, but got %+v", tt.expectedResult, result)
 			}
 		})
+	}
+}
+
+type scriptedAdapter struct {
+	response *adapters.DemandResponse
+}
+
+func (a scriptedAdapter) BuildImpression(openrtb.BidRequest, *schema.AuctionRequest) (*openrtb2.Imp, adapters.RTBRequestOptions, error) {
+	return &openrtb2.Imp{ID: "imp-1"}, adapters.RTBRequestOptions{}, nil
+}
+
+func (a scriptedAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{URL: "http://scripted.invalid/bid"}, nil
+}
+
+// ParseBids attaches the scripted bid to the response built from the scripted HTTP reply.
+func (a scriptedAdapter) ParseBids(dr *adapters.DemandResponse) (*adapters.DemandResponse, error) {
+	dr.Bid = a.response.Bid
+	return dr, nil
+}
+
+// client returns an HTTP client that replays the scripted response without a network:
+// the scripted Error becomes a transport error, otherwise the scripted Status is returned.
+func (a scriptedAdapter) client() *http.Client {
+	return &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		if a.response.Error != nil {
+			return nil, a.response.Error
+		}
+		return &http.Response{
+			StatusCode: a.response.Status,
+			Body:       io.NopCloser(strings.NewReader("{}")),
+			Header:     make(http.Header),
+			Request:    r,
+		}, nil
+	})}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
+	engine := &telemetry.MemoryEngine{}
+	responses := map[adapter.Key]*adapters.DemandResponse{
+		adapter.BidmachineKey: {
+			DemandID: adapter.BidmachineKey,
+			Status:   http.StatusOK,
+			Bid:      &adapters.DemandBid{Price: 2.5},
+		},
+		adapter.MetaKey: {
+			DemandID: adapter.MetaKey,
+			Status:   http.StatusNoContent,
+		},
+		adapter.VungleKey: {
+			DemandID: adapter.VungleKey,
+			Error:    context.DeadlineExceeded,
+		},
+	}
+	keys := []adapter.Key{adapter.BidmachineKey, adapter.MetaKey, adapter.VungleKey}
+
+	builder := &bidding.Builder{
+		AdaptersBuilder: &mocks.AdaptersBuilderMock{
+			BuildFunc: func(key adapter.Key, _ adapter.ProcessedConfigsMap) (*adapters.Bidder, error) {
+				scripted := scriptedAdapter{response: responses[key]}
+				return &adapters.Bidder{Adapter: scripted, Client: scripted.client()}, nil
+			},
+		},
+		NotificationHandler: &mocks.NotificationHandlerMock{
+			HandleBiddingRoundFunc: func(context.Context, *schema.AdObject, bidding.AuctionResult, string, string) error {
+				return nil
+			},
+		},
+		BidCacher: &mocks.BidCacherMock{
+			ApplyBidCacheFunc: func(_ context.Context, _ *schema.AuctionRequest, aucRes *bidding.AuctionResult) []adapters.DemandResponse {
+				return aucRes.Bids
+			},
+		},
+		Telemetry: telemetry.New(engine, nil),
+	}
+
+	adaptersCfg := schema.Adapters{}
+	demands := map[adapter.Key]map[string]any{}
+	cfgs := adapter.ProcessedConfigsMap{}
+	for _, key := range keys {
+		adaptersCfg[key] = schema.Adapter{Version: "1.0.0", SDKVersion: "1.0.0"}
+		demands[key] = map[string]any{"token": "token"}
+		cfgs[key] = map[string]any{}
+	}
+
+	auctionStart := time.Now().Add(-30 * time.Second).UnixMilli()
+	result, err := builder.HoldAuction(context.Background(), &bidding.BuildParams{
+		App:             testApp(4),
+		AdapterConfigs:  cfgs,
+		BiddingAdapters: keys,
+		StartTS:         auctionStart,
+		Country:         "DE",
+		AuctionRequest: schema.AuctionRequest{
+			AdType: "banner",
+			AdObject: schema.AdObject{
+				AuctionID:  "auc-dsp",
+				PriceFloor: 0.01,
+				Demands:    demands,
+			},
+			Adapters: adaptersCfg,
+			BaseRequest: schema.BaseRequest{
+				Session: schema.Session{ID: "sess-dsp"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("HoldAuction() error = %v", err)
+	}
+
+	for _, bid := range result.Bids {
+		if bid.StartTS != auctionStart {
+			t.Errorf("%s StartTS = %d, want auction start %d (ad-events timing_map must not change)", bid.DemandID, bid.StartTS, auctionStart)
+		}
+		if bid.SendTS < auctionStart {
+			t.Errorf("%s SendTS = %d, want set at send", bid.DemandID, bid.SendTS)
+		}
+	}
+
+	sent := telemetry.EventsOf[*telemetryv1.DspRequestSent](engine)
+	received := telemetry.EventsOf[*telemetryv1.DspResponseReceived](engine)
+	rejected := telemetry.EventsOf[*telemetryv1.DspResponseRejected](engine)
+	outcomes := map[string]telemetryv1.Outcome{}
+	for _, ev := range received {
+		outcomes[ev.GetDsp()] = ev.GetOutcome()
+		if ev.GetLatencyMs() < 0 || ev.GetLatencyMs() > 5_000 {
+			t.Errorf("%s latency_ms = %d; want send→return, not auction-start→return", ev.GetDsp(), ev.GetLatencyMs())
+		}
+		if env := ev.GetEnvelope(); env.GetAuctionId() != "auc-dsp" || env.GetCountry() != "DE" {
+			t.Errorf("envelope = %v", env)
+		}
+	}
+
+	if len(sent) != 3 || len(received) != 3 {
+		t.Fatalf("DSP events sent=%d received=%d rejected=%d (want 3+3); full auction is 1+3+3+1 with Service.Run", len(sent), len(received), len(rejected))
+	}
+	if outcomes[string(adapter.BidmachineKey)] != telemetryv1.Outcome_OUTCOME_BID {
+		t.Errorf("bidmachine outcome = %v", outcomes[string(adapter.BidmachineKey)])
+	}
+	if outcomes[string(adapter.MetaKey)] != telemetryv1.Outcome_OUTCOME_NOBID {
+		t.Errorf("meta outcome = %v", outcomes[string(adapter.MetaKey)])
+	}
+	if outcomes[string(adapter.VungleKey)] != telemetryv1.Outcome_OUTCOME_TIMEOUT {
+		t.Errorf("vungle outcome = %v", outcomes[string(adapter.VungleKey)])
+	}
+}
+
+func TestBuilder_HoldAuction_EmitsDSPRejectedBelowFloor(t *testing.T) {
+	engine := &telemetry.MemoryEngine{}
+	builder := &bidding.Builder{
+		AdaptersBuilder: &mocks.AdaptersBuilderMock{
+			BuildFunc: func(_ adapter.Key, _ adapter.ProcessedConfigsMap) (*adapters.Bidder, error) {
+				scripted := scriptedAdapter{response: &adapters.DemandResponse{
+					DemandID: adapter.BidmachineKey,
+					Status:   http.StatusOK,
+					Bid:      &adapters.DemandBid{Price: 0.01},
+				}}
+				return &adapters.Bidder{Adapter: scripted, Client: scripted.client()}, nil
+			},
+		},
+		NotificationHandler: &mocks.NotificationHandlerMock{
+			HandleBiddingRoundFunc: func(context.Context, *schema.AdObject, bidding.AuctionResult, string, string) error {
+				return nil
+			},
+		},
+		BidCacher: &mocks.BidCacherMock{
+			ApplyBidCacheFunc: func(_ context.Context, _ *schema.AuctionRequest, aucRes *bidding.AuctionResult) []adapters.DemandResponse {
+				return aucRes.Bids
+			},
+		},
+		Telemetry: telemetry.New(engine, nil),
+	}
+
+	_, err := builder.HoldAuction(context.Background(), &bidding.BuildParams{
+		App:             testApp(4),
+		AdapterConfigs:  adapter.ProcessedConfigsMap{adapter.BidmachineKey: map[string]any{}},
+		BiddingAdapters: []adapter.Key{adapter.BidmachineKey},
+		AuctionRequest: schema.AuctionRequest{
+			AdType: "banner",
+			AdObject: schema.AdObject{
+				AuctionID:  "auc-below-floor",
+				PriceFloor: 1.0,
+				Demands:    map[adapter.Key]map[string]any{adapter.BidmachineKey: {"token": "token"}},
+			},
+			Adapters: schema.Adapters{adapter.BidmachineKey: {Version: "1.0.0", SDKVersion: "1.0.0"}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("HoldAuction() error = %v", err)
+	}
+
+	rejectedEvents := telemetry.EventsOf[*telemetryv1.DspResponseRejected](engine)
+	if len(rejectedEvents) == 0 {
+		t.Fatal("expected dsp_response_rejected for a bid below floor")
+	}
+	rejected := rejectedEvents[0]
+	if rejected.GetRejectReason() != telemetryv1.RejectReason_REJECT_REASON_BELOW_FLOOR {
+		t.Errorf("reject_reason = %v, want below_floor", rejected.GetRejectReason())
+	}
+	if rejected.GetPrice() != 0.01 || rejected.GetPriceFloor() <= rejected.GetPrice() {
+		t.Errorf("price = %v floor = %v", rejected.GetPrice(), rejected.GetPriceFloor())
 	}
 }
 

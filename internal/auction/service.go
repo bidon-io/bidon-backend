@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
 	"github.com/bidon-io/bidon-backend/internal/adapter"
@@ -21,6 +22,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/store"
 	"github.com/bidon-io/bidon-backend/internal/segment"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type Service struct {
@@ -29,6 +31,7 @@ type Service struct {
 	SegmentMatcher     *segment.Matcher
 	AdapterKeysFetcher AdapterKeysFetcher
 	EventLogger        *event.Logger
+	Telemetry          *telemetry.Logger
 }
 
 type Response struct {
@@ -76,15 +79,34 @@ var adCacheAdaptersFilter = store.NewAdCacheAdaptersFilter()
 
 func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, error) {
 	req := params.Req
+	started := time.Now()
 
 	var auctionConfig *Config
 	var auctionResult *Result
 	var adUnitsMap *AdUnitsMap
 	var err error
 
+	// Before priceFloor() overwrites AdObject.PriceFloor, so this records
+	// requested_price_floor (what the SDK sent), not the effective price_floor.
+	s.Telemetry.Event().AuctionRequestReceived(telemetry.Params{
+		Request: params.Req,
+		App:     params.App,
+		Country: params.Country,
+	})
+
 	// Ensure events are always logged, even on errors
 	defer func() {
 		s.logEvents(req, params, auctionConfig, auctionResult, adUnitsMap, err)
+		s.Telemetry.Event().AuctionCompleted(telemetry.AuctionCompletedParams{
+			Params: telemetry.Params{
+				Request: params.Req,
+				App:     params.App,
+				Country: params.Country,
+			},
+			Bids:    biddingBids(auctionResult),
+			Started: started,
+			Err:     err,
+		})
 	}()
 
 	segmentParams := &segment.Params{
@@ -130,6 +152,8 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 	}
 	req.AdObject.AuctionConfigurationID = auctionConfig.ID
 	req.AdObject.AuctionConfigurationUID = auctionConfig.UID
+	// From here AdObject.PriceFloor is the effective price_floor on
+	// auction_completed and dsp_response_rejected, not requested_price_floor.
 	req.AdObject.PriceFloor = priceFloor(req, auctionConfig)
 
 	bp := &BuildParams{
@@ -142,6 +166,7 @@ func (s *Service) Run(ctx context.Context, params *ExecutionParams) (*Response, 
 		PriceFloor:           req.AdObject.PriceFloor,
 		AuctionRequest:       req,
 		GeoData:              params.GeoData,
+		Country:              params.Country,
 		AuctionKey:           req.AdObject.AuctionKey,
 		AuctionConfiguration: auctionConfig,
 	}
@@ -175,6 +200,7 @@ var disabledFloorAuctionKeys = [...]string{
 	"1LQP7A4UG0400", // Rewarded
 }
 
+// priceFloor returns the effective auction floor. It is not requested_price_floor.
 func priceFloor(req *schema.AuctionRequest, auctionConfig *Config) float64 {
 	// Check if price floor should be disabled for this auction key with custom adapter
 	isCustomAdapter := slices.Contains(adapter.CustomAdapters[:], req.GetMediator())
@@ -316,6 +342,13 @@ func (s *Service) logEvents(
 			params.LogErr(fmt.Errorf("log %v event: %v", ev.EventType, err))
 		})
 	}
+}
+
+func biddingBids(result *Result) []adapters.DemandResponse {
+	if result == nil || result.BiddingAuctionResult == nil {
+		return nil
+	}
+	return result.BiddingAuctionResult.Bids
 }
 
 func convertBidToAdUnit(req *schema.AuctionRequest, demandResponse adapters.DemandResponse, adUnitsMap *AdUnitsMap) *AdUnit {
