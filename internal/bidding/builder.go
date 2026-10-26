@@ -32,6 +32,17 @@ type Builder struct {
 	BidCacher           BidCacher
 	Logger              *zap.Logger
 	Telemetry           *telemetry.Logger
+
+	// misconfigLogged records (app, adapter) pairs that have already emitted the
+	// Error log for an ExecuteOptions failure. Adapter config is per app, so a
+	// broken Moloco on app A must not hide the same failure on app B.
+	// LoadOrStore makes that line once per pair for the life of the process.
+	misconfigLogged sync.Map
+}
+
+type misconfigKey struct {
+	appID   int64
+	adapter adapter.Key
 }
 
 // log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
@@ -304,7 +315,11 @@ func (b *Builder) processAdapter(
 	demandResponse.EndTS = time.Now().UnixMilli()
 	b.setTokenResponse(demandResponse, &auctionRequest)
 	if demandResponse.Error != nil {
-		childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		if errors.Is(demandResponse.Error, adapters.ErrExecuteOptions) {
+			b.logMisconfiguration(childLogger, params.App.ID, adapterKey, demandResponse.Error)
+		} else {
+			childLogger.Debug("execute bid request", zap.Error(demandResponse.Error))
+		}
 		b.Telemetry.Event().DSPResponseReceived(tp, demandResponse)
 		bids <- *demandResponse
 		return
@@ -334,6 +349,19 @@ func bestSlotResponse(key adapter.Key, slots []*adapters.DemandResponse, startTS
 		return &adapters.DemandResponse{DemandID: key, StartTS: startTS, SendTS: sendTS, EndTS: time.Now().UnixMilli()}
 	}
 	return best
+}
+
+// logMisconfiguration emits one Error log per app and adapter, then Debug for
+// later auctions of that pair. The store is atomic so concurrent auctions for
+// the same pair still produce a single Error line. Every failure increments
+// AdapterOptionsErrors, including the ones that no longer log at Error.
+func (b *Builder) logMisconfiguration(logger *zap.Logger, appID int64, key adapter.Key, err error) {
+	AdapterOptionsErrors.WithLabelValues(string(key)).Inc()
+	if _, loaded := b.misconfigLogged.LoadOrStore(misconfigKey{appID: appID, adapter: key}, struct{}{}); loaded {
+		logger.Debug("execute bid request", zap.Error(err))
+		return
+	}
+	logger.Error("adapter misconfigured", zap.Int64("app_id", appID), zap.Error(err))
 }
 
 func (b *Builder) buildApp(schemaApp schema.App, params *BuildParams) *openrtb2.App {
