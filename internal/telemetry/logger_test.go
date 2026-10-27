@@ -96,7 +96,7 @@ func TestEventDSPResponseReceived(t *testing.T) {
 		t.Errorf("event_name: got %q", env.GetEventName())
 	}
 	if env.GetSchemaVersion() != SchemaVersion {
-		t.Errorf("schema_version: got %q", env.GetSchemaVersion())
+		t.Errorf("schema_version: got %d", env.GetSchemaVersion())
 	}
 	if env.GetAuctionId() != "auc-1" || env.GetSessionId() != "sess-1" {
 		t.Errorf("ids: auction=%q session=%q", env.GetAuctionId(), env.GetSessionId())

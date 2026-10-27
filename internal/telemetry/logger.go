@@ -71,6 +71,14 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		return
 	}
 	env.EventName = eventName
+	if dsp != "" {
+		if env.DspId == "" {
+			env.DspId = dsp
+		}
+		if env.DemandSource == "" {
+			env.DemandSource = dsp
+		}
+	}
 
 	message, err := proto.Marshal(msg)
 	if err != nil {
