@@ -305,6 +305,34 @@ func TestNoBidCarriesReasonHeader(t *testing.T) {
 	}
 }
 
+func TestNoBidIsRecorded(t *testing.T) {
+	server, sim := newTestServer(t)
+
+	resp, err := server.Client().Post(server.URL+"/openrtb/bid", echo.MIMEApplicationJSON,
+		strings.NewReader(`{"id":"r1","app":{"bundle":"com.unknown.app"},"imp":[{"id":"i1","banner":{"w":320,"h":50},"bidfloor":0.1}]}`))
+	if err != nil {
+		t.Fatalf("POST: %v", err)
+	}
+	resp.Body.Close()
+
+	var payload struct {
+		Count  int           `json:"count"`
+		NoBids []NoBidRecord `json:"nobids"`
+	}
+	getJSON(t, server, "/debug/nobids", &payload)
+	if payload.Count != 1 || len(payload.NoBids) != 1 {
+		t.Fatalf("unexpected /debug/nobids payload: %+v", payload)
+	}
+	if got := payload.NoBids[0]; got.Bundle != "com.unknown.app" || got.Reason != string(ReasonUnknownBundle) || got.RequestID != "r1" {
+		t.Errorf("no-bid record = %+v", got)
+	}
+
+	sim.Store.Clear()
+	if got := sim.Store.NoBids(""); len(got) != 0 {
+		t.Errorf("no-bids after Clear = %+v, want none", got)
+	}
+}
+
 func TestMalformedRequestIsRejected(t *testing.T) {
 	server, _ := newTestServer(t)
 

@@ -85,6 +85,7 @@ Build **`bidon-dspsim`**: a standalone OpenRTB DSP simulator in
 | `GET /creative/impression/:bidID` · `/creative/click/:bidID` · `/creative/track/:bidID/:event` | creative-side (VAST/HTML) tracking |
 | `GET /creative/asset/:name` | generated SVG images; stubbed `video/mp4` |
 | `GET /debug/bids` (`?dsp=`) · `/debug/bids/:bidID` · `DELETE /debug/bids` | inspect / clear the bid registry and orphans |
+| `GET /debug/nobids` (`?dsp=`) | requests answered 204, with the reason |
 | `GET /debug/creatives` · `/debug/creatives/:dsp` | creative library with per-creative serve counts |
 | `GET /debug/catalog` · `POST /debug/reload` | inspect / reload the Postgres snapshot **and** the creative library |
 | `GET /health_checks` | DB health via `config.UseHealthCheckHandler` |

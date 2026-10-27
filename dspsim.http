@@ -59,6 +59,10 @@ GET {{dspsimHost}}/debug/bids
 GET {{dspsimHost}}/debug/bids?dsp=adikteev
 
 
+### Debug — requests answered 204, with the reason
+GET {{dspsimHost}}/debug/nobids
+
+
 ### Debug — creative library and serve counts
 GET {{dspsimHost}}/debug/creatives
 

@@ -64,6 +64,17 @@ type BidRecord struct {
 	Notifications []Notification `json:"notifications"`
 }
 
+// NoBidRecord is one bid request the simulator declined with a 204.
+type NoBidRecord struct {
+	RequestID  string    `json:"request_id"`
+	Bundle     string    `json:"bundle"`
+	DSP        string    `json:"dsp"`
+	AdType     ad.Type   `json:"ad_type"`
+	Floor      float64   `json:"floor"`
+	Reason     string    `json:"reason"`
+	ReceivedAt time.Time `json:"received_at"`
+}
+
 // Store keeps bid records in memory, keyed by bid id. Records expire after a
 // TTL and the oldest are evicted once the cap is reached. Nothing is persisted:
 // the simulator is a test instrument, not a system of record.
@@ -76,6 +87,7 @@ type Store struct {
 	records      map[string]*BidRecord
 	order        []string
 	orphanEvents []Notification
+	noBids       []NoBidRecord
 	now          func() time.Time
 }
 
@@ -124,6 +136,34 @@ func (s *Store) Record(bidID string, n Notification) bool {
 
 	rec.Notifications = append(rec.Notifications, n)
 	return true
+}
+
+// PutNoBid remembers a declined bid request, keeping only the newest ones.
+func (s *Store) PutNoBid(n NoBidRecord) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.noBids = append(s.noBids, n)
+	if len(s.noBids) > s.max {
+		s.noBids = s.noBids[len(s.noBids)-s.max:]
+	}
+}
+
+// NoBids returns the retained declined requests, newest first, optionally
+// filtered by DSP.
+func (s *Store) NoBids(dsp string) []NoBidRecord {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	dsp = strings.ToLower(strings.TrimSpace(dsp))
+	out := make([]NoBidRecord, 0, len(s.noBids))
+	for i := len(s.noBids) - 1; i >= 0; i-- {
+		if dsp != "" && strings.ToLower(s.noBids[i].DSP) != dsp {
+			continue
+		}
+		out = append(out, s.noBids[i])
+	}
+	return out
 }
 
 // Get returns a copy of the record for bidID.
@@ -176,7 +216,7 @@ func (s *Store) Len() int {
 	return len(s.records)
 }
 
-// Clear drops every record and orphan.
+// Clear drops every record, orphan, and declined request.
 func (s *Store) Clear() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -184,6 +224,7 @@ func (s *Store) Clear() {
 	s.records = map[string]*BidRecord{}
 	s.order = nil
 	s.orphanEvents = nil
+	s.noBids = nil
 }
 
 // evictLocked removes expired records first, then the oldest ones until the

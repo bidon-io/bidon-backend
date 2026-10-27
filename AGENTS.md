@@ -88,6 +88,27 @@ just precommit      # lint
 Single package: `go test ./internal/auction/...`
 Regenerate mocks: `go generate ./...`
 
+#### End-to-end SDK flow
+
+`internal/sdkapi/v2/e2e` drives the assembled sdkapi app over HTTP against a
+real Postgres, Redis, and `bidon-dspsim` (config → auction → win/show/loss).
+It is behind the `e2e` build tag, so `just test` never runs it, and it uses
+its own stack in `docker-compose.test.yml` — its fixtures are committed, not
+rolled back, because dspsim reads the database as a separate process.
+It reads `E2E_DATABASE_URL`, `E2E_REDIS_URL` and `E2E_DSPSIM_URL` (defaults match
+the compose stack) and never `DATABASE_URL`, since it truncates tables and
+flushes Redis.
+
+```bash
+just test-e2e-up    # Redis + dspsim + their Postgres and migrations
+just test-e2e       # go test -tags e2e ./internal/sdkapi/v2/e2e/...
+just test-e2e-ci    # the whole thing in Docker, the way CI does
+just test-e2e-down
+```
+
+CI runs it from the `Go / Run E2E Tests` workflow, `workflow_dispatch` only —
+it is deliberately not part of `go-check-pr.yml`.
+
 ### Images / Coolify
 
 ```bash
