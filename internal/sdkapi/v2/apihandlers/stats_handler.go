@@ -39,7 +39,8 @@ func (h *StatsHandler) Handle(c echo.Context) error {
 		})
 	}
 
-	h.NotificationHandler.HandleStats(c.Request().Context(), req.raw.Stats, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
+	ctx := withNoticeMeta(c.Request().Context(), req.app, req.raw.BaseRequest, req.countryCode(), string(req.raw.AdType), "")
+	h.NotificationHandler.HandleStats(ctx, req.raw.Stats, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }

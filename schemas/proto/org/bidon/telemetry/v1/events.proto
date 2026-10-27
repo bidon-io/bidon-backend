@@ -125,3 +125,83 @@ message DspResponseRejected {
   double price_floor = 5;
   RejectReason reject_reason = 6;
 }
+
+// AdImpression is a show. /v2/show synthesizes a row (dsp and price;
+// render_duration_ms and om_enabled unset) when the call did not carry an SDK
+// event. A client event_id is published as-is, and the server does not emit
+// a second row for the same call.
+message AdImpression {
+  option (event_name) = "ad_impression";
+
+  Envelope envelope = 1;
+  int64 render_duration_ms = 2;
+  bool om_enabled = 3;
+  string dsp = 4;
+  double price = 5;
+}
+
+// NoticeType is which OpenRTB notice was attempted.
+// TimeoutURL is recorded as loss_notice_sent; the metric label stays
+// "timeout" so the two can be told apart.
+enum NoticeType {
+  NOTICE_TYPE_UNSPECIFIED = 0;
+  NOTICE_TYPE_WIN = 1;
+  NOTICE_TYPE_BILLING = 2;
+  NOTICE_TYPE_LOSS = 3;
+  NOTICE_TYPE_TIMEOUT = 4;
+}
+
+// WinNoticeSent is an nurl attempt, including success=false after retries.
+message WinNoticeSent {
+  option (event_name) = "win_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  double clearing_price = 3;
+  bool success = 4;
+  int32 http_status = 5;
+  int32 retry_count = 6;
+  int64 latency_ms = 7;
+}
+
+// BillingNoticeSent is a burl attempt, including success=false after retries.
+message BillingNoticeSent {
+  option (event_name) = "billing_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  double billable_price = 3;
+  bool success = 4;
+  int32 http_status = 5;
+  int32 retry_count = 6;
+  int64 latency_ms = 7;
+}
+
+// LossNoticeSent is an lurl attempt. TimeoutURL uses this message too.
+message LossNoticeSent {
+  option (event_name) = "loss_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  int32 loss_reason_code = 3;
+  double winning_price = 4;
+  bool success = 5;
+  int32 http_status = 6;
+  int32 retry_count = 7;
+  int64 latency_ms = 8;
+}
+
+// NoticeDeliveryFailed is emitted with the *_sent event when delivery did not
+// succeed. *_sent.success is false on that same attempt.
+message NoticeDeliveryFailed {
+  option (event_name) = "notice_delivery_failed";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  NoticeType notice_type = 3;
+  int32 http_status = 4;
+  int32 attempts = 5;
+  int64 latency_ms = 6;
+  // Short class: http_4xx, http_5xx, transport. Not the response body.
+  string error_code = 7;
+}

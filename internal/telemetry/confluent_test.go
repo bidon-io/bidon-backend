@@ -119,8 +119,8 @@ func TestConfluentSerdeRegisterAllRetries(t *testing.T) {
 	serde.registerAll(context.Background())
 
 	n := len(catalogTypes())
-	if n != 5 {
-		t.Fatalf("catalog types: got %d, want 5", n)
+	if n != 10 {
+		t.Fatalf("catalog types: got %d, want 10", n)
 	}
 	if got := len(reg.subjects); got != n {
 		t.Fatalf("registered subjects: got %d, want %d", got, n)

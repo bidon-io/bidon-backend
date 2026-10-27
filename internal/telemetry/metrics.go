@@ -28,6 +28,17 @@ var (
 		Name: "telemetry_dropped_total",
 		Help: "Catalog events not delivered to telemetry-events.",
 	}, []string{"reason"})
+
+	// NoticeDeliveryTotal type is nurl|lurl|burl|timeout. result is 2xx|4xx|5xx|timeout.
+	NoticeDeliveryTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "notice_delivery_total",
+		Help: "OpenRTB notice attempts. type is nurl, lurl, burl, or timeout (TimeoutURL). result is 2xx, 4xx, 5xx, or timeout (transport failure).",
+	}, []string{"type", "result"})
+
+	AdImpressionTotal = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "ad_impression_total",
+		Help: "ad_impression rows emitted, synthesized or client.",
+	})
 )
 
 const (
@@ -44,4 +55,12 @@ func ObserveDSP(dsp string, outcome telemetryv1.Outcome, seconds float64) {
 
 func ObserveAuctionCompleted(result AuctionResult) {
 	AuctionCompletedTotal.WithLabelValues(string(result)).Inc()
+}
+
+func ObserveNotice(kind, result string) {
+	NoticeDeliveryTotal.WithLabelValues(kind, result).Inc()
+}
+
+func ObserveAdImpression() {
+	AdImpressionTotal.Inc()
 }

@@ -146,6 +146,7 @@ func New(deps Deps) (*App, error) {
 			HttpClient:  deps.HTTPClient,
 			EventLogger: eventLogger,
 			Logger:      logger.Named("notification"),
+			Telemetry:   deps.Telemetry,
 		},
 	}
 	adUnitsCache := config.NewRedisCacheOf[[]auction.AdUnit](rdb, cacheTTL, "ad_units")
@@ -240,6 +241,7 @@ func New(deps Deps) (*App, error) {
 		ConfigurationFetcher:      configurationFetcher,
 		AuctionService:            auctionService,
 		AdUnitLookup:              adUnitLookup,
+		Telemetry:                 deps.Telemetry,
 	}
 	routerV2.RegisterRoutes(v2Group)
 

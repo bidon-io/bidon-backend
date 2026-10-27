@@ -38,7 +38,12 @@ func (h *WinHandler) Handle(c echo.Context) error {
 
 	// Call notification handler
 	bid := req.raw.Bid
-	err = h.NotificationHandler.HandleWin(c.Request().Context(), bid, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
+	format := ""
+	if bid != nil {
+		format = string(bid.Format())
+	}
+	ctx := withNoticeMeta(c.Request().Context(), req.app, req.raw.BaseRequest, req.countryCode(), string(req.raw.AdType), format)
+	err = h.NotificationHandler.HandleWin(ctx, bid, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
 	if err != nil {
 		sdkapi.LogError(c, fmt.Errorf("handle win notification: %v", err))
 	}
