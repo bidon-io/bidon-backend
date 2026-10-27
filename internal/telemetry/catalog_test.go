@@ -59,6 +59,55 @@ func TestFloorRuleIsConsistentAcrossEvents(t *testing.T) {
 	}
 }
 
+func TestDSPResponseReceivedCopiesCreativeFields(t *testing.T) {
+	engine := &MemoryEngine{}
+	ev := New(engine, nil).Event()
+	dr := &adapters.DemandResponse{
+		DemandID:    adapter.BidmachineKey,
+		Status:      200,
+		RawResponse: `{"nbr":2,"seatbid":[{"bid":[{"crid":"cr-9","price":1.2,"ext":{"crtype":"MRAID"}}]}]}`,
+		Bid:         &adapters.DemandBid{Price: 1.2},
+		SendTS:      1,
+		EndTS:       5,
+	}
+	ev.DSPResponseReceived(testAuctionParams(), dr)
+
+	got := EventsOf[*telemetryv1.DspResponseReceived](engine)
+	if len(got) != 1 {
+		t.Fatalf("dsp_response_received = %d, want 1", len(got))
+	}
+	if got[0].GetCreativeId() != "cr-9" || got[0].GetCrtype() != "MRAID" || got[0].GetNbr() != 2 {
+		t.Errorf("creative fields = crid %q crtype %q nbr %d", got[0].GetCreativeId(), got[0].GetCrtype(), got[0].GetNbr())
+	}
+}
+
+func TestAdImpressionKeepsClientEventID(t *testing.T) {
+	engine := &MemoryEngine{}
+	ev := New(engine, nil).Event()
+	client := &telemetryv1.AdImpression{
+		Envelope:         &telemetryv1.Envelope{EventId: "client-1", AuctionId: "auc", AppId: 7},
+		RenderDurationMs: 12,
+		OmEnabled:        true,
+		Dsp:              "dsp",
+	}
+	ev.AdImpression(Identity{AppID: 9, AuctionID: "other"}, "dsp", 1.5, client)
+	ev.AdImpression(Identity{AppID: 9, AuctionID: "auc-synth", SessionID: "sess"}, "dsp", 1.5, nil)
+
+	got := EventsOf[*telemetryv1.AdImpression](engine)
+	if len(got) != 2 {
+		t.Fatalf("ad_impression = %d, want 2", len(got))
+	}
+	if got[0].GetEnvelope().GetEventId() != "client-1" || got[0].GetRenderDurationMs() != 12 || !got[0].GetOmEnabled() {
+		t.Errorf("client row was rewritten: %+v", got[0])
+	}
+	if got[1].GetEnvelope().GetEventId() == "" || got[1].GetEnvelope().GetEventId() == "client-1" {
+		t.Errorf("synthesized event_id = %q", got[1].GetEnvelope().GetEventId())
+	}
+	if got[1].GetPrice() != 1.5 || got[1].GetEnvelope().GetAuctionId() != "auc-synth" {
+		t.Errorf("synthesized row = %+v", got[1])
+	}
+}
+
 func TestParticipantCount(t *testing.T) {
 	bids := []adapters.DemandResponse{
 		{DemandID: adapter.BidmachineKey, SendTS: 1},

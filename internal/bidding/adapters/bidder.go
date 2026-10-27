@@ -53,6 +53,12 @@ type DemandResponse struct {
 	// Telemetry only — StartTS stays auction start for ad-events and the bid cache.
 	SendTS int64
 	Token  Token
+	// Catalog fields filled by AnnotateCatalogFields from the raw OpenRTB body.
+	// NBR is nil when the response omitted nbr. CreativeID is bid.crid.
+	// CrType is bid.ext.crtype.
+	NBR        *int32
+	CreativeID string
+	CrType     string
 }
 
 func (dr *DemandResponse) IsBid() bool {

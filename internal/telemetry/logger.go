@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/config"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 type LoggerEngine interface {
@@ -71,6 +72,17 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		return
 	}
 	env.EventName = eventName
+	if dsp != "" {
+		if env.DspId == "" {
+			env.DspId = dsp
+		}
+		if env.DemandSource == "" {
+			env.DemandSource = dsp
+		}
+		if env.DemandType == telemetryv1.DemandType_DEMAND_TYPE_UNSPECIFIED {
+			env.DemandType = telemetryv1.DemandType_DEMAND_TYPE_BIDDING
+		}
+	}
 
 	message, err := proto.Marshal(msg)
 	if err != nil {

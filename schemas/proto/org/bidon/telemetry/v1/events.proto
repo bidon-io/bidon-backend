@@ -10,12 +10,92 @@ extend google.protobuf.MessageOptions {
   string event_name = 50000;
 }
 
-// Envelope is the identity header embedded in every catalog event.
+// Host is who embeds the SDK. PRD: publisher / max_adapter.
+enum Host {
+  HOST_UNSPECIFIED = 0;
+  HOST_PUBLISHER = 1;
+  HOST_MAX_ADAPTER = 2;
+}
+
+// AuctionOwner is who runs the auction. PRD: bidon / max.
+enum AuctionOwner {
+  AUCTION_OWNER_UNSPECIFIED = 0;
+  AUCTION_OWNER_BIDON = 1;
+  AUCTION_OWNER_MAX = 2;
+}
+
+// IntegrationMode is the derived label. PRD: direct / max_custom / max_bidding.
+enum IntegrationMode {
+  INTEGRATION_MODE_UNSPECIFIED = 0;
+  INTEGRATION_MODE_DIRECT = 1;
+  INTEGRATION_MODE_MAX_CUSTOM = 2;
+  INTEGRATION_MODE_MAX_BIDDING = 3;
+}
+
+// Mediator is the mediation host. PRD names max and bidon, extensible.
+enum Mediator {
+  MEDIATOR_UNSPECIFIED = 0;
+  MEDIATOR_BIDON = 1;
+  MEDIATOR_MAX = 2;
+  MEDIATOR_LEVEL_PLAY = 3;
+  MEDIATOR_ADMOB = 4;
+}
+
+// DemandType is bidding or a direct deal. There is no network demand.
+enum DemandType {
+  DEMAND_TYPE_UNSPECIFIED = 0;
+  DEMAND_TYPE_BIDDING = 1;
+  DEMAND_TYPE_DIRECT_DEAL = 2;
+}
+
+// ConnectionType is the PRD set, plus the coarser values the auction request
+// already sends (ethernet, 2G, 3G, generic cellular). Those are not collapsed
+// into unknown.
+enum ConnectionType {
+  CONNECTION_TYPE_UNSPECIFIED = 0;
+  CONNECTION_TYPE_WIFI = 1;
+  CONNECTION_TYPE_CELLULAR_4G = 2;
+  CONNECTION_TYPE_CELLULAR_5G = 3;
+  CONNECTION_TYPE_OFFLINE = 4;
+  CONNECTION_TYPE_UNKNOWN = 5;
+  CONNECTION_TYPE_ETHERNET = 6;
+  CONNECTION_TYPE_CELLULAR = 7;
+  CONNECTION_TYPE_CELLULAR_2G = 8;
+  CONNECTION_TYPE_CELLULAR_3G = 9;
+}
+
+// ConsentSource is who supplied the consent signals. PRD: bidon_cmp / max_sdk /
+// publisher_api. Left unspecified when the request does not say.
+enum ConsentSource {
+  CONSENT_SOURCE_UNSPECIFIED = 0;
+  CONSENT_SOURCE_BIDON_CMP = 1;
+  CONSENT_SOURCE_MAX_SDK = 2;
+  CONSENT_SOURCE_PUBLISHER_API = 3;
+}
+
+// AdvertisingIdState is why advertising_id is a real id or an all-zero UUID.
+// PRD order: COPPA, then no consent, then limit-ad-tracking, else real.
+enum AdvertisingIdState {
+  ADVERTISING_ID_STATE_UNSPECIFIED = 0;
+  ADVERTISING_ID_STATE_REAL = 1;
+  ADVERTISING_ID_STATE_ZEROED_COPPA = 2;
+  ADVERTISING_ID_STATE_ZEROED_NO_CONSENT = 3;
+  ADVERTISING_ID_STATE_ZEROED_LAT = 4;
+}
+
+// Envelope is the PRD common header, present on every event. Fields the stage
+// has not produced stay at the proto3 default.
+// schema_version is the PRD int: the current major. Additive changes stay on
+// this number. A breaking change bumps it.
+// auction_id is the id on the request. The API requires the client to send it.
+// app_id scopes joins because that client id is not globally unique.
+// trace_id joins the event to the PRD's per-auction trace.
+// bundle is the PRD app_bundle.
 message Envelope {
   string event_id = 1;
   string event_name = 2;
   int64 event_ts = 3;
-  string schema_version = 4;
+  int32 schema_version = 4;
   int64 app_id = 5;
   string auction_id = 6;
   string session_id = 7;
@@ -28,6 +108,52 @@ message Envelope {
   // Auction events keep app_id and leave these empty.
   string app_key = 13;
   string bundle = 14;
+
+  Host host = 15;
+  AuctionOwner auction_owner = 16;
+  IntegrationMode integration_mode = 17;
+  Mediator mediator = 18;
+  string mediator_sdk_version = 19;
+  string bid_id = 20;
+  string dsp_id = 21;
+  string token_id = 22;
+  string demand_source = 23;
+  DemandType demand_type = 24;
+  string sdk_version = 25;
+  string app_version = 26;
+  string publisher_id = 27;
+  string os = 28;
+  string os_version = 29;
+  string device_model = 30;
+  string device_manufacturer = 31;
+  ConnectionType connection_type = 32;
+  string ad_unit_id = 33;
+  string placement = 34;
+  bool gdpr_applies = 35;
+  bool has_tcf_string = 36;
+  string us_privacy = 37;
+  bool coppa = 38;
+  bool lmt = 39;
+  string advertising_id = 40;
+  AdvertisingIdState advertising_id_state = 41;
+  int64 session_start_ts = 42;
+  int32 screen_width = 43;
+  int32 screen_height = 44;
+  double screen_density = 45;
+  // oRTB device type. 4 = phone, 5 = tablet.
+  int32 device_type = 46;
+  ConsentSource consent_source = 47;
+  // sdk_uptime_ms is the PRD field. The request's session clock is a monotonic
+  // tick, not milliseconds, so the server leaves this unset.
+  int64 sdk_uptime_ms = 48;
+  string ab_test_group = 49;
+  string wrapper_version = 50;
+  int32 os_api_level = 51;
+  string gpp_string = 52;
+  bool gpp_consent = 53;
+  bool mspa_enforced = 54;
+  // dnt is a separate signal from limit-ad-tracking. The request does not carry it.
+  bool dnt = 55;
 }
 
 // Scope is the auction phase an event describes.
@@ -50,6 +176,11 @@ enum Outcome {
 enum RejectReason {
   REJECT_REASON_UNSPECIFIED = 0;
   REJECT_REASON_BELOW_FLOOR = 1;
+  // Reserved until the server checks exist. Only BELOW_FLOOR is emitted today.
+  REJECT_REASON_SCHEMA_INVALID = 2;
+  REJECT_REASON_MISSING_ADM_FIELDS = 3;
+  REJECT_REASON_BLOCKED_CATEGORY = 4;
+  REJECT_REASON_EXPIRED = 5;
 }
 
 // ErrorCode is a short auction-level failure class.
@@ -99,6 +230,8 @@ message DspRequestSent {
   Envelope envelope = 1;
   Scope scope = 2;
   string dsp = 3;
+  // OpenRTB tmax we sent. Zero when the adapter has no published budget (Amazon).
+  int64 timeout_budget_ms = 4;
 }
 
 // DspResponseReceived is emitted after the adapter returns, once per
@@ -113,6 +246,10 @@ message DspResponseReceived {
   int32 http_status = 5;
   int64 latency_ms = 6;
   double price = 7;
+  // Unset when the response has no nbr. Zero is a real OpenRTB no-bid reason.
+  optional int32 nbr = 8;
+  string creative_id = 9;
+  string crtype = 10;
 }
 
 // DspResponseRejected is emitted when a bid exists but price <= price_floor.
@@ -357,12 +494,17 @@ message AdShowRequested {
 }
 
 // AdImpression is the client impression. Billing stays on /v2/show.
+// /v2/show synthesizes a row (dsp, price; render_duration_ms and om_enabled
+// unset) only when the call did not carry the SDK event. A client event_id
+// is published as-is, and the server does not emit a second row.
 message AdImpression {
   option (event_name) = "ad_impression";
 
   Envelope envelope = 1;
   int64 render_duration_ms = 2;
   bool om_enabled = 3;
+  string dsp = 4;
+  double price = 5;
 }
 
 // AdShowFailed is emitted when show fails.
@@ -535,6 +677,72 @@ message SignalTimeoutSuspected {
   Envelope envelope = 1;
   int64 duration_ms = 2;
   int64 budget_ms = 3;
+}
+
+// NoticeType is which OpenRTB notice was attempted.
+// TimeoutURL is recorded as LOSS on loss_notice_sent; the metric label
+// stays "timeout" so the two can be told apart.
+enum NoticeType {
+  NOTICE_TYPE_UNSPECIFIED = 0;
+  NOTICE_TYPE_WIN = 1;
+  NOTICE_TYPE_BILLING = 2;
+  NOTICE_TYPE_LOSS = 3;
+  NOTICE_TYPE_TIMEOUT = 4;
+}
+
+// WinNoticeSent is an nurl attempt, including success=false after retries.
+message WinNoticeSent {
+  option (event_name) = "win_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  double clearing_price = 3;
+  bool success = 4;
+  int32 http_status = 5;
+  int32 retry_count = 6;
+  int64 latency_ms = 7;
+}
+
+// BillingNoticeSent is a burl attempt, including success=false after retries.
+message BillingNoticeSent {
+  option (event_name) = "billing_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  double billable_price = 3;
+  bool success = 4;
+  int32 http_status = 5;
+  int32 retry_count = 6;
+  int64 latency_ms = 7;
+}
+
+// LossNoticeSent is an lurl attempt. TimeoutURL uses this message too.
+message LossNoticeSent {
+  option (event_name) = "loss_notice_sent";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  int32 loss_reason_code = 3;
+  double winning_price = 4;
+  bool success = 5;
+  int32 http_status = 6;
+  int32 retry_count = 7;
+  int64 latency_ms = 8;
+}
+
+// NoticeDeliveryFailed is emitted with the *_sent event when delivery did not
+// succeed. *_sent.success is false on that same attempt.
+message NoticeDeliveryFailed {
+  option (event_name) = "notice_delivery_failed";
+
+  Envelope envelope = 1;
+  string dsp = 2;
+  NoticeType notice_type = 3;
+  int32 http_status = 4;
+  int32 attempts = 5;
+  int64 latency_ms = 6;
+  // Short class: http_4xx, http_5xx, transport. Not the response body.
+  string error_code = 7;
 }
 
 // MetricObservation is one client metric sample. It is applied to /metrics

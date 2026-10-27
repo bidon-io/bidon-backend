@@ -322,6 +322,12 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 		}
 	}
 
+	for _, ev := range sent {
+		if ev.GetTimeoutBudgetMs() != 2000 {
+			t.Errorf("%s timeout_budget_ms = %d, want 2000", ev.GetDsp(), ev.GetTimeoutBudgetMs())
+		}
+	}
+
 	if len(sent) != 3 || len(received) != 3 {
 		t.Fatalf("DSP events sent=%d received=%d rejected=%d (want 3+3); full auction is 1+3+3+1 with Service.Run", len(sent), len(received), len(rejected))
 	}

@@ -12,6 +12,8 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers/mocks"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 func SetupShowHandler() apihandlers.ShowHandler {
@@ -80,5 +82,45 @@ func TestShowHandler_Handle(t *testing.T) {
 
 			CheckResponseCode(t, err, rec.Code, tt.expectedCode)
 		})
+	}
+}
+
+func TestShowHandler_EmitsAdImpression(t *testing.T) {
+	reqBody, err := os.ReadFile("testdata/show/valid_request.json")
+	if err != nil {
+		t.Fatalf("Error reading request file: %v", err)
+	}
+	engine := &telemetry.MemoryEngine{}
+	handler := SetupShowHandler()
+	handler.Telemetry = telemetry.New(engine, nil)
+	rec, err := ExecuteRequest(t, &handler, http.MethodPost, "/v2/show", string(reqBody), nil)
+	if err != nil {
+		t.Fatalf("Handle() error = %v", err)
+	}
+	CheckResponseCode(t, err, rec.Code, http.StatusOK)
+
+	mock := handler.NotificationHandler.(*mocks.ShowNotificationHandlerMock)
+	if len(mock.HandleShowCalls()) != 1 {
+		t.Fatalf("HandleShow calls = %d, want 1", len(mock.HandleShowCalls()))
+	}
+	imps := telemetry.EventsOf[*telemetryv1.AdImpression](engine)
+	if len(imps) != 1 {
+		t.Fatalf("ad_impression = %d, want 1", len(imps))
+	}
+	if imps[0].GetDsp() != "bigoads" {
+		t.Errorf("dsp = %q, want bigoads", imps[0].GetDsp())
+	}
+	if imps[0].GetEnvelope().GetAuctionId() != "93be3de1-3cf7-4537-9b5e-8c8cf16c2391" {
+		t.Errorf("auction_id = %q", imps[0].GetEnvelope().GetAuctionId())
+	}
+	if imps[0].GetEnvelope().GetAppId() != 1 {
+		t.Errorf("app_id = %d, want 1", imps[0].GetEnvelope().GetAppId())
+	}
+	env := imps[0].GetEnvelope()
+	if env.GetAdvertisingIdState() != telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_LAT {
+		t.Errorf("advertising_id_state = %s", env.GetAdvertisingIdState())
+	}
+	if env.GetAdvertisingId() != "00000000-0000-0000-0000-000000000000" {
+		t.Errorf("advertising_id = %q", env.GetAdvertisingId())
 	}
 }

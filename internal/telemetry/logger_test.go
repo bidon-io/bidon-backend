@@ -96,7 +96,7 @@ func TestEventDSPResponseReceived(t *testing.T) {
 		t.Errorf("event_name: got %q", env.GetEventName())
 	}
 	if env.GetSchemaVersion() != SchemaVersion {
-		t.Errorf("schema_version: got %q", env.GetSchemaVersion())
+		t.Errorf("schema_version: got %d", env.GetSchemaVersion())
 	}
 	if env.GetAuctionId() != "auc-1" || env.GetSessionId() != "sess-1" {
 		t.Errorf("ids: auction=%q session=%q", env.GetAuctionId(), env.GetSessionId())
@@ -115,6 +115,15 @@ func TestEventDSPResponseReceived(t *testing.T) {
 	}
 	if env.GetEventTs() <= 0 {
 		t.Errorf("event_ts: got %d, want unix ms", env.GetEventTs())
+	}
+	if env.GetAdvertisingId() != zeroAdvertisingID || env.GetAdvertisingIdState() != telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_NO_CONSENT {
+		t.Errorf("advertising_id: %q %s", env.GetAdvertisingId(), env.GetAdvertisingIdState())
+	}
+	if env.GetHost() != telemetryv1.Host_HOST_PUBLISHER || env.GetIntegrationMode() != telemetryv1.IntegrationMode_INTEGRATION_MODE_DIRECT {
+		t.Errorf("mode: host=%s integration=%s", env.GetHost(), env.GetIntegrationMode())
+	}
+	if env.GetDspId() != "bidmachine" || env.GetDemandType() != telemetryv1.DemandType_DEMAND_TYPE_BIDDING {
+		t.Errorf("demand: dsp=%q type=%s", env.GetDspId(), env.GetDemandType())
 	}
 	if pb.GetScope() != telemetryv1.Scope_SCOPE_BIDDING_ROUND {
 		t.Errorf("scope: got %v", pb.GetScope())
@@ -307,6 +316,10 @@ func TestCatalogEventNames(t *testing.T) {
 		"org.bidon.telemetry.v1.SignalProvided":            "signal_provided",
 		"org.bidon.telemetry.v1.SignalFailed":              "signal_failed",
 		"org.bidon.telemetry.v1.SignalTimeoutSuspected":    "signal_timeout_suspected",
+		"org.bidon.telemetry.v1.WinNoticeSent":             "win_notice_sent",
+		"org.bidon.telemetry.v1.BillingNoticeSent":         "billing_notice_sent",
+		"org.bidon.telemetry.v1.LossNoticeSent":            "loss_notice_sent",
+		"org.bidon.telemetry.v1.NoticeDeliveryFailed":      "notice_delivery_failed",
 	}
 
 	got := map[string]string{}

@@ -65,12 +65,13 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 	ObserveAuctionCompleted(result)
 }
 
-func (e Event) DSPRequestSent(params Params, dsp string) {
+func (e Event) DSPRequestSent(params Params, dsp string, timeoutBudgetMS int64) {
 	a := attrsFrom(params)
 	e.emit(&telemetryv1.DspRequestSent{
-		Envelope: newProtoEnvelope(a),
-		Scope:    telemetryv1.Scope_SCOPE_BIDDING_ROUND,
-		Dsp:      dsp,
+		Envelope:        newProtoEnvelope(a),
+		Scope:           telemetryv1.Scope_SCOPE_BIDDING_ROUND,
+		Dsp:             dsp,
+		TimeoutBudgetMs: timeoutBudgetMS,
 	}, dsp, a)
 }
 
@@ -83,6 +84,7 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	if dr.SendTS != 0 {
 		latencyMS = dr.EndTS - dr.SendTS
 	}
+	adapters.AnnotateCatalogFields(dr)
 	outcome := OutcomeFromDemand(dr.Error, dr.IsBid(), dr.Status)
 	ev := &telemetryv1.DspResponseReceived{
 		Envelope:   newProtoEnvelope(a),
@@ -91,6 +93,9 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 		Outcome:    outcome,
 		HttpStatus: int32(dr.Status),
 		LatencyMs:  latencyMS,
+		Nbr:        dr.NBR,
+		CreativeId: dr.CreativeID,
+		Crtype:     dr.CrType,
 	}
 	if dr.IsBid() {
 		ev.Price = dr.Price()
@@ -138,6 +143,7 @@ func attrsFrom(params Params) attrs {
 		AdFormat:  string(req.AdObject.Format()),
 		Country:   params.Country,
 		TraceID:   params.TraceID,
+		Base:      &req.BaseRequest,
 	}
 }
 

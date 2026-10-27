@@ -499,8 +499,9 @@ components:
           format: int64
           description: Client event time, Unix milliseconds
         schema_version:
-          type: string
-          description: Ignored if sent. Server writes the current version. Never a 4xx.
+          type: integer
+          format: int32
+          description: Ignored if sent. Server writes the current major (1). Never a 4xx.
         app_id:
           type: integer
           format: int64

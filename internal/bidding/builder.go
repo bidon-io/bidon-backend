@@ -34,6 +34,9 @@ type Builder struct {
 	Telemetry           *telemetry.Logger
 }
 
+// dspTimeoutBudgetMS is the OpenRTB tmax on every bidding-round request.
+const dspTimeoutBudgetMS int64 = 2000
+
 // log returns the configured logger, or a no-op logger if none was set (e.g. in tests).
 func (b *Builder) log() *zap.Logger {
 	if b.Logger == nil {
@@ -183,7 +186,24 @@ func (b *Builder) HoldAuction(ctx context.Context, params *BuildParams) (Auction
 	// Cache Bids
 	auctionResult.Bids = b.BidCacher.ApplyBidCache(ctx, &auctionRequest, &auctionResult)
 
-	if err := b.NotificationHandler.HandleBiddingRound(ctx, &auctionRequest.AdObject, auctionResult, auctionRequest.App.Bundle, string(auctionRequest.AdType)); err != nil {
+	var appID int64
+	var country string
+	if params != nil {
+		country = params.Country
+		if params.App != nil {
+			appID = params.App.ID
+		}
+	}
+	nctx := telemetry.WithNoticeMeta(ctx, telemetry.NoticeMeta{
+		AppID:     appID,
+		SessionID: auctionRequest.Session.ID,
+		Country:   country,
+		AdType:    string(auctionRequest.AdType),
+		AdFormat:  string(auctionRequest.AdObject.Format()),
+		Base:      auctionRequest.BaseRequest,
+		HasBase:   true,
+	})
+	if err := b.NotificationHandler.HandleBiddingRound(nctx, &auctionRequest.AdObject, auctionResult, auctionRequest.App.Bundle, string(auctionRequest.AdType)); err != nil {
 		childLogger.Error("handle bidding round",
 			zap.String("bundle", auctionRequest.App.Bundle),
 			zap.String("ad_type", string(auctionRequest.AdType)),
@@ -206,7 +226,7 @@ func (b *Builder) buildBaseRequest(auctionRequest schema.AuctionRequest, bidID s
 		ID:     bidID,
 		Test:   *bool2int(auctionRequest.Test),
 		AT:     1,
-		TMax:   2000,
+		TMax:   dspTimeoutBudgetMS,
 		App:    b.buildApp(auctionRequest.App, params),
 		Device: b.BuildDevice(auctionRequest.Device, auctionRequest.User, params.GeoData),
 		Imp: []openrtb2.Imp{
@@ -252,7 +272,7 @@ func (b *Builder) processAdapter(
 			return
 		}
 		sendStart := time.Now().UnixMilli()
-		b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey))
+		b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey), 0)
 		demandResponses, err := bidder.FetchBids(&auctionRequest)
 		if err != nil {
 			dr := adapters.DemandResponse{
@@ -297,7 +317,7 @@ func (b *Builder) processAdapter(
 	}
 
 	sendStart := time.Now().UnixMilli()
-	b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey))
+	b.Telemetry.Event().DSPRequestSent(tp, string(adapterKey), dspTimeoutBudgetMS)
 	demandResponse := adapters.ExecuteDemandRequest(ctx, bidder.Client, bidder.Adapter, bidRequest, adapterKey)
 	demandResponse.StartTS = params.StartTS
 	demandResponse.SendTS = sendStart

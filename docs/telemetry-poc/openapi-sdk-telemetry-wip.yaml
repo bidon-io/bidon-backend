@@ -327,8 +327,9 @@ components:
             Rate the SDK applied (G11 coherent per auction). Funnel / error events
             should be `1`. Server does not re-sample.
         schema_version:
-          type: string
-          description: Ignored if sent. Server writes `0.1` (or current). Never a 4xx.
+          type: integer
+          format: int32
+          description: Ignored if sent. Server writes the current major (1). Never a 4xx.
         app_id:
           type: integer
           format: int64

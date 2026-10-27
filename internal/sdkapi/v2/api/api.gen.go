@@ -1067,8 +1067,8 @@ type AdClicked struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1125,8 +1125,8 @@ type AdClosed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1186,8 +1186,8 @@ type AdExpired struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1247,8 +1247,8 @@ type AdFilled struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1306,8 +1306,8 @@ type AdImpression struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1370,8 +1370,8 @@ type AdLoadFailed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1437,8 +1437,8 @@ type AdLoadRequested struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1498,8 +1498,8 @@ type AdLoaded struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1562,8 +1562,8 @@ type AdRequestStarted struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1627,8 +1627,8 @@ type AdRewardGranted struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1680,8 +1680,8 @@ type AdShowFailed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1739,8 +1739,8 @@ type AdShowRequested struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1795,8 +1795,8 @@ type AdViewable struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1865,8 +1865,8 @@ type AdapterInitResult struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1935,8 +1935,8 @@ type AdapterLoadBudgetExceeded struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -1993,8 +1993,8 @@ type AdapterTokenRequested struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2054,8 +2054,8 @@ type AdapterTokenResult struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2133,8 +2133,8 @@ type AdmParseResult struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2200,8 +2200,8 @@ type AuctionFailed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2259,8 +2259,8 @@ type AuctionNoDemand struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2323,8 +2323,8 @@ type AuctionRequested struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2387,8 +2387,8 @@ type AuctionResponseReceived struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2452,8 +2452,8 @@ type ClientEventEnvelope struct {
 	// should be `1`. Server does not re-sample.
 	SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-	// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-	SchemaVersion *string `json:"schema_version,omitempty"`
+	// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+	SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 	// SessionId Optional override. Default is `session.id` on the batch.
 	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2511,8 +2511,8 @@ type ConfigFetchResult struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2595,8 +2595,8 @@ type NoFillReturnedToMax struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2656,8 +2656,8 @@ type RenderCrashed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2714,8 +2714,8 @@ type RendererSelected struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2784,8 +2784,8 @@ type SdkInitCompleted struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2839,8 +2839,8 @@ type SdkInitFailed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2898,8 +2898,8 @@ type SdkInitStarted struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -2956,8 +2956,8 @@ type SignalFailed struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3014,8 +3014,8 @@ type SignalProvided struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3082,8 +3082,8 @@ type SignalRequested struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3140,8 +3140,8 @@ type SignalTimeoutSuspected struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3247,8 +3247,8 @@ type TokenCollectionCompleted struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3303,8 +3303,8 @@ type VideoComplete struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3356,8 +3356,8 @@ type VideoError struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3412,8 +3412,8 @@ type VideoMidpoint struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3465,8 +3465,8 @@ type VideoQ1 struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3518,8 +3518,8 @@ type VideoQ3 struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3571,8 +3571,8 @@ type VideoSkipped struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3624,8 +3624,8 @@ type VideoStart struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -3679,8 +3679,8 @@ type WebviewError struct {
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
-		SchemaVersion *string `json:"schema_version,omitempty"`
+		// SchemaVersion Ignored if sent. Server writes the current major (1). Never a 4xx.
+		SchemaVersion *int32 `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
 		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
@@ -7986,169 +7986,169 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"BugAAA==",
+	"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",
+	"/38AAAD//y8Txt4a6AAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

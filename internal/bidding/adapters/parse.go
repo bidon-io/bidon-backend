@@ -51,6 +51,42 @@ func ParseDemandResponse(adapter BidderInterface, dr *DemandResponse) (*DemandRe
 	return dr, err
 }
 
+// AnnotateCatalogFields copies nbr, crid, and ext.crtype out of an OpenRTB
+// body onto the response. Non-JSON bodies are left unchanged. Fields already
+// set are kept.
+func AnnotateCatalogFields(dr *DemandResponse) {
+	if dr == nil || dr.RawResponse == "" {
+		return
+	}
+	var body struct {
+		NBR     *int32 `json:"nbr"`
+		SeatBid []struct {
+			Bid []struct {
+				CrID string `json:"crid"`
+				Ext  struct {
+					CrType string `json:"crtype"`
+				} `json:"ext"`
+			} `json:"bid"`
+		} `json:"seatbid"`
+	}
+	if err := json.Unmarshal([]byte(dr.RawResponse), &body); err != nil {
+		return
+	}
+	if dr.NBR == nil {
+		dr.NBR = body.NBR
+	}
+	if len(body.SeatBid) == 0 || len(body.SeatBid[0].Bid) == 0 {
+		return
+	}
+	bid := body.SeatBid[0].Bid[0]
+	if dr.CreativeID == "" {
+		dr.CreativeID = bid.CrID
+	}
+	if dr.CrType == "" {
+		dr.CrType = bid.Ext.CrType
+	}
+}
+
 // FillRendering derives Bid.Rendering from Bid.Ext when unset.
 // Used by ParseDemandResponse and non-parse bid paths (Amazon, bid cache).
 // OpenRTB parse already sets Rendering via rendering.DecodeBidExt.
