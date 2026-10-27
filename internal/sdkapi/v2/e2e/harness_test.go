@@ -3,7 +3,10 @@
 // Package e2e drives the assembled bidon-sdkapi Echo application over real
 // HTTP, against a real Postgres, a real Redis, and a real OpenRTB DSP
 // simulator (bidon-dspsim) — all three provided by docker-compose.test.yml,
-// never by this package. Start them with `just test-e2e-up`, then run this
+// never by this package. Its endpoints come from E2E_DATABASE_URL,
+// E2E_REDIS_URL and E2E_DSPSIM_URL, deliberately not DATABASE_URL/REDIS_URL:
+// TestMain truncates tables and flushes Redis, which must never hit whatever
+// a developer's shell environment points at. Start them with `just test-e2e-up`, then run this
 // suite with `just test-e2e` or, containerised, `just test-e2e-ci`.
 //
 // The suite is excluded from `go test ./...` by the e2e build tag, and it
@@ -56,21 +59,21 @@ var (
 )
 
 func databaseURL() string {
-	if url := os.Getenv("DATABASE_URL"); url != "" {
+	if url := os.Getenv("E2E_DATABASE_URL"); url != "" {
 		return url
 	}
 	return "postgres://bidon:pass@localhost:5436/bidon_e2e"
 }
 
 func redisURL() string {
-	if url := os.Getenv("REDIS_URL"); url != "" {
+	if url := os.Getenv("E2E_REDIS_URL"); url != "" {
 		return url
 	}
 	return "redis://localhost:6380/0"
 }
 
 func dspsimBaseURL() string {
-	if url := os.Getenv("DSPSIM_URL"); url != "" {
+	if url := os.Getenv("E2E_DSPSIM_URL"); url != "" {
 		return strings.TrimRight(url, "/")
 	}
 	return "http://localhost:1326"
@@ -90,7 +93,7 @@ func TestMain(m *testing.M) {
 
 	opt, err := redis.ParseURL(redisURL())
 	if err != nil {
-		fatalf("parse REDIS_URL %q: %v", redisURL(), err)
+		fatalf("parse E2E_REDIS_URL %q: %v", redisURL(), err)
 	}
 	testRedis = redis.NewClient(opt)
 	if err := testRedis.Ping(context.Background()).Err(); err != nil {
@@ -224,6 +227,29 @@ func dspsimBids(t *testing.T, bundle string) []dspsim.BidRecord {
 	for _, b := range body.Bids {
 		if b.Bundle == bundle {
 			matched = append(matched, b)
+		}
+	}
+	return matched
+}
+
+// dspsimNoBids returns every request dspsim declined with a 204 for bundle.
+func dspsimNoBids(t *testing.T, bundle string) []dspsim.NoBidRecord {
+	t.Helper()
+
+	resp, err := httpClient.Get(dspsimURL + "/debug/nobids?dsp=adikteev")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body struct {
+		NoBids []dspsim.NoBidRecord `json:"nobids"`
+	}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+
+	var matched []dspsim.NoBidRecord
+	for _, n := range body.NoBids {
+		if n.Bundle == bundle {
+			matched = append(matched, n)
 		}
 	}
 	return matched

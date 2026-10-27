@@ -121,4 +121,10 @@ func TestSDKFlow_NoBid(t *testing.T) {
 	require.Equal(t, "RTB", auc.NoBids[0].BidType)
 
 	require.Empty(t, dspsimBids(t, f.app.PackageName.String), "dspsim should have recorded no bid")
+
+	// no_bids is also what a connection error produces, so the proof that
+	// dspsim actually received the request and declined it comes from dspsim.
+	declined := dspsimNoBids(t, f.app.PackageName.String)
+	require.Len(t, declined, 1, "dspsim should have recorded exactly one declined request")
+	require.Equal(t, string(dspsim.ReasonFloorTooHigh), declined[0].Reason)
 }

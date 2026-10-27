@@ -82,9 +82,9 @@ services:
       dspsim:
         condition: service_healthy
     environment:
-      <<: *test-db-env
-      REDIS_URL: redis://redis:6379/0
-      DSPSIM_URL: http://dspsim:1325
+      E2E_DATABASE_URL: postgres://bidon:pass@postgres:5432/bidon_e2e
+      E2E_REDIS_URL: redis://redis:6379/0
+      E2E_DSPSIM_URL: http://dspsim:1325
 
 volumes:
   pgdata-test-e2e:

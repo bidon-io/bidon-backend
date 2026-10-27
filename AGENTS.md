@@ -95,6 +95,9 @@ real Postgres, Redis, and `bidon-dspsim` (config → auction → win/show/loss).
 It is behind the `e2e` build tag, so `just test` never runs it, and it uses
 its own stack in `docker-compose.test.yml` — its fixtures are committed, not
 rolled back, because dspsim reads the database as a separate process.
+It reads `E2E_DATABASE_URL`, `E2E_REDIS_URL` and `E2E_DSPSIM_URL` (defaults match
+the compose stack) and never `DATABASE_URL`, since it truncates tables and
+flushes Redis.
 
 ```bash
 just test-e2e-up    # Redis + dspsim + their Postgres and migrations

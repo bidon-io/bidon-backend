@@ -48,6 +48,7 @@ func (s *Server) RegisterRoutes(g *echo.Group) {
 
 	g.GET("/debug/bids", s.handleDebugBids)
 	g.GET("/debug/bids/:bidID", s.handleDebugBid)
+	g.GET("/debug/nobids", s.handleDebugNoBids)
 	g.DELETE("/debug/bids", s.handleDebugClear)
 	g.GET("/debug/creatives", s.handleDebugCreatives)
 	g.GET("/debug/creatives/:dsp", s.handleDebugCreatives)
@@ -190,6 +191,15 @@ func (s *Server) noBid(c echo.Context, summary RequestSummary, reason NoBidReaso
 		zap.String("format", string(summary.Format)),
 		zap.Float64("floor", summary.Floor),
 	)
+	s.Store.PutNoBid(NoBidRecord{
+		RequestID:  summary.RequestID,
+		Bundle:     summary.Bundle,
+		DSP:        summary.DSP,
+		AdType:     summary.AdType,
+		Floor:      summary.Floor,
+		Reason:     string(reason),
+		ReceivedAt: time.Now().UTC(),
+	})
 	c.Response().Header().Set("X-Dspsim-Nobid-Reason", string(reason))
 	return c.NoContent(http.StatusNoContent)
 }
@@ -325,6 +335,14 @@ func (s *Server) handleDebugBids(c echo.Context) error {
 		"count":   s.Store.Len(),
 		"bids":    s.Store.List(c.QueryParam("dsp")),
 		"orphans": s.Store.Orphans(),
+	})
+}
+
+func (s *Server) handleDebugNoBids(c echo.Context) error {
+	noBids := s.Store.NoBids(c.QueryParam("dsp"))
+	return c.JSON(http.StatusOK, map[string]any{
+		"count":  len(noBids),
+		"nobids": noBids,
 	})
 }
 
