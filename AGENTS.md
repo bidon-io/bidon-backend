@@ -130,6 +130,9 @@ deployment".
 - **Service layer** — `internal/*/service.go`, depends on interfaces, DI
 - **Three-layer models** — `internal/db/*.gen.go` (generated) → `internal/admin/*.go`
   (domain) → `internal/admin/openapi/*.go` (API); mappers live in repo files
+- **Admin UI** — `bidon-admin` serves only the API; the Nuxt UI runs as the
+  separate `bidon-ui` image and proxies `/api` and `/auth` to it
+  (`NUXT_API_PROXY_TARGET`)
 - **Adapters** — `internal/bidding/adapters/`, common interface per demand source
 - **User scoping** — `ListOwnedByUser()` / `FindOwnedByUser()` for multi-tenancy
 - **Advisory locking** — `pg_advisory_xact_lock` guards concurrent dedup

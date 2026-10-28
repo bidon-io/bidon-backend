@@ -1,6 +1,8 @@
 # Bidon Admin UI (Nuxt 3)
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Standalone Nuxt frontend for the Bidon admin API, run as its own container (`bidon-ui`) or via `yarn dev`.
+
+See the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) for framework details.
 
 ## Setup
 
@@ -20,7 +22,7 @@ yarn dev
 
 The Nitro middleware (`server/middleware/proxy.ts`) proxies `/api/**` and `/auth/**` to the Go `bidon-admin` backend (`NUXT_API_PROXY_TARGET`, defaults to `http://localhost:1323`).
 
-With the full local stack (`docker compose -f docker-compose.dev.yml up`), the UI is available at `http://localhost:3010`.
+With the full local stack (`just compose`), the UI is available at `http://localhost:3010`.
 
 ## Local API
 
