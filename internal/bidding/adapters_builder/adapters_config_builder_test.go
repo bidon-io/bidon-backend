@@ -126,186 +126,7 @@ func TestAdaptersConfigBuilder_Build_RemapParity(t *testing.T) {
 		MolocoAPIKey:   "moloco-api-key",
 	}
 
-	tests := []struct {
-		name         string
-		key          adapter.Key
-		accountExtra map[string]any
-		appData      map[string]any
-		adUnitExtra  map[string]any // nil => no RTB ad unit
-		want         map[string]any
-	}{
-		{
-			name:         "adikteev",
-			key:          adapter.AdikteevKey,
-			accountExtra: map[string]any{"sdk_instance_id": "sdk-1"},
-			appData:      map[string]any{},
-			want:         map[string]any{"sdk_instance_id": "sdk-1"},
-		},
-		{
-			name:         "amazon",
-			key:          adapter.AmazonKey,
-			accountExtra: map[string]any{"price_points_map": map[string]any{"a": 1.0}},
-			appData:      map[string]any{},
-			want:         map[string]any{"price_points_map": map[string]any{"a": 1.0}},
-		},
-		{
-			name: "bidmachine",
-			key:  adapter.BidmachineKey,
-			accountExtra: map[string]any{
-				"seller_id":        "seller",
-				"endpoint":         "https://example.test",
-				"mediation_config": []any{"m1"},
-			},
-			appData: map[string]any{},
-			want: map[string]any{
-				"seller_id":        "seller",
-				"endpoint":         "https://example.test",
-				"mediation_config": []any{"m1"},
-			},
-		},
-		{
-			name:         "bigoads",
-			key:          adapter.BigoAdsKey,
-			accountExtra: map[string]any{"publisher_id": "pub"},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"slot_id": "slot", "placement_id": "plc"},
-			want: map[string]any{
-				"seller_id":    "pub",
-				"app_id":       "app",
-				"tag_id":       "slot",
-				"placement_id": "plc",
-			},
-		},
-		{
-			name:         "inmobi",
-			key:          adapter.InmobiKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_key": "inmobi-key"},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want: map[string]any{
-				"app_id":       "inmobi-key",
-				"placement_id": "plc",
-			},
-		},
-		{
-			name:         "mintegral",
-			key:          adapter.MintegralKey,
-			accountExtra: map[string]any{"publisher_id": "pub"},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"unit_id": "unit", "placement_id": "plc"},
-			want: map[string]any{
-				"seller_id":    "pub",
-				"app_id":       "app",
-				"tag_id":       "unit",
-				"placement_id": "plc",
-			},
-		},
-		{
-			name:         "vkads",
-			key:          adapter.VKAdsKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"slot_id": "slot"},
-			want: map[string]any{
-				"app_id": "app",
-				"tag_id": "slot",
-			},
-		},
-		{
-			name:         "vungle",
-			key:          adapter.VungleKey,
-			accountExtra: map[string]any{"account_id": "acct"},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want: map[string]any{
-				"seller_id": "acct",
-				"app_id":    "app",
-				"tag_id":    "plc",
-			},
-		},
-		{
-			name:         "meta",
-			key:          adapter.MetaKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_id": "meta-app"},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want: map[string]any{
-				"app_id":      "meta-app",
-				"app_secret":  "meta-secret",
-				"platform_id": "meta-platform",
-				"tag_id":      "plc",
-			},
-		},
-		{
-			name:         "mobilefuse",
-			key:          adapter.MobileFuseKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want:         map[string]any{"tag_id": "plc"},
-		},
-		{
-			name:         "moloco",
-			key:          adapter.MolocoKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_key": "moloco-key"},
-			adUnitExtra:  map[string]any{"ad_unit_id": "au"},
-			want: map[string]any{
-				"app_id":  "moloco-key",
-				"api_key": "moloco-api-key",
-				"tag_id":  "au",
-			},
-		},
-		{
-			name:         "startio",
-			key:          adapter.StartIOKey,
-			accountExtra: map[string]any{"account": "acct"},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"tag_id": "tag"},
-			want: map[string]any{
-				"account": "acct",
-				"app_id":  "app",
-				"tag_id":  "tag",
-			},
-		},
-		{
-			name:         "taurusx",
-			key:          adapter.TaurusXKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_id": "app"},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want: map[string]any{
-				"app_id": "app",
-				"tag_id": "plc",
-			},
-		},
-		{
-			name:         "yandex",
-			key:          adapter.YandexKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{},
-			adUnitExtra:  map[string]any{"ad_unit_id": "au"},
-			want:         map[string]any{"ad_unit_id": "au"},
-		},
-		{
-			name:         "zmaticoo",
-			key:          adapter.ZmaticooKey,
-			accountExtra: map[string]any{},
-			appData:      map[string]any{"app_key": "z-key"},
-			adUnitExtra:  map[string]any{"placement_id": "plc"},
-			want: map[string]any{
-				"app_id":       "z-key",
-				"placement_id": "plc",
-			},
-		},
-		{
-			name:         "admob_passthrough",
-			key:          adapter.AdmobKey,
-			accountExtra: map[string]any{"foo": "bar", "nested": map[string]any{"k": "v"}},
-			appData:      map[string]any{"ignored": true},
-			want:         map[string]any{"foo": "bar", "nested": map[string]any{"k": "v"}},
-		},
-	}
+	tests := remapParityCases
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -345,5 +166,202 @@ func TestAdaptersConfigBuilder_Build_RemapParity(t *testing.T) {
 				t.Fatalf("processed config mismatch\ngot:  %#v\nwant: %#v", got[tt.key], tt.want)
 			}
 		})
+	}
+}
+
+type remapParityCase struct {
+	name         string
+	key          adapter.Key
+	accountExtra map[string]any
+	appData      map[string]any
+	adUnitExtra  map[string]any // nil => no RTB ad unit
+	want         map[string]any
+}
+
+var remapParityCases = []remapParityCase{
+	{
+		name:         "adikteev",
+		key:          adapter.AdikteevKey,
+		accountExtra: map[string]any{"endpoint": "https://adikteev.test", "sdk_instance_id": "ignored"},
+		appData:      map[string]any{},
+		want:         map[string]any{"endpoint": "https://adikteev.test"},
+	},
+	{
+		name:         "amazon",
+		key:          adapter.AmazonKey,
+		accountExtra: map[string]any{"price_points_map": map[string]any{"a": 1.0}},
+		appData:      map[string]any{},
+		want:         map[string]any{"price_points_map": map[string]any{"a": 1.0}},
+	},
+	{
+		name: "bidmachine",
+		key:  adapter.BidmachineKey,
+		accountExtra: map[string]any{
+			"seller_id":        "seller",
+			"endpoint":         "https://example.test",
+			"mediation_config": []any{"m1"},
+		},
+		appData: map[string]any{},
+		want: map[string]any{
+			"seller_id":        "seller",
+			"endpoint":         "https://example.test",
+			"mediation_config": []any{"m1"},
+		},
+	},
+	{
+		name:         "bigoads",
+		key:          adapter.BigoAdsKey,
+		accountExtra: map[string]any{"publisher_id": "pub"},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"slot_id": "slot", "placement_id": "plc"},
+		want: map[string]any{
+			"seller_id":    "pub",
+			"app_id":       "app",
+			"tag_id":       "slot",
+			"placement_id": "plc",
+		},
+	},
+	{
+		name:         "inmobi",
+		key:          adapter.InmobiKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_key": "inmobi-key"},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want: map[string]any{
+			"app_id":       "inmobi-key",
+			"placement_id": "plc",
+		},
+	},
+	{
+		name:         "mintegral",
+		key:          adapter.MintegralKey,
+		accountExtra: map[string]any{"publisher_id": "pub"},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"unit_id": "unit", "placement_id": "plc"},
+		want: map[string]any{
+			"seller_id":    "pub",
+			"app_id":       "app",
+			"tag_id":       "unit",
+			"placement_id": "plc",
+		},
+	},
+	{
+		name:         "vkads",
+		key:          adapter.VKAdsKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"slot_id": "slot"},
+		want: map[string]any{
+			"app_id": "app",
+			"tag_id": "slot",
+		},
+	},
+	{
+		name:         "vungle",
+		key:          adapter.VungleKey,
+		accountExtra: map[string]any{"account_id": "acct"},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want: map[string]any{
+			"seller_id": "acct",
+			"app_id":    "app",
+			"tag_id":    "plc",
+		},
+	},
+	{
+		name:         "meta",
+		key:          adapter.MetaKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_id": "meta-app"},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want: map[string]any{
+			"app_id":      "meta-app",
+			"app_secret":  "meta-secret",
+			"platform_id": "meta-platform",
+			"tag_id":      "plc",
+		},
+	},
+	{
+		name:         "mobilefuse",
+		key:          adapter.MobileFuseKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want:         map[string]any{"tag_id": "plc"},
+	},
+	{
+		name:         "moloco",
+		key:          adapter.MolocoKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_key": "moloco-key"},
+		adUnitExtra:  map[string]any{"ad_unit_id": "au"},
+		want: map[string]any{
+			"app_id":  "moloco-key",
+			"api_key": "moloco-api-key",
+			"tag_id":  "au",
+		},
+	},
+	{
+		name:         "startio",
+		key:          adapter.StartIOKey,
+		accountExtra: map[string]any{"account": "acct"},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"tag_id": "tag"},
+		want: map[string]any{
+			"account": "acct",
+			"app_id":  "app",
+			"tag_id":  "tag",
+		},
+	},
+	{
+		name:         "taurusx",
+		key:          adapter.TaurusXKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_id": "app"},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want: map[string]any{
+			"app_id": "app",
+			"tag_id": "plc",
+		},
+	},
+	{
+		name:         "yandex",
+		key:          adapter.YandexKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{},
+		adUnitExtra:  map[string]any{"ad_unit_id": "au"},
+		want:         map[string]any{"ad_unit_id": "au"},
+	},
+	{
+		name:         "zmaticoo",
+		key:          adapter.ZmaticooKey,
+		accountExtra: map[string]any{},
+		appData:      map[string]any{"app_key": "z-key"},
+		adUnitExtra:  map[string]any{"placement_id": "plc"},
+		want: map[string]any{
+			"app_id":       "z-key",
+			"placement_id": "plc",
+		},
+	},
+	{
+		name:         "admob_passthrough",
+		key:          adapter.AdmobKey,
+		accountExtra: map[string]any{"foo": "bar", "nested": map[string]any{"k": "v"}},
+		appData:      map[string]any{"ignored": true},
+		want:         map[string]any{"foo": "bar", "nested": map[string]any{"k": "v"}},
+	},
+}
+
+func TestRemapParity_CoversRegistry(t *testing.T) {
+	t.Parallel()
+
+	covered := map[adapter.Key]bool{}
+	for _, tc := range remapParityCases {
+		covered[tc.key] = true
+	}
+	for _, n := range adapter.Networks() {
+		if (n.HasProcessedConfigMaps() || n.InjectEnvSecrets != nil) && !covered[n.Key] {
+			t.Errorf("%s has registry projections but no remap parity case", n.Key)
+		}
 	}
 }

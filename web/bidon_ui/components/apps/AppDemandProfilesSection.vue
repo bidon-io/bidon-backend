@@ -211,6 +211,7 @@
 import useDeleteResource from "@/composables/useDeleteResource";
 
 const networks = useNetworks();
+onMounted(() => void networks.tryLoad());
 
 const props = defineProps({
   demandProfiles: { type: Array, required: true },

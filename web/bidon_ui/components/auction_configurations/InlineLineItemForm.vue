@@ -217,7 +217,8 @@ const validationSchema = computed(() =>
       .nullable(true)
       .when([], {
         is: () => props.adType === "banner",
-        then: (schema) => schema.required("Format is required for Banner Ad Type"),
+        then: (schema) =>
+          schema.required("Format is required for Banner Ad Type"),
       }),
     bidFloor: props.isBidding
       ? yup.number().nullable(true).label("Bid Floor")
@@ -232,9 +233,7 @@ const { errors, useFieldModel, handleSubmit } = useForm({
     humanName: props.initialItem?.humanName ?? "",
     accountId: props.initialItem?.accountId ?? null,
     format:
-      props.adType === "banner"
-        ? (props.initialItem?.format || "BANNER")
-        : "",
+      props.adType === "banner" ? props.initialItem?.format || "BANNER" : "",
     bidFloor: props.initialItem?.bidFloor ?? null,
     extra: props.initialItem?.extra ?? {},
   },
@@ -250,6 +249,8 @@ const accounts = ref([]);
 
 onMounted(async () => {
   try {
+    // accountType below depends on the catalog.
+    await networks.ensureLoaded();
     const data = await $apiFetch("/demand_source_accounts", {
       params: { limit: 1000 },
     });
@@ -273,6 +274,12 @@ const submitError = ref("");
 const submitWarning = ref("");
 
 const save = handleSubmit(async (values) => {
+  const loadError = await networks.tryLoad();
+  if (loadError) {
+    submitError.value = loadError;
+    return;
+  }
+
   saving.value = true;
   submitError.value = "";
   submitWarning.value = "";

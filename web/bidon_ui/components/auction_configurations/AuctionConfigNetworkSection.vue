@@ -167,6 +167,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 const networks = useNetworks();
+onMounted(() => void networks.tryLoad());
 
 const props = defineProps({
   config: { type: Object, required: true },

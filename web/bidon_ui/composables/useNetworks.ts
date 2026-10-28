@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { until, useAsyncState } from "@vueuse/core";
+import { useAsyncState } from "@vueuse/core";
 
 export interface NetworkCatalogItem {
   key: string;
@@ -9,6 +9,8 @@ export interface NetworkCatalogItem {
   supportsWaterfall: boolean;
 }
 
+const LOAD_ERROR = "Could not load the network catalog. Please retry.";
+
 /** Fetches and caches the admin network catalog from GET /api/networks. */
 export const useNetworks = defineStore("networks", () => {
   // Pass a factory so execute() can retry after a failed fetch.
@@ -17,23 +19,39 @@ export const useNetworks = defineStore("networks", () => {
     [] as NetworkCatalogItem[],
   );
 
+  // Share one in-flight request so concurrent callers never double-fetch.
+  let pending: Promise<unknown> | null = null;
+
   async function ensureLoaded() {
-    if (isLoading.value) {
-      await until(isLoading).toBe(false);
-    }
-
-    // On failure VueUse leaves isReady=false; retry until success or throw.
     if (!isReady.value) {
-      await execute();
+      // On failure VueUse leaves isReady=false, so the next call retries.
+      pending ??= execute().finally(() => {
+        pending = null;
+      });
+      await pending;
     }
 
-    if (error.value != null) {
+    if (!isReady.value) {
       throw error.value instanceof Error
         ? error.value
-        : new Error(String(error.value));
+        : new Error(String(error.value ?? "Failed to load networks"));
     }
 
     return state.value;
+  }
+
+  /**
+   * Loads the catalog; returns a user-facing error message, or null on success.
+   * Never throws, so it is safe to call without awaiting.
+   */
+  async function tryLoad(): Promise<string | null> {
+    try {
+      await ensureLoaded();
+      return null;
+    } catch (e) {
+      console.error("Failed to load network catalog", e);
+      return LOAD_ERROR;
+    }
   }
 
   const byKey = computed(() =>
@@ -57,8 +75,7 @@ export const useNetworks = defineStore("networks", () => {
 
   function keyForAccountType(accountType: string) {
     return (
-      state.value.find((n) => n.accountType === accountType)?.key ??
-      accountType
+      state.value.find((n) => n.accountType === accountType)?.key ?? accountType
     );
   }
 
@@ -80,6 +97,7 @@ export const useNetworks = defineStore("networks", () => {
     error,
     execute,
     ensureLoaded,
+    tryLoad,
     byKey,
     demandSourceOptions,
     labelFor,

@@ -4,8 +4,7 @@ ADRs live in this directory. Numbering is sequential and never reused; an ADR
 that is superseded is marked `Superseded by 000X` and the new one points back.
 
 Format: [Nygard ADR](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
-(Status / Context / Decision / Consequences), with the header block used in
-`docs/backlog/` (`**Status**`, `**Date**`, `**Deciders**`, `**Linear**`).
+(Status / Context / Decision / Consequences).
 
 | ADR                              | Title         | Status   | Date       |
 | -------------------------------- | ------------- | -------- | ---------- |

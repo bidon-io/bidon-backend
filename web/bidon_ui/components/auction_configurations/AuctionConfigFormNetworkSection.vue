@@ -277,7 +277,7 @@ import { useToast } from "primevue/usetoast";
 
 const networks = useNetworks();
 onMounted(() => {
-  void networks.ensureLoaded();
+  void networks.tryLoad();
 });
 
 const props = defineProps({

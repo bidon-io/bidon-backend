@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // Prefetch network catalog for authenticated sessions (retries on failure).
   if (authStore.currentUser) {
-    void useNetworks().ensureLoaded();
+    void useNetworks().tryLoad();
   }
 
   const normalizedPath = to.path.replace(/\/$/, "");

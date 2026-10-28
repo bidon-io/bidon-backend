@@ -246,6 +246,12 @@ const saving = ref(false);
 const submitError = ref("");
 
 const save = handleSubmit(async (values) => {
+  const loadError = await networks.tryLoad();
+  if (loadError) {
+    submitError.value = loadError;
+    return;
+  }
+
   saving.value = true;
   submitError.value = "";
   try {

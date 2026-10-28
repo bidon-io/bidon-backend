@@ -3,6 +3,7 @@ package adapters_builder
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/config"
@@ -106,8 +107,22 @@ func (b *AdaptersConfigBuilder) Build(ctx context.Context, appID int64, adapterK
 
 	for key, profile := range profiles {
 		network, ok := adapter.NetworkByKey(key)
-		if !ok || !network.HasProcessedConfigMaps() {
+		if !ok {
 			adaptersMap[key] = profile.AccountExtra
+			continue
+		}
+
+		if !network.HasProcessedConfigMaps() {
+			if network.InjectEnvSecrets == nil {
+				adaptersMap[key] = profile.AccountExtra
+				continue
+			}
+			// Copy so injected secrets never leak into the cached profile.
+			adaptersMap[key] = maps.Clone(profile.AccountExtra)
+			if adaptersMap[key] == nil {
+				adaptersMap[key] = map[string]any{}
+			}
+			network.ApplyEnvSecrets(adaptersMap[key], demandEnvSecrets(b.DemandConfig))
 			continue
 		}
 

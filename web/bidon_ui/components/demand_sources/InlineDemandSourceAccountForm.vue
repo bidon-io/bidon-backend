@@ -107,6 +107,12 @@ const accountType = computed(() => {
 });
 
 const onSubmit = handleSubmit(async (values) => {
+  const loadError = await networks.tryLoad();
+  if (loadError) {
+    submitError.value = loadError;
+    return;
+  }
+
   if (!accountType.value) {
     submitError.value = `No account type mapping found for network "${props.demandSourceApiKey}".`;
     return;

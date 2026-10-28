@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -60,5 +61,71 @@ func TestGetNetworks_ReturnsRegistryCatalog(t *testing.T) {
 	}
 	if admob.SupportsBidding || !admob.SupportsWaterfall {
 		t.Fatalf("admob flags = %+v", admob)
+	}
+}
+
+// networkCatalogItem is hand-written; keep it aligned with network.schema.json.
+func TestNetworkCatalogItem_MatchesOpenAPISchema(t *testing.T) {
+	t.Parallel()
+
+	raw, err := os.ReadFile("../openapi/schemas/network.schema.json")
+	if err != nil {
+		t.Fatalf("read schema: %v", err)
+	}
+	var schema struct {
+		Required   []string                  `json:"required"`
+		Properties map[string]map[string]any `json:"properties"`
+	}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		t.Fatalf("decode schema: %v", err)
+	}
+
+	encoded, err := json.Marshal(networkCatalogItem{})
+	if err != nil {
+		t.Fatalf("encode item: %v", err)
+	}
+	var fields map[string]any
+	if err := json.Unmarshal(encoded, &fields); err != nil {
+		t.Fatalf("decode item: %v", err)
+	}
+
+	for name := range fields {
+		if _, ok := schema.Properties[name]; !ok {
+			t.Errorf("response field %q not in schema", name)
+		}
+	}
+	for name := range schema.Properties {
+		if _, ok := fields[name]; !ok {
+			t.Errorf("schema property %q not in response", name)
+		}
+	}
+	for _, name := range schema.Required {
+		if _, ok := fields[name]; !ok {
+			t.Errorf("required schema property %q not in response", name)
+		}
+	}
+}
+
+func TestNetworkCatalog_KeysAreValidAdapterKeys(t *testing.T) {
+	t.Parallel()
+
+	raw, err := os.ReadFile("../openapi/schemas/adapter-key.schema.json")
+	if err != nil {
+		t.Fatalf("read schema: %v", err)
+	}
+	var schema struct {
+		Enum []string `json:"enum"`
+	}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		t.Fatalf("decode schema: %v", err)
+	}
+	allowed := map[string]bool{}
+	for _, k := range schema.Enum {
+		allowed[k] = true
+	}
+	for _, n := range adapter.Networks() {
+		if !allowed[string(n.Key)] {
+			t.Errorf("%s missing from adapter-key.schema.json enum", n.Key)
+		}
 	}
 }
