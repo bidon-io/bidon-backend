@@ -201,11 +201,14 @@ func TestHandler_HandleWin_ExternalNotificationsEnabled(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(3) // Expect 3 notifications (1 win + 2 loss)
 
+	var mu sync.Mutex
 	var sentEvents []notification.Params
 	sender := &mocks.SenderMock{
 		SendEventFunc: func(_ context.Context, p notification.Params) {
 			defer wg.Done()
+			mu.Lock()
 			sentEvents = append(sentEvents, p)
+			mu.Unlock()
 		},
 	}
 
@@ -315,11 +318,14 @@ func TestHandler_HandleWin_NonRTBBid(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2) // Expect 2 notifications (1 win + 1 loss) for all bids regardless of incoming bid type
 
+	var mu sync.Mutex
 	var sentEvents []notification.Params
 	sender := &mocks.SenderMock{
 		SendEventFunc: func(_ context.Context, p notification.Params) {
 			defer wg.Done()
+			mu.Lock()
 			sentEvents = append(sentEvents, p)
+			mu.Unlock()
 		},
 	}
 
@@ -399,11 +405,14 @@ func TestHandler_HandleLoss_ExternalNotificationsEnabled(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2) // Expect 2 loss notifications
 
+	var mu sync.Mutex
 	var sentEvents []notification.Params
 	sender := &mocks.SenderMock{
 		SendEventFunc: func(_ context.Context, p notification.Params) {
 			defer wg.Done()
+			mu.Lock()
 			sentEvents = append(sentEvents, p)
+			mu.Unlock()
 
 			// Verify it's a loss notification
 			if p.NotificationType != "LURL" {
@@ -513,11 +522,14 @@ func TestHandler_HandleLoss_NonRTBBid(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2) // Expect 2 loss notifications for all bids regardless of incoming bid type
 
+	var mu sync.Mutex
 	var sentEvents []notification.Params
 	sender := &mocks.SenderMock{
 		SendEventFunc: func(_ context.Context, p notification.Params) {
 			defer wg.Done()
+			mu.Lock()
 			sentEvents = append(sentEvents, p)
+			mu.Unlock()
 
 			// Verify it's a loss notification
 			if p.NotificationType != "LURL" {

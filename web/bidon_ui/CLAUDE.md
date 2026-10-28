@@ -263,9 +263,7 @@ node .output/server/index.mjs
 **Required environment variable:**
 - `NUXT_API_PROXY_TARGET` — URL of the Go `bidon-admin` backend (e.g. `http://bidon-admin:1323`). A warning is logged at startup if unset; falls back to `http://localhost:1323`.
 
-**Docker target:** `bidon-ui` in the root `Dockerfile` (uses `yarn build`, runs Node.js).
-
-**Note:** The root `Dockerfile` also contains a `bidon-admin-builder` stage that still embeds static files (via `yarn generate`) into the Go binary for deployments that do not use the separate `bidon-ui` container.
+**Docker target:** `bidon-ui` in the root `Dockerfile` (uses `yarn build`, runs Node.js). The `bidon-admin` image is API-only and does not embed UI assets.
 
 ## Testing
 
