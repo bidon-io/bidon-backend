@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"cmp"
 	"context"
 	"errors"
 
@@ -71,6 +72,8 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		return
 	}
 	env.EventName = eventName
+	env.DspId = cmp.Or(env.DspId, dsp)
+	env.DemandSource = cmp.Or(env.DemandSource, dsp)
 
 	message, err := proto.Marshal(msg)
 	if err != nil {

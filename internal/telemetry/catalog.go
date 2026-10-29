@@ -138,6 +138,7 @@ func attrsFrom(params Params) attrs {
 		AdFormat:  string(req.AdObject.Format()),
 		Country:   params.Country,
 		TraceID:   params.TraceID,
+		Base:      &req.BaseRequest,
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 // message type's (event_name) option.
 func newProtoEnvelope(a attrs) *telemetryv1.Envelope {
 	id, _ := uuid.NewV4()
-	return &telemetryv1.Envelope{
+	env := &telemetryv1.Envelope{
 		EventId:       id.String(),
 		EventTs:       time.Now().UnixMilli(),
 		SchemaVersion: SchemaVersion,
@@ -23,10 +23,12 @@ func newProtoEnvelope(a attrs) *telemetryv1.Envelope {
 		AdFormat:      a.AdFormat,
 		Country:       a.Country,
 		TraceId:       a.TraceID,
-		// Every event is emitted (100% sample) until sampling lands.
-		// TODO: set the real rate once sampling exists. It must keep or drop an
-		// auction's diagnostic events together, keyed on (app_id, auction_id),
-		// and never sample funnel stages, errors, impressions or notices.
+		// Every event is emitted until sampling lands. One rate per auction,
+		// keyed on (app_id, auction_id), so funnel completeness stays
+		// computable. Errors, wins, billing notices, ad_impression, and the
+		// other funnel stages are never sampled.
 		SamplingRate: 1.0,
 	}
+	applyPRDEnvelope(env, a.Base)
+	return env
 }
