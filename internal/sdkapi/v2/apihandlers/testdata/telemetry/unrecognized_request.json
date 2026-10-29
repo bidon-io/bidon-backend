@@ -1,0 +1,51 @@
+{
+  "app": {
+    "key": "app_abc123",
+    "bundle": "com.example.game"
+  },
+  "session": {
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "events": [
+    {
+      "envelope": {
+        "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+        "event_name": "ad_request_started",
+        "event_ts": 1710000000123,
+        "auction_id": "auc_01J8Z3K4N5",
+        "ad_type": "banner",
+        "ad_format": "BANNER",
+        "sampling_rate": 1
+      },
+      "price_floor": 0.05
+    },
+    {
+      "envelope": {
+        "event_id": "11111111-1111-4111-8111-111111111111",
+        "event_name": "not_in_catalogue",
+        "event_ts": 1710000000200,
+        "auction_id": "auc_01J8Z3K4N5",
+        "ad_type": "banner",
+        "sampling_rate": 1
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "name": "client_auction_duration_seconds",
+      "type": "histogram",
+      "value": 0.327,
+      "labels": {
+        "ad_type": "banner"
+      }
+    },
+    {
+      "name": "client_unknown_duration_seconds",
+      "type": "histogram",
+      "value": 1.5,
+      "labels": {
+        "ad_type": "banner"
+      }
+    }
+  ]
+}
