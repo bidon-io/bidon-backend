@@ -267,9 +267,18 @@ fn json_list(
     let items = value.as_array().ok_or(())?;
     let mut out = Vec::with_capacity(items.len());
     for item in items {
-        out.push(json_scalar(&field.kind(), item)?);
+        out.push(json_value(&field.kind(), item)?);
     }
     Ok(out)
+}
+
+fn json_value(kind: &Kind, value: &serde_json::Value) -> Result<Value, ()> {
+    if let Kind::Message(descriptor) = kind {
+        let mut nested = DynamicMessage::new(descriptor.clone());
+        fill_message(&mut nested, value)?;
+        return Ok(Value::Message(nested));
+    }
+    json_scalar(kind, value)
 }
 
 fn json_string_map(value: &serde_json::Value) -> Result<HashMap<MapKey, Value>, ()> {
@@ -319,8 +328,10 @@ mod tests {
     #[test]
     fn client_catalog_excludes_server_events() {
         let catalog = Catalog::load();
-        assert_eq!(catalog.len(), 42);
+        assert_eq!(catalog.len(), 43);
         assert!(catalog.contains("ad_request_started"));
+        assert!(catalog.contains("sdk_crashed"));
+        assert!(!catalog.contains("render_process_gone"));
         assert!(catalog.contains("signal_timeout_suspected"));
         assert!(!catalog.contains("dsp_request_sent"));
         assert!(!catalog.contains("auction_request_received"));
@@ -380,6 +391,111 @@ mod tests {
         match decoded.get_field_by_name("price_floor").unwrap().as_ref() {
             Value::F64(price) => assert!((*price - 0.05).abs() < f64::EPSILON),
             other => panic!("price_floor: {other:?}"),
+        }
+        assert!(decoded.get_field_by_name("ignored").is_none());
+    }
+
+    #[test]
+    fn keeps_declared_fields_and_drops_ones_missing_from_the_proto() {
+        let catalog = Catalog::load();
+        let raw = serde_json::json!({
+            "envelope": {
+                "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "event_name": "ad_load_failed",
+                "event_ts": 1710000000123i64
+            },
+            "error_code": "no_fill",
+            "external_error_code": "3",
+            "external_error_source": "admob",
+            "exception_class": "LoadException",
+            "exception_cause_class": "IOException",
+            "not_in_proto": "dropped"
+        });
+        let encoded = catalog
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .expect("encode");
+        let decoded = catalog
+            .decode(&encoded.message_type, &encoded.payload)
+            .expect("decode");
+        assert_eq!(field_string(&decoded, "external_error_code"), "3");
+        assert_eq!(field_string(&decoded, "external_error_source"), "admob");
+        assert_eq!(field_string(&decoded, "exception_class"), "LoadException");
+        assert_eq!(field_string(&decoded, "exception_cause_class"), "IOException");
+        assert!(decoded.get_field_by_name("not_in_proto").is_none());
+    }
+
+    #[test]
+    fn keeps_envelope_host_and_auction_owner_strings() {
+        let catalog = Catalog::load();
+        let raw = serde_json::json!({
+            "envelope": {
+                "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "event_name": "ad_request_started",
+                "event_ts": 1710000000123i64,
+                "host": "publisher",
+                "auction_owner": "bidon"
+            }
+        });
+        let encoded = catalog
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .expect("encode");
+        let decoded = catalog
+            .decode(&encoded.message_type, &encoded.payload)
+            .expect("decode");
+        let envelope = match decoded.get_field_by_name("envelope").unwrap().into_owned() {
+            Value::Message(envelope) => envelope,
+            other => panic!("envelope: {other:?}"),
+        };
+        assert_eq!(field_string(&envelope, "host"), "publisher");
+        assert_eq!(field_string(&envelope, "auction_owner"), "bidon");
+    }
+
+    #[test]
+    fn keeps_sdk_crashed_exception_list() {
+        let catalog = Catalog::load();
+        let raw = serde_json::json!({
+            "envelope": {
+                "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "event_name": "sdk_crashed",
+                "event_ts": 1710000000123i64
+            },
+            "crashed_on_main_thread": true,
+            "exceptions": [{
+                "class": "java.lang.IllegalStateException",
+                "frames": ["org.bidon.sdk.Session.tick"],
+                "omitted_frames": 4
+            }]
+        });
+        let encoded = catalog
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .expect("encode");
+        let decoded = catalog
+            .decode(&encoded.message_type, &encoded.payload)
+            .expect("decode");
+        match decoded.get_field_by_name("crashed_on_main_thread").unwrap().as_ref() {
+            Value::Bool(true) => {}
+            other => panic!("crashed_on_main_thread: {other:?}"),
+        }
+        let exceptions = decoded.get_field_by_name("exceptions").unwrap();
+        let exceptions = match exceptions.as_ref() {
+            Value::List(items) => items,
+            other => panic!("exceptions: {other:?}"),
+        };
+        let exception = match &exceptions[0] {
+            Value::Message(message) => message,
+            other => panic!("exception: {other:?}"),
+        };
+        assert_eq!(field_string(exception, "class"), "java.lang.IllegalStateException");
+        match exception.get_field_by_name("frames").unwrap().as_ref() {
+            Value::List(frames) => match &frames[0] {
+                Value::String(frame) => assert_eq!(frame, "org.bidon.sdk.Session.tick"),
+                other => panic!("frame: {other:?}"),
+            },
+            other => panic!("frames: {other:?}"),
+        }
+        match exception.get_field_by_name("omitted_frames").unwrap().as_ref() {
+            Value::I32(4) => {}
+            other => panic!("omitted_frames: {other:?}"),
         }
     }
 

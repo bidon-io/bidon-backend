@@ -462,6 +462,7 @@ components:
         - $ref: '#/components/schemas/AdRewardGranted'
         - $ref: '#/components/schemas/WebviewError'
         - $ref: '#/components/schemas/RenderCrashed'
+        - $ref: '#/components/schemas/SdkCrashed'
         - $ref: '#/components/schemas/VideoStart'
         - $ref: '#/components/schemas/VideoQ1'
         - $ref: '#/components/schemas/VideoMidpoint'
@@ -546,6 +547,14 @@ components:
           description: |
             Rate the SDK applied (G11 coherent per auction). Funnel and error events
             should be `1`. Server does not re-sample.
+        host:
+          type: string
+          description: Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+          example: publisher
+        auction_owner:
+          type: string
+          description: Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+          example: bidon
     ClientEventName:
       type: string
       description: |
@@ -582,6 +591,7 @@ components:
         - ad_reward_granted
         - webview_error
         - render_crashed
+        - sdk_crashed
         - video_start
         - video_q1
         - video_midpoint
@@ -1175,6 +1185,18 @@ components:
             - webview_load
             - timeout
           description: Where load failed.
+        external_error_code:
+          type: string
+          description: Adapter or network code, beside the banded error_code.
+        external_error_source:
+          type: string
+          description: Who produced external_error_code.
+        exception_class:
+          type: string
+          description: Exception class name. No message.
+        exception_cause_class:
+          type: string
+          description: Cause exception class name. No message.
     AdExpired:
       type: object
       additionalProperties: false
@@ -1408,6 +1430,56 @@ components:
         crtype:
           type: string
           description: Creative type.
+        did_crash:
+          type: boolean
+          description: True when the renderer crashed. False when the system killed it.
+        was_shown:
+          type: boolean
+          description: The ad was on screen.
+        renderer_priority_at_exit:
+          type: integer
+          format: int32
+          description: WebView renderer priority at exit. 0 waived, 1 bound, 2 important.
+    SdkCrashed:
+      type: object
+      additionalProperties: false
+      required:
+        - envelope
+      description: A crash in our own code, sent on the next launch.
+      properties:
+        envelope:
+          allOf:
+            - $ref: '#/components/schemas/ClientEventEnvelope'
+            - type: object
+              properties:
+                event_name:
+                  type: string
+                  enum:
+                    - sdk_crashed
+        crashed_on_main_thread:
+          type: boolean
+          description: The crashing thread was the main thread.
+        exceptions:
+          type: array
+          description: Exception chain we kept. No messages, only class and frames.
+          items:
+            $ref: '#/components/schemas/SdkCrashException'
+    SdkCrashException:
+      type: object
+      additionalProperties: false
+      properties:
+        class:
+          type: string
+          description: Exception class name.
+        frames:
+          type: array
+          items:
+            type: string
+          description: Stack frames kept for this exception.
+        omitted_frames:
+          type: integer
+          format: int32
+          description: Frames left off the end of frames.
     VideoStart:
       type: object
       additionalProperties: false
