@@ -38,7 +38,12 @@ func (h *LossHandler) Handle(c echo.Context) error {
 
 	// Call notification handler
 	bid := req.raw.Bid
-	err = h.NotificationHandler.HandleLoss(c.Request().Context(), bid, &req.raw.ExternalWinner, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
+	format := ""
+	if bid != nil {
+		format = string(bid.Format())
+	}
+	ctx := withNoticeMeta(c.Request().Context(), req.app, req.raw.BaseRequest, req.countryCode(), string(req.raw.AdType), format)
+	err = h.NotificationHandler.HandleLoss(ctx, bid, &req.raw.ExternalWinner, req.auctionConfig, req.raw.App.Bundle, string(req.raw.AdType))
 	if err != nil {
 		sdkapi.LogError(c, fmt.Errorf("handle loss notification: %v", err))
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/api"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/v2/apihandlers"
 	"github.com/bidon-io/bidon-backend/internal/segment"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type Router struct {
@@ -30,6 +31,7 @@ type Router struct {
 	BiddingBuilder            *bidding.Builder
 	AuctionService            *auction.Service
 	AdUnitLookup              *sdkapistore.AdUnitLookup
+	Telemetry                 *telemetry.Logger
 }
 
 func (r *Router) RegisterRoutes(g *echo.Group) {
@@ -69,6 +71,7 @@ func (r *Router) RegisterRoutes(g *echo.Group) {
 		EventLogger:         r.EventLogger,
 		NotificationHandler: r.NotificationHandler,
 		AdUnitLookup:        r.AdUnitLookup,
+		Telemetry:           r.Telemetry,
 	}
 	clickHandler := apihandlers.ClickHandler{
 		BaseHandler: &apihandlers.BaseHandler[schema.ClickRequest, *schema.ClickRequest]{

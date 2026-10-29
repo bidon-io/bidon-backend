@@ -13,6 +13,7 @@ import (
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/event"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/util"
+	"github.com/bidon-io/bidon-backend/internal/telemetry"
 )
 
 type ShowHandler struct {
@@ -20,6 +21,7 @@ type ShowHandler struct {
 	EventLogger         *event.Logger
 	NotificationHandler ShowNotificationHandler
 	AdUnitLookup        AdUnitLookup
+	Telemetry           *telemetry.Logger
 }
 
 //go:generate go run -mod=mod github.com/matryer/moq@v0.5.3 -out mocks/show_mocks.go -pkg mocks . ShowNotificationHandler AdUnitLookup
@@ -42,7 +44,27 @@ func (h *ShowHandler) Handle(c echo.Context) error {
 		sdkapi.LogError(c, fmt.Errorf("log show event: %v", err))
 	})
 
-	h.NotificationHandler.HandleShow(c.Request().Context(), req.raw.Bid, req.raw.App.Bundle, string(req.raw.AdType))
+	bid := req.raw.Bid
+	format := ""
+	if bid != nil {
+		format = string(bid.Format())
+	}
+	ctx := withNoticeMeta(c.Request().Context(), req.app, req.raw.BaseRequest, req.countryCode(), string(req.raw.AdType), format)
+	if h.Telemetry != nil && bid != nil {
+		// Synthesized until the SDK sends ad_impression on this call.
+		// AdImpression publishes a client row as-is when its event_id is set,
+		// and does not emit a second one.
+		h.Telemetry.Event().AdImpression(telemetry.Identity{
+			AppID:     req.app.ID,
+			AuctionID: bid.AuctionID,
+			SessionID: req.raw.Session.ID,
+			AdType:    string(req.raw.AdType),
+			AdFormat:  format,
+			Country:   req.countryCode(),
+		}, bid.DemandID, bid.GetPrice(), nil)
+	}
+
+	h.NotificationHandler.HandleShow(ctx, bid, req.raw.App.Bundle, string(req.raw.AdType))
 
 	return c.JSON(http.StatusOK, map[string]any{"success": true})
 }

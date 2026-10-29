@@ -265,6 +265,11 @@ func TestCatalogEventNames(t *testing.T) {
 		"org.bidon.telemetry.v1.DspRequestSent":         "dsp_request_sent",
 		"org.bidon.telemetry.v1.DspResponseReceived":    "dsp_response_received",
 		"org.bidon.telemetry.v1.DspResponseRejected":    "dsp_response_rejected",
+		"org.bidon.telemetry.v1.AdImpression":           "ad_impression",
+		"org.bidon.telemetry.v1.WinNoticeSent":          "win_notice_sent",
+		"org.bidon.telemetry.v1.BillingNoticeSent":      "billing_notice_sent",
+		"org.bidon.telemetry.v1.LossNoticeSent":         "loss_notice_sent",
+		"org.bidon.telemetry.v1.NoticeDeliveryFailed":   "notice_delivery_failed",
 	}
 
 	got := map[string]string{}
