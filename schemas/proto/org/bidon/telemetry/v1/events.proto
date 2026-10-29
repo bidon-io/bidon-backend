@@ -28,6 +28,10 @@ message Envelope {
   // Auction events keep app_id and leave these empty.
   string app_key = 13;
   string bundle = 14;
+  // PRD labels, same kind of string as ad_type. publisher or max_adapter.
+  string host = 15;
+  // PRD labels. bidon or max.
+  string auction_owner = 16;
 }
 
 // Scope is the auction phase an event describes.
@@ -337,6 +341,12 @@ message AdLoadFailed {
   string error_code = 4;
   int64 duration_ms = 5;
   string failed_stage = 6;
+  // Adapter or network code, kept beside the banded error_code.
+  string external_error_code = 7;
+  string external_error_source = 8;
+  // Class names only. No exception message.
+  string exception_class = 9;
+  string exception_cause_class = 10;
 }
 
 // AdExpired is emitted when a loaded ad passes its TTL.
@@ -420,13 +430,18 @@ message WebviewError {
   bool is_main_frame = 5;
 }
 
-// RenderCrashed is emitted when the renderer crashes.
+// RenderCrashed is the WebView renderer process dying. did_crash is false when
+// the system killed it. renderer_priority_at_exit is the WebView priority:
+// 0 waived, 1 bound, 2 important.
 message RenderCrashed {
   option (event_name) = "render_crashed";
 
   Envelope envelope = 1;
   string renderer = 2;
   string crtype = 3;
+  bool did_crash = 4;
+  bool was_shown = 5;
+  int32 renderer_priority_at_exit = 6;
 }
 
 // VideoStart is emitted when video starts.
@@ -535,6 +550,23 @@ message SignalTimeoutSuspected {
   Envelope envelope = 1;
   int64 duration_ms = 2;
   int64 budget_ms = 3;
+}
+
+// SdkCrashed is a crash in our own code, written at the crash and sent on the
+// next launch. exceptions is the chain we kept. omitted_frames is how many
+// frames were left off the end of that exception's list.
+message SdkCrashed {
+  option (event_name) = "sdk_crashed";
+
+  Envelope envelope = 1;
+  bool crashed_on_main_thread = 2;
+  repeated SdkCrashException exceptions = 3;
+
+  message SdkCrashException {
+    string class = 1;
+    repeated string frames = 2;
+    int32 omitted_frames = 3;
+  }
 }
 
 // MetricObservation is one client metric sample. It is applied to /metrics

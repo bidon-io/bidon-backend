@@ -363,6 +363,7 @@ const (
 	ClientEventNameNoFillReturnedToMax       ClientEventName = "no_fill_returned_to_max"
 	ClientEventNameRenderCrashed             ClientEventName = "render_crashed"
 	ClientEventNameRendererSelected          ClientEventName = "renderer_selected"
+	ClientEventNameSdkCrashed                ClientEventName = "sdk_crashed"
 	ClientEventNameSdkInitCompleted          ClientEventName = "sdk_init_completed"
 	ClientEventNameSdkInitFailed             ClientEventName = "sdk_init_failed"
 	ClientEventNameSdkInitStarted            ClientEventName = "sdk_init_started"
@@ -448,6 +449,18 @@ const (
 	Html  RendererSelectedRenderer = "html"
 	Mraid RendererSelectedRenderer = "mraid"
 	Vast  RendererSelectedRenderer = "vast"
+)
+
+// Defines values for SdkCrashedEnvelopeAdType.
+const (
+	SdkCrashedEnvelopeAdTypeBanner       SdkCrashedEnvelopeAdType = "banner"
+	SdkCrashedEnvelopeAdTypeInterstitial SdkCrashedEnvelopeAdType = "interstitial"
+	SdkCrashedEnvelopeAdTypeRewarded     SdkCrashedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SdkCrashedEnvelopeEventName.
+const (
+	SdkCrashedEnvelopeEventNameSdkCrashed SdkCrashedEnvelopeEventName = "sdk_crashed"
 )
 
 // Defines values for SdkInitCompletedEnvelopeAdType.
@@ -978,9 +991,9 @@ const (
 
 // Defines values for PostWinParamsAdType.
 const (
-	Banner       PostWinParamsAdType = "banner"
-	Interstitial PostWinParamsAdType = "interstitial"
-	Rewarded     PostWinParamsAdType = "rewarded"
+	PostWinParamsAdTypeBanner       PostWinParamsAdType = "banner"
+	PostWinParamsAdTypeInterstitial PostWinParamsAdType = "interstitial"
+	PostWinParamsAdTypeRewarded     PostWinParamsAdType = "rewarded"
 )
 
 // Defines values for PostWinJSONBodyBidBannerFormat.
@@ -1050,6 +1063,9 @@ type AdClicked struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1062,6 +1078,9 @@ type AdClicked struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1108,6 +1127,9 @@ type AdClosed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1120,6 +1142,9 @@ type AdClosed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1169,6 +1194,9 @@ type AdExpired struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1181,6 +1209,9 @@ type AdExpired struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1230,6 +1261,9 @@ type AdFilled struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1242,6 +1276,9 @@ type AdFilled struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1289,6 +1326,9 @@ type AdImpression struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1301,6 +1341,9 @@ type AdImpression struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1353,6 +1396,9 @@ type AdLoadFailed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1365,6 +1411,9 @@ type AdLoadFailed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1385,6 +1434,18 @@ type AdLoadFailed struct {
 
 	// ErrorDomain Stable domain (sdk / adapter / network / publisher).
 	ErrorDomain *string `json:"error_domain,omitempty"`
+
+	// ExceptionCauseClass Cause exception class name. No message.
+	ExceptionCauseClass *string `json:"exception_cause_class,omitempty"`
+
+	// ExceptionClass Exception class name. No message.
+	ExceptionClass *string `json:"exception_class,omitempty"`
+
+	// ExternalErrorCode Adapter or network code, beside the banded error_code.
+	ExternalErrorCode *string `json:"external_error_code,omitempty"`
+
+	// ExternalErrorSource Who produced external_error_code.
+	ExternalErrorSource *string `json:"external_error_source,omitempty"`
 
 	// FailedStage Where load failed.
 	FailedStage *AdLoadFailedFailedStage `json:"failed_stage,omitempty"`
@@ -1420,6 +1481,9 @@ type AdLoadRequested struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1432,6 +1496,9 @@ type AdLoadRequested struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1481,6 +1548,9 @@ type AdLoaded struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1493,6 +1563,9 @@ type AdLoaded struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1545,6 +1618,9 @@ type AdRequestStarted struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1557,6 +1633,9 @@ type AdRequestStarted struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1610,6 +1689,9 @@ type AdRewardGranted struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1622,6 +1704,9 @@ type AdRewardGranted struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1663,6 +1748,9 @@ type AdShowFailed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1675,6 +1763,9 @@ type AdShowFailed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1722,6 +1813,9 @@ type AdShowRequested struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1734,6 +1828,9 @@ type AdShowRequested struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1778,6 +1875,9 @@ type AdViewable struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1790,6 +1890,9 @@ type AdViewable struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1848,6 +1951,9 @@ type AdapterInitResult struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1860,6 +1966,9 @@ type AdapterInitResult struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1918,6 +2027,9 @@ type AdapterLoadBudgetExceeded struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1930,6 +2042,9 @@ type AdapterLoadBudgetExceeded struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -1976,6 +2091,9 @@ type AdapterTokenRequested struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -1988,6 +2106,9 @@ type AdapterTokenRequested struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2037,6 +2158,9 @@ type AdapterTokenResult struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2049,6 +2173,9 @@ type AdapterTokenResult struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2116,6 +2243,9 @@ type AdmParseResult struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2128,6 +2258,9 @@ type AdmParseResult struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2183,6 +2316,9 @@ type AuctionFailed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2195,6 +2331,9 @@ type AuctionFailed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2242,6 +2381,9 @@ type AuctionNoDemand struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2254,6 +2396,9 @@ type AuctionNoDemand struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2306,6 +2451,9 @@ type AuctionRequested struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2318,6 +2466,9 @@ type AuctionRequested struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2370,6 +2521,9 @@ type AuctionResponseReceived struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2382,6 +2536,9 @@ type AuctionResponseReceived struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2431,6 +2588,9 @@ type ClientEventEnvelope struct {
 	// Omit on session-only events.
 	AuctionId *string `json:"auction_id,omitempty"`
 
+	// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+	AuctionOwner *string `json:"auction_owner,omitempty"`
+
 	// Bundle Ignored if sent. Server copies `app.bundle`.
 	Bundle *string `json:"bundle,omitempty"`
 
@@ -2447,6 +2607,9 @@ type ClientEventEnvelope struct {
 
 	// EventTs Client event time, Unix milliseconds
 	EventTs int64 `json:"event_ts"`
+
+	// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+	Host *string `json:"host,omitempty"`
 
 	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 	// should be `1`. Server does not re-sample.
@@ -2494,6 +2657,9 @@ type ConfigFetchResult struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2506,6 +2672,9 @@ type ConfigFetchResult struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2578,6 +2747,9 @@ type NoFillReturnedToMax struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2590,6 +2762,9 @@ type NoFillReturnedToMax struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2621,7 +2796,10 @@ type NoFillReturnedToMaxEnvelopeEventName string
 // RenderCrashed Renderer crashed.
 type RenderCrashed struct {
 	// Crtype Creative type.
-	Crtype   *string `json:"crtype,omitempty"`
+	Crtype *string `json:"crtype,omitempty"`
+
+	// DidCrash True when the renderer crashed. False when the system killed it.
+	DidCrash *bool `json:"did_crash,omitempty"`
 	Envelope struct {
 		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
 		AdFormat *string `json:"ad_format,omitempty"`
@@ -2639,6 +2817,9 @@ type RenderCrashed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2651,6 +2832,9 @@ type RenderCrashed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2668,6 +2852,12 @@ type RenderCrashed struct {
 
 	// Renderer Renderer that crashed.
 	Renderer *string `json:"renderer,omitempty"`
+
+	// RendererPriorityAtExit WebView renderer priority at exit. 0 waived, 1 bound, 2 important.
+	RendererPriorityAtExit *int32 `json:"renderer_priority_at_exit,omitempty"`
+
+	// WasShown The ad was on screen.
+	WasShown *bool `json:"was_shown,omitempty"`
 }
 
 // RenderCrashedEnvelopeAdType Ad type
@@ -2697,6 +2887,9 @@ type RendererSelected struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2709,6 +2902,9 @@ type RendererSelected struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2740,6 +2936,82 @@ type RendererSelectedEnvelopeEventName string
 // RendererSelectedRenderer Renderer.
 type RendererSelectedRenderer string
 
+// SdkCrashException defines model for SdkCrashException.
+type SdkCrashException struct {
+	// Class Exception class name.
+	Class *string `json:"class,omitempty"`
+
+	// Frames Stack frames kept for this exception.
+	Frames *[]string `json:"frames,omitempty"`
+
+	// OmittedFrames Frames left off the end of frames.
+	OmittedFrames *int32 `json:"omitted_frames,omitempty"`
+}
+
+// SdkCrashed A crash in our own code, sent on the next launch.
+type SdkCrashed struct {
+	// CrashedOnMainThread The crashing thread was the main thread.
+	CrashedOnMainThread *bool `json:"crashed_on_main_thread,omitempty"`
+	Envelope            struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SdkCrashedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID          `json:"event_id"`
+		EventName SdkCrashedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Exceptions Exception chain we kept. No messages, only class and frames.
+	Exceptions *[]SdkCrashException `json:"exceptions,omitempty"`
+}
+
+// SdkCrashedEnvelopeAdType Ad type
+type SdkCrashedEnvelopeAdType string
+
+// SdkCrashedEnvelopeEventName defines model for SdkCrashed.Envelope.EventName.
+type SdkCrashedEnvelopeEventName string
+
 // SdkInitCompleted Init finished.
 type SdkInitCompleted struct {
 	// AdaptersRegistered Adapters registered during init.
@@ -2767,6 +3039,9 @@ type SdkInitCompleted struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2779,6 +3054,9 @@ type SdkInitCompleted struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2822,6 +3100,9 @@ type SdkInitFailed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2834,6 +3115,9 @@ type SdkInitFailed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2881,6 +3165,9 @@ type SdkInitStarted struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2893,6 +3180,9 @@ type SdkInitStarted struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2939,6 +3229,9 @@ type SignalFailed struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -2951,6 +3244,9 @@ type SignalFailed struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -2997,6 +3293,9 @@ type SignalProvided struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3009,6 +3308,9 @@ type SignalProvided struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3065,6 +3367,9 @@ type SignalRequested struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3077,6 +3382,9 @@ type SignalRequested struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3123,6 +3431,9 @@ type SignalTimeoutSuspected struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3135,6 +3446,9 @@ type SignalTimeoutSuspected struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3230,6 +3544,9 @@ type TokenCollectionCompleted struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3242,6 +3559,9 @@ type TokenCollectionCompleted struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3286,6 +3606,9 @@ type VideoComplete struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3298,6 +3621,9 @@ type VideoComplete struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3339,6 +3665,9 @@ type VideoError struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3351,6 +3680,9 @@ type VideoError struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3395,6 +3727,9 @@ type VideoMidpoint struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3407,6 +3742,9 @@ type VideoMidpoint struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3448,6 +3786,9 @@ type VideoQ1 struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3460,6 +3801,9 @@ type VideoQ1 struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3501,6 +3845,9 @@ type VideoQ3 struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3513,6 +3860,9 @@ type VideoQ3 struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3554,6 +3904,9 @@ type VideoSkipped struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3566,6 +3919,9 @@ type VideoSkipped struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3607,6 +3963,9 @@ type VideoStart struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3619,6 +3978,9 @@ type VideoStart struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -3662,6 +4024,9 @@ type WebviewError struct {
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
 		// Bundle Ignored if sent. Server copies `app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
@@ -3674,6 +4039,9 @@ type WebviewError struct {
 
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
@@ -7253,6 +7621,32 @@ func (t *TelemetryEvent) MergeRenderCrashed(v RenderCrashed) error {
 	return err
 }
 
+// AsSdkCrashed returns the union data inside the TelemetryEvent as a SdkCrashed
+func (t TelemetryEvent) AsSdkCrashed() (SdkCrashed, error) {
+	var body SdkCrashed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSdkCrashed overwrites any union data inside the TelemetryEvent as the provided SdkCrashed
+func (t *TelemetryEvent) FromSdkCrashed(v SdkCrashed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSdkCrashed performs a merge with any union data inside the TelemetryEvent, using the provided SdkCrashed
+func (t *TelemetryEvent) MergeSdkCrashed(v SdkCrashed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsVideoStart returns the union data inside the TelemetryEvent as a VideoStart
 func (t TelemetryEvent) AsVideoStart() (VideoStart, error) {
 	var body VideoStart
@@ -7986,169 +8380,176 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"BugAAA==",
+	"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",
+	"AAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

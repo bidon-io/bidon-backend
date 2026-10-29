@@ -294,6 +294,7 @@ func TestCatalogEventNames(t *testing.T) {
 		"org.bidon.telemetry.v1.AdRewardGranted":           "ad_reward_granted",
 		"org.bidon.telemetry.v1.WebviewError":              "webview_error",
 		"org.bidon.telemetry.v1.RenderCrashed":             "render_crashed",
+		"org.bidon.telemetry.v1.SdkCrashed":                "sdk_crashed",
 		"org.bidon.telemetry.v1.VideoStart":                "video_start",
 		"org.bidon.telemetry.v1.VideoQ1":                   "video_q1",
 		"org.bidon.telemetry.v1.VideoMidpoint":             "video_midpoint",

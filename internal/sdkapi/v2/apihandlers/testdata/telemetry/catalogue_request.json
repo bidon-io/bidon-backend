@@ -262,7 +262,11 @@
       "error_domain": "adapter",
       "error_code": "no_fill",
       "duration_ms": 800,
-      "failed_stage": "load"
+      "failed_stage": "load",
+      "external_error_code": "3",
+      "external_error_source": "admob",
+      "exception_class": "LoadException",
+      "exception_cause_class": "IOException"
     },
     {
       "envelope": {
@@ -382,7 +386,10 @@
         "sampling_rate": 1
       },
       "renderer": "mraid",
-      "crtype": "mraid"
+      "crtype": "mraid",
+      "did_crash": true,
+      "was_shown": true,
+      "renderer_priority_at_exit": 2
     },
     {
       "envelope": {
@@ -530,6 +537,26 @@
       },
       "duration_ms": 1600,
       "budget_ms": 1500
+    },
+    {
+      "envelope": {
+        "event_id": "00000000-0000-4000-8000-000000000043",
+        "event_name": "sdk_crashed",
+        "event_ts": 1710000002150,
+        "auction_id": "auc_01J8Z3K4N5",
+        "ad_type": "rewarded",
+        "host": "publisher",
+        "auction_owner": "bidon",
+        "sampling_rate": 1
+      },
+      "crashed_on_main_thread": false,
+      "exceptions": [
+        {
+          "class": "java.lang.IllegalStateException",
+          "frames": ["org.bidon.sdk.Session.tick"],
+          "omitted_frames": 4
+        }
+      ]
     }
   ],
   "metrics": [

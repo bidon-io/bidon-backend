@@ -470,6 +470,18 @@ components:
             error_code:
               type: string
               description: Banded / catalogued. Errors are never sampled (G6).
+            external_error_code:
+              type: string
+              description: Adapter or network code, beside the banded error_code.
+            external_error_source:
+              type: string
+              description: Who produced external_error_code.
+            exception_class:
+              type: string
+              description: Exception class name. No message.
+            exception_cause_class:
+              type: string
+              description: Cause exception class name. No message.
 
     MetricObservation:
       type: object
