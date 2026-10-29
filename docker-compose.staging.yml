@@ -25,6 +25,7 @@ x-logging: &default-logging
 #   BIDON_MIGRATE_TAG         — Docker image tag for bidon-migrate
 #   BIDON_SEED_TAG            — Docker image tag for bidon-seed
 #   BIDON_UI_TAG              — Docker image tag for bidon-ui (e.g. git SHA from CI)
+#   BIDON_TELEMETRY_TAG       — Docker image tag for bidon-telemetry
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
@@ -229,6 +230,25 @@ services:
     logging: *default-logging
     <<: *restart-policy
 
+  bidon-telemetry:
+    image: "registry.digitalocean.com/bidon-io/bidon-telemetry:${BIDON_TELEMETRY_TAG}"
+    expose:
+      - "1326"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: *staging-bidon-app-env
+      TELEMETRY_PORT: 1326
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1326/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *default-logging
+    <<: *restart-policy
+
   # vmui: expose publicly via Coolify → Traefik; same Basic Auth middleware pattern as
   # redpanda-console, with its own VICTORIAMETRICS_BA_USERS. vmui is served at /vmui on port 8428.
   # Scrapes bidon-sdkapi /metrics. Nothing depends on it; stopping it never affects auctions.
@@ -249,6 +269,9 @@ services:
           - job_name: bidon-sdkapi
             static_configs:
               - targets: ["${SERVICE_NAME_BIDON_SDKAPI:-bidon-sdkapi}:1323"]
+          - job_name: bidon-telemetry
+            static_configs:
+              - targets: ["${SERVICE_NAME_BIDON_TELEMETRY:-bidon-telemetry}:1326"]
         EOF
         exec /victoria-metrics-prod \
           -promscrape.config=/tmp/scrape.yml \
