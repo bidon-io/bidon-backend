@@ -16,6 +16,7 @@ func TestAdvertisingIDFollowsPRDOrder(t *testing.T) {
 		base  *schema.BaseRequest
 		want  string
 		state telemetryv1.AdvertisingIdState
+		lmt   bool
 	}{
 		{
 			name:  "no request",
@@ -31,12 +32,22 @@ func TestAdvertisingIDFollowsPRDOrder(t *testing.T) {
 			state: telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_COPPA,
 		},
 		{
+			name: "coppa with no consent still sets lmt",
+			base: &schema.BaseRequest{
+				User: schema.User{IDFA: real, TrackingAuthorizationStatus: "denied", COPPA: &coppa},
+			},
+			want:  zeroAdvertisingID,
+			state: telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_COPPA,
+			lmt:   true,
+		},
+		{
 			name: "missing consent",
 			base: &schema.BaseRequest{
 				User: schema.User{IDFA: real, TrackingAuthorizationStatus: "denied"},
 			},
 			want:  zeroAdvertisingID,
 			state: telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_NO_CONSENT,
+			lmt:   true,
 		},
 		{
 			name: "authorized with a deleted id",
@@ -45,6 +56,7 @@ func TestAdvertisingIDFollowsPRDOrder(t *testing.T) {
 			},
 			want:  zeroAdvertisingID,
 			state: telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_LAT,
+			lmt:   true,
 		},
 		{
 			name: "real id",
@@ -57,9 +69,9 @@ func TestAdvertisingIDFollowsPRDOrder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, state := advertisingID(tt.base)
-			if got != tt.want || state != tt.state {
-				t.Errorf("advertisingID() = %q %s, want %q %s", got, state, tt.want, tt.state)
+			got, state, lmt := advertisingID(tt.base)
+			if got != tt.want || state != tt.state || lmt != tt.lmt {
+				t.Errorf("advertisingID() = %q %s lmt=%v, want %q %s lmt=%v", got, state, lmt, tt.want, tt.state, tt.lmt)
 			}
 		})
 	}
@@ -122,10 +134,41 @@ func TestApplyPRDEnvelopeCopiesRequest(t *testing.T) {
 	if !env.GetGdprApplies() || env.GetUsPrivacy() != "1YNN" || env.GetCoppa() {
 		t.Errorf("consent: gdpr=%v us=%q coppa=%v", env.GetGdprApplies(), env.GetUsPrivacy(), env.GetCoppa())
 	}
-	if env.GetAdvertisingId() != "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" {
-		t.Errorf("advertising_id = %q", env.GetAdvertisingId())
+	if env.GetAdvertisingId() != "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" || env.GetLmt() {
+		t.Errorf("advertising_id = %q lmt=%v", env.GetAdvertisingId(), env.GetLmt())
 	}
 	if env.GetSdkUptimeMs() != 0 {
 		t.Errorf("sdk_uptime_ms = %d, want unset", env.GetSdkUptimeMs())
+	}
+}
+
+func TestIntegrationMode(t *testing.T) {
+	tests := []struct {
+		name     string
+		ext      string
+		host     telemetryv1.Host
+		mode     telemetryv1.IntegrationMode
+		mediator telemetryv1.Mediator
+	}{
+		{name: "direct", host: telemetryv1.Host_HOST_PUBLISHER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_DIRECT, mediator: telemetryv1.Mediator_MEDIATOR_BIDON},
+		{name: "max", ext: `{"mediation_mode":"max"}`, host: telemetryv1.Host_HOST_MAX_ADAPTER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_MAX_CUSTOM, mediator: telemetryv1.Mediator_MEDIATOR_MAX},
+		{name: "mediator max only", ext: `{"mediator":"max"}`, host: telemetryv1.Host_HOST_MAX_ADAPTER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_MAX_CUSTOM, mediator: telemetryv1.Mediator_MEDIATOR_MAX},
+		{name: "max bidding", ext: `{"mediation_mode":"max_bidding"}`, host: telemetryv1.Host_HOST_MAX_ADAPTER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_MAX_BIDDING, mediator: telemetryv1.Mediator_MEDIATOR_MAX},
+		{name: "levelplay", ext: `{"mediator":"levelplay"}`, host: telemetryv1.Host_HOST_PUBLISHER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_DIRECT, mediator: telemetryv1.Mediator_MEDIATOR_LEVEL_PLAY},
+		{name: "unknown mediator", ext: `{"mediator":"other"}`, host: telemetryv1.Host_HOST_PUBLISHER, mode: telemetryv1.IntegrationMode_INTEGRATION_MODE_DIRECT, mediator: telemetryv1.Mediator_MEDIATOR_UNSPECIFIED},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			base := &schema.BaseRequest{Ext: tt.ext}
+			base.NormalizeValues()
+			env := &telemetryv1.Envelope{}
+			applyPRDEnvelope(env, base)
+			if env.GetAuctionOwner() != telemetryv1.AuctionOwner_AUCTION_OWNER_BIDON {
+				t.Errorf("owner = %s", env.GetAuctionOwner())
+			}
+			if env.GetHost() != tt.host || env.GetIntegrationMode() != tt.mode || env.GetMediator() != tt.mediator {
+				t.Errorf("got %s %s %s", env.GetHost(), env.GetIntegrationMode(), env.GetMediator())
+			}
+		})
 	}
 }
