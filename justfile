@@ -122,6 +122,9 @@ build-dspsim:
 build-ui:
     just _build bidon-ui
 
+build-telemetry:
+    docker buildx build --load --platform linux/amd64 --file telemetry/Dockerfile --tag {{registry}}/bidon-telemetry:{{tag}} .
+
 build-all:
     just build-admin
     just build-sdkapi
@@ -129,6 +132,7 @@ build-all:
     just build-seed
     just build-dspsim
     just build-ui
+    just build-telemetry
 
 # --- CI / registry image builds ---
 # Build and push images to the DigitalOcean Container Registry (--push).
@@ -158,6 +162,9 @@ ci-build-dspsim:
 ci-build-ui:
     just _ci-build bidon-ui
 
+ci-build-telemetry:
+    docker buildx build --platform linux/amd64 --file telemetry/Dockerfile --tag {{registry}}/bidon-telemetry:{{tag}} --push .
+
 ci-build-all:
     just docker-login
     just ci-build-admin
@@ -166,3 +173,4 @@ ci-build-all:
     just ci-build-seed
     just ci-build-dspsim
     just ci-build-ui
+    just ci-build-telemetry

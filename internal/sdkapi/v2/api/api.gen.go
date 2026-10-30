@@ -20,6 +20,647 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for AdClickedEnvelopeAdType.
+const (
+	AdClickedEnvelopeAdTypeBanner       AdClickedEnvelopeAdType = "banner"
+	AdClickedEnvelopeAdTypeInterstitial AdClickedEnvelopeAdType = "interstitial"
+	AdClickedEnvelopeAdTypeRewarded     AdClickedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdClickedEnvelopeEventName.
+const (
+	AdClickedEnvelopeEventNameAdClicked AdClickedEnvelopeEventName = "ad_clicked"
+)
+
+// Defines values for AdClosedCloseMethod.
+const (
+	AppBackgrounded AdClosedCloseMethod = "app_backgrounded"
+	Auto            AdClosedCloseMethod = "auto"
+	User            AdClosedCloseMethod = "user"
+)
+
+// Defines values for AdClosedEnvelopeAdType.
+const (
+	AdClosedEnvelopeAdTypeBanner       AdClosedEnvelopeAdType = "banner"
+	AdClosedEnvelopeAdTypeInterstitial AdClosedEnvelopeAdType = "interstitial"
+	AdClosedEnvelopeAdTypeRewarded     AdClosedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdClosedEnvelopeEventName.
+const (
+	AdClosedEnvelopeEventNameAdClosed AdClosedEnvelopeEventName = "ad_closed"
+)
+
+// Defines values for AdExpiredEnvelopeAdType.
+const (
+	AdExpiredEnvelopeAdTypeBanner       AdExpiredEnvelopeAdType = "banner"
+	AdExpiredEnvelopeAdTypeInterstitial AdExpiredEnvelopeAdType = "interstitial"
+	AdExpiredEnvelopeAdTypeRewarded     AdExpiredEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdExpiredEnvelopeEventName.
+const (
+	AdExpiredEnvelopeEventNameAdExpired AdExpiredEnvelopeEventName = "ad_expired"
+)
+
+// Defines values for AdFilledBidType.
+const (
+	Bidding   AdFilledBidType = "bidding"
+	Waterfall AdFilledBidType = "waterfall"
+)
+
+// Defines values for AdFilledEnvelopeAdType.
+const (
+	AdFilledEnvelopeAdTypeBanner       AdFilledEnvelopeAdType = "banner"
+	AdFilledEnvelopeAdTypeInterstitial AdFilledEnvelopeAdType = "interstitial"
+	AdFilledEnvelopeAdTypeRewarded     AdFilledEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdFilledEnvelopeEventName.
+const (
+	AdFilledEnvelopeEventNameAdFilled AdFilledEnvelopeEventName = "ad_filled"
+)
+
+// Defines values for AdImpressionEnvelopeAdType.
+const (
+	AdImpressionEnvelopeAdTypeBanner       AdImpressionEnvelopeAdType = "banner"
+	AdImpressionEnvelopeAdTypeInterstitial AdImpressionEnvelopeAdType = "interstitial"
+	AdImpressionEnvelopeAdTypeRewarded     AdImpressionEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdImpressionEnvelopeEventName.
+const (
+	AdImpressionEnvelopeEventNameAdImpression AdImpressionEnvelopeEventName = "ad_impression"
+)
+
+// Defines values for AdLoadFailedEnvelopeAdType.
+const (
+	AdLoadFailedEnvelopeAdTypeBanner       AdLoadFailedEnvelopeAdType = "banner"
+	AdLoadFailedEnvelopeAdTypeInterstitial AdLoadFailedEnvelopeAdType = "interstitial"
+	AdLoadFailedEnvelopeAdTypeRewarded     AdLoadFailedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdLoadFailedEnvelopeEventName.
+const (
+	AdLoadFailedEnvelopeEventNameAdLoadFailed AdLoadFailedEnvelopeEventName = "ad_load_failed"
+)
+
+// Defines values for AdLoadFailedFailedStage.
+const (
+	AdLoadFailedFailedStageAssetFetch     AdLoadFailedFailedStage = "asset_fetch"
+	AdLoadFailedFailedStageParse          AdLoadFailedFailedStage = "parse"
+	AdLoadFailedFailedStageRendererSelect AdLoadFailedFailedStage = "renderer_select"
+	AdLoadFailedFailedStageTimeout        AdLoadFailedFailedStage = "timeout"
+	AdLoadFailedFailedStageWebviewInit    AdLoadFailedFailedStage = "webview_init"
+	AdLoadFailedFailedStageWebviewLoad    AdLoadFailedFailedStage = "webview_load"
+)
+
+// Defines values for AdLoadRequestedCaller.
+const (
+	MaxAdapter   AdLoadRequestedCaller = "max_adapter"
+	PublisherApi AdLoadRequestedCaller = "publisher_api"
+)
+
+// Defines values for AdLoadRequestedEnvelopeAdType.
+const (
+	AdLoadRequestedEnvelopeAdTypeBanner       AdLoadRequestedEnvelopeAdType = "banner"
+	AdLoadRequestedEnvelopeAdTypeInterstitial AdLoadRequestedEnvelopeAdType = "interstitial"
+	AdLoadRequestedEnvelopeAdTypeRewarded     AdLoadRequestedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdLoadRequestedEnvelopeEventName.
+const (
+	AdLoadRequestedEnvelopeEventNameAdLoadRequested AdLoadRequestedEnvelopeEventName = "ad_load_requested"
+)
+
+// Defines values for AdLoadedEnvelopeAdType.
+const (
+	AdLoadedEnvelopeAdTypeBanner       AdLoadedEnvelopeAdType = "banner"
+	AdLoadedEnvelopeAdTypeInterstitial AdLoadedEnvelopeAdType = "interstitial"
+	AdLoadedEnvelopeAdTypeRewarded     AdLoadedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdLoadedEnvelopeEventName.
+const (
+	AdLoadedEnvelopeEventNameAdLoaded AdLoadedEnvelopeEventName = "ad_loaded"
+)
+
+// Defines values for AdRequestStartedEnvelopeAdType.
+const (
+	AdRequestStartedEnvelopeAdTypeBanner       AdRequestStartedEnvelopeAdType = "banner"
+	AdRequestStartedEnvelopeAdTypeInterstitial AdRequestStartedEnvelopeAdType = "interstitial"
+	AdRequestStartedEnvelopeAdTypeRewarded     AdRequestStartedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdRequestStartedEnvelopeEventName.
+const (
+	AdRequestStartedEnvelopeEventNameAdRequestStarted AdRequestStartedEnvelopeEventName = "ad_request_started"
+)
+
+// Defines values for AdRewardGrantedEnvelopeAdType.
+const (
+	AdRewardGrantedEnvelopeAdTypeBanner       AdRewardGrantedEnvelopeAdType = "banner"
+	AdRewardGrantedEnvelopeAdTypeInterstitial AdRewardGrantedEnvelopeAdType = "interstitial"
+	AdRewardGrantedEnvelopeAdTypeRewarded     AdRewardGrantedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdRewardGrantedEnvelopeEventName.
+const (
+	AdRewardGrantedEnvelopeEventNameAdRewardGranted AdRewardGrantedEnvelopeEventName = "ad_reward_granted"
+)
+
+// Defines values for AdShowFailedEnvelopeAdType.
+const (
+	AdShowFailedEnvelopeAdTypeBanner       AdShowFailedEnvelopeAdType = "banner"
+	AdShowFailedEnvelopeAdTypeInterstitial AdShowFailedEnvelopeAdType = "interstitial"
+	AdShowFailedEnvelopeAdTypeRewarded     AdShowFailedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdShowFailedEnvelopeEventName.
+const (
+	AdShowFailedEnvelopeEventNameAdShowFailed AdShowFailedEnvelopeEventName = "ad_show_failed"
+)
+
+// Defines values for AdShowRequestedEnvelopeAdType.
+const (
+	AdShowRequestedEnvelopeAdTypeBanner       AdShowRequestedEnvelopeAdType = "banner"
+	AdShowRequestedEnvelopeAdTypeInterstitial AdShowRequestedEnvelopeAdType = "interstitial"
+	AdShowRequestedEnvelopeAdTypeRewarded     AdShowRequestedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdShowRequestedEnvelopeEventName.
+const (
+	AdShowRequestedEnvelopeEventNameAdShowRequested AdShowRequestedEnvelopeEventName = "ad_show_requested"
+)
+
+// Defines values for AdViewableEnvelopeAdType.
+const (
+	AdViewableEnvelopeAdTypeBanner       AdViewableEnvelopeAdType = "banner"
+	AdViewableEnvelopeAdTypeInterstitial AdViewableEnvelopeAdType = "interstitial"
+	AdViewableEnvelopeAdTypeRewarded     AdViewableEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdViewableEnvelopeEventName.
+const (
+	AdViewableEnvelopeEventNameAdViewable AdViewableEnvelopeEventName = "ad_viewable"
+)
+
+// Defines values for AdapterInitResultEnvelopeAdType.
+const (
+	AdapterInitResultEnvelopeAdTypeBanner       AdapterInitResultEnvelopeAdType = "banner"
+	AdapterInitResultEnvelopeAdTypeInterstitial AdapterInitResultEnvelopeAdType = "interstitial"
+	AdapterInitResultEnvelopeAdTypeRewarded     AdapterInitResultEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdapterInitResultEnvelopeEventName.
+const (
+	AdapterInitResultEnvelopeEventNameAdapterInitResult AdapterInitResultEnvelopeEventName = "adapter_init_result"
+)
+
+// Defines values for AdapterLoadBudgetExceededEnvelopeAdType.
+const (
+	AdapterLoadBudgetExceededEnvelopeAdTypeBanner       AdapterLoadBudgetExceededEnvelopeAdType = "banner"
+	AdapterLoadBudgetExceededEnvelopeAdTypeInterstitial AdapterLoadBudgetExceededEnvelopeAdType = "interstitial"
+	AdapterLoadBudgetExceededEnvelopeAdTypeRewarded     AdapterLoadBudgetExceededEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdapterLoadBudgetExceededEnvelopeEventName.
+const (
+	AdapterLoadBudgetExceededEnvelopeEventNameAdapterLoadBudgetExceeded AdapterLoadBudgetExceededEnvelopeEventName = "adapter_load_budget_exceeded"
+)
+
+// Defines values for AdapterTokenRequestedEnvelopeAdType.
+const (
+	AdapterTokenRequestedEnvelopeAdTypeBanner       AdapterTokenRequestedEnvelopeAdType = "banner"
+	AdapterTokenRequestedEnvelopeAdTypeInterstitial AdapterTokenRequestedEnvelopeAdType = "interstitial"
+	AdapterTokenRequestedEnvelopeAdTypeRewarded     AdapterTokenRequestedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdapterTokenRequestedEnvelopeEventName.
+const (
+	AdapterTokenRequestedEnvelopeEventNameAdapterTokenRequested AdapterTokenRequestedEnvelopeEventName = "adapter_token_requested"
+)
+
+// Defines values for AdapterTokenResultEnvelopeAdType.
+const (
+	AdapterTokenResultEnvelopeAdTypeBanner       AdapterTokenResultEnvelopeAdType = "banner"
+	AdapterTokenResultEnvelopeAdTypeInterstitial AdapterTokenResultEnvelopeAdType = "interstitial"
+	AdapterTokenResultEnvelopeAdTypeRewarded     AdapterTokenResultEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdapterTokenResultEnvelopeEventName.
+const (
+	AdapterTokenResultEnvelopeEventNameAdapterTokenResult AdapterTokenResultEnvelopeEventName = "adapter_token_result"
+)
+
+// Defines values for AdapterTokenResultOutcome.
+const (
+	AdapterTokenResultOutcomeError     AdapterTokenResultOutcome = "error"
+	AdapterTokenResultOutcomeNullToken AdapterTokenResultOutcome = "null_token"
+	AdapterTokenResultOutcomeOk        AdapterTokenResultOutcome = "ok"
+	AdapterTokenResultOutcomeTimeout   AdapterTokenResultOutcome = "timeout"
+)
+
+// Defines values for AdmParseResultEnvelopeAdType.
+const (
+	AdmParseResultEnvelopeAdTypeBanner       AdmParseResultEnvelopeAdType = "banner"
+	AdmParseResultEnvelopeAdTypeInterstitial AdmParseResultEnvelopeAdType = "interstitial"
+	AdmParseResultEnvelopeAdTypeRewarded     AdmParseResultEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AdmParseResultEnvelopeEventName.
+const (
+	AdmParseResultEnvelopeEventNameAdmParseResult AdmParseResultEnvelopeEventName = "adm_parse_result"
+)
+
+// Defines values for AuctionFailedEnvelopeAdType.
+const (
+	AuctionFailedEnvelopeAdTypeBanner       AuctionFailedEnvelopeAdType = "banner"
+	AuctionFailedEnvelopeAdTypeInterstitial AuctionFailedEnvelopeAdType = "interstitial"
+	AuctionFailedEnvelopeAdTypeRewarded     AuctionFailedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AuctionFailedEnvelopeEventName.
+const (
+	AuctionFailedEnvelopeEventNameAuctionFailed AuctionFailedEnvelopeEventName = "auction_failed"
+)
+
+// Defines values for AuctionNoDemandEnvelopeAdType.
+const (
+	AuctionNoDemandEnvelopeAdTypeBanner       AuctionNoDemandEnvelopeAdType = "banner"
+	AuctionNoDemandEnvelopeAdTypeInterstitial AuctionNoDemandEnvelopeAdType = "interstitial"
+	AuctionNoDemandEnvelopeAdTypeRewarded     AuctionNoDemandEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AuctionNoDemandEnvelopeEventName.
+const (
+	AuctionNoDemandEnvelopeEventNameAuctionNoDemand AuctionNoDemandEnvelopeEventName = "auction_no_demand"
+)
+
+// Defines values for AuctionNoDemandReason.
+const (
+	AuctionError AuctionNoDemandReason = "auction_error"
+	NoFills      AuctionNoDemandReason = "no_fills"
+	Timeout      AuctionNoDemandReason = "timeout"
+)
+
+// Defines values for AuctionRequestedEnvelopeAdType.
+const (
+	AuctionRequestedEnvelopeAdTypeBanner       AuctionRequestedEnvelopeAdType = "banner"
+	AuctionRequestedEnvelopeAdTypeInterstitial AuctionRequestedEnvelopeAdType = "interstitial"
+	AuctionRequestedEnvelopeAdTypeRewarded     AuctionRequestedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AuctionRequestedEnvelopeEventName.
+const (
+	AuctionRequestedEnvelopeEventNameAuctionRequested AuctionRequestedEnvelopeEventName = "auction_requested"
+)
+
+// Defines values for AuctionResponseReceivedEnvelopeAdType.
+const (
+	AuctionResponseReceivedEnvelopeAdTypeBanner       AuctionResponseReceivedEnvelopeAdType = "banner"
+	AuctionResponseReceivedEnvelopeAdTypeInterstitial AuctionResponseReceivedEnvelopeAdType = "interstitial"
+	AuctionResponseReceivedEnvelopeAdTypeRewarded     AuctionResponseReceivedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for AuctionResponseReceivedEnvelopeEventName.
+const (
+	AuctionResponseReceivedEnvelopeEventNameAuctionResponseReceived AuctionResponseReceivedEnvelopeEventName = "auction_response_received"
+)
+
+// Defines values for ClientEventEnvelopeAdType.
+const (
+	ClientEventEnvelopeAdTypeBanner       ClientEventEnvelopeAdType = "banner"
+	ClientEventEnvelopeAdTypeInterstitial ClientEventEnvelopeAdType = "interstitial"
+	ClientEventEnvelopeAdTypeRewarded     ClientEventEnvelopeAdType = "rewarded"
+)
+
+// Defines values for ClientEventName.
+const (
+	ClientEventNameAdClicked                 ClientEventName = "ad_clicked"
+	ClientEventNameAdClosed                  ClientEventName = "ad_closed"
+	ClientEventNameAdExpired                 ClientEventName = "ad_expired"
+	ClientEventNameAdFilled                  ClientEventName = "ad_filled"
+	ClientEventNameAdImpression              ClientEventName = "ad_impression"
+	ClientEventNameAdLoadFailed              ClientEventName = "ad_load_failed"
+	ClientEventNameAdLoadRequested           ClientEventName = "ad_load_requested"
+	ClientEventNameAdLoaded                  ClientEventName = "ad_loaded"
+	ClientEventNameAdRequestStarted          ClientEventName = "ad_request_started"
+	ClientEventNameAdRewardGranted           ClientEventName = "ad_reward_granted"
+	ClientEventNameAdShowFailed              ClientEventName = "ad_show_failed"
+	ClientEventNameAdShowRequested           ClientEventName = "ad_show_requested"
+	ClientEventNameAdViewable                ClientEventName = "ad_viewable"
+	ClientEventNameAdapterInitResult         ClientEventName = "adapter_init_result"
+	ClientEventNameAdapterLoadBudgetExceeded ClientEventName = "adapter_load_budget_exceeded"
+	ClientEventNameAdapterTokenRequested     ClientEventName = "adapter_token_requested"
+	ClientEventNameAdapterTokenResult        ClientEventName = "adapter_token_result"
+	ClientEventNameAdmParseResult            ClientEventName = "adm_parse_result"
+	ClientEventNameAuctionFailed             ClientEventName = "auction_failed"
+	ClientEventNameAuctionNoDemand           ClientEventName = "auction_no_demand"
+	ClientEventNameAuctionRequested          ClientEventName = "auction_requested"
+	ClientEventNameAuctionResponseReceived   ClientEventName = "auction_response_received"
+	ClientEventNameConfigFetchResult         ClientEventName = "config_fetch_result"
+	ClientEventNameNoFillReturnedToMax       ClientEventName = "no_fill_returned_to_max"
+	ClientEventNameRenderCrashed             ClientEventName = "render_crashed"
+	ClientEventNameRendererSelected          ClientEventName = "renderer_selected"
+	ClientEventNameSdkCrashed                ClientEventName = "sdk_crashed"
+	ClientEventNameSdkInitCompleted          ClientEventName = "sdk_init_completed"
+	ClientEventNameSdkInitFailed             ClientEventName = "sdk_init_failed"
+	ClientEventNameSdkInitStarted            ClientEventName = "sdk_init_started"
+	ClientEventNameSignalFailed              ClientEventName = "signal_failed"
+	ClientEventNameSignalProvided            ClientEventName = "signal_provided"
+	ClientEventNameSignalRequested           ClientEventName = "signal_requested"
+	ClientEventNameSignalTimeoutSuspected    ClientEventName = "signal_timeout_suspected"
+	ClientEventNameTokenCollectionCompleted  ClientEventName = "token_collection_completed"
+	ClientEventNameVideoComplete             ClientEventName = "video_complete"
+	ClientEventNameVideoError                ClientEventName = "video_error"
+	ClientEventNameVideoMidpoint             ClientEventName = "video_midpoint"
+	ClientEventNameVideoQ1                   ClientEventName = "video_q1"
+	ClientEventNameVideoQ3                   ClientEventName = "video_q3"
+	ClientEventNameVideoSkipped              ClientEventName = "video_skipped"
+	ClientEventNameVideoStart                ClientEventName = "video_start"
+	ClientEventNameWebviewError              ClientEventName = "webview_error"
+)
+
+// Defines values for ClientMetricName.
+const (
+	ClientAdLoadDurationSeconds          ClientMetricName = "client_ad_load_duration_seconds"
+	ClientAuctionDurationSeconds         ClientMetricName = "client_auction_duration_seconds"
+	ClientTokenCollectionDurationSeconds ClientMetricName = "client_token_collection_duration_seconds"
+)
+
+// Defines values for ConfigFetchResultEnvelopeAdType.
+const (
+	ConfigFetchResultEnvelopeAdTypeBanner       ConfigFetchResultEnvelopeAdType = "banner"
+	ConfigFetchResultEnvelopeAdTypeInterstitial ConfigFetchResultEnvelopeAdType = "interstitial"
+	ConfigFetchResultEnvelopeAdTypeRewarded     ConfigFetchResultEnvelopeAdType = "rewarded"
+)
+
+// Defines values for ConfigFetchResultEnvelopeEventName.
+const (
+	ConfigFetchResultEnvelopeEventNameConfigFetchResult ConfigFetchResultEnvelopeEventName = "config_fetch_result"
+)
+
+// Defines values for MetricObservationType.
+const (
+	Counter   MetricObservationType = "counter"
+	Gauge     MetricObservationType = "gauge"
+	Histogram MetricObservationType = "histogram"
+)
+
+// Defines values for NoFillReturnedToMaxEnvelopeAdType.
+const (
+	NoFillReturnedToMaxEnvelopeAdTypeBanner       NoFillReturnedToMaxEnvelopeAdType = "banner"
+	NoFillReturnedToMaxEnvelopeAdTypeInterstitial NoFillReturnedToMaxEnvelopeAdType = "interstitial"
+	NoFillReturnedToMaxEnvelopeAdTypeRewarded     NoFillReturnedToMaxEnvelopeAdType = "rewarded"
+)
+
+// Defines values for NoFillReturnedToMaxEnvelopeEventName.
+const (
+	NoFillReturnedToMaxEnvelopeEventNameNoFillReturnedToMax NoFillReturnedToMaxEnvelopeEventName = "no_fill_returned_to_max"
+)
+
+// Defines values for RenderCrashedEnvelopeAdType.
+const (
+	RenderCrashedEnvelopeAdTypeBanner       RenderCrashedEnvelopeAdType = "banner"
+	RenderCrashedEnvelopeAdTypeInterstitial RenderCrashedEnvelopeAdType = "interstitial"
+	RenderCrashedEnvelopeAdTypeRewarded     RenderCrashedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for RenderCrashedEnvelopeEventName.
+const (
+	RenderCrashedEnvelopeEventNameRenderCrashed RenderCrashedEnvelopeEventName = "render_crashed"
+)
+
+// Defines values for RendererSelectedEnvelopeAdType.
+const (
+	RendererSelectedEnvelopeAdTypeBanner       RendererSelectedEnvelopeAdType = "banner"
+	RendererSelectedEnvelopeAdTypeInterstitial RendererSelectedEnvelopeAdType = "interstitial"
+	RendererSelectedEnvelopeAdTypeRewarded     RendererSelectedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for RendererSelectedEnvelopeEventName.
+const (
+	RendererSelectedEnvelopeEventNameRendererSelected RendererSelectedEnvelopeEventName = "renderer_selected"
+)
+
+// Defines values for RendererSelectedRenderer.
+const (
+	Html  RendererSelectedRenderer = "html"
+	Mraid RendererSelectedRenderer = "mraid"
+	Vast  RendererSelectedRenderer = "vast"
+)
+
+// Defines values for SdkCrashedEnvelopeAdType.
+const (
+	SdkCrashedEnvelopeAdTypeBanner       SdkCrashedEnvelopeAdType = "banner"
+	SdkCrashedEnvelopeAdTypeInterstitial SdkCrashedEnvelopeAdType = "interstitial"
+	SdkCrashedEnvelopeAdTypeRewarded     SdkCrashedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SdkCrashedEnvelopeEventName.
+const (
+	SdkCrashedEnvelopeEventNameSdkCrashed SdkCrashedEnvelopeEventName = "sdk_crashed"
+)
+
+// Defines values for SdkInitCompletedEnvelopeAdType.
+const (
+	SdkInitCompletedEnvelopeAdTypeBanner       SdkInitCompletedEnvelopeAdType = "banner"
+	SdkInitCompletedEnvelopeAdTypeInterstitial SdkInitCompletedEnvelopeAdType = "interstitial"
+	SdkInitCompletedEnvelopeAdTypeRewarded     SdkInitCompletedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SdkInitCompletedEnvelopeEventName.
+const (
+	SdkInitCompletedEnvelopeEventNameSdkInitCompleted SdkInitCompletedEnvelopeEventName = "sdk_init_completed"
+)
+
+// Defines values for SdkInitFailedEnvelopeAdType.
+const (
+	SdkInitFailedEnvelopeAdTypeBanner       SdkInitFailedEnvelopeAdType = "banner"
+	SdkInitFailedEnvelopeAdTypeInterstitial SdkInitFailedEnvelopeAdType = "interstitial"
+	SdkInitFailedEnvelopeAdTypeRewarded     SdkInitFailedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SdkInitFailedEnvelopeEventName.
+const (
+	SdkInitFailedEnvelopeEventNameSdkInitFailed SdkInitFailedEnvelopeEventName = "sdk_init_failed"
+)
+
+// Defines values for SdkInitStartedEnvelopeAdType.
+const (
+	SdkInitStartedEnvelopeAdTypeBanner       SdkInitStartedEnvelopeAdType = "banner"
+	SdkInitStartedEnvelopeAdTypeInterstitial SdkInitStartedEnvelopeAdType = "interstitial"
+	SdkInitStartedEnvelopeAdTypeRewarded     SdkInitStartedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SdkInitStartedEnvelopeEventName.
+const (
+	SdkInitStartedEnvelopeEventNameSdkInitStarted SdkInitStartedEnvelopeEventName = "sdk_init_started"
+)
+
+// Defines values for SignalFailedEnvelopeAdType.
+const (
+	SignalFailedEnvelopeAdTypeBanner       SignalFailedEnvelopeAdType = "banner"
+	SignalFailedEnvelopeAdTypeInterstitial SignalFailedEnvelopeAdType = "interstitial"
+	SignalFailedEnvelopeAdTypeRewarded     SignalFailedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SignalFailedEnvelopeEventName.
+const (
+	SignalFailedEnvelopeEventNameSignalFailed SignalFailedEnvelopeEventName = "signal_failed"
+)
+
+// Defines values for SignalProvidedEnvelopeAdType.
+const (
+	SignalProvidedEnvelopeAdTypeBanner       SignalProvidedEnvelopeAdType = "banner"
+	SignalProvidedEnvelopeAdTypeInterstitial SignalProvidedEnvelopeAdType = "interstitial"
+	SignalProvidedEnvelopeAdTypeRewarded     SignalProvidedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SignalProvidedEnvelopeEventName.
+const (
+	SignalProvidedEnvelopeEventNameSignalProvided SignalProvidedEnvelopeEventName = "signal_provided"
+)
+
+// Defines values for SignalProvidedTokenSource.
+const (
+	Cached SignalProvidedTokenSource = "cached"
+	Fresh  SignalProvidedTokenSource = "fresh"
+)
+
+// Defines values for SignalRequestedEnvelopeAdType.
+const (
+	SignalRequestedEnvelopeAdTypeBanner       SignalRequestedEnvelopeAdType = "banner"
+	SignalRequestedEnvelopeAdTypeInterstitial SignalRequestedEnvelopeAdType = "interstitial"
+	SignalRequestedEnvelopeAdTypeRewarded     SignalRequestedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SignalRequestedEnvelopeEventName.
+const (
+	SignalRequestedEnvelopeEventNameSignalRequested SignalRequestedEnvelopeEventName = "signal_requested"
+)
+
+// Defines values for SignalTimeoutSuspectedEnvelopeAdType.
+const (
+	SignalTimeoutSuspectedEnvelopeAdTypeBanner       SignalTimeoutSuspectedEnvelopeAdType = "banner"
+	SignalTimeoutSuspectedEnvelopeAdTypeInterstitial SignalTimeoutSuspectedEnvelopeAdType = "interstitial"
+	SignalTimeoutSuspectedEnvelopeAdTypeRewarded     SignalTimeoutSuspectedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for SignalTimeoutSuspectedEnvelopeEventName.
+const (
+	SignalTimeoutSuspectedEnvelopeEventNameSignalTimeoutSuspected SignalTimeoutSuspectedEnvelopeEventName = "signal_timeout_suspected"
+)
+
+// Defines values for TokenCollectionCompletedEnvelopeAdType.
+const (
+	TokenCollectionCompletedEnvelopeAdTypeBanner       TokenCollectionCompletedEnvelopeAdType = "banner"
+	TokenCollectionCompletedEnvelopeAdTypeInterstitial TokenCollectionCompletedEnvelopeAdType = "interstitial"
+	TokenCollectionCompletedEnvelopeAdTypeRewarded     TokenCollectionCompletedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for TokenCollectionCompletedEnvelopeEventName.
+const (
+	TokenCollectionCompletedEnvelopeEventNameTokenCollectionCompleted TokenCollectionCompletedEnvelopeEventName = "token_collection_completed"
+)
+
+// Defines values for VideoCompleteEnvelopeAdType.
+const (
+	VideoCompleteEnvelopeAdTypeBanner       VideoCompleteEnvelopeAdType = "banner"
+	VideoCompleteEnvelopeAdTypeInterstitial VideoCompleteEnvelopeAdType = "interstitial"
+	VideoCompleteEnvelopeAdTypeRewarded     VideoCompleteEnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoCompleteEnvelopeEventName.
+const (
+	VideoCompleteEnvelopeEventNameVideoComplete VideoCompleteEnvelopeEventName = "video_complete"
+)
+
+// Defines values for VideoErrorEnvelopeAdType.
+const (
+	VideoErrorEnvelopeAdTypeBanner       VideoErrorEnvelopeAdType = "banner"
+	VideoErrorEnvelopeAdTypeInterstitial VideoErrorEnvelopeAdType = "interstitial"
+	VideoErrorEnvelopeAdTypeRewarded     VideoErrorEnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoErrorEnvelopeEventName.
+const (
+	VideoErrorEnvelopeEventNameVideoError VideoErrorEnvelopeEventName = "video_error"
+)
+
+// Defines values for VideoMidpointEnvelopeAdType.
+const (
+	VideoMidpointEnvelopeAdTypeBanner       VideoMidpointEnvelopeAdType = "banner"
+	VideoMidpointEnvelopeAdTypeInterstitial VideoMidpointEnvelopeAdType = "interstitial"
+	VideoMidpointEnvelopeAdTypeRewarded     VideoMidpointEnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoMidpointEnvelopeEventName.
+const (
+	VideoMidpointEnvelopeEventNameVideoMidpoint VideoMidpointEnvelopeEventName = "video_midpoint"
+)
+
+// Defines values for VideoQ1EnvelopeAdType.
+const (
+	VideoQ1EnvelopeAdTypeBanner       VideoQ1EnvelopeAdType = "banner"
+	VideoQ1EnvelopeAdTypeInterstitial VideoQ1EnvelopeAdType = "interstitial"
+	VideoQ1EnvelopeAdTypeRewarded     VideoQ1EnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoQ1EnvelopeEventName.
+const (
+	VideoQ1EnvelopeEventNameVideoQ1 VideoQ1EnvelopeEventName = "video_q1"
+)
+
+// Defines values for VideoQ3EnvelopeAdType.
+const (
+	VideoQ3EnvelopeAdTypeBanner       VideoQ3EnvelopeAdType = "banner"
+	VideoQ3EnvelopeAdTypeInterstitial VideoQ3EnvelopeAdType = "interstitial"
+	VideoQ3EnvelopeAdTypeRewarded     VideoQ3EnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoQ3EnvelopeEventName.
+const (
+	VideoQ3EnvelopeEventNameVideoQ3 VideoQ3EnvelopeEventName = "video_q3"
+)
+
+// Defines values for VideoSkippedEnvelopeAdType.
+const (
+	VideoSkippedEnvelopeAdTypeBanner       VideoSkippedEnvelopeAdType = "banner"
+	VideoSkippedEnvelopeAdTypeInterstitial VideoSkippedEnvelopeAdType = "interstitial"
+	VideoSkippedEnvelopeAdTypeRewarded     VideoSkippedEnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoSkippedEnvelopeEventName.
+const (
+	VideoSkippedEnvelopeEventNameVideoSkipped VideoSkippedEnvelopeEventName = "video_skipped"
+)
+
+// Defines values for VideoStartEnvelopeAdType.
+const (
+	VideoStartEnvelopeAdTypeBanner       VideoStartEnvelopeAdType = "banner"
+	VideoStartEnvelopeAdTypeInterstitial VideoStartEnvelopeAdType = "interstitial"
+	VideoStartEnvelopeAdTypeRewarded     VideoStartEnvelopeAdType = "rewarded"
+)
+
+// Defines values for VideoStartEnvelopeEventName.
+const (
+	VideoStartEnvelopeEventNameVideoStart VideoStartEnvelopeEventName = "video_start"
+)
+
+// Defines values for WebviewErrorEnvelopeAdType.
+const (
+	WebviewErrorEnvelopeAdTypeBanner       WebviewErrorEnvelopeAdType = "banner"
+	WebviewErrorEnvelopeAdTypeInterstitial WebviewErrorEnvelopeAdType = "interstitial"
+	WebviewErrorEnvelopeAdTypeRewarded     WebviewErrorEnvelopeAdType = "rewarded"
+)
+
+// Defines values for WebviewErrorEnvelopeEventName.
+const (
+	WebviewErrorEnvelopeEventNameWebviewError WebviewErrorEnvelopeEventName = "webview_error"
+)
+
 // Defines values for AdType.
 const (
 	AdTypeBanner       AdType = "banner"
@@ -400,6 +1041,3037 @@ const (
 	CPM PostWinJSONBodyShowBidType = "CPM"
 	RTB PostWinJSONBodyShowBidType = "RTB"
 )
+
+// AdClicked Click on the shown ad.
+type AdClicked struct {
+	// ClickTarget Click target.
+	ClickTarget *string `json:"click_target,omitempty"`
+	Envelope    struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdClickedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID         `json:"event_id"`
+		EventName AdClickedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TimeSinceImpressionMs Time from impression to click.
+	TimeSinceImpressionMs *int64 `json:"time_since_impression_ms,omitempty"`
+}
+
+// AdClickedEnvelopeAdType Ad type
+type AdClickedEnvelopeAdType string
+
+// AdClickedEnvelopeEventName defines model for AdClicked.Envelope.EventName.
+type AdClickedEnvelopeEventName string
+
+// AdClosed Shown ad closed.
+type AdClosed struct {
+	// CloseMethod How it closed.
+	CloseMethod *AdClosedCloseMethod `json:"close_method,omitempty"`
+	Envelope    struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdClosedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID        `json:"event_id"`
+		EventName AdClosedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TimeVisibleMs Time the ad was visible.
+	TimeVisibleMs *int64 `json:"time_visible_ms,omitempty"`
+}
+
+// AdClosedCloseMethod How it closed.
+type AdClosedCloseMethod string
+
+// AdClosedEnvelopeAdType Ad type
+type AdClosedEnvelopeAdType string
+
+// AdClosedEnvelopeEventName defines model for AdClosed.Envelope.EventName.
+type AdClosedEnvelopeEventName string
+
+// AdExpired A loaded ad passed its TTL.
+type AdExpired struct {
+	// AgeAtExpiryMs Age when it expired.
+	AgeAtExpiryMs *int64 `json:"age_at_expiry_ms,omitempty"`
+	Envelope      struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdExpiredEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID         `json:"event_id"`
+		EventName AdExpiredEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TtlMs Configured TTL.
+	TtlMs *int64 `json:"ttl_ms,omitempty"`
+}
+
+// AdExpiredEnvelopeAdType Ad type
+type AdExpiredEnvelopeAdType string
+
+// AdExpiredEnvelopeEventName defines model for AdExpired.Envelope.EventName.
+type AdExpiredEnvelopeEventName string
+
+// AdFilled Auction filled. Distinct from ad_loaded, which is creative load completion.
+type AdFilled struct {
+	// BidType How the fill was won.
+	BidType *AdFilledBidType `json:"bid_type,omitempty"`
+
+	// DemandId Winning adapter or DSP key.
+	DemandId *string `json:"demand_id,omitempty"`
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdFilledEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID        `json:"event_id"`
+		EventName AdFilledEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Price Clearing price the SDK will show.
+	Price *float64 `json:"price,omitempty"`
+}
+
+// AdFilledBidType How the fill was won.
+type AdFilledBidType string
+
+// AdFilledEnvelopeAdType Ad type
+type AdFilledEnvelopeAdType string
+
+// AdFilledEnvelopeEventName defines model for AdFilled.Envelope.EventName.
+type AdFilledEnvelopeEventName string
+
+// AdImpression Creative was shown. Billing stays on /v2/show; this is the client copy.
+type AdImpression struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdImpressionEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName AdImpressionEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// OmEnabled OM SDK was active for this impression.
+	OmEnabled *bool `json:"om_enabled,omitempty"`
+
+	// RenderDurationMs Time from show request to impression.
+	RenderDurationMs *int64 `json:"render_duration_ms,omitempty"`
+}
+
+// AdImpressionEnvelopeAdType Ad type
+type AdImpressionEnvelopeAdType string
+
+// AdImpressionEnvelopeEventName defines model for AdImpression.Envelope.EventName.
+type AdImpressionEnvelopeEventName string
+
+// AdLoadFailed Creative load failed.
+type AdLoadFailed struct {
+	// DemandId Adapter or DSP that failed to load.
+	DemandId *string `json:"demand_id,omitempty"`
+
+	// DurationMs Time until failure.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdLoadFailedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName AdLoadFailedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error. Errors are never sampled.
+	ErrorCode string `json:"error_code"`
+
+	// ErrorDomain Stable domain (sdk / adapter / network / publisher).
+	ErrorDomain *string `json:"error_domain,omitempty"`
+
+	// ExceptionCauseClass Cause exception class name. No message.
+	ExceptionCauseClass *string `json:"exception_cause_class,omitempty"`
+
+	// ExceptionClass Exception class name. No message.
+	ExceptionClass *string `json:"exception_class,omitempty"`
+
+	// ExternalErrorCode Adapter or network code, beside the banded error_code.
+	ExternalErrorCode *string `json:"external_error_code,omitempty"`
+
+	// ExternalErrorSource Who produced external_error_code.
+	ExternalErrorSource *string `json:"external_error_source,omitempty"`
+
+	// FailedStage Where load failed.
+	FailedStage *AdLoadFailedFailedStage `json:"failed_stage,omitempty"`
+}
+
+// AdLoadFailedEnvelopeAdType Ad type
+type AdLoadFailedEnvelopeAdType string
+
+// AdLoadFailedEnvelopeEventName defines model for AdLoadFailed.Envelope.EventName.
+type AdLoadFailedEnvelopeEventName string
+
+// AdLoadFailedFailedStage Where load failed.
+type AdLoadFailedFailedStage string
+
+// AdLoadRequested SDK starts loading the returned ad.
+type AdLoadRequested struct {
+	// Caller Who asked for the load.
+	Caller   *AdLoadRequestedCaller `json:"caller,omitempty"`
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdLoadRequestedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID               `json:"event_id"`
+		EventName AdLoadRequestedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// HasBidResponse A bid response was already in hand.
+	HasBidResponse *bool `json:"has_bid_response,omitempty"`
+}
+
+// AdLoadRequestedCaller Who asked for the load.
+type AdLoadRequestedCaller string
+
+// AdLoadRequestedEnvelopeAdType Ad type
+type AdLoadRequestedEnvelopeAdType string
+
+// AdLoadRequestedEnvelopeEventName defines model for AdLoadRequested.Envelope.EventName.
+type AdLoadRequestedEnvelopeEventName string
+
+// AdLoaded Creative finished loading.
+type AdLoaded struct {
+	// CreativeSizeBytes Creative size.
+	CreativeSizeBytes *int64 `json:"creative_size_bytes,omitempty"`
+	Envelope          struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdLoadedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID        `json:"event_id"`
+		EventName AdLoadedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Renderer Renderer that loaded it.
+	Renderer *string `json:"renderer,omitempty"`
+
+	// TotalDurationMs Load time.
+	TotalDurationMs *int64 `json:"total_duration_ms,omitempty"`
+}
+
+// AdLoadedEnvelopeAdType Ad type
+type AdLoadedEnvelopeAdType string
+
+// AdLoadedEnvelopeEventName defines model for AdLoaded.Envelope.EventName.
+type AdLoadedEnvelopeEventName string
+
+// AdRequestStarted Publisher calls load().
+type AdRequestStarted struct {
+	// AuctionKey Auction configuration key if the SDK has one.
+	AuctionKey *string `json:"auction_key,omitempty"`
+
+	// CachedAdAvailable A cached ad was already available.
+	CachedAdAvailable *bool `json:"cached_ad_available,omitempty"`
+	Envelope          struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdRequestStartedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                `json:"event_id"`
+		EventName AdRequestStartedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// IsAutorefresh Refresh of an already-shown banner.
+	IsAutorefresh *bool `json:"is_autorefresh,omitempty"`
+
+	// Placement Bidon placement.
+	Placement *string `json:"placement,omitempty"`
+
+	// PriceFloor Client-side floor at request start. Server stores this as requested_price_floor; price_floor on server events is the effective floor.
+	PriceFloor *float64 `json:"price_floor,omitempty"`
+
+	// Trigger What started the request.
+	Trigger *string `json:"trigger,omitempty"`
+}
+
+// AdRequestStartedEnvelopeAdType Ad type
+type AdRequestStartedEnvelopeAdType string
+
+// AdRequestStartedEnvelopeEventName defines model for AdRequestStarted.Envelope.EventName.
+type AdRequestStartedEnvelopeEventName string
+
+// AdRewardGranted Rewarded ad granted the reward.
+type AdRewardGranted struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdRewardGrantedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID               `json:"event_id"`
+		EventName AdRewardGrantedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// AdRewardGrantedEnvelopeAdType Ad type
+type AdRewardGrantedEnvelopeAdType string
+
+// AdRewardGrantedEnvelopeEventName defines model for AdRewardGranted.Envelope.EventName.
+type AdRewardGrantedEnvelopeEventName string
+
+// AdShowFailed Show failed.
+type AdShowFailed struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdShowFailedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName AdShowFailedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode string `json:"error_code"`
+
+	// FailedStage Where show failed.
+	FailedStage *string `json:"failed_stage,omitempty"`
+}
+
+// AdShowFailedEnvelopeAdType Ad type
+type AdShowFailedEnvelopeAdType string
+
+// AdShowFailedEnvelopeEventName defines model for AdShowFailed.Envelope.EventName.
+type AdShowFailedEnvelopeEventName string
+
+// AdShowRequested SDK is asked to show a loaded ad.
+type AdShowRequested struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdShowRequestedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID               `json:"event_id"`
+		EventName AdShowRequestedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TimeSinceLoadedMs Age of the loaded ad.
+	TimeSinceLoadedMs *int64 `json:"time_since_loaded_ms,omitempty"`
+}
+
+// AdShowRequestedEnvelopeAdType Ad type
+type AdShowRequestedEnvelopeAdType string
+
+// AdShowRequestedEnvelopeEventName defines model for AdShowRequested.Envelope.EventName.
+type AdShowRequestedEnvelopeEventName string
+
+// AdViewable Impression became viewable.
+type AdViewable struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdViewableEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID          `json:"event_id"`
+		EventName AdViewableEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// OmEnabled OM SDK was active.
+	OmEnabled *bool `json:"om_enabled,omitempty"`
+
+	// OmPartnerName OM partner name.
+	OmPartnerName *string `json:"om_partner_name,omitempty"`
+
+	// TimeToViewableMs Time from impression to viewable.
+	TimeToViewableMs *int64 `json:"time_to_viewable_ms,omitempty"`
+}
+
+// AdViewableEnvelopeAdType Ad type
+type AdViewableEnvelopeAdType string
+
+// AdViewableEnvelopeEventName defines model for AdViewable.Envelope.EventName.
+type AdViewableEnvelopeEventName string
+
+// AdapterInitResult Per-adapter init result.
+type AdapterInitResult struct {
+	// AdapterName Adapter key.
+	AdapterName *string `json:"adapter_name,omitempty"`
+
+	// AdapterVersion Adapter SDK version.
+	AdapterVersion *string `json:"adapter_version,omitempty"`
+
+	// DurationMs Wall time of this adapter init.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdapterInitResultEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                 `json:"event_id"`
+		EventName AdapterInitResultEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode *string `json:"error_code,omitempty"`
+
+	// ExternalErrorCode Adapter-reported code, preserved raw.
+	ExternalErrorCode *string `json:"external_error_code,omitempty"`
+
+	// Success Whether init succeeded.
+	Success *bool `json:"success,omitempty"`
+}
+
+// AdapterInitResultEnvelopeAdType Ad type
+type AdapterInitResultEnvelopeAdType string
+
+// AdapterInitResultEnvelopeEventName defines model for AdapterInitResult.Envelope.EventName.
+type AdapterInitResultEnvelopeEventName string
+
+// AdapterLoadBudgetExceeded MAX adapter load budget elapsed.
+type AdapterLoadBudgetExceeded struct {
+	// AttemptsMade Load attempts made before overrun.
+	AttemptsMade *int64 `json:"attempts_made,omitempty"`
+
+	// BudgetMs Configured budget.
+	BudgetMs *int64 `json:"budget_ms,omitempty"`
+
+	// ElapsedMs Time spent when the budget fired.
+	ElapsedMs *int64 `json:"elapsed_ms,omitempty"`
+	Envelope  struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdapterLoadBudgetExceededEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                         `json:"event_id"`
+		EventName AdapterLoadBudgetExceededEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// StageAtOverrun Token collection, auction round trip, or waterfall.
+	StageAtOverrun *string `json:"stage_at_overrun,omitempty"`
+}
+
+// AdapterLoadBudgetExceededEnvelopeAdType Ad type
+type AdapterLoadBudgetExceededEnvelopeAdType string
+
+// AdapterLoadBudgetExceededEnvelopeEventName defines model for AdapterLoadBudgetExceeded.Envelope.EventName.
+type AdapterLoadBudgetExceededEnvelopeEventName string
+
+// AdapterTokenRequested Bidding adapter asked for a token.
+type AdapterTokenRequested struct {
+	// AdapterName Adapter key.
+	AdapterName *string `json:"adapter_name,omitempty"`
+	Envelope    struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdapterTokenRequestedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                     `json:"event_id"`
+		EventName AdapterTokenRequestedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TimeoutBudgetMs Time the adapter was given.
+	TimeoutBudgetMs *int64 `json:"timeout_budget_ms,omitempty"`
+}
+
+// AdapterTokenRequestedEnvelopeAdType Ad type
+type AdapterTokenRequestedEnvelopeAdType string
+
+// AdapterTokenRequestedEnvelopeEventName defines model for AdapterTokenRequested.Envelope.EventName.
+type AdapterTokenRequestedEnvelopeEventName string
+
+// AdapterTokenResult Bidding adapter token settled.
+type AdapterTokenResult struct {
+	// AdapterName Adapter key.
+	AdapterName *string `json:"adapter_name,omitempty"`
+
+	// DurationMs Wall time of the token call.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdapterTokenResultEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                  `json:"event_id"`
+		EventName AdapterTokenResultEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode *string `json:"error_code,omitempty"`
+
+	// ExternalErrorCode Adapter-reported code, preserved raw.
+	ExternalErrorCode *string `json:"external_error_code,omitempty"`
+
+	// Outcome Token outcome.
+	Outcome *AdapterTokenResultOutcome `json:"outcome,omitempty"`
+
+	// TokenSizeBytes Token size when one was returned.
+	TokenSizeBytes *int64 `json:"token_size_bytes,omitempty"`
+}
+
+// AdapterTokenResultEnvelopeAdType Ad type
+type AdapterTokenResultEnvelopeAdType string
+
+// AdapterTokenResultEnvelopeEventName defines model for AdapterTokenResult.Envelope.EventName.
+type AdapterTokenResultEnvelopeEventName string
+
+// AdapterTokenResultOutcome Token outcome.
+type AdapterTokenResultOutcome string
+
+// AdmParseResult Creative payload parsed.
+type AdmParseResult struct {
+	// BidId Bid id from the payload.
+	BidId *string `json:"bid_id,omitempty"`
+
+	// Crtype Creative type.
+	Crtype *string `json:"crtype,omitempty"`
+
+	// DspId DSP id from the payload.
+	DspId *string `json:"dsp_id,omitempty"`
+
+	// DurationMs Parse time.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AdmParseResultEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID              `json:"event_id"`
+		EventName AdmParseResultEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// EnvelopeVersion adm envelope version.
+	EnvelopeVersion *string `json:"envelope_version,omitempty"`
+
+	// FallbackApplied A fallback renderer or parse path was used.
+	FallbackApplied *bool `json:"fallback_applied,omitempty"`
+
+	// Success Whether parsing succeeded.
+	Success *bool `json:"success,omitempty"`
+
+	// UnknownFields Fields the parser did not recognise.
+	UnknownFields *[]string `json:"unknown_fields,omitempty"`
+}
+
+// AdmParseResultEnvelopeAdType Ad type
+type AdmParseResultEnvelopeAdType string
+
+// AdmParseResultEnvelopeEventName defines model for AdmParseResult.Envelope.EventName.
+type AdmParseResultEnvelopeEventName string
+
+// AuctionFailed No auction response, or the call errored.
+type AuctionFailed struct {
+	// DurationMs Client-observed RTT until failure.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AuctionFailedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID             `json:"event_id"`
+		EventName AuctionFailedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode string `json:"error_code"`
+
+	// HttpStatus HTTP status when a response arrived.
+	HttpStatus *int64 `json:"http_status,omitempty"`
+}
+
+// AuctionFailedEnvelopeAdType Ad type
+type AuctionFailedEnvelopeAdType string
+
+// AuctionFailedEnvelopeEventName defines model for AuctionFailed.Envelope.EventName.
+type AuctionFailedEnvelopeEventName string
+
+// AuctionNoDemand Valid auction response with zero eligible demand.
+type AuctionNoDemand struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AuctionNoDemandEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID               `json:"event_id"`
+		EventName AuctionNoDemandEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// PriceFloor Floor in effect for the empty result.
+	PriceFloor *float64 `json:"price_floor,omitempty"`
+
+	// Reason Banded reason.
+	Reason *AuctionNoDemandReason `json:"reason,omitempty"`
+}
+
+// AuctionNoDemandEnvelopeAdType Ad type
+type AuctionNoDemandEnvelopeAdType string
+
+// AuctionNoDemandEnvelopeEventName defines model for AuctionNoDemand.Envelope.EventName.
+type AuctionNoDemandEnvelopeEventName string
+
+// AuctionNoDemandReason Banded reason.
+type AuctionNoDemandReason string
+
+// AuctionRequested SDK is about to call /v2/auction.
+type AuctionRequested struct {
+	// AdaptersIncluded Adapters included on the request.
+	AdaptersIncluded *[]string `json:"adapters_included,omitempty"`
+	Envelope         struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AuctionRequestedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                `json:"event_id"`
+		EventName AuctionRequestedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// PriceFloor Client-side floor sent on the auction request.
+	PriceFloor *float64 `json:"price_floor,omitempty"`
+
+	// TokenCount Tokens included on the request.
+	TokenCount *int64 `json:"token_count,omitempty"`
+}
+
+// AuctionRequestedEnvelopeAdType Ad type
+type AuctionRequestedEnvelopeAdType string
+
+// AuctionRequestedEnvelopeEventName defines model for AuctionRequested.Envelope.EventName.
+type AuctionRequestedEnvelopeEventName string
+
+// AuctionResponseReceived SDK received the /v2/auction response.
+type AuctionResponseReceived struct {
+	// DemandCount Demand entries returned.
+	DemandCount *int64 `json:"demand_count,omitempty"`
+
+	// DurationMs Client-observed /v2/auction RTT.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *AuctionResponseReceivedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                       `json:"event_id"`
+		EventName AuctionResponseReceivedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ResponseSizeBytes Response body size.
+	ResponseSizeBytes *int64 `json:"response_size_bytes,omitempty"`
+
+	// TopEcpm Highest price in the response.
+	TopEcpm *float64 `json:"top_ecpm,omitempty"`
+}
+
+// AuctionResponseReceivedEnvelopeAdType Ad type
+type AuctionResponseReceivedEnvelopeAdType string
+
+// AuctionResponseReceivedEnvelopeEventName defines model for AuctionResponseReceived.Envelope.EventName.
+type AuctionResponseReceivedEnvelopeEventName string
+
+// ClientEventEnvelope Identity header embedded in every catalog event. Same fields as the
+// protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
+// are ignored if the client sends them. `app_key` and `bundle` are copied
+// from the request.
+type ClientEventEnvelope struct {
+	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+	AdFormat *string `json:"ad_format,omitempty"`
+
+	// AdType Ad type
+	AdType *ClientEventEnvelopeAdType `json:"ad_type,omitempty"`
+
+	// AppId Ignored if sent. Client ingest leaves this unset.
+	AppId *int64 `json:"app_id,omitempty"`
+
+	// AppKey Ignored if sent. Server copies `app.key`.
+	AppKey *string `json:"app_key,omitempty"`
+
+	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+	// Omit on session-only events.
+	AuctionId *string `json:"auction_id,omitempty"`
+
+	// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+	AuctionOwner *string `json:"auction_owner,omitempty"`
+
+	// Bundle Ignored if sent. Server copies `app.bundle`.
+	Bundle *string `json:"bundle,omitempty"`
+
+	// Country Ignored if sent. Server stamps from MaxMind.
+	Country *string `json:"country,omitempty"`
+
+	// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+	EventId openapi_types.UUID `json:"event_id"`
+
+	// EventName PRD client catalogue (M1, M2, M3 client events, and video quartiles).
+	// Server-minted rows (`auction_request_received`, `dsp_*`, `auction_completed`,
+	// notice events) are not accepted here. Billing stays on `/v2/show`.
+	EventName ClientEventName `json:"event_name"`
+
+	// EventTs Client event time, Unix milliseconds
+	EventTs int64 `json:"event_ts"`
+
+	// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+	Host *string `json:"host,omitempty"`
+
+	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+	// should be `1`. Server does not re-sample.
+	SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+	// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+	SchemaVersion *string `json:"schema_version,omitempty"`
+
+	// SessionId Optional override. Default is `session.id` on the batch.
+	SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+	// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+	TraceId *string `json:"trace_id,omitempty"`
+}
+
+// ClientEventEnvelopeAdType Ad type
+type ClientEventEnvelopeAdType string
+
+// ClientEventName PRD client catalogue (M1, M2, M3 client events, and video quartiles).
+// Server-minted rows (`auction_request_received`, `dsp_*`, `auction_completed`,
+// notice events) are not accepted here. Billing stays on `/v2/show`.
+type ClientEventName string
+
+// ClientMetricName POC discussion set. Additive only — new series = proto + OpenAPI change.
+type ClientMetricName string
+
+// ConfigFetchResult Remote config call.
+type ConfigFetchResult struct {
+	// DurationMs Wall time of the config call.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *ConfigFetchResultEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                 `json:"event_id"`
+		EventName ConfigFetchResultEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// FromCache Served from the SDK cache.
+	FromCache *bool `json:"from_cache,omitempty"`
+
+	// HttpStatus HTTP status when the call reached the server.
+	HttpStatus *int64 `json:"http_status,omitempty"`
+
+	// Success Whether the config call succeeded.
+	Success *bool `json:"success,omitempty"`
+}
+
+// ConfigFetchResultEnvelopeAdType Ad type
+type ConfigFetchResultEnvelopeAdType string
+
+// ConfigFetchResultEnvelopeEventName defines model for ConfigFetchResult.Envelope.EventName.
+type ConfigFetchResultEnvelopeEventName string
+
+// MetricObservation One observation against a **catalogued** series. Label keys must be in that
+// series' allow-list. Do **not** send `auction_id`, `session_id`, or `event_id`
+// as labels (cardinality).
+type MetricObservation struct {
+	// Labels Only keys listed for that series. Extra key → drop the observation.
+	Labels *map[string]string `json:"labels,omitempty"`
+
+	// Name POC discussion set. Additive only — new series = proto + OpenAPI change.
+	Name ClientMetricName `json:"name"`
+
+	// Type Must match the catalogue row for `name`.
+	Type MetricObservationType `json:"type"`
+
+	// Value Counter increment, histogram observation, or gauge set.
+	Value float64 `json:"value"`
+}
+
+// MetricObservationType Must match the catalogue row for `name`.
+type MetricObservationType string
+
+// NoFillReturnedToMax Bidon returns no-fill so MAX can fall through.
+type NoFillReturnedToMax struct {
+	// AttemptsMade Load attempts made.
+	AttemptsMade *int64 `json:"attempts_made,omitempty"`
+	Envelope     struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *NoFillReturnedToMaxEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                   `json:"event_id"`
+		EventName NoFillReturnedToMaxEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Reason Banded reason.
+	Reason *string `json:"reason,omitempty"`
+
+	// TotalDurationMs Time until no-fill was returned.
+	TotalDurationMs *int64 `json:"total_duration_ms,omitempty"`
+}
+
+// NoFillReturnedToMaxEnvelopeAdType Ad type
+type NoFillReturnedToMaxEnvelopeAdType string
+
+// NoFillReturnedToMaxEnvelopeEventName defines model for NoFillReturnedToMax.Envelope.EventName.
+type NoFillReturnedToMaxEnvelopeEventName string
+
+// RenderCrashed Renderer crashed.
+type RenderCrashed struct {
+	// Crtype Creative type.
+	Crtype *string `json:"crtype,omitempty"`
+
+	// DidCrash True when the renderer crashed. False when the system killed it.
+	DidCrash *bool `json:"did_crash,omitempty"`
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *RenderCrashedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID             `json:"event_id"`
+		EventName RenderCrashedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Renderer Renderer that crashed.
+	Renderer *string `json:"renderer,omitempty"`
+
+	// RendererPriorityAtExit WebView renderer priority at exit. 0 waived, 1 bound, 2 important.
+	RendererPriorityAtExit *int32 `json:"renderer_priority_at_exit,omitempty"`
+
+	// WasShown The ad was on screen.
+	WasShown *bool `json:"was_shown,omitempty"`
+}
+
+// RenderCrashedEnvelopeAdType Ad type
+type RenderCrashedEnvelopeAdType string
+
+// RenderCrashedEnvelopeEventName defines model for RenderCrashed.Envelope.EventName.
+type RenderCrashedEnvelopeEventName string
+
+// RendererSelected Renderer chosen for the creative.
+type RendererSelected struct {
+	// Crtype Creative type.
+	Crtype   *string `json:"crtype,omitempty"`
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *RendererSelectedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                `json:"event_id"`
+		EventName RendererSelectedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Renderer Renderer.
+	Renderer *RendererSelectedRenderer `json:"renderer,omitempty"`
+
+	// SelectionReason Why this renderer was chosen.
+	SelectionReason *string `json:"selection_reason,omitempty"`
+}
+
+// RendererSelectedEnvelopeAdType Ad type
+type RendererSelectedEnvelopeAdType string
+
+// RendererSelectedEnvelopeEventName defines model for RendererSelected.Envelope.EventName.
+type RendererSelectedEnvelopeEventName string
+
+// RendererSelectedRenderer Renderer.
+type RendererSelectedRenderer string
+
+// SdkCrashException defines model for SdkCrashException.
+type SdkCrashException struct {
+	// Class Exception class name.
+	Class *string `json:"class,omitempty"`
+
+	// Frames Stack frames kept for this exception.
+	Frames *[]string `json:"frames,omitempty"`
+
+	// OmittedFrames Frames left off the end of frames.
+	OmittedFrames *int32 `json:"omitted_frames,omitempty"`
+}
+
+// SdkCrashed A crash in our own code, sent on the next launch.
+type SdkCrashed struct {
+	// CrashedOnMainThread The crashing thread was the main thread.
+	CrashedOnMainThread *bool `json:"crashed_on_main_thread,omitempty"`
+	Envelope            struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SdkCrashedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID          `json:"event_id"`
+		EventName SdkCrashedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// Exceptions Exception chain we kept. No messages, only class and frames.
+	Exceptions *[]SdkCrashException `json:"exceptions,omitempty"`
+}
+
+// SdkCrashedEnvelopeAdType Ad type
+type SdkCrashedEnvelopeAdType string
+
+// SdkCrashedEnvelopeEventName defines model for SdkCrashed.Envelope.EventName.
+type SdkCrashedEnvelopeEventName string
+
+// SdkInitCompleted Init finished.
+type SdkInitCompleted struct {
+	// AdaptersRegistered Adapters registered during init.
+	AdaptersRegistered *[]string `json:"adapters_registered,omitempty"`
+
+	// ConfigSource Where init config came from.
+	ConfigSource *string `json:"config_source,omitempty"`
+
+	// DurationMs Wall time of init.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SdkInitCompletedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                `json:"event_id"`
+		EventName SdkInitCompletedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// SdkInitCompletedEnvelopeAdType Ad type
+type SdkInitCompletedEnvelopeAdType string
+
+// SdkInitCompletedEnvelopeEventName defines model for SdkInitCompleted.Envelope.EventName.
+type SdkInitCompletedEnvelopeEventName string
+
+// SdkInitFailed Init threw or timed out.
+type SdkInitFailed struct {
+	// DurationMs Wall time until failure.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SdkInitFailedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID             `json:"event_id"`
+		EventName SdkInitFailedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error. Errors are never sampled.
+	ErrorCode string `json:"error_code"`
+
+	// FailedPhase Init phase that failed.
+	FailedPhase *string `json:"failed_phase,omitempty"`
+}
+
+// SdkInitFailedEnvelopeAdType Ad type
+type SdkInitFailedEnvelopeAdType string
+
+// SdkInitFailedEnvelopeEventName defines model for SdkInitFailed.Envelope.EventName.
+type SdkInitFailedEnvelopeEventName string
+
+// SdkInitStarted BidonSdk.initialize() entered.
+type SdkInitStarted struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SdkInitStartedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID              `json:"event_id"`
+		EventName SdkInitStartedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// InitTrigger Why init ran.
+	InitTrigger *string `json:"init_trigger,omitempty"`
+}
+
+// SdkInitStartedEnvelopeAdType Ad type
+type SdkInitStartedEnvelopeAdType string
+
+// SdkInitStartedEnvelopeEventName defines model for SdkInitStarted.Envelope.EventName.
+type SdkInitStartedEnvelopeEventName string
+
+// SignalFailed collectSignal() failed.
+type SignalFailed struct {
+	// DurationMs Time until failure.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SignalFailedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName SignalFailedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode string `json:"error_code"`
+}
+
+// SignalFailedEnvelopeAdType Ad type
+type SignalFailedEnvelopeAdType string
+
+// SignalFailedEnvelopeEventName defines model for SignalFailed.Envelope.EventName.
+type SignalFailedEnvelopeEventName string
+
+// SignalProvided A signal token was returned to MAX.
+type SignalProvided struct {
+	// DurationMs Time to produce the token.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SignalProvidedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID              `json:"event_id"`
+		EventName SignalProvidedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// GaidAvailable A GAID was available under consent and LMT.
+	GaidAvailable *bool `json:"gaid_available,omitempty"`
+
+	// TokenId Token id.
+	TokenId *string `json:"token_id,omitempty"`
+
+	// TokenSizeBytes Token size.
+	TokenSizeBytes *int64 `json:"token_size_bytes,omitempty"`
+
+	// TokenSource Whether the token was fresh or cached.
+	TokenSource *SignalProvidedTokenSource `json:"token_source,omitempty"`
+}
+
+// SignalProvidedEnvelopeAdType Ad type
+type SignalProvidedEnvelopeAdType string
+
+// SignalProvidedEnvelopeEventName defines model for SignalProvided.Envelope.EventName.
+type SignalProvidedEnvelopeEventName string
+
+// SignalProvidedTokenSource Whether the token was fresh or cached.
+type SignalProvidedTokenSource string
+
+// SignalRequested MAX called collectSignal().
+type SignalRequested struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SignalRequestedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID               `json:"event_id"`
+		EventName SignalRequestedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// SignalRequestedEnvelopeAdType Ad type
+type SignalRequestedEnvelopeAdType string
+
+// SignalRequestedEnvelopeEventName defines model for SignalRequested.Envelope.EventName.
+type SignalRequestedEnvelopeEventName string
+
+// SignalTimeoutSuspected Own timer exceeded MAX's signal budget.
+type SignalTimeoutSuspected struct {
+	// BudgetMs MAX budget.
+	BudgetMs *int64 `json:"budget_ms,omitempty"`
+
+	// DurationMs Time observed.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+	Envelope   struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *SignalTimeoutSuspectedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                      `json:"event_id"`
+		EventName SignalTimeoutSuspectedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// SignalTimeoutSuspectedEnvelopeAdType Ad type
+type SignalTimeoutSuspectedEnvelopeAdType string
+
+// SignalTimeoutSuspectedEnvelopeEventName defines model for SignalTimeoutSuspected.Envelope.EventName.
+type SignalTimeoutSuspectedEnvelopeEventName string
+
+// TelemetryApp Identity only. Not the full `app` object from BaseRequest.
+type TelemetryApp struct {
+	// Bundle Package name. Copied onto `envelope.bundle`.
+	Bundle string `json:"bundle"`
+
+	// Key Publisher app key. Copied onto `envelope.app_key`.
+	Key string `json:"key"`
+}
+
+// TelemetryEvent One catalog message as protojson. The shared fields live in a nested
+// `envelope`, the same shape as `org.bidon.telemetry.v1.Envelope` in
+// BAC-61. `event_name` is inside the envelope. OpenAPI 3.0 cannot
+// discriminate on a nested property, so this is a oneOf without a
+// discriminator.
+type TelemetryEvent struct {
+	union json.RawMessage
+}
+
+// TelemetryRequest WIP caps — **100 events, 50 observations, 256 KiB** body. Over any cap → 413.
+// Extra properties are dropped, not stored (G3 / PRD rationale 5).
+type TelemetryRequest struct {
+	// App Identity only. Not the full `app` object from BaseRequest.
+	App TelemetryApp `json:"app"`
+
+	// Events Catalogued client events. At least one of `events` / `metrics` should
+	// be present in practice; empty arrays are valid (202, accepted 0).
+	Events *[]TelemetryEvent `json:"events,omitempty"`
+
+	// Metrics Allow-listed observations. Not OTLP. Not Prometheus remote-write.
+	Metrics *[]MetricObservation `json:"metrics,omitempty"`
+
+	// Session Session id only. No RAM / battery / timestamps (those are BaseRequest).
+	Session TelemetrySession `json:"session"`
+}
+
+// TelemetryResponse defines model for TelemetryResponse.
+type TelemetryResponse struct {
+	// Accepted Items enqueued after allow-list. Not a delivery ack.
+	Accepted int `json:"accepted"`
+}
+
+// TelemetrySession Session id only. No RAM / battery / timestamps (those are BaseRequest).
+type TelemetrySession struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+// TokenCollectionCompleted All token adapters settled or the budget was hit.
+type TokenCollectionCompleted struct {
+	// AdaptersRequested Adapters asked.
+	AdaptersRequested *int64 `json:"adapters_requested,omitempty"`
+
+	// AdaptersReturned Adapters that returned a token.
+	AdaptersReturned *int64 `json:"adapters_returned,omitempty"`
+
+	// AdaptersTimedOut Adapters that timed out.
+	AdaptersTimedOut *int64 `json:"adapters_timed_out,omitempty"`
+	Envelope         struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *TokenCollectionCompletedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID                        `json:"event_id"`
+		EventName TokenCollectionCompletedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// TotalDurationMs Wall time of the token round.
+	TotalDurationMs *int64 `json:"total_duration_ms,omitempty"`
+}
+
+// TokenCollectionCompletedEnvelopeAdType Ad type
+type TokenCollectionCompletedEnvelopeAdType string
+
+// TokenCollectionCompletedEnvelopeEventName defines model for TokenCollectionCompleted.Envelope.EventName.
+type TokenCollectionCompletedEnvelopeEventName string
+
+// VideoComplete Video completed.
+type VideoComplete struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoCompleteEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID             `json:"event_id"`
+		EventName VideoCompleteEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoCompleteEnvelopeAdType Ad type
+type VideoCompleteEnvelopeAdType string
+
+// VideoCompleteEnvelopeEventName defines model for VideoComplete.Envelope.EventName.
+type VideoCompleteEnvelopeEventName string
+
+// VideoError Video playback error.
+type VideoError struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoErrorEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID          `json:"event_id"`
+		EventName VideoErrorEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode string `json:"error_code"`
+}
+
+// VideoErrorEnvelopeAdType Ad type
+type VideoErrorEnvelopeAdType string
+
+// VideoErrorEnvelopeEventName defines model for VideoError.Envelope.EventName.
+type VideoErrorEnvelopeEventName string
+
+// VideoMidpoint Video reached the midpoint.
+type VideoMidpoint struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoMidpointEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID             `json:"event_id"`
+		EventName VideoMidpointEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoMidpointEnvelopeAdType Ad type
+type VideoMidpointEnvelopeAdType string
+
+// VideoMidpointEnvelopeEventName defines model for VideoMidpoint.Envelope.EventName.
+type VideoMidpointEnvelopeEventName string
+
+// VideoQ1 Video reached the first quartile.
+type VideoQ1 struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoQ1EnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID       `json:"event_id"`
+		EventName VideoQ1EnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoQ1EnvelopeAdType Ad type
+type VideoQ1EnvelopeAdType string
+
+// VideoQ1EnvelopeEventName defines model for VideoQ1.Envelope.EventName.
+type VideoQ1EnvelopeEventName string
+
+// VideoQ3 Video reached the third quartile.
+type VideoQ3 struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoQ3EnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID       `json:"event_id"`
+		EventName VideoQ3EnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoQ3EnvelopeAdType Ad type
+type VideoQ3EnvelopeAdType string
+
+// VideoQ3EnvelopeEventName defines model for VideoQ3.Envelope.EventName.
+type VideoQ3EnvelopeEventName string
+
+// VideoSkipped Video was skipped.
+type VideoSkipped struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoSkippedEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName VideoSkippedEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoSkippedEnvelopeAdType Ad type
+type VideoSkippedEnvelopeAdType string
+
+// VideoSkippedEnvelopeEventName defines model for VideoSkipped.Envelope.EventName.
+type VideoSkippedEnvelopeEventName string
+
+// VideoStart Video started.
+type VideoStart struct {
+	Envelope struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *VideoStartEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID          `json:"event_id"`
+		EventName VideoStartEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+}
+
+// VideoStartEnvelopeAdType Ad type
+type VideoStartEnvelopeAdType string
+
+// VideoStartEnvelopeEventName defines model for VideoStart.Envelope.EventName.
+type VideoStartEnvelopeEventName string
+
+// WebviewError WebView error while rendering.
+type WebviewError struct {
+	// Description Scrubbed error description. No PII.
+	Description *string `json:"description,omitempty"`
+	Envelope    struct {
+		// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
+		AdFormat *string `json:"ad_format,omitempty"`
+
+		// AdType Ad type
+		AdType *WebviewErrorEnvelopeAdType `json:"ad_type,omitempty"`
+
+		// AppId Ignored if sent. Client ingest leaves this unset.
+		AppId *int64 `json:"app_id,omitempty"`
+
+		// AppKey Ignored if sent. Server copies `app.key`.
+		AppKey *string `json:"app_key,omitempty"`
+
+		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
+		// Omit on session-only events.
+		AuctionId *string `json:"auction_id,omitempty"`
+
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		AuctionOwner *string `json:"auction_owner,omitempty"`
+
+		// Bundle Ignored if sent. Server copies `app.bundle`.
+		Bundle *string `json:"bundle,omitempty"`
+
+		// Country Ignored if sent. Server stamps from MaxMind.
+		Country *string `json:"country,omitempty"`
+
+		// EventId Client-minted. Dedupe key is `(app_id, event_id)` (G5). Redis is a follow-up.
+		EventId   openapi_types.UUID            `json:"event_id"`
+		EventName WebviewErrorEnvelopeEventName `json:"event_name"`
+
+		// EventTs Client event time, Unix milliseconds
+		EventTs int64 `json:"event_ts"`
+
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		Host *string `json:"host,omitempty"`
+
+		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
+		// should be `1`. Server does not re-sample.
+		SamplingRate *float64 `json:"sampling_rate,omitempty"`
+
+		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		SchemaVersion *string `json:"schema_version,omitempty"`
+
+		// SessionId Optional override. Default is `session.id` on the batch.
+		SessionId *openapi_types.UUID `json:"session_id,omitempty"`
+
+		// TraceId Ignored if sent on ingest. Server-minted on the auction path.
+		TraceId *string `json:"trace_id,omitempty"`
+	} `json:"envelope"`
+
+	// ErrorCode Banded error.
+	ErrorCode string `json:"error_code"`
+
+	// FailingUrlHost Host of the failing URL only.
+	FailingUrlHost *string `json:"failing_url_host,omitempty"`
+
+	// IsMainFrame Error was on the main frame.
+	IsMainFrame *bool `json:"is_main_frame,omitempty"`
+}
+
+// WebviewErrorEnvelopeAdType Ad type
+type WebviewErrorEnvelopeAdType string
+
+// WebviewErrorEnvelopeEventName defines model for WebviewError.Envelope.EventName.
+type WebviewErrorEnvelopeEventName string
 
 // AdType defines model for AdType.
 type AdType string
@@ -3195,6 +6867,1134 @@ type PostStatsJSONRequestBody PostStatsJSONBody
 // PostWinJSONRequestBody defines body for PostWin for application/json ContentType.
 type PostWinJSONRequestBody PostWinJSONBody
 
+// AsSdkInitStarted returns the union data inside the TelemetryEvent as a SdkInitStarted
+func (t TelemetryEvent) AsSdkInitStarted() (SdkInitStarted, error) {
+	var body SdkInitStarted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSdkInitStarted overwrites any union data inside the TelemetryEvent as the provided SdkInitStarted
+func (t *TelemetryEvent) FromSdkInitStarted(v SdkInitStarted) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSdkInitStarted performs a merge with any union data inside the TelemetryEvent, using the provided SdkInitStarted
+func (t *TelemetryEvent) MergeSdkInitStarted(v SdkInitStarted) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSdkInitCompleted returns the union data inside the TelemetryEvent as a SdkInitCompleted
+func (t TelemetryEvent) AsSdkInitCompleted() (SdkInitCompleted, error) {
+	var body SdkInitCompleted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSdkInitCompleted overwrites any union data inside the TelemetryEvent as the provided SdkInitCompleted
+func (t *TelemetryEvent) FromSdkInitCompleted(v SdkInitCompleted) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSdkInitCompleted performs a merge with any union data inside the TelemetryEvent, using the provided SdkInitCompleted
+func (t *TelemetryEvent) MergeSdkInitCompleted(v SdkInitCompleted) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSdkInitFailed returns the union data inside the TelemetryEvent as a SdkInitFailed
+func (t TelemetryEvent) AsSdkInitFailed() (SdkInitFailed, error) {
+	var body SdkInitFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSdkInitFailed overwrites any union data inside the TelemetryEvent as the provided SdkInitFailed
+func (t *TelemetryEvent) FromSdkInitFailed(v SdkInitFailed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSdkInitFailed performs a merge with any union data inside the TelemetryEvent, using the provided SdkInitFailed
+func (t *TelemetryEvent) MergeSdkInitFailed(v SdkInitFailed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdapterInitResult returns the union data inside the TelemetryEvent as a AdapterInitResult
+func (t TelemetryEvent) AsAdapterInitResult() (AdapterInitResult, error) {
+	var body AdapterInitResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdapterInitResult overwrites any union data inside the TelemetryEvent as the provided AdapterInitResult
+func (t *TelemetryEvent) FromAdapterInitResult(v AdapterInitResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdapterInitResult performs a merge with any union data inside the TelemetryEvent, using the provided AdapterInitResult
+func (t *TelemetryEvent) MergeAdapterInitResult(v AdapterInitResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsConfigFetchResult returns the union data inside the TelemetryEvent as a ConfigFetchResult
+func (t TelemetryEvent) AsConfigFetchResult() (ConfigFetchResult, error) {
+	var body ConfigFetchResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromConfigFetchResult overwrites any union data inside the TelemetryEvent as the provided ConfigFetchResult
+func (t *TelemetryEvent) FromConfigFetchResult(v ConfigFetchResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeConfigFetchResult performs a merge with any union data inside the TelemetryEvent, using the provided ConfigFetchResult
+func (t *TelemetryEvent) MergeConfigFetchResult(v ConfigFetchResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdapterTokenRequested returns the union data inside the TelemetryEvent as a AdapterTokenRequested
+func (t TelemetryEvent) AsAdapterTokenRequested() (AdapterTokenRequested, error) {
+	var body AdapterTokenRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdapterTokenRequested overwrites any union data inside the TelemetryEvent as the provided AdapterTokenRequested
+func (t *TelemetryEvent) FromAdapterTokenRequested(v AdapterTokenRequested) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdapterTokenRequested performs a merge with any union data inside the TelemetryEvent, using the provided AdapterTokenRequested
+func (t *TelemetryEvent) MergeAdapterTokenRequested(v AdapterTokenRequested) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdapterTokenResult returns the union data inside the TelemetryEvent as a AdapterTokenResult
+func (t TelemetryEvent) AsAdapterTokenResult() (AdapterTokenResult, error) {
+	var body AdapterTokenResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdapterTokenResult overwrites any union data inside the TelemetryEvent as the provided AdapterTokenResult
+func (t *TelemetryEvent) FromAdapterTokenResult(v AdapterTokenResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdapterTokenResult performs a merge with any union data inside the TelemetryEvent, using the provided AdapterTokenResult
+func (t *TelemetryEvent) MergeAdapterTokenResult(v AdapterTokenResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTokenCollectionCompleted returns the union data inside the TelemetryEvent as a TokenCollectionCompleted
+func (t TelemetryEvent) AsTokenCollectionCompleted() (TokenCollectionCompleted, error) {
+	var body TokenCollectionCompleted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTokenCollectionCompleted overwrites any union data inside the TelemetryEvent as the provided TokenCollectionCompleted
+func (t *TelemetryEvent) FromTokenCollectionCompleted(v TokenCollectionCompleted) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTokenCollectionCompleted performs a merge with any union data inside the TelemetryEvent, using the provided TokenCollectionCompleted
+func (t *TelemetryEvent) MergeTokenCollectionCompleted(v TokenCollectionCompleted) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdRequestStarted returns the union data inside the TelemetryEvent as a AdRequestStarted
+func (t TelemetryEvent) AsAdRequestStarted() (AdRequestStarted, error) {
+	var body AdRequestStarted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdRequestStarted overwrites any union data inside the TelemetryEvent as the provided AdRequestStarted
+func (t *TelemetryEvent) FromAdRequestStarted(v AdRequestStarted) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdRequestStarted performs a merge with any union data inside the TelemetryEvent, using the provided AdRequestStarted
+func (t *TelemetryEvent) MergeAdRequestStarted(v AdRequestStarted) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionRequested returns the union data inside the TelemetryEvent as a AuctionRequested
+func (t TelemetryEvent) AsAuctionRequested() (AuctionRequested, error) {
+	var body AuctionRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionRequested overwrites any union data inside the TelemetryEvent as the provided AuctionRequested
+func (t *TelemetryEvent) FromAuctionRequested(v AuctionRequested) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionRequested performs a merge with any union data inside the TelemetryEvent, using the provided AuctionRequested
+func (t *TelemetryEvent) MergeAuctionRequested(v AuctionRequested) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionResponseReceived returns the union data inside the TelemetryEvent as a AuctionResponseReceived
+func (t TelemetryEvent) AsAuctionResponseReceived() (AuctionResponseReceived, error) {
+	var body AuctionResponseReceived
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionResponseReceived overwrites any union data inside the TelemetryEvent as the provided AuctionResponseReceived
+func (t *TelemetryEvent) FromAuctionResponseReceived(v AuctionResponseReceived) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionResponseReceived performs a merge with any union data inside the TelemetryEvent, using the provided AuctionResponseReceived
+func (t *TelemetryEvent) MergeAuctionResponseReceived(v AuctionResponseReceived) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdFilled returns the union data inside the TelemetryEvent as a AdFilled
+func (t TelemetryEvent) AsAdFilled() (AdFilled, error) {
+	var body AdFilled
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdFilled overwrites any union data inside the TelemetryEvent as the provided AdFilled
+func (t *TelemetryEvent) FromAdFilled(v AdFilled) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdFilled performs a merge with any union data inside the TelemetryEvent, using the provided AdFilled
+func (t *TelemetryEvent) MergeAdFilled(v AdFilled) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionFailed returns the union data inside the TelemetryEvent as a AuctionFailed
+func (t TelemetryEvent) AsAuctionFailed() (AuctionFailed, error) {
+	var body AuctionFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionFailed overwrites any union data inside the TelemetryEvent as the provided AuctionFailed
+func (t *TelemetryEvent) FromAuctionFailed(v AuctionFailed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionFailed performs a merge with any union data inside the TelemetryEvent, using the provided AuctionFailed
+func (t *TelemetryEvent) MergeAuctionFailed(v AuctionFailed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuctionNoDemand returns the union data inside the TelemetryEvent as a AuctionNoDemand
+func (t TelemetryEvent) AsAuctionNoDemand() (AuctionNoDemand, error) {
+	var body AuctionNoDemand
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuctionNoDemand overwrites any union data inside the TelemetryEvent as the provided AuctionNoDemand
+func (t *TelemetryEvent) FromAuctionNoDemand(v AuctionNoDemand) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuctionNoDemand performs a merge with any union data inside the TelemetryEvent, using the provided AuctionNoDemand
+func (t *TelemetryEvent) MergeAuctionNoDemand(v AuctionNoDemand) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdLoadRequested returns the union data inside the TelemetryEvent as a AdLoadRequested
+func (t TelemetryEvent) AsAdLoadRequested() (AdLoadRequested, error) {
+	var body AdLoadRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdLoadRequested overwrites any union data inside the TelemetryEvent as the provided AdLoadRequested
+func (t *TelemetryEvent) FromAdLoadRequested(v AdLoadRequested) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdLoadRequested performs a merge with any union data inside the TelemetryEvent, using the provided AdLoadRequested
+func (t *TelemetryEvent) MergeAdLoadRequested(v AdLoadRequested) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdmParseResult returns the union data inside the TelemetryEvent as a AdmParseResult
+func (t TelemetryEvent) AsAdmParseResult() (AdmParseResult, error) {
+	var body AdmParseResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdmParseResult overwrites any union data inside the TelemetryEvent as the provided AdmParseResult
+func (t *TelemetryEvent) FromAdmParseResult(v AdmParseResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdmParseResult performs a merge with any union data inside the TelemetryEvent, using the provided AdmParseResult
+func (t *TelemetryEvent) MergeAdmParseResult(v AdmParseResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsRendererSelected returns the union data inside the TelemetryEvent as a RendererSelected
+func (t TelemetryEvent) AsRendererSelected() (RendererSelected, error) {
+	var body RendererSelected
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromRendererSelected overwrites any union data inside the TelemetryEvent as the provided RendererSelected
+func (t *TelemetryEvent) FromRendererSelected(v RendererSelected) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeRendererSelected performs a merge with any union data inside the TelemetryEvent, using the provided RendererSelected
+func (t *TelemetryEvent) MergeRendererSelected(v RendererSelected) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdLoaded returns the union data inside the TelemetryEvent as a AdLoaded
+func (t TelemetryEvent) AsAdLoaded() (AdLoaded, error) {
+	var body AdLoaded
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdLoaded overwrites any union data inside the TelemetryEvent as the provided AdLoaded
+func (t *TelemetryEvent) FromAdLoaded(v AdLoaded) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdLoaded performs a merge with any union data inside the TelemetryEvent, using the provided AdLoaded
+func (t *TelemetryEvent) MergeAdLoaded(v AdLoaded) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdLoadFailed returns the union data inside the TelemetryEvent as a AdLoadFailed
+func (t TelemetryEvent) AsAdLoadFailed() (AdLoadFailed, error) {
+	var body AdLoadFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdLoadFailed overwrites any union data inside the TelemetryEvent as the provided AdLoadFailed
+func (t *TelemetryEvent) FromAdLoadFailed(v AdLoadFailed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdLoadFailed performs a merge with any union data inside the TelemetryEvent, using the provided AdLoadFailed
+func (t *TelemetryEvent) MergeAdLoadFailed(v AdLoadFailed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdExpired returns the union data inside the TelemetryEvent as a AdExpired
+func (t TelemetryEvent) AsAdExpired() (AdExpired, error) {
+	var body AdExpired
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdExpired overwrites any union data inside the TelemetryEvent as the provided AdExpired
+func (t *TelemetryEvent) FromAdExpired(v AdExpired) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdExpired performs a merge with any union data inside the TelemetryEvent, using the provided AdExpired
+func (t *TelemetryEvent) MergeAdExpired(v AdExpired) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdShowRequested returns the union data inside the TelemetryEvent as a AdShowRequested
+func (t TelemetryEvent) AsAdShowRequested() (AdShowRequested, error) {
+	var body AdShowRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdShowRequested overwrites any union data inside the TelemetryEvent as the provided AdShowRequested
+func (t *TelemetryEvent) FromAdShowRequested(v AdShowRequested) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdShowRequested performs a merge with any union data inside the TelemetryEvent, using the provided AdShowRequested
+func (t *TelemetryEvent) MergeAdShowRequested(v AdShowRequested) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdImpression returns the union data inside the TelemetryEvent as a AdImpression
+func (t TelemetryEvent) AsAdImpression() (AdImpression, error) {
+	var body AdImpression
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdImpression overwrites any union data inside the TelemetryEvent as the provided AdImpression
+func (t *TelemetryEvent) FromAdImpression(v AdImpression) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdImpression performs a merge with any union data inside the TelemetryEvent, using the provided AdImpression
+func (t *TelemetryEvent) MergeAdImpression(v AdImpression) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdShowFailed returns the union data inside the TelemetryEvent as a AdShowFailed
+func (t TelemetryEvent) AsAdShowFailed() (AdShowFailed, error) {
+	var body AdShowFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdShowFailed overwrites any union data inside the TelemetryEvent as the provided AdShowFailed
+func (t *TelemetryEvent) FromAdShowFailed(v AdShowFailed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdShowFailed performs a merge with any union data inside the TelemetryEvent, using the provided AdShowFailed
+func (t *TelemetryEvent) MergeAdShowFailed(v AdShowFailed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdViewable returns the union data inside the TelemetryEvent as a AdViewable
+func (t TelemetryEvent) AsAdViewable() (AdViewable, error) {
+	var body AdViewable
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdViewable overwrites any union data inside the TelemetryEvent as the provided AdViewable
+func (t *TelemetryEvent) FromAdViewable(v AdViewable) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdViewable performs a merge with any union data inside the TelemetryEvent, using the provided AdViewable
+func (t *TelemetryEvent) MergeAdViewable(v AdViewable) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdClicked returns the union data inside the TelemetryEvent as a AdClicked
+func (t TelemetryEvent) AsAdClicked() (AdClicked, error) {
+	var body AdClicked
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdClicked overwrites any union data inside the TelemetryEvent as the provided AdClicked
+func (t *TelemetryEvent) FromAdClicked(v AdClicked) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdClicked performs a merge with any union data inside the TelemetryEvent, using the provided AdClicked
+func (t *TelemetryEvent) MergeAdClicked(v AdClicked) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdClosed returns the union data inside the TelemetryEvent as a AdClosed
+func (t TelemetryEvent) AsAdClosed() (AdClosed, error) {
+	var body AdClosed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdClosed overwrites any union data inside the TelemetryEvent as the provided AdClosed
+func (t *TelemetryEvent) FromAdClosed(v AdClosed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdClosed performs a merge with any union data inside the TelemetryEvent, using the provided AdClosed
+func (t *TelemetryEvent) MergeAdClosed(v AdClosed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdRewardGranted returns the union data inside the TelemetryEvent as a AdRewardGranted
+func (t TelemetryEvent) AsAdRewardGranted() (AdRewardGranted, error) {
+	var body AdRewardGranted
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdRewardGranted overwrites any union data inside the TelemetryEvent as the provided AdRewardGranted
+func (t *TelemetryEvent) FromAdRewardGranted(v AdRewardGranted) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdRewardGranted performs a merge with any union data inside the TelemetryEvent, using the provided AdRewardGranted
+func (t *TelemetryEvent) MergeAdRewardGranted(v AdRewardGranted) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsWebviewError returns the union data inside the TelemetryEvent as a WebviewError
+func (t TelemetryEvent) AsWebviewError() (WebviewError, error) {
+	var body WebviewError
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromWebviewError overwrites any union data inside the TelemetryEvent as the provided WebviewError
+func (t *TelemetryEvent) FromWebviewError(v WebviewError) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeWebviewError performs a merge with any union data inside the TelemetryEvent, using the provided WebviewError
+func (t *TelemetryEvent) MergeWebviewError(v WebviewError) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsRenderCrashed returns the union data inside the TelemetryEvent as a RenderCrashed
+func (t TelemetryEvent) AsRenderCrashed() (RenderCrashed, error) {
+	var body RenderCrashed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromRenderCrashed overwrites any union data inside the TelemetryEvent as the provided RenderCrashed
+func (t *TelemetryEvent) FromRenderCrashed(v RenderCrashed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeRenderCrashed performs a merge with any union data inside the TelemetryEvent, using the provided RenderCrashed
+func (t *TelemetryEvent) MergeRenderCrashed(v RenderCrashed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSdkCrashed returns the union data inside the TelemetryEvent as a SdkCrashed
+func (t TelemetryEvent) AsSdkCrashed() (SdkCrashed, error) {
+	var body SdkCrashed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSdkCrashed overwrites any union data inside the TelemetryEvent as the provided SdkCrashed
+func (t *TelemetryEvent) FromSdkCrashed(v SdkCrashed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSdkCrashed performs a merge with any union data inside the TelemetryEvent, using the provided SdkCrashed
+func (t *TelemetryEvent) MergeSdkCrashed(v SdkCrashed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoStart returns the union data inside the TelemetryEvent as a VideoStart
+func (t TelemetryEvent) AsVideoStart() (VideoStart, error) {
+	var body VideoStart
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoStart overwrites any union data inside the TelemetryEvent as the provided VideoStart
+func (t *TelemetryEvent) FromVideoStart(v VideoStart) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoStart performs a merge with any union data inside the TelemetryEvent, using the provided VideoStart
+func (t *TelemetryEvent) MergeVideoStart(v VideoStart) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoQ1 returns the union data inside the TelemetryEvent as a VideoQ1
+func (t TelemetryEvent) AsVideoQ1() (VideoQ1, error) {
+	var body VideoQ1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoQ1 overwrites any union data inside the TelemetryEvent as the provided VideoQ1
+func (t *TelemetryEvent) FromVideoQ1(v VideoQ1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoQ1 performs a merge with any union data inside the TelemetryEvent, using the provided VideoQ1
+func (t *TelemetryEvent) MergeVideoQ1(v VideoQ1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoMidpoint returns the union data inside the TelemetryEvent as a VideoMidpoint
+func (t TelemetryEvent) AsVideoMidpoint() (VideoMidpoint, error) {
+	var body VideoMidpoint
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoMidpoint overwrites any union data inside the TelemetryEvent as the provided VideoMidpoint
+func (t *TelemetryEvent) FromVideoMidpoint(v VideoMidpoint) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoMidpoint performs a merge with any union data inside the TelemetryEvent, using the provided VideoMidpoint
+func (t *TelemetryEvent) MergeVideoMidpoint(v VideoMidpoint) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoQ3 returns the union data inside the TelemetryEvent as a VideoQ3
+func (t TelemetryEvent) AsVideoQ3() (VideoQ3, error) {
+	var body VideoQ3
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoQ3 overwrites any union data inside the TelemetryEvent as the provided VideoQ3
+func (t *TelemetryEvent) FromVideoQ3(v VideoQ3) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoQ3 performs a merge with any union data inside the TelemetryEvent, using the provided VideoQ3
+func (t *TelemetryEvent) MergeVideoQ3(v VideoQ3) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoComplete returns the union data inside the TelemetryEvent as a VideoComplete
+func (t TelemetryEvent) AsVideoComplete() (VideoComplete, error) {
+	var body VideoComplete
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoComplete overwrites any union data inside the TelemetryEvent as the provided VideoComplete
+func (t *TelemetryEvent) FromVideoComplete(v VideoComplete) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoComplete performs a merge with any union data inside the TelemetryEvent, using the provided VideoComplete
+func (t *TelemetryEvent) MergeVideoComplete(v VideoComplete) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoSkipped returns the union data inside the TelemetryEvent as a VideoSkipped
+func (t TelemetryEvent) AsVideoSkipped() (VideoSkipped, error) {
+	var body VideoSkipped
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoSkipped overwrites any union data inside the TelemetryEvent as the provided VideoSkipped
+func (t *TelemetryEvent) FromVideoSkipped(v VideoSkipped) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoSkipped performs a merge with any union data inside the TelemetryEvent, using the provided VideoSkipped
+func (t *TelemetryEvent) MergeVideoSkipped(v VideoSkipped) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsVideoError returns the union data inside the TelemetryEvent as a VideoError
+func (t TelemetryEvent) AsVideoError() (VideoError, error) {
+	var body VideoError
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVideoError overwrites any union data inside the TelemetryEvent as the provided VideoError
+func (t *TelemetryEvent) FromVideoError(v VideoError) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVideoError performs a merge with any union data inside the TelemetryEvent, using the provided VideoError
+func (t *TelemetryEvent) MergeVideoError(v VideoError) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAdapterLoadBudgetExceeded returns the union data inside the TelemetryEvent as a AdapterLoadBudgetExceeded
+func (t TelemetryEvent) AsAdapterLoadBudgetExceeded() (AdapterLoadBudgetExceeded, error) {
+	var body AdapterLoadBudgetExceeded
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAdapterLoadBudgetExceeded overwrites any union data inside the TelemetryEvent as the provided AdapterLoadBudgetExceeded
+func (t *TelemetryEvent) FromAdapterLoadBudgetExceeded(v AdapterLoadBudgetExceeded) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAdapterLoadBudgetExceeded performs a merge with any union data inside the TelemetryEvent, using the provided AdapterLoadBudgetExceeded
+func (t *TelemetryEvent) MergeAdapterLoadBudgetExceeded(v AdapterLoadBudgetExceeded) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsNoFillReturnedToMax returns the union data inside the TelemetryEvent as a NoFillReturnedToMax
+func (t TelemetryEvent) AsNoFillReturnedToMax() (NoFillReturnedToMax, error) {
+	var body NoFillReturnedToMax
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromNoFillReturnedToMax overwrites any union data inside the TelemetryEvent as the provided NoFillReturnedToMax
+func (t *TelemetryEvent) FromNoFillReturnedToMax(v NoFillReturnedToMax) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeNoFillReturnedToMax performs a merge with any union data inside the TelemetryEvent, using the provided NoFillReturnedToMax
+func (t *TelemetryEvent) MergeNoFillReturnedToMax(v NoFillReturnedToMax) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSignalRequested returns the union data inside the TelemetryEvent as a SignalRequested
+func (t TelemetryEvent) AsSignalRequested() (SignalRequested, error) {
+	var body SignalRequested
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSignalRequested overwrites any union data inside the TelemetryEvent as the provided SignalRequested
+func (t *TelemetryEvent) FromSignalRequested(v SignalRequested) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSignalRequested performs a merge with any union data inside the TelemetryEvent, using the provided SignalRequested
+func (t *TelemetryEvent) MergeSignalRequested(v SignalRequested) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSignalProvided returns the union data inside the TelemetryEvent as a SignalProvided
+func (t TelemetryEvent) AsSignalProvided() (SignalProvided, error) {
+	var body SignalProvided
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSignalProvided overwrites any union data inside the TelemetryEvent as the provided SignalProvided
+func (t *TelemetryEvent) FromSignalProvided(v SignalProvided) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSignalProvided performs a merge with any union data inside the TelemetryEvent, using the provided SignalProvided
+func (t *TelemetryEvent) MergeSignalProvided(v SignalProvided) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSignalFailed returns the union data inside the TelemetryEvent as a SignalFailed
+func (t TelemetryEvent) AsSignalFailed() (SignalFailed, error) {
+	var body SignalFailed
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSignalFailed overwrites any union data inside the TelemetryEvent as the provided SignalFailed
+func (t *TelemetryEvent) FromSignalFailed(v SignalFailed) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSignalFailed performs a merge with any union data inside the TelemetryEvent, using the provided SignalFailed
+func (t *TelemetryEvent) MergeSignalFailed(v SignalFailed) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSignalTimeoutSuspected returns the union data inside the TelemetryEvent as a SignalTimeoutSuspected
+func (t TelemetryEvent) AsSignalTimeoutSuspected() (SignalTimeoutSuspected, error) {
+	var body SignalTimeoutSuspected
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSignalTimeoutSuspected overwrites any union data inside the TelemetryEvent as the provided SignalTimeoutSuspected
+func (t *TelemetryEvent) FromSignalTimeoutSuspected(v SignalTimeoutSuspected) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSignalTimeoutSuspected performs a merge with any union data inside the TelemetryEvent, using the provided SignalTimeoutSuspected
+func (t *TelemetryEvent) MergeSignalTimeoutSuspected(v SignalTimeoutSuspected) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t TelemetryEvent) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *TelemetryEvent) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get OpenAPI specification
@@ -3580,82 +8380,176 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"AAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
