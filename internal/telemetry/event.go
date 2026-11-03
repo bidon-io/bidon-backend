@@ -23,12 +23,13 @@ func newProtoEnvelope(a attrs) *telemetryv1.Envelope {
 		AdFormat:      a.AdFormat,
 		Country:       a.Country,
 		TraceId:       a.TraceID,
-		// Every event is emitted until sampling lands. One rate per auction,
-		// keyed on (app_id, auction_id), so funnel completeness stays
-		// computable. Errors, wins, billing notices, ad_impression, and the
-		// other funnel stages are never sampled.
+		// Every event is emitted until sampling lands.
+		// TODO: set the real rate. One rate per auction, keyed on
+		// (app_id, auction_id), so funnel completeness stays computable.
+		// Errors, wins, billing notices, ad_impression, and the other funnel
+		// stages are never sampled.
 		SamplingRate: 1.0,
 	}
-	applyPRDEnvelope(env, a.Base)
+	fillEnvelopeFromRequest(env, a.Request)
 	return env
 }

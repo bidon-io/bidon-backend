@@ -38,3 +38,21 @@ that decode through the registry cannot read those records.
 
 Connect S3 Parquet sink, RisingWave protobuf source, sampling, turning
 framing on in staging/prod compose.
+
+## Breaking schema reset (envelope regrouping)
+
+The envelope was regrouped into nested messages, `schema_version` changed from
+`string` to `int32`, and the per-event `dsp` field moved to
+`envelope.demand.dsp_id`. That is not BACKWARD compatible with subjects
+registered earlier, and nothing runs in production, so environments that
+already registered the old schema are reset once:
+
+1. Stop sdkapi, or deploy straight after the steps below.
+2. Delete the `telemetry-events` topic.
+3. Hard-delete every `telemetry-events-org.bidon.telemetry.v1.*` subject:
+   `DELETE /subjects/<subject>`, then `DELETE /subjects/<subject>?permanent=true`.
+   Recreating the topic alone is not enough. Subjects outlive it, the new
+   schema is rejected, and sdkapi fails open to raw protobuf.
+4. Deploy. sdkapi registers the subjects again on startup.
+
+From here on, field changes are additive and field numbers are never reused.

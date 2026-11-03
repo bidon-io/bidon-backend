@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"go.uber.org/zap"
@@ -45,6 +46,7 @@ func testAuctionParams() Params {
 			},
 			BaseRequest: schema.BaseRequest{
 				Session: schema.Session{ID: "sess-1"},
+				App:     schema.App{Bundle: "org.example"},
 			},
 		},
 		App:     &sdkapi.App{ID: 42},
@@ -119,8 +121,11 @@ func TestEventDSPResponseReceived(t *testing.T) {
 	if pb.GetScope() != telemetryv1.Scope_SCOPE_BIDDING_ROUND {
 		t.Errorf("scope: got %v", pb.GetScope())
 	}
-	if pb.GetDsp() != string(adapter.BidmachineKey) {
-		t.Errorf("dsp: got %q", pb.GetDsp())
+	if env.GetDemand().GetDspId() != string(adapter.BidmachineKey) {
+		t.Errorf("demand.dsp_id: got %q", env.GetDemand().GetDspId())
+	}
+	if env.GetApp().GetBundle() != "org.example" {
+		t.Errorf("app.bundle: got %q; attrsFrom must wire the request in", env.GetApp().GetBundle())
 	}
 	if pb.GetOutcome() != telemetryv1.Outcome_OUTCOME_BID {
 		t.Errorf("outcome: got %v", pb.GetOutcome())
@@ -245,13 +250,15 @@ func TestLogEngineStructured(t *testing.T) {
 		Envelope struct {
 			AuctionID string `json:"auction_id"`
 			TraceID   string `json:"trace_id"`
+			Demand    struct {
+				DspID string `json:"dsp_id"`
+			} `json:"demand"`
 		} `json:"envelope"`
-		DSP string `json:"dsp"`
 	}
 	if err := json.Unmarshal([]byte(raw), &event); err != nil {
 		t.Fatalf("event is not JSON: %v (%s)", err, raw)
 	}
-	if event.Envelope.AuctionID != "auc-log" || event.Envelope.TraceID != "trace-log" || event.DSP != string(adapter.BidmachineKey) {
+	if event.Envelope.AuctionID != "auc-log" || event.Envelope.TraceID != "trace-log" || event.Envelope.Demand.DspID != string(adapter.BidmachineKey) {
 		t.Errorf("event = %s", raw)
 	}
 }
@@ -295,6 +302,14 @@ func TestCatalogEventNames(t *testing.T) {
 		got[string(d.FullName())] = name
 	}
 
+	for _, d := range catalogTypes() {
+		mt, _ := protoregistry.GlobalTypes.FindMessageByName(d.FullName())
+		isDSP := strings.HasPrefix(string(d.Name()), "Dsp")
+		if got := requiresDSP(mt.New().Interface()); got != isDSP {
+			t.Errorf("%s requires_dsp = %v, want %v (Dsp* messages only)", d.FullName(), got, isDSP)
+		}
+	}
+
 	for typ, name := range want {
 		if got[typ] != name {
 			t.Errorf("%s event_name = %q, want %q", typ, got[typ], name)
@@ -312,7 +327,7 @@ func TestCatalogEventNames(t *testing.T) {
 
 func TestEmitDropsMessageWithoutEnvelope(t *testing.T) {
 	engine := &recordingEngine{}
-	New(engine, nil).Event().emit(&telemetryv1.DspRequestSent{}, "", attrs{})
+	New(engine, nil).Event().emitDSP(&telemetryv1.DspRequestSent{}, "bidmachine", attrs{})
 	if len(engine.messages) != 0 {
 		t.Fatalf("emit without envelope produced %d messages", len(engine.messages))
 	}
@@ -372,5 +387,23 @@ func assertField(t *testing.T, fields map[string]any, key, want string) {
 	got, ok := fields[key]
 	if !ok || got != want {
 		t.Errorf("%s: got %#v, want %q", key, fields[key], want)
+	}
+}
+
+func TestEmitDropsDSPEventWithoutDSP(t *testing.T) {
+	engine := &recordingEngine{}
+	e := New(engine, nil).Event()
+	params := testAuctionParams()
+	a := attrsFrom(params)
+
+	e.emit(&telemetryv1.DspRequestSent{Envelope: newProtoEnvelope(a)}, a)
+	e.emitDSP(&telemetryv1.DspRequestSent{Envelope: newProtoEnvelope(a)}, "", a)
+	if len(engine.messages) != 0 {
+		t.Fatalf("DSP event without a dsp was produced: %d messages", len(engine.messages))
+	}
+
+	e.emitDSP(&telemetryv1.DspRequestSent{Envelope: newProtoEnvelope(a)}, "bidmachine", a)
+	if len(engine.messages) != 1 {
+		t.Fatalf("got %d messages, want 1", len(engine.messages))
 	}
 }

@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"cmp"
 	"context"
 	"errors"
 
@@ -9,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/bidon-io/bidon-backend/config"
+	telemetryv1 "github.com/bidon-io/bidon-backend/pkg/proto/org/bidon/telemetry/v1"
 )
 
 type LoggerEngine interface {
@@ -56,7 +56,19 @@ func (e Event) logf() *zap.Logger {
 	return e.log
 }
 
-func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
+// emit produces an auction-level event. Events that declare (requires_dsp)
+// must go through emitDSP and are dropped here.
+func (e Event) emit(msg catalogEvent, a attrs) {
+	e.send(msg, "", a)
+}
+
+// emitDSP produces an event about one DSP and records it as
+// envelope.demand.dsp_id.
+func (e Event) emitDSP(msg catalogEvent, dsp string, a attrs) {
+	e.send(msg, dsp, a)
+}
+
+func (e Event) send(msg catalogEvent, dsp string, a attrs) {
 	if e.engine == nil {
 		return
 	}
@@ -71,9 +83,15 @@ func (e Event) emit(msg catalogEvent, dsp string, a attrs) {
 		)
 		return
 	}
+	if requiresDSP(msg) && dsp == "" {
+		TelemetryDroppedTotal.WithLabelValues(DropReasonInvalid).Inc()
+		e.logError("telemetry event requires a dsp", eventName, dsp, a)
+		return
+	}
 	env.EventName = eventName
-	env.DspId = cmp.Or(env.DspId, dsp)
-	env.DemandSource = cmp.Or(env.DemandSource, dsp)
+	if dsp != "" {
+		env.Demand = &telemetryv1.Envelope_Demand{DspId: dsp}
+	}
 
 	message, err := proto.Marshal(msg)
 	if err != nil {

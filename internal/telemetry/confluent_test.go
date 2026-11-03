@@ -46,7 +46,7 @@ func registeredSerde(t *testing.T, reg *fakeRegistry) *confluentSerde {
 func TestConfluentFrameRoundTrip(t *testing.T) {
 	msg := &telemetryv1.DspResponseReceived{
 		Envelope: &telemetryv1.Envelope{EventName: "dsp_response_received", AuctionId: "auc-1"},
-		Dsp:      "bidmachine",
+		Outcome:  telemetryv1.Outcome_OUTCOME_BID,
 	}
 	payload, err := proto.Marshal(msg)
 	if err != nil {

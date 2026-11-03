@@ -16,7 +16,7 @@ type attrs struct {
 	AdFormat  string
 	Country   string
 	TraceID   string
-	// Base is the auction request. Nil when the caller has no device or
+	// Request is the auction request. Nil when the caller has no device or
 	// consent payload to copy.
-	Base *schema.BaseRequest
+	Request *schema.BaseRequest
 }

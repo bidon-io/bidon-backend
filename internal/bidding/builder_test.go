@@ -335,11 +335,16 @@ func TestBuilder_HoldAuction_EmitsDSPTelemetry(t *testing.T) {
 	sent := telemetry.EventsOf[*telemetryv1.DspRequestSent](engine)
 	received := telemetry.EventsOf[*telemetryv1.DspResponseReceived](engine)
 	rejected := telemetry.EventsOf[*telemetryv1.DspResponseRejected](engine)
+	for _, ev := range sent {
+		if ev.GetEnvelope().GetDemand().GetDspId() == "" {
+			t.Error("dsp_request_sent without demand.dsp_id")
+		}
+	}
 	outcomes := map[string]telemetryv1.Outcome{}
 	for _, ev := range received {
-		outcomes[ev.GetDsp()] = ev.GetOutcome()
+		outcomes[ev.GetEnvelope().GetDemand().GetDspId()] = ev.GetOutcome()
 		if ev.GetLatencyMs() < 0 || ev.GetLatencyMs() > 5_000 {
-			t.Errorf("%s latency_ms = %d; want send→return, not auction-start→return", ev.GetDsp(), ev.GetLatencyMs())
+			t.Errorf("%s latency_ms = %d; want send→return, not auction-start→return", ev.GetEnvelope().GetDemand().GetDspId(), ev.GetLatencyMs())
 		}
 		if env := ev.GetEnvelope(); env.GetAuctionId() != "auc-dsp" || env.GetCountry() != "DE" {
 			t.Errorf("envelope = %v", env)
@@ -409,6 +414,9 @@ func TestBuilder_HoldAuction_EmitsDSPRejectedBelowFloor(t *testing.T) {
 		t.Fatal("expected dsp_response_rejected for a bid below floor")
 	}
 	rejected := rejectedEvents[0]
+	if rejected.GetEnvelope().GetDemand().GetDspId() == "" {
+		t.Error("dsp_response_rejected without demand.dsp_id")
+	}
 	if rejected.GetRejectReason() != telemetryv1.RejectReason_REJECT_REASON_BELOW_FLOOR {
 		t.Errorf("reject_reason = %v, want below_floor", rejected.GetRejectReason())
 	}

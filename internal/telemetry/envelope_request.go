@@ -1,8 +1,9 @@
 package telemetry
 
 import (
-	"cmp"
 	"strings"
+
+	"github.com/prebid/openrtb/v19/adcom1"
 
 	"github.com/bidon-io/bidon-backend/internal/device"
 	"github.com/bidon-io/bidon-backend/internal/sdkapi/schema"
@@ -13,83 +14,112 @@ import (
 // id must not be forwarded. It is always set so the field is present on the wire.
 const zeroAdvertisingID = "00000000-0000-0000-0000-000000000000"
 
-// applyPRDEnvelope fills the PRD common header from the auction request.
+// fillEnvelopeFromRequest fills the envelope groups from the auction request.
 // Fields the request does not carry stay at the proto3 default.
 // country stays the server MaxMind value already on the envelope.
-func applyPRDEnvelope(env *telemetryv1.Envelope, base *schema.BaseRequest) {
+func fillEnvelopeFromRequest(env *telemetryv1.Envelope, req *schema.BaseRequest) {
 	if env == nil {
 		return
 	}
-	env.AdvertisingId, env.AdvertisingIdState, env.Lmt = advertisingID(base)
-	if base == nil {
+	id, state, lmt := advertisingID(req)
+	env.Privacy = &telemetryv1.Envelope_Privacy{
+		AdvertisingId:      id,
+		AdvertisingIdState: state,
+		Lmt:                lmt,
+	}
+	if req == nil {
 		return
 	}
 
-	// This server runs the auction, including when MAX embeds the SDK.
-	env.AuctionOwner = telemetryv1.AuctionOwner_AUCTION_OWNER_BIDON
-	env.Host, env.IntegrationMode, env.Mediator = integration(base)
-
-	env.Bundle = cmp.Or(env.Bundle, base.App.Bundle)
-	env.AppKey = cmp.Or(env.AppKey, base.App.Key)
-	env.SdkVersion = base.App.SDKVersion
-	env.AppVersion = base.App.Version
-	env.Os = base.Device.OS
-	env.OsVersion = base.Device.OSVersion
-	env.DeviceModel = base.Device.Model
-	env.DeviceManufacturer = base.Device.Manufacturer
-	env.ConnectionType = connectionType(base.Device.ConnectionType)
-	env.ScreenWidth = int32(base.Device.Width)
-	env.ScreenHeight = int32(base.Device.Height)
-	env.ScreenDensity = base.Device.PXRatio
-	// OpenRTB device type: 4 phone, 5 tablet.
-	switch base.Device.Type {
-	case device.PhoneType:
-		env.DeviceType = 4
-	case device.TabletType:
-		env.DeviceType = 5
+	host, mode, mediator := integration(req)
+	env.Integration = &telemetryv1.Envelope_Integration{
+		Host: host,
+		// This server runs the auction, including when MAX embeds the SDK.
+		AuctionOwner:    telemetryv1.AuctionOwner_AUCTION_OWNER_BIDON,
+		IntegrationMode: mode,
+		Mediator:        mediator,
 	}
-	env.SessionStartTs = int64(base.Session.StartTS)
 
-	regs := base.GetRegulations()
-	env.GdprApplies = regs.GDPR
-	env.UsPrivacy = regs.USPrivacy
-	env.Coppa = coppaFlagged(base)
+	env.App = &telemetryv1.Envelope_App{
+		AppKey:     req.App.Key,
+		Bundle:     req.App.Bundle,
+		AppVersion: req.App.Version,
+		SdkVersion: req.App.SDKVersion,
+	}
+
+	env.Device = &telemetryv1.Envelope_Device{
+		Os:             req.Device.OS,
+		OsVersion:      req.Device.OSVersion,
+		Model:          req.Device.Model,
+		Manufacturer:   req.Device.Manufacturer,
+		DeviceType:     deviceType(req.Device.Type),
+		ConnectionType: connectionType(req.Device.ConnectionType),
+		ScreenWidth:    int32(req.Device.Width),
+		ScreenHeight:   int32(req.Device.Height),
+		ScreenDensity:  req.Device.PXRatio,
+	}
+
+	env.Session = &telemetryv1.Envelope_Session{StartTs: int64(req.Session.StartTS)}
+
+	regs := req.GetRegulations()
+	env.Privacy.Coppa = coppaFlagged(req)
+	env.Privacy.GdprApplies = regs.GDPR
+	env.Privacy.UsPrivacy = regs.USPrivacy
+	env.Privacy.HasTcfString = regs.EUPrivacy != ""
 }
 
-// advertisingID applies the PRD order: COPPA, then missing consent, then
+// deviceType is the OpenRTB device type: 4 phone, 5 tablet.
+func deviceType(t device.Type) int32 {
+	switch t {
+	case device.PhoneType:
+		return int32(adcom1.DevicePhone)
+	case device.TabletType:
+		return int32(adcom1.DeviceTablet)
+	}
+	return 0
+}
+
+// advertisingID applies the order: COPPA, then missing consent, then
 // limit-ad-tracking or a deleted id, otherwise the real id. lmt follows the
 // request, so COPPA can zero the id while lmt stays false. With no request
 // the id is the zero UUID, the state stays unspecified, and lmt is false.
-func advertisingID(base *schema.BaseRequest) (string, telemetryv1.AdvertisingIdState, bool) {
-	if base == nil {
+//
+// "Consent" here is only the request's tracking_authorization_status (the iOS
+// tracking permission). GDPR, TCF and GPP consent are not evaluated yet.
+// TODO: derive consent across platforms and from the regulation strings.
+func advertisingID(req *schema.BaseRequest) (string, telemetryv1.AdvertisingIdState, bool) {
+	if req == nil {
 		return zeroAdvertisingID, telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_UNSPECIFIED, false
 	}
-	raw := strings.ToLower(strings.TrimSpace(base.User.IDFA))
-	authorized := strings.EqualFold(base.User.TrackingAuthorizationStatus, "authorized")
-	real := raw != "" && raw != zeroAdvertisingID
-	lmt := !authorized || !real
+	raw := strings.ToLower(strings.TrimSpace(req.User.IDFA))
+	authorized := strings.EqualFold(req.User.TrackingAuthorizationStatus, "authorized")
+	isReal := raw != "" && raw != zeroAdvertisingID
+	lmt := !authorized || !isReal
 
 	switch {
-	case coppaFlagged(base):
+	case coppaFlagged(req):
 		return zeroAdvertisingID, telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_COPPA, lmt
 	case !authorized:
 		return zeroAdvertisingID, telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_NO_CONSENT, lmt
-	case !real:
+	case !isReal:
 		return zeroAdvertisingID, telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_ZEROED_LAT, lmt
 	default:
 		return raw, telemetryv1.AdvertisingIdState_ADVERTISING_ID_STATE_REAL, lmt
 	}
 }
 
-func coppaFlagged(base *schema.BaseRequest) bool {
-	return base.GetRegulations().COPPA || (base.User.COPPA != nil && *base.User.COPPA)
+// coppaFlagged is true when either the regulations or the user flag COPPA. The
+// OpenRTB builder sends only regs.COPPA, so telemetry can flag COPPA on an
+// auction whose bid requests did not.
+func coppaFlagged(req *schema.BaseRequest) bool {
+	return req.GetRegulations().COPPA || (req.User.COPPA != nil && *req.User.COPPA)
 }
 
 // integration labels the SDK host. A blank mode with mediator max is the MAX
 // custom adapter. max_bidding is recorded when the request says so.
-func integration(base *schema.BaseRequest) (telemetryv1.Host, telemetryv1.IntegrationMode, telemetryv1.Mediator) {
-	mode := strings.ToLower(strings.TrimSpace(base.GetMediationMode()))
-	mediator := strings.ToLower(strings.TrimSpace(base.GetMediator()))
+func integration(req *schema.BaseRequest) (telemetryv1.Host, telemetryv1.IntegrationMode, telemetryv1.Mediator) {
+	mode := strings.ToLower(strings.TrimSpace(req.GetMediationMode()))
+	mediator := strings.ToLower(strings.TrimSpace(req.GetMediator()))
 	switch {
 	case mode == "max_bidding":
 		return telemetryv1.Host_HOST_MAX_ADAPTER, telemetryv1.IntegrationMode_INTEGRATION_MODE_MAX_BIDDING, telemetryv1.Mediator_MEDIATOR_MAX
@@ -127,7 +157,7 @@ func connectionType(raw string) telemetryv1.ConnectionType {
 		return telemetryv1.ConnectionType_CONNECTION_TYPE_CELLULAR_5G
 	case "ETHERNET":
 		return telemetryv1.ConnectionType_CONNECTION_TYPE_ETHERNET
-	case "CELLULAR":
+	case "CELLULAR", "CELLULAR_UNKNOWN":
 		return telemetryv1.ConnectionType_CONNECTION_TYPE_CELLULAR
 	case "CELLULAR_2_G":
 		return telemetryv1.ConnectionType_CONNECTION_TYPE_CELLULAR_2G
