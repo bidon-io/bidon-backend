@@ -483,7 +483,8 @@ components:
         Identity header embedded in every catalog event. Same fields as the
         protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
         are ignored if the client sends them. `app_key` and `bundle` are copied
-        from the request.
+        from the request onto `envelope.app`. `host` and `auction_owner` are
+        the PRD labels and are stored on `envelope.integration`.
       required:
         - event_id
         - event_name
@@ -501,17 +502,17 @@ components:
           description: Client event time, Unix milliseconds
         schema_version:
           type: string
-          description: Ignored if sent. Server writes the current version. Never a 4xx.
+          description: Ignored if sent. The stored field is int32 `1`. Never a 4xx.
         app_id:
           type: integer
           format: int64
           description: Ignored if sent. Client ingest leaves this unset.
         app_key:
           type: string
-          description: Ignored if sent. Server copies `app.key`.
+          description: Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
         bundle:
           type: string
-          description: Ignored if sent. Server copies `app.bundle`.
+          description: Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
         auction_id:
           type: string
           description: |
@@ -549,11 +550,16 @@ components:
             should be `1`. Server does not re-sample.
         host:
           type: string
-          description: Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+          description: |
+            Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+            Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
           example: publisher
         auction_owner:
           type: string
-          description: Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+          description: |
+            Who runs the auction. PRD labels `bidon` or `max`.
+            Stored as `envelope.integration.auction_owner`
+            (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
           example: bidon
     ClientEventName:
       type: string

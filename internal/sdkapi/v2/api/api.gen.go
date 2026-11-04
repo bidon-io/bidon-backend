@@ -1056,17 +1056,19 @@ type AdClicked struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1079,14 +1081,15 @@ type AdClicked struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1120,17 +1123,19 @@ type AdClosed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1143,14 +1148,15 @@ type AdClosed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1187,17 +1193,19 @@ type AdExpired struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1210,14 +1218,15 @@ type AdExpired struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1254,17 +1263,19 @@ type AdFilled struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1277,14 +1288,15 @@ type AdFilled struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1319,17 +1331,19 @@ type AdImpression struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1342,14 +1356,15 @@ type AdImpression struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1389,17 +1404,19 @@ type AdLoadFailed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1412,14 +1429,15 @@ type AdLoadFailed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1474,17 +1492,19 @@ type AdLoadRequested struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1497,14 +1517,15 @@ type AdLoadRequested struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1541,17 +1562,19 @@ type AdLoaded struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1564,14 +1587,15 @@ type AdLoaded struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1611,17 +1635,19 @@ type AdRequestStarted struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1634,14 +1660,15 @@ type AdRequestStarted struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1682,17 +1709,19 @@ type AdRewardGranted struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1705,14 +1734,15 @@ type AdRewardGranted struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1741,17 +1771,19 @@ type AdShowFailed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1764,14 +1796,15 @@ type AdShowFailed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1806,17 +1839,19 @@ type AdShowRequested struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1829,14 +1864,15 @@ type AdShowRequested struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1868,17 +1904,19 @@ type AdViewable struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1891,14 +1929,15 @@ type AdViewable struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -1944,17 +1983,19 @@ type AdapterInitResult struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -1967,14 +2008,15 @@ type AdapterInitResult struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2020,17 +2062,19 @@ type AdapterLoadBudgetExceeded struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2043,14 +2087,15 @@ type AdapterLoadBudgetExceeded struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2084,17 +2129,19 @@ type AdapterTokenRequested struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2107,14 +2154,15 @@ type AdapterTokenRequested struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2151,17 +2199,19 @@ type AdapterTokenResult struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2174,14 +2224,15 @@ type AdapterTokenResult struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2236,17 +2287,19 @@ type AdmParseResult struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2259,14 +2312,15 @@ type AdmParseResult struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2309,17 +2363,19 @@ type AuctionFailed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2332,14 +2388,15 @@ type AuctionFailed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2374,17 +2431,19 @@ type AuctionNoDemand struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2397,14 +2456,15 @@ type AuctionNoDemand struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2444,17 +2504,19 @@ type AuctionRequested struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2467,14 +2529,15 @@ type AuctionRequested struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2514,17 +2577,19 @@ type AuctionResponseReceived struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2537,14 +2602,15 @@ type AuctionResponseReceived struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2570,7 +2636,8 @@ type AuctionResponseReceivedEnvelopeEventName string
 // ClientEventEnvelope Identity header embedded in every catalog event. Same fields as the
 // protobuf Envelope. `app_id`, `country`, `schema_version`, and `trace_id`
 // are ignored if the client sends them. `app_key` and `bundle` are copied
-// from the request.
+// from the request onto `envelope.app`. `host` and `auction_owner` are
+// the PRD labels and are stored on `envelope.integration`.
 type ClientEventEnvelope struct {
 	// AdFormat Banner format when `ad_type=banner` (`BANNER` / `LEADERBOARD` / `MREC` / `ADAPTIVE`).
 	AdFormat *string `json:"ad_format,omitempty"`
@@ -2581,17 +2648,19 @@ type ClientEventEnvelope struct {
 	// AppId Ignored if sent. Client ingest leaves this unset.
 	AppId *int64 `json:"app_id,omitempty"`
 
-	// AppKey Ignored if sent. Server copies `app.key`.
+	// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 	AppKey *string `json:"app_key,omitempty"`
 
 	// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 	// Omit on session-only events.
 	AuctionId *string `json:"auction_id,omitempty"`
 
-	// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+	// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+	// Stored as `envelope.integration.auction_owner`
+	// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 	AuctionOwner *string `json:"auction_owner,omitempty"`
 
-	// Bundle Ignored if sent. Server copies `app.bundle`.
+	// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 	Bundle *string `json:"bundle,omitempty"`
 
 	// Country Ignored if sent. Server stamps from MaxMind.
@@ -2608,14 +2677,15 @@ type ClientEventEnvelope struct {
 	// EventTs Client event time, Unix milliseconds
 	EventTs int64 `json:"event_ts"`
 
-	// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+	// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+	// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 	Host *string `json:"host,omitempty"`
 
 	// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 	// should be `1`. Server does not re-sample.
 	SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-	// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+	// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 	SchemaVersion *string `json:"schema_version,omitempty"`
 
 	// SessionId Optional override. Default is `session.id` on the batch.
@@ -2650,17 +2720,19 @@ type ConfigFetchResult struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2673,14 +2745,15 @@ type ConfigFetchResult struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2740,17 +2813,19 @@ type NoFillReturnedToMax struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2763,14 +2838,15 @@ type NoFillReturnedToMax struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2810,17 +2886,19 @@ type RenderCrashed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2833,14 +2911,15 @@ type RenderCrashed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2880,17 +2959,19 @@ type RendererSelected struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2903,14 +2984,15 @@ type RendererSelected struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -2962,17 +3044,19 @@ type SdkCrashed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -2985,14 +3069,15 @@ type SdkCrashed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3032,17 +3117,19 @@ type SdkInitCompleted struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3055,14 +3142,15 @@ type SdkInitCompleted struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3093,17 +3181,19 @@ type SdkInitFailed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3116,14 +3206,15 @@ type SdkInitFailed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3158,17 +3249,19 @@ type SdkInitStarted struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3181,14 +3274,15 @@ type SdkInitStarted struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3222,17 +3316,19 @@ type SignalFailed struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3245,14 +3341,15 @@ type SignalFailed struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3286,17 +3383,19 @@ type SignalProvided struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3309,14 +3408,15 @@ type SignalProvided struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3360,17 +3460,19 @@ type SignalRequested struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3383,14 +3485,15 @@ type SignalRequested struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3424,17 +3527,19 @@ type SignalTimeoutSuspected struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3447,14 +3552,15 @@ type SignalTimeoutSuspected struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3537,17 +3643,19 @@ type TokenCollectionCompleted struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3560,14 +3668,15 @@ type TokenCollectionCompleted struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3599,17 +3708,19 @@ type VideoComplete struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3622,14 +3733,15 @@ type VideoComplete struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3658,17 +3770,19 @@ type VideoError struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3681,14 +3795,15 @@ type VideoError struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3720,17 +3835,19 @@ type VideoMidpoint struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3743,14 +3860,15 @@ type VideoMidpoint struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3779,17 +3897,19 @@ type VideoQ1 struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3802,14 +3922,15 @@ type VideoQ1 struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3838,17 +3959,19 @@ type VideoQ3 struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3861,14 +3984,15 @@ type VideoQ3 struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3897,17 +4021,19 @@ type VideoSkipped struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3920,14 +4046,15 @@ type VideoSkipped struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -3956,17 +4083,19 @@ type VideoStart struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -3979,14 +4108,15 @@ type VideoStart struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -4017,17 +4147,19 @@ type WebviewError struct {
 		// AppId Ignored if sent. Client ingest leaves this unset.
 		AppId *int64 `json:"app_id,omitempty"`
 
-		// AppKey Ignored if sent. Server copies `app.key`.
+		// AppKey Ignored if sent here. Server writes `app.key` on `envelope.app.app_key`.
 		AppKey *string `json:"app_key,omitempty"`
 
 		// AuctionId Client-supplied. Not globally unique (G10). Joins are `(app_id, auction_id)`.
 		// Omit on session-only events.
 		AuctionId *string `json:"auction_id,omitempty"`
 
-		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`, not an enum name.
+		// AuctionOwner Who runs the auction. PRD labels `bidon` or `max`.
+		// Stored as `envelope.integration.auction_owner`
+		// (`AUCTION_OWNER_BIDON` or `AUCTION_OWNER_MAX`).
 		AuctionOwner *string `json:"auction_owner,omitempty"`
 
-		// Bundle Ignored if sent. Server copies `app.bundle`.
+		// Bundle Ignored if sent here. Server writes `app.bundle` on `envelope.app.bundle`.
 		Bundle *string `json:"bundle,omitempty"`
 
 		// Country Ignored if sent. Server stamps from MaxMind.
@@ -4040,14 +4172,15 @@ type WebviewError struct {
 		// EventTs Client event time, Unix milliseconds
 		EventTs int64 `json:"event_ts"`
 
-		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`, not an enum name.
+		// Host Who embeds the SDK. PRD labels `publisher` or `max_adapter`.
+		// Stored as `envelope.integration.host` (`HOST_PUBLISHER` or `HOST_MAX_ADAPTER`).
 		Host *string `json:"host,omitempty"`
 
 		// SamplingRate Rate the SDK applied (G11 coherent per auction). Funnel and error events
 		// should be `1`. Server does not re-sample.
 		SamplingRate *float64 `json:"sampling_rate,omitempty"`
 
-		// SchemaVersion Ignored if sent. Server writes the current version. Never a 4xx.
+		// SchemaVersion Ignored if sent. The stored field is int32 `1`. Never a 4xx.
 		SchemaVersion *string `json:"schema_version,omitempty"`
 
 		// SessionId Optional override. Default is `session.id` on the batch.
@@ -8380,176 +8513,178 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"AAA=",
+	"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",
+	"8QAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

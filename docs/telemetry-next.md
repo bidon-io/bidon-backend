@@ -5,13 +5,13 @@ This file is the status of [PR #963](https://github.com/bidon-io/bidon-backend/p
 (`bac-73-sdk-telemetry-ingest`) against the BAC-91 tickets. The design notes
 live beside it; this page says which of them the code actually implements.
 
-The branch still needs a rebase onto `new-main`. It was cut at `18ff8401`,
-before the PRD envelope ([#962](https://github.com/bidon-io/bidon-backend/pull/962))
-and Smadex ([#934](https://github.com/bidon-io/bidon-backend/pull/934)). Expect
-conflicts in `schemas/proto/org/bidon/telemetry/v1/events.proto` and
-`http-client.env.json`. Keep the envelope fields from `new-main` (`app_key`,
-`bundle`, and the PRD header). This branch still writes `schema_version` as
-the string `"1"`.
+The branch is rebased onto `new-main`, which already has the PRD envelope
+([#962](https://github.com/bidon-io/bidon-backend/pull/962)) and Smadex
+([#934](https://github.com/bidon-io/bidon-backend/pull/934)). Ingest keeps that
+header. `app_key` and `bundle` are written on `envelope.app`, and
+`schema_version` is the int32 `1`. A client `host` or `auction_owner` string
+(`publisher`, `max_adapter`, `bidon`, `max`) is stored on
+`envelope.integration` as the PRD enum.
 
 ## What this pull request implements
 
@@ -76,8 +76,7 @@ They are not a claim that this PR built it.
 
 ## If you continue the work
 
-1. Rebase this branch onto `new-main` and resolve `events.proto` by keeping the merged PRD header and this branch's client catalogue.
-2. Run the PR test plan: `go test ./internal/telemetry/ ./internal/sdkapi/v2/app/ ./internal/sdkapi/v2/api/`, `cargo test --manifest-path telemetry/Cargo.toml`, then `just compose` and POST `internal/sdkapi/v2/apihandlers/testdata/telemetry/valid_request.json` to `http://localhost:1326/v2/telemetry`. Confirm one framed record on `telemetry-events`, counters on `:1326/metrics`, and that `:1324` does not serve the route. POST `unrecognized_request.json` and confirm 202 with the unknown name dropped.
-3. Finish BAC-78 on sdkapi: add `telemetry.enabled`, `sample_rate`, `event_names`, and `metric_names` to `/v2/config`, using the WIP yaml as the contract. Leave sampling on the SDK.
-4. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
-5. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. The TRD and the store notes are the design.
+1. Run the PR test plan: `go test ./internal/telemetry/ ./internal/sdkapi/v2/app/ ./internal/sdkapi/v2/api/`, `cargo test --manifest-path telemetry/Cargo.toml`, then `just compose` and POST `internal/sdkapi/v2/apihandlers/testdata/telemetry/valid_request.json` to `http://localhost:1326/v2/telemetry`. Confirm one framed record on `telemetry-events`, counters on `:1326/metrics`, and that `:1324` does not serve the route. POST `unrecognized_request.json` and confirm 202 with the unknown name dropped.
+2. Finish BAC-78 on sdkapi: add `telemetry.enabled`, `sample_rate`, `event_names`, and `metric_names` to `/v2/config`, using the WIP yaml as the contract. Leave sampling on the SDK.
+3. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
+4. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. The TRD and the store notes are the design.

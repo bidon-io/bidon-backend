@@ -189,12 +189,13 @@ fn stamp(
         }
     };
     set_i64(&mut envelope, "app_id", 0)?;
-    set_string(&mut envelope, "app_key", app_key)?;
-    set_string(&mut envelope, "bundle", bundle)?;
-    set_string(&mut envelope, "schema_version", SCHEMA_VERSION)?;
+    set_app(&mut envelope, app_key, bundle)?;
+    let schema_version = SCHEMA_VERSION.parse().map_err(|_| ())?;
+    set_i32(&mut envelope, "schema_version", schema_version)?;
     set_string(&mut envelope, "event_name", event_name)?;
     set_string(&mut envelope, "country", "")?;
     set_string(&mut envelope, "trace_id", "")?;
+    stamp_integration(&mut envelope, raw)?;
     let session_override = raw
         .get("envelope")
         .and_then(|envelope| envelope.get("session_id"))
@@ -226,6 +227,91 @@ fn set_i64(msg: &mut DynamicMessage, name: &str, value: i64) -> Result<(), ()> {
     Ok(())
 }
 
+fn set_i32(msg: &mut DynamicMessage, name: &str, value: i32) -> Result<(), ()> {
+    let field = msg.descriptor().get_field_by_name(name).ok_or(())?;
+    msg.set_field(&field, Value::I32(value));
+    Ok(())
+}
+
+fn set_enum(msg: &mut DynamicMessage, name: &str, number: i32) -> Result<(), ()> {
+    let field = msg.descriptor().get_field_by_name(name).ok_or(())?;
+    msg.set_field(&field, Value::EnumNumber(number));
+    Ok(())
+}
+
+/// app_key and bundle live on the nested PRD app message. The request wins
+/// over anything the client put there.
+fn set_app(envelope: &mut DynamicMessage, app_key: &str, bundle: &str) -> Result<(), ()> {
+    let field = envelope.descriptor().get_field_by_name("app").ok_or(())?;
+    let Kind::Message(descriptor) = field.kind() else {
+        return Err(());
+    };
+    let mut app = match envelope.get_field(&field).into_owned() {
+        Value::Message(existing) => existing,
+        _ => DynamicMessage::new(descriptor),
+    };
+    set_string(&mut app, "app_key", app_key)?;
+    set_string(&mut app, "bundle", bundle)?;
+    envelope.set_field(&field, Value::Message(app));
+    Ok(())
+}
+
+/// Flat client labels are not envelope fields. publisher/bidon land on the
+/// PRD integration enums so they are not dropped.
+fn stamp_integration(envelope: &mut DynamicMessage, raw: &serde_json::Value) -> Result<(), ()> {
+    let host = envelope_string(raw, "host");
+    let owner = envelope_string(raw, "auction_owner");
+    if host.is_none() && owner.is_none() {
+        return Ok(());
+    }
+    let field = envelope
+        .descriptor()
+        .get_field_by_name("integration")
+        .ok_or(())?;
+    let Kind::Message(descriptor) = field.kind() else {
+        return Err(());
+    };
+    let mut integration = match envelope.get_field(&field).into_owned() {
+        Value::Message(existing) => existing,
+        _ => DynamicMessage::new(descriptor),
+    };
+    if let Some(host) = host {
+        set_enum(&mut integration, "host", host_number(host))?;
+    }
+    if let Some(owner) = owner {
+        set_enum(
+            &mut integration,
+            "auction_owner",
+            auction_owner_number(owner),
+        )?;
+    }
+    envelope.set_field(&field, Value::Message(integration));
+    Ok(())
+}
+
+fn envelope_string<'a>(raw: &'a serde_json::Value, name: &str) -> Option<&'a str> {
+    raw.get("envelope")
+        .and_then(|envelope| envelope.get(name))
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+}
+
+fn host_number(label: &str) -> i32 {
+    match label {
+        "publisher" | "HOST_PUBLISHER" => 1,
+        "max_adapter" | "HOST_MAX_ADAPTER" => 2,
+        _ => 0,
+    }
+}
+
+fn auction_owner_number(label: &str) -> i32 {
+    match label {
+        "bidon" | "AUCTION_OWNER_BIDON" => 1,
+        "max" | "AUCTION_OWNER_MAX" => 2,
+        _ => 0,
+    }
+}
+
 fn set_f64(msg: &mut DynamicMessage, name: &str, value: f64) -> Result<(), ()> {
     let field = msg.descriptor().get_field_by_name(name).ok_or(())?;
     msg.set_field(&field, Value::F64(value));
@@ -255,7 +341,12 @@ fn fill_message(msg: &mut DynamicMessage, raw: &serde_json::Value) -> Result<(),
             msg.set_field(&field, Value::Message(nested));
             continue;
         }
-        msg.set_field(&field, json_scalar(&field.kind(), value)?);
+        match json_scalar(&field.kind(), value) {
+            Ok(parsed) => msg.set_field(&field, parsed),
+            // Clients still send the old string. The server writes the int.
+            Err(()) if key == "schema_version" => continue,
+            Err(()) => return Err(()),
+        }
     }
     Ok(())
 }
@@ -378,13 +469,14 @@ mod tests {
             other => panic!("envelope: {other:?}"),
         };
         assert_eq!(field_i64(&envelope, "app_id"), 0);
-        assert_eq!(field_string(&envelope, "app_key"), "chess_2000");
-        assert_eq!(field_string(&envelope, "bundle"), "com.demo.chessmaster");
+        let app = message_field(&envelope, "app");
+        assert_eq!(field_string(&app, "app_key"), "chess_2000");
+        assert_eq!(field_string(&app, "bundle"), "com.demo.chessmaster");
         assert_eq!(
             field_string(&envelope, "session_id"),
             "550e8400-e29b-41d4-a716-446655440000"
         );
-        assert_eq!(field_string(&envelope, "schema_version"), "1");
+        assert_eq!(field_i32(&envelope, "schema_version"), 1);
         assert_eq!(field_string(&envelope, "country"), "");
         assert_eq!(field_string(&envelope, "trace_id"), "");
         assert_eq!(field_string(&envelope, "auction_id"), "auc_01J8Z3K4N5");
@@ -420,12 +512,15 @@ mod tests {
         assert_eq!(field_string(&decoded, "external_error_code"), "3");
         assert_eq!(field_string(&decoded, "external_error_source"), "admob");
         assert_eq!(field_string(&decoded, "exception_class"), "LoadException");
-        assert_eq!(field_string(&decoded, "exception_cause_class"), "IOException");
+        assert_eq!(
+            field_string(&decoded, "exception_cause_class"),
+            "IOException"
+        );
         assert!(decoded.get_field_by_name("not_in_proto").is_none());
     }
 
     #[test]
-    fn keeps_envelope_host_and_auction_owner_strings() {
+    fn keeps_client_host_and_auction_owner_on_integration() {
         let catalog = Catalog::load();
         let raw = serde_json::json!({
             "envelope": {
@@ -446,8 +541,9 @@ mod tests {
             Value::Message(envelope) => envelope,
             other => panic!("envelope: {other:?}"),
         };
-        assert_eq!(field_string(&envelope, "host"), "publisher");
-        assert_eq!(field_string(&envelope, "auction_owner"), "bidon");
+        let integration = message_field(&envelope, "integration");
+        assert_eq!(field_enum(&integration, "host"), 1);
+        assert_eq!(field_enum(&integration, "auction_owner"), 1);
     }
 
     #[test]
@@ -472,7 +568,11 @@ mod tests {
         let decoded = catalog
             .decode(&encoded.message_type, &encoded.payload)
             .expect("decode");
-        match decoded.get_field_by_name("crashed_on_main_thread").unwrap().as_ref() {
+        match decoded
+            .get_field_by_name("crashed_on_main_thread")
+            .unwrap()
+            .as_ref()
+        {
             Value::Bool(true) => {}
             other => panic!("crashed_on_main_thread: {other:?}"),
         }
@@ -485,7 +585,10 @@ mod tests {
             Value::Message(message) => message,
             other => panic!("exception: {other:?}"),
         };
-        assert_eq!(field_string(exception, "class"), "java.lang.IllegalStateException");
+        assert_eq!(
+            field_string(exception, "class"),
+            "java.lang.IllegalStateException"
+        );
         match exception.get_field_by_name("frames").unwrap().as_ref() {
             Value::List(frames) => match &frames[0] {
                 Value::String(frame) => assert_eq!(frame, "org.bidon.sdk.Session.tick"),
@@ -493,7 +596,11 @@ mod tests {
             },
             other => panic!("frames: {other:?}"),
         }
-        match exception.get_field_by_name("omitted_frames").unwrap().as_ref() {
+        match exception
+            .get_field_by_name("omitted_frames")
+            .unwrap()
+            .as_ref()
+        {
             Value::I32(4) => {}
             other => panic!("omitted_frames: {other:?}"),
         }
@@ -509,6 +616,27 @@ mod tests {
     fn field_i64(msg: &DynamicMessage, name: &str) -> i64 {
         match msg.get_field_by_name(name).unwrap().as_ref() {
             Value::I64(value) => *value,
+            other => panic!("{name}: {other:?}"),
+        }
+    }
+
+    fn field_i32(msg: &DynamicMessage, name: &str) -> i32 {
+        match msg.get_field_by_name(name).unwrap().as_ref() {
+            Value::I32(value) => *value,
+            other => panic!("{name}: {other:?}"),
+        }
+    }
+
+    fn field_enum(msg: &DynamicMessage, name: &str) -> i32 {
+        match msg.get_field_by_name(name).unwrap().as_ref() {
+            Value::EnumNumber(value) => *value,
+            other => panic!("{name}: {other:?}"),
+        }
+    }
+
+    fn message_field(msg: &DynamicMessage, name: &str) -> DynamicMessage {
+        match msg.get_field_by_name(name).unwrap().into_owned() {
+            Value::Message(message) => message,
             other => panic!("{name}: {other:?}"),
         }
     }
