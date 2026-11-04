@@ -8,14 +8,104 @@ extend google.protobuf.MessageOptions {
   // Catalog event_name for a telemetry-events message. Every message that
   // embeds Envelope must declare it; the emitter reads it from the type.
   string event_name = 50000;
+  // The event is about one DSP. The emitter drops it unless
+  // envelope.demand.dsp_id is set.
+  bool requires_dsp = 50001;
 }
 
-// Envelope is the identity header embedded in every catalog event.
+// Host is who embeds the SDK.
+enum Host {
+  HOST_UNSPECIFIED = 0;
+  HOST_PUBLISHER = 1;
+  HOST_MAX_ADAPTER = 2;
+}
+
+// AuctionOwner is who runs the auction.
+enum AuctionOwner {
+  AUCTION_OWNER_UNSPECIFIED = 0;
+  AUCTION_OWNER_BIDON = 1;
+  AUCTION_OWNER_MAX = 2;
+}
+
+// IntegrationMode is the derived label: direct, max_custom or max_bidding.
+enum IntegrationMode {
+  INTEGRATION_MODE_UNSPECIFIED = 0;
+  INTEGRATION_MODE_DIRECT = 1;
+  INTEGRATION_MODE_MAX_CUSTOM = 2;
+  INTEGRATION_MODE_MAX_BIDDING = 3;
+}
+
+// Mediator is the mediation host. Extensible.
+enum Mediator {
+  MEDIATOR_UNSPECIFIED = 0;
+  MEDIATOR_BIDON = 1;
+  MEDIATOR_MAX = 2;
+  MEDIATOR_LEVEL_PLAY = 3;
+  MEDIATOR_ADMOB = 4;
+}
+
+// DemandType is bidding or a direct deal. There is no network demand.
+enum DemandType {
+  DEMAND_TYPE_UNSPECIFIED = 0;
+  DEMAND_TYPE_BIDDING = 1;
+  DEMAND_TYPE_DIRECT_DEAL = 2;
+}
+
+// ConnectionType is the telemetry set plus the coarser values the auction
+// request already sends (ethernet, 2G, 3G, generic cellular). Those are not
+// collapsed into unknown.
+enum ConnectionType {
+  CONNECTION_TYPE_UNSPECIFIED = 0;
+  CONNECTION_TYPE_WIFI = 1;
+  CONNECTION_TYPE_CELLULAR_4G = 2;
+  CONNECTION_TYPE_CELLULAR_5G = 3;
+  CONNECTION_TYPE_OFFLINE = 4;
+  CONNECTION_TYPE_UNKNOWN = 5;
+  CONNECTION_TYPE_ETHERNET = 6;
+  CONNECTION_TYPE_CELLULAR = 7;
+  CONNECTION_TYPE_CELLULAR_2G = 8;
+  CONNECTION_TYPE_CELLULAR_3G = 9;
+}
+
+// ConsentSource is who supplied the consent signals: bidon_cmp, max_sdk or
+// publisher_api. Left unspecified when the request does not say.
+enum ConsentSource {
+  CONSENT_SOURCE_UNSPECIFIED = 0;
+  CONSENT_SOURCE_BIDON_CMP = 1;
+  CONSENT_SOURCE_MAX_SDK = 2;
+  CONSENT_SOURCE_PUBLISHER_API = 3;
+}
+
+// AdvertisingIdState is why advertising_id is a real id or an all-zero UUID.
+// Order: COPPA, then no consent, then limit-ad-tracking, else real.
+// ZEROED_NO_CONSENT currently means only that the request's
+// tracking_authorization_status is not "authorized". GDPR, TCF and GPP consent
+// are not evaluated yet.
+enum AdvertisingIdState {
+  ADVERTISING_ID_STATE_UNSPECIFIED = 0;
+  ADVERTISING_ID_STATE_REAL = 1;
+  ADVERTISING_ID_STATE_ZEROED_COPPA = 2;
+  ADVERTISING_ID_STATE_ZEROED_NO_CONSENT = 3;
+  ADVERTISING_ID_STATE_ZEROED_LAT = 4;
+}
+
+// Envelope is the common header present on every event. Identity and join
+// keys are flat; the rest is grouped by topic. A group the event has nothing
+// for is left unset, and fields the stage has not produced stay at the proto3
+// default. The header is defined by the telemetry PRD and TRD
+// (docs/PRD_BidOn_Telemetry - v1.pdf, docs/TRD_BidOn_Telemetry.md on the
+// BAC-53 initiative branch).
+//
+// schema_version is the current major. Additive changes stay on this number.
+// A breaking change bumps it.
+// auction_id is the id on the request. The API requires the client to send it.
+// app_id scopes joins because that client id is not globally unique.
+// trace_id joins the event to the per-auction trace.
 message Envelope {
   string event_id = 1;
   string event_name = 2;
   int64 event_ts = 3;
-  string schema_version = 4;
+  int32 schema_version = 4;
   int64 app_id = 5;
   string auction_id = 6;
   string session_id = 7;
@@ -24,6 +114,78 @@ message Envelope {
   string country = 10;
   string trace_id = 11;
   double sampling_rate = 12;
+  string placement = 13;
+
+  App app = 14;
+  Device device = 15;
+  Session session = 16;
+  Privacy privacy = 17;
+  Integration integration = 18;
+  // Demand is set only on events about one DSP.
+  Demand demand = 19;
+
+  message App {
+    string app_key = 1;
+    string bundle = 2;
+    string app_version = 3;
+    string sdk_version = 4;
+    string publisher_id = 5;
+    string wrapper_version = 6;
+  }
+
+  message Device {
+    string os = 1;
+    string os_version = 2;
+    int32 os_api_level = 3;
+    string model = 4;
+    string manufacturer = 5;
+    // oRTB device type. 4 = phone, 5 = tablet.
+    int32 device_type = 6;
+    ConnectionType connection_type = 7;
+    int32 screen_width = 8;
+    int32 screen_height = 9;
+    double screen_density = 10;
+  }
+
+  message Session {
+    int64 start_ts = 1;
+    // The request's session clock is a monotonic tick, not milliseconds, so
+    // the server leaves this unset.
+    int64 sdk_uptime_ms = 2;
+    string ab_test_group = 3;
+  }
+
+  message Privacy {
+    string advertising_id = 1;
+    AdvertisingIdState advertising_id_state = 2;
+    bool lmt = 3;
+    // dnt is a separate signal from limit-ad-tracking. The request does not carry it.
+    bool dnt = 4;
+    bool coppa = 5;
+    bool gdpr_applies = 6;
+    bool has_tcf_string = 7;
+    string us_privacy = 8;
+    string gpp_string = 9;
+    bool gpp_consent = 10;
+    bool mspa_enforced = 11;
+    ConsentSource consent_source = 12;
+  }
+
+  message Integration {
+    Host host = 1;
+    AuctionOwner auction_owner = 2;
+    IntegrationMode integration_mode = 3;
+    Mediator mediator = 4;
+    string mediator_sdk_version = 5;
+  }
+
+  message Demand {
+    string dsp_id = 1;
+    DemandType demand_type = 2;
+    string bid_id = 3;
+    string token_id = 4;
+    string ad_unit_id = 5;
+  }
 }
 
 // Scope is the auction phase an event describes.
@@ -91,24 +253,24 @@ message AuctionCompleted {
 // DspRequestSent is emitted immediately before the adapter HTTP call.
 message DspRequestSent {
   option (event_name) = "dsp_request_sent";
+  option (requires_dsp) = true;
 
   Envelope envelope = 1;
   Scope scope = 2;
-  string dsp = 3;
 }
 
 // DspResponseReceived is emitted after the adapter returns, once per
 // dsp_request_sent. Multi-slot DSPs (Amazon) report their best slot.
 message DspResponseReceived {
   option (event_name) = "dsp_response_received";
+  option (requires_dsp) = true;
 
   Envelope envelope = 1;
   Scope scope = 2;
-  string dsp = 3;
-  Outcome outcome = 4;
-  int32 http_status = 5;
-  int64 latency_ms = 6;
-  double price = 7;
+  Outcome outcome = 3;
+  int32 http_status = 4;
+  int64 latency_ms = 5;
+  double price = 6;
 }
 
 // DspResponseRejected is emitted when a bid exists but price <= price_floor.
@@ -116,12 +278,12 @@ message DspResponseReceived {
 // requested_price_floor.
 message DspResponseRejected {
   option (event_name) = "dsp_response_rejected";
+  option (requires_dsp) = true;
 
   Envelope envelope = 1;
   Scope scope = 2;
-  string dsp = 3;
-  double price = 4;
+  double price = 3;
   // Effective floor this bid failed to beat. Not requested_price_floor.
-  double price_floor = 5;
-  RejectReason reject_reason = 6;
+  double price_floor = 4;
+  RejectReason reject_reason = 5;
 }

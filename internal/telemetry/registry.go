@@ -28,6 +28,12 @@ func EventName(msg proto.Message) string {
 	return name
 }
 
+// requiresDSP reports whether msg's type declares (requires_dsp).
+func requiresDSP(msg proto.Message) bool {
+	v, _ := proto.GetExtension(msg.ProtoReflect().Descriptor().Options(), telemetryv1.E_RequiresDsp).(bool)
+	return v
+}
+
 // catalogTypes returns every message in events.proto that embeds the Envelope.
 func catalogTypes() []protoreflect.MessageDescriptor {
 	msgs := telemetryv1.File_org_bidon_telemetry_v1_events_proto.Messages()

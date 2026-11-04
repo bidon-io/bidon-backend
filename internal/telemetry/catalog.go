@@ -38,7 +38,7 @@ func (e Event) AuctionRequestReceived(params Params) {
 	e.emit(&telemetryv1.AuctionRequestReceived{
 		Envelope:            newProtoEnvelope(a),
 		RequestedPriceFloor: requestedFloor,
-	}, "", a)
+	}, a)
 }
 
 func (e Event) AuctionCompleted(params AuctionCompletedParams) {
@@ -61,16 +61,15 @@ func (e Event) AuctionCompleted(params AuctionCompletedParams) {
 		ev.ErrorCode = errorCode(params.Err)
 		result = AuctionResultError
 	}
-	e.emit(ev, "", a)
+	e.emit(ev, a)
 	ObserveAuctionCompleted(result)
 }
 
 func (e Event) DSPRequestSent(params Params, dsp string) {
 	a := attrsFrom(params)
-	e.emit(&telemetryv1.DspRequestSent{
+	e.emitDSP(&telemetryv1.DspRequestSent{
 		Envelope: newProtoEnvelope(a),
 		Scope:    telemetryv1.Scope_SCOPE_BIDDING_ROUND,
-		Dsp:      dsp,
 	}, dsp, a)
 }
 
@@ -87,7 +86,6 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	ev := &telemetryv1.DspResponseReceived{
 		Envelope:   newProtoEnvelope(a),
 		Scope:      telemetryv1.Scope_SCOPE_BIDDING_ROUND,
-		Dsp:        string(dr.DemandID),
 		Outcome:    outcome,
 		HttpStatus: int32(dr.Status),
 		LatencyMs:  latencyMS,
@@ -95,7 +93,7 @@ func (e Event) DSPResponseReceived(params Params, dr *adapters.DemandResponse) {
 	if dr.IsBid() {
 		ev.Price = dr.Price()
 	}
-	e.emit(ev, ev.Dsp, a)
+	e.emitDSP(ev, string(dr.DemandID), a)
 	ObserveDSP(string(dr.DemandID), outcome, float64(latencyMS)/1000)
 
 	e.dspResponseRejectedIfBelowFloor(params, dr)
@@ -111,10 +109,9 @@ func (e Event) dspResponseRejectedIfBelowFloor(params Params, dr *adapters.Deman
 		return
 	}
 	a := attrsFrom(params)
-	e.emit(&telemetryv1.DspResponseRejected{
+	e.emitDSP(&telemetryv1.DspResponseRejected{
 		Envelope:     newProtoEnvelope(a),
 		Scope:        telemetryv1.Scope_SCOPE_BIDDING_ROUND,
-		Dsp:          string(dr.DemandID),
 		Price:        dr.Price(),
 		PriceFloor:   floor,
 		RejectReason: telemetryv1.RejectReason_REJECT_REASON_BELOW_FLOOR,
@@ -138,6 +135,7 @@ func attrsFrom(params Params) attrs {
 		AdFormat:  string(req.AdObject.Format()),
 		Country:   params.Country,
 		TraceID:   params.TraceID,
+		Request:   &req.BaseRequest,
 	}
 }
 
