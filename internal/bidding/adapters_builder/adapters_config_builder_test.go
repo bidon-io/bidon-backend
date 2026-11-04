@@ -302,6 +302,13 @@ var remapParityCases = []remapParityCase{
 		},
 	},
 	{
+		name:         "smadex",
+		key:          adapter.SmadexKey,
+		accountExtra: map[string]any{"endpoint": "https://smadex.test", "sdk_instance_id": "ignored"},
+		appData:      map[string]any{},
+		want:         map[string]any{"endpoint": "https://smadex.test"},
+	},
+	{
 		name:         "startio",
 		key:          adapter.StartIOKey,
 		accountExtra: map[string]any{"account": "acct"},

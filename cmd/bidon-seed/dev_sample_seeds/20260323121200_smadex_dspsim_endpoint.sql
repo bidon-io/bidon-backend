@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 
--- Dev-only overlay: point the sample Adikteev account at bidon-dspsim.
+-- Dev-only overlay: point the sample Smadex account at bidon-dspsim.
 -- Shared sample_seeds use the real DSP URL (staging / Coolify previews).
 DO $$
 DECLARE

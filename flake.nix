@@ -22,7 +22,6 @@
             pkgs.pre-commit
             pkgs.git-spice
             pkgs.gh
-            pkgs.doctl
           ];
 
           # git-spice's package only ships the `gs` binary; this silences its "use git-spice" warning.

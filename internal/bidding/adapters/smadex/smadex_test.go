@@ -62,8 +62,12 @@ func compareErrors(want, got error) bool {
 	return (want == nil) == (got == nil)
 }
 
+const testEndpoint = "https://example.com/openrtb/bid"
+
 func buildAdapter() smadex.SmadexAdapter {
-	return smadex.SmadexAdapter{}
+	return smadex.SmadexAdapter{
+		Endpoint: testEndpoint,
+	}
 }
 
 func buildBaseRequest() openrtb.BidRequest {
@@ -256,9 +260,9 @@ func TestSmadex_CreateRequest(t *testing.T) {
 		},
 	}
 
-	adapter := buildAdapter()
+	networkAdapter := buildAdapter()
 	for _, tC := range testCases {
-		request, err := adapter.CreateRequest(tC.params.BaseBidRequest, tC.params.AuctionRequest)
+		request, err := adapters.BuildDemandRequest(&networkAdapter, tC.params.BaseBidRequest, tC.params.AuctionRequest, adapter.SmadexKey)
 		if err == nil {
 			request.Imp[0].ID = "1"
 		}
@@ -280,8 +284,8 @@ func TestSmadexAdapter_ExecuteRequest(t *testing.T) {
 		if req.Method != http.MethodPost {
 			t.Errorf("Expected POST request")
 		}
-		if req.URL.String() != "https://bon-use1.smadex.com/hyperad/rtb/437617/bid" {
-			t.Errorf("Expected URL: https://bon-use1.smadex.com/hyperad/rtb/437617/bid")
+		if req.URL.String() != testEndpoint {
+			t.Errorf("Expected URL: %s, got %s", testEndpoint, req.URL.String())
 		}
 		contentType := req.Header.Get("Content-Type")
 		if contentType != "application/json" {
@@ -298,7 +302,7 @@ func TestSmadexAdapter_ExecuteRequest(t *testing.T) {
 		ID: "test-request-id",
 	}
 
-	response := networkAdapter.ExecuteRequest(context.Background(), customClient, request)
+	response := adapters.ExecuteDemandRequest(context.Background(), customClient, &networkAdapter, request, adapter.SmadexKey)
 
 	if response.DemandID != adapter.SmadexKey {
 		t.Errorf("Expected DemandID %v, but got %v", adapter.SmadexKey, response.DemandID)
@@ -421,7 +425,7 @@ func TestSmadex_ParseBids(t *testing.T) {
 			DemandResponse: *response,
 			Err:            err,
 		}
-		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext")); diff != "" {
+		if diff := cmp.Diff(tC.want, got, cmp.Comparer(compareErrors), cmpopts.IgnoreFields(adapters.DemandBid{}, "Ext", "Rendering")); diff != "" {
 			t.Errorf("%s: adapters.ParseDemandResponse(&adapter, ctx, %v) mismatch (-want, +got):\n%s", tC.name, tC.params.DemandsResponse, diff)
 		}
 	}
@@ -431,8 +435,7 @@ func TestSmadex_Builder(t *testing.T) {
 	client := &http.Client{}
 	bmCfg := adapter.ProcessedConfigsMap{
 		adapter.SmadexKey: map[string]any{
-			"seller_id": "1",
-			"endpoint":  "example.com",
+			"endpoint": testEndpoint,
 		},
 	}
 	bidder, err := smadex.Builder(bmCfg, client)

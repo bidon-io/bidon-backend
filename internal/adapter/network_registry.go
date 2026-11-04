@@ -125,6 +125,13 @@ var networks = []Network{
 		InjectEnvSecrets: injectMolocoEnvSecrets,
 	},
 	{
+		Key:             SmadexKey,
+		Label:           "Smadex",
+		AccountType:     "DemandSourceAccount::Smadex",
+		SupportsBidding: true,
+		AccountExtra:    []FieldMap{CopyKey("endpoint")},
+	},
+	{
 		Key:             StartIOKey,
 		Label:           "Start.io",
 		AccountType:     "DemandSourceAccount::StartIO",

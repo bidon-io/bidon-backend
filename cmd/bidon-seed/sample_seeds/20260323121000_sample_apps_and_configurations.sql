@@ -118,7 +118,7 @@ BEGIN
     (
         smadex_account_id, smadex_id, owner_id,
         'DemandSourceAccount::smadex',
-        '{}'::jsonb,
+        '{"endpoint": "https://bon-use1.smadex.com/hyperad/rtb/437617/bid"}'::jsonb,
         true, false, NOW(), NOW(), 'Smadex Audience Network', smadex_account_id
     )
     ON CONFLICT (id) DO NOTHING;

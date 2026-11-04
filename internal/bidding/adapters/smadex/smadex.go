@@ -1,11 +1,8 @@
 package smadex
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/bidon-io/bidon-backend/internal/ad"
@@ -23,6 +20,8 @@ const defaultEndpoint = "https://bon-use1.smadex.com/hyperad/rtb/437617/bid"
 type SmadexAdapter struct {
 	Endpoint string
 }
+
+var _ adapters.BidderInterface = (*SmadexAdapter)(nil)
 
 var bannerFormats = map[ad.Format][2]int64{
 	ad.BannerFormat: {320, 50},
@@ -112,42 +111,10 @@ func (a *SmadexAdapter) EnrichOpenRTBRequest(request *openrtb.BidRequest, auctio
 	return nil
 }
 
-func (a *SmadexAdapter) ExecuteRequest(ctx context.Context, client *http.Client, request openrtb.BidRequest) *adapters.DemandResponse {
-	dr := &adapters.DemandResponse{
-		DemandID:  adapter.SmadexKey,
-		RequestID: request.ID,
-	}
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	dr.RawRequest = string(requestBody)
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.Endpoint, bytes.NewBuffer(requestBody))
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	httpReq.Header.Add("Content-Type", "application/json")
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-	defer httpResp.Body.Close()
-
-	respBody, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		dr.Error = err
-		return dr
-	}
-
-	dr.RawResponse = string(respBody)
-	dr.Status = httpResp.StatusCode
-
-	return dr
+func (a *SmadexAdapter) ExecuteOptions(openrtb.BidRequest) (adapters.ExecuteRTBOptions, error) {
+	return adapters.ExecuteRTBOptions{
+		URL: a.Endpoint,
+	}, nil
 }
 
 func Builder(cfg adapter.ProcessedConfigsMap, client *http.Client) (*adapters.Bidder, error) {
