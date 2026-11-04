@@ -9,3 +9,4 @@ Format: [Nygard ADR](https://cognitect.com/blog/2011/11/15/documenting-architect
 | ADR                              | Title         | Status   | Date       |
 | -------------------------------- | ------------- | -------- | ---------- |
 | [0001](0001-dsp-simulator.md)    | DSP simulator | Accepted | 2026-09-01 |
+| [0002](0002-telemetry-ingest.md) | SDK telemetry ingest service | Accepted | 2026-11-04 |
