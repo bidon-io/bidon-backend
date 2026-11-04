@@ -1,5 +1,7 @@
 # Telemetry POC: local metrics
 
+Status of the programme, and what is still open, is [telemetry-next.md](./telemetry-next.md).
+
 `just compose` starts VictoriaMetrics, which scrapes `bidon-sdkapi:1324/metrics`
 every 15s (config: `docker/telemetry/victoriametrics/scrape.yml`). Nothing in the
 stack depends on it, so stopping it does not affect `/v2/auction`.
