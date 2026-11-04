@@ -61,6 +61,7 @@ They are not a claim that this PR built it.
 
 | Doc | What it is |
 | --- | --- |
+| [adr/0002-telemetry-ingest.md](./adr/0002-telemetry-ingest.md) | Why client ingest is a separate Rust process. |
 | [telemetry-brief.md](./telemetry-brief.md) | Short brief. |
 | [telemetry-requirements.md](./telemetry-requirements.md) | Jobs to be done, grains A/B/C. |
 | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) | What sdkapi already emits, PII, dual-emit, ticket list. |
