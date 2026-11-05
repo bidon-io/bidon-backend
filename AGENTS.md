@@ -168,5 +168,6 @@ bidding) → parallel bidding round → ranked ad units → win/loss notificatio
 
 ## Resources
 
+[Docs index](docs/README.md) ·
 [Self-Hosted Deployment Guide](https://docs.bidon.org/docs/server/self-hosted) ·
 OpenAPI: `internal/admin/openapi/` · Proto: `proto/`

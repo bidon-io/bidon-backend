@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BidOn Telemetry POC — Linear tasks and MRs</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    color: #1a1d21;
+    font: 10.5pt/1.45 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    background: #fff;
+  }
+  h1, h2, h3, h4, .sans, nav, table, .kicker, .badge, .meta, .toc a, .cover-sub {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 8pt; letter-spacing: -0.02em; }
+  h2 {
+    font-size: 13pt;
+    margin: 16pt 0 8pt;
+    padding-bottom: 4pt;
+    border-bottom: 1.5pt solid #1a1d21;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 11pt; margin: 14pt 0 6pt; page-break-after: avoid; }
+  h4 { font-size: 10pt; margin: 10pt 0 4pt; color: #3d4450; page-break-after: avoid; }
+  p { margin: 0 0 8pt; }
+  ul, ol { margin: 0 0 10pt; padding-left: 18pt; }
+  li { margin: 0 0 3pt; }
+  a { color: #1a1d21; }
+  code, .mono {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 8.5pt;
+  }
+  code {
+    background: #f3f4f6;
+    padding: 1pt 3pt;
+    border-radius: 2pt;
+    white-space: nowrap;
+  }
+  th code {
+    color: inherit;
+    background: transparent;
+    padding: 0;
+  }
+  .nowrap { white-space: nowrap; }
+  .cover {
+    border-top: 6pt solid #0f3d2e;
+    padding-top: 18pt;
+    margin-bottom: 18pt;
+  }
+  .kicker {
+    font-size: 8.5pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #0f3d2e;
+    font-weight: 650;
+    margin: 0 0 8pt;
+  }
+  .cover-sub { font-size: 11pt; color: #3d4450; margin: 0 0 14pt; font-weight: 400; }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6pt 16pt;
+    font-size: 8.5pt;
+    color: #4b5563;
+    margin: 0 0 4pt;
+  }
+  .meta b { color: #1a1d21; font-weight: 600; }
+  .lede { font-size: 11.5pt; line-height: 1.4; color: #2b3038; }
+  .callout {
+    background: #f4f7f5;
+    border-left: 3.5pt solid #0f3d2e;
+    padding: 8pt 12pt;
+    margin: 10pt 0 14pt;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 0 0 12pt;
+    page-break-inside: auto;
+  }
+  table.keep { page-break-inside: avoid; }
+  th, td {
+    border: 0.6pt solid #d1d5db;
+    padding: 5pt 7pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #0f3d2e;
+    color: #fff;
+    font-weight: 600;
+  }
+  tr { page-break-inside: avoid; }
+  tbody tr:nth-child(even) { background: #f7f8f7; }
+  .badge {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 1pt 6pt;
+    border-radius: 8pt;
+    white-space: nowrap;
+  }
+  .st-review { background: #fef3c7; color: #92400e; }
+  .st-backlog { background: #e5e7eb; color: #374151; }
+  .st-epic { background: #dbeafe; color: #1e3a8a; }
+  .tree {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 8.5pt;
+    background: #f7f8f7;
+    border: 0.6pt solid #d1d5db;
+    padding: 10pt 12pt;
+    margin: 0 0 12pt;
+    white-space: pre;
+    line-height: 1.35;
+  }
+  .issue {
+    page-break-inside: avoid;
+    margin: 0 0 14pt;
+    border: 0.6pt solid #d1d5db;
+    padding: 10pt 12pt 8pt;
+  }
+  .issue h3 { margin-top: 0; }
+  .issue-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8pt;
+    margin-bottom: 6pt;
+  }
+  .issue-head h3 { margin: 0; border: 0; }
+  .muted { color: #6b7280; font-size: 8.5pt; }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10pt;
+    margin: 0 0 12pt;
+  }
+  .card {
+    border: 0.6pt solid #d1d5db;
+    padding: 8pt 10pt;
+    page-break-inside: avoid;
+  }
+  .card h4 { margin-top: 0; }
+  .grain { border-top: 3pt solid #0f3d2e; }
+  .footer-note {
+    font-size: 8pt;
+    color: #6b7280;
+    margin-top: 16pt;
+  }
+  .toc { margin: 0 0 8pt; padding: 0; list-style: none; }
+  .toc li { margin: 0 0 3pt; font-size: 9.5pt; }
+  .toc a { text-decoration: none; }
+  .small { font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <p class="kicker">BidOn · Backend · BAC-59</p>
+  <h1>Telemetry POC</h1>
+  <p class="cover-sub">Server auction path — events, metrics, traces, and a live funnel</p>
+  <div class="meta">
+    <span><b>Date</b> 15 September 2026</span>
+    <span><b>Team</b> Backend</span>
+    <span><b>Labels</b> telemetry, poc</span>
+    <span><b>Parent</b> BAC-59</span>
+    <span><b>Status</b> BAC-60 and BAC-61 ready for review; BAC-62–64 in backlog</span>
+  </div>
+</header>
+
+<p class="lede">This proof of concept asks one question: after a single <code>POST /v2/auction</code> (and optionally <code>/v2/show</code>), can Bidon engineers see which DSPs bid, no-bid, or timed out, whether the ad was shown, and whether the billing notice was accepted — without an SDK change and without standing up the events warehouse.</p>
+
+<div class="callout">
+  <p><b>Shape.</b> Six Linear issues, five merge requests. The parent (BAC-59) is an epic only. Children BAC-60 through BAC-64 each have a Linear story and an MR. Work is stacked: the typed logger first, then auction emit, then traces and the observe stack in parallel, then impression and notice close-out.</p>
+</div>
+
+<h2>1. Why this POC exists</h2>
+
+<p>The telemetry PRD and events-warehouse TRD describe the product destination: protobuf on Redpanda, Parquet on Spaces, DuckDB for engineer-mediated SQL. That lake can exist empty. This POC is the <b>first implementable slice that produces evidence from live auctions</b>, using Go changes and a local observe stack.</p>
+
+<p>It is server-first on purpose. Certification reconciliation and per-DSP delivery evidence are owned by <code class="nowrap">bidon&#8209;sdkapi</code>. Waiting on SDK ingest (<code>POST /v2/telemetry</code>, remote-config sampling, publisher upgrades) would delay the demo by quarters. At the end of issues 1–5, Bidon can already answer bid / nobid / timeout rate, notice delivery rate, clearing price vs floor, and where auction latency goes.</p>
+
+<p>The existing <code>ad-events</code> / <code>notification-events</code> streams stay as they are. They carry identifiers and raw DSP payloads that must not become the telemetry product. The POC dual-writes a typed catalog onto a new <code>telemetry-events</code> topic.</p>
+
+<h2>2. Three grains, one auction</h2>
+
+<div class="two-col">
+  <div class="card grain">
+    <h4>A — Product events</h4>
+    <p>One row per thing that happened. One protobuf message per event on Redpanda topic <code>telemetry-events</code>, Confluent-framed via the Schema Registry. Every message embeds a shared <code>Envelope</code> (<code>event_id</code>, <code>event_name</code>, <code>auction_id</code>, …) plus typed fields — not a payload blob. Consumed live by RisingWave in this POC; later by the Parquet warehouse.</p>
+  </div>
+  <div class="card grain">
+    <h4>B — Traces</h4>
+    <p>One tree per auction, child span per DSP. OTLP → otelcol → VictoriaTraces. Answers “show me auction X’s legs.” Sentry stays exceptions-only. <code>trace_id</code> is copied onto the event envelope so grains join.</p>
+  </div>
+</div>
+<div class="card grain" style="margin-bottom:12pt;">
+  <h4>C — Operational metrics</h4>
+  <p>Low-cardinality Prometheus series on <code>GET /metrics</code>, scraped into VictoriaMetrics. Answers “is it bad right now.” Labels are <code>dsp</code> and <code>outcome</code> — never <code>auction_id</code>. If RisingWave or Victoria* are down, ads still serve and <code>ad-events</code> still write.</p>
+</div>
+
+<h2>3. In scope and out of scope</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:28%">In this POC</th><th>Not in this POC</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Typed logger on <code>telemetry-events</code></td>
+      <td>Parquet / S3 / DuckDB / Kafka Connect lake</td>
+    </tr>
+    <tr>
+      <td>Bidding-round catalog events + scrapeable counters (protobuf + Schema Registry)</td>
+      <td>Sampling; registry framing in prod compose</td>
+    </tr>
+    <tr>
+      <td>OTel parent + per-DSP child spans</td>
+      <td><code>POST /v2/telemetry</code> client ingest</td>
+    </tr>
+    <tr>
+      <td>Local RisingWave + VM / VT / Grafana</td>
+      <td>Sampling, Coolify production observe stack</td>
+    </tr>
+    <tr>
+      <td><code>/v2/show</code> impression and observed notice HTTP status</td>
+      <td>Product UI, waterfall fill, bid-match-by-price fix</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Linear map and merge requests</h2>
+
+<p>Six issues, five MRs. File BAC-59 as the epic; BAC-60–64 as children. Each child markdown in <code>docs/telemetry-poc/</code> is split into a Linear story (no implementation) and MR instructions for the implementing agent.</p>
+
+<p class="tree">BAC-59  parent (epic, no MR)
+  └── BAC-60  typed telemetry logger          ← MR 1
+        └── BAC-61  auction events + metrics  ← MR 2
+              ├── BAC-62  traces              ← MR 3  (∥ BAC-63)
+              └── BAC-63  RisingWave + VM/VT/Grafana  ← MR 4
+                    └── BAC-64  show + notices ← MR 5</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Linear</th>
+      <th>Title</th>
+      <th>MR</th>
+      <th>Blocks on</th>
+      <th>Status (15 Sep 2026)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td class="nowrap"><b>BAC-59</b></td>
+      <td>Telemetry POC: server auction path</td>
+      <td>None (epic)</td>
+      <td>—</td>
+      <td><span class="badge st-epic">Backlog · epic</span></td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td class="nowrap"><b>BAC-60</b></td>
+      <td>Typed telemetry-events logger</td>
+      <td>MR 1 · plumbing only</td>
+      <td>BAC-59</td>
+      <td><span class="badge st-review">Ready for review</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td class="nowrap"><b>BAC-61</b></td>
+      <td>Auction and DSP events plus /metrics counters</td>
+      <td>MR 2 · emit + counters</td>
+      <td>BAC-60</td>
+      <td><span class="badge st-review">Ready for review</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td class="nowrap"><b>BAC-62</b></td>
+      <td>OpenTelemetry auction parent and per-DSP child spans</td>
+      <td>MR 3 · traces</td>
+      <td>BAC-60 (pairs with 63)</td>
+      <td><span class="badge st-backlog">Backlog</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td class="nowrap"><b>BAC-63</b></td>
+      <td>Local RisingWave live funnel plus VM / VT / Grafana</td>
+      <td>MR 4 · observe stack</td>
+      <td>BAC-60 (useful after 61)</td>
+      <td><span class="badge st-backlog">Backlog</span></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td class="nowrap"><b>BAC-64</b></td>
+      <td>ad_impression and notice HTTP outcomes</td>
+      <td>MR 5 · show + notices</td>
+      <td>BAC-61 and BAC-63</td>
+      <td><span class="badge st-backlog">Backlog</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="small muted">Linear: <a href="https://linear.app/bidon/issue/BAC-59">BAC-59</a> · <a href="https://linear.app/bidon/issue/BAC-60">BAC-60</a> · <a href="https://linear.app/bidon/issue/BAC-61">BAC-61</a> · <a href="https://linear.app/bidon/issue/BAC-62">BAC-62</a> · <a href="https://linear.app/bidon/issue/BAC-63">BAC-63</a> · <a href="https://linear.app/bidon/issue/BAC-64">BAC-64</a>. Stacked git-spice branches match the issue ids (<code>bac-60-…</code>, <code>bac-61-…</code>, …).</p>
+
+<h2>5. Epic — BAC-59 (no MR)</h2>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>Telemetry POC: server auction path</h3>
+    <span class="badge st-epic">Epic</span>
+  </div>
+  <p><b>User story.</b> As a Bidon engineer (and later BD / support), I want to observe an auction — which DSPs bid, no-bid, or timed out, whether the ad was shown, and whether the billing notice was accepted.</p>
+  <p><b>Goal.</b> One <code>POST /v2/auction</code> (and optionally <code>/v2/show</code>) proves all three grains: catalog events on <code>telemetry-events</code>, low-cardinality series on <code>/metrics</code>, a per-auction trace with a child span per DSP.</p>
+  <h4>Definition of done (across children)</h4>
+  <ul>
+    <li>One auction writes <code>auction_request_received</code>, per-DSP send/receive, and <code>auction_completed</code> to <code>telemetry-events</code>.</li>
+    <li>Those rows are <code>SELECT</code>able in RisingWave (<code>funnel_5m</code>, <code>dsp_outcomes_5m</code>, <code>auctions_in_flight</code>) and on a Grafana board.</li>
+    <li>DSP outcome counts and request duration appear on <code>GET /metrics</code> and in Grafana → VictoriaMetrics.</li>
+    <li>The auction trace (parent + one child per DSP) is in VictoriaTraces; <code>trace_id</code> is on the event.</li>
+    <li>Optional close-out (BAC-64): same <code>auction_id</code> joins to impression and an observed notice HTTP status.</li>
+    <li>When telemetry infra is down: <code>/v2/auction</code> still succeeds; <code>ad-events</code> still written.</li>
+  </ul>
+  <p class="muted">No merge request. Compose for the observe services is BAC-63. Coolify/staging observe is called out on the epic as eventual, but the MR for the stack is local-dev first.</p>
+</div>
+
+<h2>6. Issue and MR breakdown</h2>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>BAC-60 — Typed telemetry-events logger</h3>
+    <span class="badge st-review">MR 1 · Ready for review</span>
+  </div>
+  <p><b>User story.</b> As a backend engineer, I need a logger that writes typed catalog events (shared envelope + event-specific fields) to <code>telemetry-events</code>, instead of the unstructured JSON <code>AdEvent</code> blobs on <code>ad-events</code>.</p>
+  <p><b>Goal.</b> <code>bidon-sdkapi</code> can fire-and-forget a typed record onto <code>telemetry-events</code>. No auction call sites in this issue. <code>ad-events</code> stays as it is.</p>
+  <h4>Linear definition of done</h4>
+  <ul>
+    <li><code>internal/telemetry</code> logger: envelope + typed payload, enqueue, do not await Kafka.</li>
+    <li>Topic <code>telemetry-events</code> wired (<code>KAFKA_TELEMETRY_EVENTS_TOPIC</code>).</li>
+    <li>Every catalog message embeds the <code>Envelope</code> (<code>event_id</code>, <code>event_name</code>, <code>event_ts</code>, <code>schema_version</code>, <code>app_id</code>, <code>auction_id</code>, …); headers <code>event_name</code> and <code>protobuf_message</code> on every record.</li>
+    <li>Missing topic env: log, no panic, caller not blocked.</li>
+    <li><code>ad-events</code> producer unchanged.</li>
+  </ul>
+  <h4>What the MR delivers</h4>
+  <ul>
+    <li>New package <code>internal/telemetry</code>: <code>Logger</code> with typed <code>Event.*</code> methods that build the generated <code>telemetryv1</code> messages directly (produce in a callback, never wait).</li>
+    <li>Catalog schema in <code>schemas/proto/org/bidon/telemetry/v1/events.proto</code>, registered with TopicRecordNameStrategy and BACKWARD compatibility. Registry failures fail open to raw protobuf.</li>
+    <li>Kafka topic constant + compose / <code>.env.sample</code> env. Same broker connection as today’s producer; no second client.</li>
+    <li>Construct the logger in <code>cmd/bidon-sdkapi</code>. Do not instrument <code>auction.Service</code> or <code>bidding.Builder</code> here.</li>
+    <li>No feature flag: if Kafka is on, this logger is on. No ingest HTTP API. Shipped together with the bidding-round events as BAC-61.</li>
+  </ul>
+  <p class="muted">Catalog names introduced: <code>auction_request_received</code>, <code>auction_completed</code>, <code>dsp_request_sent</code>, <code>dsp_response_received</code>, <code>dsp_response_rejected</code>. Schema version <code>0.1</code>, sampling rate <code>1.0</code>.</p>
+  <p class="muted">Landed on this stack as <code>aca2ba6</code> / <code>1736d66</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>BAC-61 — Auction and DSP events plus /metrics counters</h3>
+    <span class="badge st-review">MR 2 · Ready for review</span>
+  </div>
+  <p><b>User story.</b> As a backend engineer, I want each bidding round to record request, per-DSP send/receive (bid / no-bid / timeout), and completion, plus simple rates I can scrape, so I can see funnel and adapter health without an SDK change.</p>
+  <p><b>Goal.</b> Dual-write the server bidding-round catalog to <code>telemetry-events</code> and increment low-cardinality Prometheus series. <code>ad-events</code> keep working exactly as today.</p>
+  <h4>Linear definition of done</h4>
+  <ul>
+    <li>One 3-DSP auction (bid / nobid / timeout) emits 1 + 3 + 3 + 1 telemetry events.</li>
+    <li>DSP latency is send→return, not auction-start→return.</li>
+    <li><code>GET /metrics</code> exposes <code>dsp_response_total{dsp,outcome}</code>, <code>dsp_request_duration_seconds{dsp}</code>, <code>auction_completed_total{result}</code>. No <code>auction_id</code> label.</li>
+    <li>Auction HTTP unchanged if the telemetry logger fails; <code>ad-events</code> still written.</li>
+    <li>Outcome mapping covered by a table test.</li>
+  </ul>
+  <h4>What the MR delivers</h4>
+  <ul>
+    <li>Emit <code>auction_request_received</code> at the start of <code>auction.Service.Run</code> and <code>auction_completed</code> when it finishes (winner, participant count, total latency, short error code).</li>
+    <li>In <code>bidding.Builder.processAdapter</code>: emit <code>dsp_request_sent</code> immediately before the adapter call; set per-demand start/end timestamps; emit <code>dsp_response_received</code> (and <code>dsp_response_rejected</code> when below floor).</li>
+    <li>Thread envelope fields (<code>app_id</code>, <code>session_id</code>, country, ad type/format) into <code>BuildParams</code> — do not geocode again.</li>
+    <li>Outcome mapping in <code>internal/telemetry</code>: timeout → http_error → malformed → bid → nobid.</li>
+    <li>Prometheus counters/histogram on the default registerer already served by Echo.</li>
+    <li>Do not change <code>prepareAuctionRequestEvent</code> / <code>prepareBiddingEvents</code> JSON. Notices, <code>/v2/show</code>, OTel spans, waterfall fill are out.</li>
+  </ul>
+  <p class="muted">Landed on this stack as <code>2190636</code> / <code>56e238e</code>. Current branch: <code>bac-61-poc-auction-and-dsp-events-plus-metrics-counters</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>BAC-62 — OpenTelemetry auction parent and per-DSP child spans</h3>
+    <span class="badge st-backlog">MR 3 · Backlog</span>
+  </div>
+  <p><b>User story.</b> As a backend engineer (or support looking at one partner complaint), I want the legs of a single auction as one trace so I can see which DSP was slow or timed out without reconstructing it from logs.</p>
+  <p><b>Goal.</b> Each <code>/v2/auction</code> creates one parent span and one child per DSP. Events from that request carry <code>trace_id</code>. When an OTLP endpoint is configured, export there; keep Sentry as it is.</p>
+  <h4>Linear definition of done</h4>
+  <ul>
+    <li>Test recorder: 3 DSPs → 1 parent + 3 children with <code>app_id</code>, <code>auction_id</code>, <code>dsp</code>, <code>outcome</code>.</li>
+    <li>Telemetry events for that request share the parent <code>trace_id</code>.</li>
+    <li><code>OTEL_EXPORTER_OTLP_ENDPOINT</code> unset → no OTLP export; auctions unchanged.</li>
+    <li>Manual (with BAC-63): tree visible in VictoriaTraces.</li>
+  </ul>
+  <h4>What the MR delivers</h4>
+  <ul>
+    <li>When <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> is set, add an OTLP HTTP exporter next to the existing Sentry span processor. Do not remove Sentry.</li>
+    <li>Parent span <code>auction.run</code> in <code>Service.Run</code>; child <code>auction.dsp</code> around each adapter call. Pass context through <code>Build</code> → <code>HoldAuction</code> → <code>processAdapter</code>.</li>
+    <li>Fill <code>Envelope.TraceID</code> from the span context at emit sites (BAC-61 may land without this; BAC-62 adds the field fill).</li>
+    <li>CI uses <code>tracetest.SpanRecorder</code> — otelcol is not required in tests. Destination for a demo is BAC-63.</li>
+  </ul>
+  <p class="muted">Accept: auction spans may also show up in Sentry. Unhooking Sentry from this path is a follow-up, not this MR. Out of scope: spanmetrics, sampling, product trace UI.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>BAC-63 — Local RisingWave live funnel plus VM / VT / Grafana</h3>
+    <span class="badge st-backlog">MR 4 · Backlog</span>
+  </div>
+  <p><b>User story.</b> As an engineer demoing telemetry (and later anyone watching auction health), I want to query auctions that just ran — in flight, DSP outcomes, a 5-minute funnel — in a browser or <code>psql</code>, without standing up S3 or DuckDB.</p>
+  <p><b>Goal.</b> Dev compose runs standalone RisingWave as a consumer of <code>telemetry-events</code>, plus VictoriaMetrics, VictoriaTraces, otelcol, and Grafana. sdkapi does not depend on RisingWave. Stopping the observe services does not break ads.</p>
+  <h4>Linear definition of done</h4>
+  <ul>
+    <li><code>docker compose -f docker-compose.dev.yml up</code> starts the new services.</li>
+    <li>After one auction (BAC-61): row in Redpanda Console; <code>SELECT</code> from <code>funnel_5m</code> and <code>dsp_outcomes_5m</code>; <code>auctions_in_flight</code> populates then clears on <code>auction_completed</code>.</li>
+    <li>Grafana shows VM rate panels and RisingWave funnel panels.</li>
+    <li>With BAC-62: paste <code>trace_id</code> into VictoriaTraces and see the tree.</li>
+    <li>How-to doc: Console, <code>psql</code>, Grafana, VT.</li>
+    <li>sdkapi returns 200 for <code>/v2/auction</code> if RisingWave / VM / VT are stopped.</li>
+  </ul>
+  <h4>What the MR delivers</h4>
+  <ul>
+    <li>Pinned compose services: RisingWave (host 4566), otelcol (4318), VictoriaMetrics (8428), VictoriaTraces (10428), Grafana (3001 — 3010 is bidon-ui).</li>
+    <li>Oneshot SQL init: one registry-pinned <code>ENCODE PROTOBUF</code> source per catalog message, filtered on the <code>protobuf_message</code> header; materialized views <code>auctions_in_flight</code>, <code>dsp_outcomes_5m</code>, <code>funnel_5m</code>. Joins always on <code>(app_id, auction_id)</code>.</li>
+    <li>Create topic <code>telemetry-events</code> explicitly (auto-create only fires on first produce). Init order: Redpanda healthy → topic → RisingWave → SQL.</li>
+    <li>Do <b>not</b> add <code>depends_on: risingwave</code> to sdkapi. No Connect, Spaces, DuckDB, Alertmanager, or Coolify in this MR.</li>
+  </ul>
+</div>
+
+<div class="issue">
+  <div class="issue-head">
+    <h3>BAC-64 — ad_impression and notice HTTP outcomes</h3>
+    <span class="badge st-backlog">MR 5 · Backlog</span>
+  </div>
+  <p><b>User story.</b> As someone reconciling delivery, I want to know whether an auction was shown and whether the DSP accepted the billing/win/loss notice — including HTTP failures — on the same <code>auction_id</code> as the bidding-round events.</p>
+  <p><b>Goal.</b> <code>/v2/show</code> emits <code>ad_impression</code> on <code>telemetry-events</code>. Notice sends record real HTTP status, retries, and latency, plus a distinct failure event. RisingWave funnel joins through impression and billing. Old <code>notification-events</code> stay as they are.</p>
+  <h4>Linear definition of done</h4>
+  <ul>
+    <li>HTTP 500 in a unit test → <code>notice_delivery_failed</code> and <code>success=false</code>; HTTP 200 → <code>*_notice_sent</code> with <code>http_status=200</code>.</li>
+    <li>Show handler → <code>ad_impression</code> produced; BURL still fired.</li>
+    <li><code>notification-events</code> JSON shape unchanged.</li>
+    <li>After a show on the compose stack: <code>funnel_5m</code> impression/billing counts move; <code>notice_delivery_5m</code> reflects the HTTP class.</li>
+  </ul>
+  <h4>What the MR delivers</h4>
+  <ul>
+    <li>Fix <code>EventSender</code>: today any HTTP response is treated as success. Retry transport errors and 5xx (max 3); 4xx is terminal; 2xx is success. Record last status, retry count, and total latency.</li>
+    <li>New events: <code>ad_impression</code>, <code>win_notice_sent</code> (NURL), <code>loss_notice_sent</code> (LURL / timeout), <code>billing_notice_sent</code> (BURL), <code>notice_delivery_failed</code>.</li>
+    <li>Thread <code>app_id</code> (required on <code>/v2/show</code>) so joins work. Keep firing BURL from <code>HandleShow</code> — do not move billing onto the telemetry logger.</li>
+    <li>Metrics: <code>notice_delivery_total{type,result}</code>, <code>ad_impression_total</code>.</li>
+    <li>Extend RisingWave <code>funnel_5m</code> with impressions and successful billing; add <code>notice_delivery_5m</code>.</li>
+  </ul>
+  <p class="muted">Do not fix float-equality bid match in <code>notification/handler.go</code> here — note it as known debt. Out of scope: client-side impression dedupe, <code>/v2/stats</code> waterfall events.</p>
+</div>
+
+<h2>7. Catalog and outcomes (issues 1–2)</h2>
+
+<table>
+  <thead>
+    <tr><th>Event</th><th>When</th><th>Distinct columns (beyond envelope)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>auction_request_received</code></td><td>Start of <code>Run</code></td><td><code>price_floor</code></td></tr>
+    <tr><td><code>dsp_request_sent</code></td><td>Immediately before adapter HTTP</td><td><code>dsp</code>, <code>scope=bidding_round</code></td></tr>
+    <tr><td><code>dsp_response_received</code></td><td>After adapter return / parse</td><td><code>dsp</code>, <code>outcome</code>, <code>http_status</code>, <code>latency_ms</code>, <code>price</code></td></tr>
+    <tr><td><code>dsp_response_rejected</code></td><td>Bid present but below floor</td><td><code>reject_reason=below_floor</code></td></tr>
+    <tr><td><code>auction_completed</code></td><td>End of <code>Run</code></td><td><code>winner_dsp</code>, <code>price</code>, <code>participant_count</code>, <code>total_latency_ms</code>, <code>error_code</code></td></tr>
+    <tr><td><code>ad_impression</code></td><td><code>/v2/show</code> (BAC-64)</td><td><code>dsp</code>, <code>price</code></td></tr>
+    <tr><td><code>*_notice_sent</code> / <code>notice_delivery_failed</code></td><td>NURL / LURL / BURL (BAC-64)</td><td><code>http_status</code>, <code>success</code>, <code>retry_count</code></td></tr>
+  </tbody>
+</table>
+
+<table class="keep">
+  <thead>
+    <tr><th>DSP condition</th><th>outcome</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>context.DeadlineExceeded</code></td><td><code>timeout</code></td></tr>
+    <tr><td>HTTP 4xx/5xx or status 0 with error</td><td><code>http_error</code></td></tr>
+    <tr><td>Body / parse failure</td><td><code>malformed</code></td></tr>
+    <tr><td><code>IsBid()</code></td><td><code>bid</code></td></tr>
+    <tr><td>No bid, no error (204 / empty seat)</td><td><code>nobid</code></td></tr>
+  </tbody>
+</table>
+<p class="muted">Precedence: timeout → http_error → malformed → bid → nobid. Envelope joins are always <code>(app_id, auction_id)</code> because <code>auction_id</code> is client-supplied and not globally unique.</p>
+
+<h2>8. How the demo is supposed to look</h2>
+
+<p>After BAC-61 (events + counters) and BAC-63 (compose), one seeded auction should prove:</p>
+<ol>
+  <li><b>Redpanda Console</b> <code>http://localhost:8080</code> → topic <code>telemetry-events</code> has the request, six DSP rows, and completion.</li>
+  <li><b>RisingWave</b> <code>psql -h localhost -p 4566 -U root -d dev</code> → <code>TABLE funnel_5m;</code> and <code>dsp_outcomes_5m</code>; <code>auctions_in_flight</code> empties after complete.</li>
+  <li><b>Prometheus</b> <code>GET /metrics</code> on sdkapi → <code>dsp_response_total</code> and duration histogram moved; Grafana VM panels show rates.</li>
+  <li><b>After BAC-62:</b> copy <code>trace_id</code> from an event (decoded in Console) into VictoriaTraces and see parent + children.</li>
+  <li><b>After BAC-64:</b> <code>/v2/show</code> adds impression and billing rows to the same <code>auction_id</code>.</li>
+</ol>
+<p>Failure mode that must still pass: stop RisingWave / VictoriaMetrics / VictoriaTraces; <code>curl</code> auction still 200.</p>
+
+<h2>9. Relationship to the rest of telemetry</h2>
+
+<table class="keep">
+  <thead>
+    <tr><th>Document / work</th><th>Role versus this POC</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PRD BidOn Telemetry v1</td>
+      <td>Product jobs (fill, render, reconcile, per-DSP loss). POC proves a server-owned subset with zero SDK dependency.</td>
+    </tr>
+    <tr>
+      <td>TRD — events warehouse</td>
+      <td>Parquet on Spaces, 10 min flush, protobuf bus. Downstream of the same catalog; not required to demo the POC.</td>
+    </tr>
+    <tr>
+      <td>BAC-53 discovery</td>
+      <td>Settled the three-grain split and stores. This POC is the first implementation slice of that research.</td>
+    </tr>
+    <tr>
+      <td>BID-46 / BID-47 / BID-54</td>
+      <td>SDK envelope, delivery, and client ingest. Independent once the server logger exists; not on the POC critical path.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="footer-note">Source of truth for filing and implementing: <code>docs/telemetry-poc/</code> (README + <code>00</code>–<code>05</code>). Brief: <code>docs/telemetry-brief.md</code>. This PDF is a reading copy of that plan with Linear ids and MR boundaries filled in as of 15 September 2026.</p>
+
+</body>
+</html>
