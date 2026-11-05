@@ -1,5 +1,7 @@
 # Bidon
 
+Docs index: [docs/README.md](docs/README.md).
+
 ## Self-Hosted Bidon Setup
 
 For detailed instructions on setting up a self-hosted instance of Bidon, visit our documentation:
@@ -35,7 +37,7 @@ docker compose -f docker-compose.dev.yml up -d
 | Redis             | localhost:6379             |
 | Redpanda (Kafka)  | localhost:19092            |
 | Redpanda Console  | http://localhost:8080      |
-| VictoriaMetrics   | http://localhost:8428 (see [docs/telemetry-poc.md](docs/telemetry-poc.md)) |
+| VictoriaMetrics   | http://localhost:8428 (see [docs/runbooks/telemetry-poc.md](docs/runbooks/telemetry-poc.md)) |
 
 **First run** requires internet access to pull images and download Go modules. Subsequent runs work offline once the module cache is warm.
 Frontend (`bidon-ui`) runs with file watching enabled for Docker and hot-reloads on changes under `web/bidon_ui/`.
