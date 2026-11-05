@@ -1,7 +1,6 @@
 # Bidon backend docs
 
-Index for this repository. Local setup and staging still live in the
-[repository README](../README.md).
+Index for this repository. Setup lives in the runbooks.
 
 ## How a request moves
 
@@ -47,6 +46,8 @@ Diagrams:
 
 ## Runbooks
 
+- [Local development](runbooks/local-development.md)
+- [Staging and images](runbooks/staging.md)
 - [Onboard a network](runbooks/network.md)
 - [Telemetry POC: local metrics](runbooks/telemetry-poc.md) — local VictoriaMetrics queries
 - [Redpanda Console and vmui](runbooks/telemetry-console-and-vmui.pdf) — preview 957 walkthrough, including `POST /v2/telemetry`
