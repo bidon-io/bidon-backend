@@ -95,7 +95,7 @@ Then open `http://<droplet_ip>:8000`, create the admin user, and generate an API
 
 ### Step 4 — Configure Bidon apps (bidon-coolify)
 
-Images must be built and pushed to `registry.digitalocean.com/bidon-io` before creating apps (see root `README.md` for `just ci-build-*` recipes). Use the git SHA from the build as `--image-tag`.
+Images must be built and pushed to `registry.digitalocean.com/bidon-io` before creating apps (see [docs/runbooks/staging.md](../docs/runbooks/staging.md) for `just ci-build-*` recipes). Use the git SHA from the build as `--image-tag`.
 
 ```bash
 export COOLIFY_BASE_URL="http://$(terraform output -raw droplet_ipv4):8000"
