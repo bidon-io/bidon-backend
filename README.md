@@ -1,5 +1,7 @@
 # Bidon
 
+Docs index: [docs/README.md](docs/README.md).
+
 ## Self-Hosted Bidon Setup
 
 For detailed instructions on setting up a self-hosted instance of Bidon, visit our documentation:
