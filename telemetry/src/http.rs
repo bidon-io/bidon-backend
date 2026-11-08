@@ -8,7 +8,7 @@ use axum::routing::{get, post};
 use axum::Router;
 use futures_util::StreamExt;
 
-use crate::ingest::{HttpReply, Ingestor, MAX_BYTES};
+use crate::ingest::{problem, HttpReply, Ingestor, MAX_BYTES};
 
 pub fn router(ingestor: Arc<Ingestor>) -> Router {
     Router::new()
@@ -76,17 +76,6 @@ async fn read_limited(body: Body) -> Result<Vec<u8>, BodyError> {
     Ok(buf)
 }
 
-fn problem(status: StatusCode, message: &str) -> HttpReply {
-    HttpReply {
-        status,
-        content_type: "application/problem+json",
-        body: format!(
-            r#"{{"error":{{"message":"{message}","code":{}}}}}"#,
-            status.as_u16()
-        ),
-    }
-}
-
 fn reply_response(reply: &HttpReply) -> impl IntoResponse {
     (
         reply.status,
@@ -136,5 +125,59 @@ mod tests {
         assert_eq!(metrics.status(), StatusCode::OK);
         let bytes = metrics.into_body().collect().await.unwrap().to_bytes();
         assert!(String::from_utf8_lossy(&bytes).contains("ingest_total"));
+    }
+
+    fn app() -> Router {
+        router(Arc::new(Ingestor::new(
+            Arc::new(RecordingOutbox::new()),
+            Arc::new(SchemaCache::default()),
+            Metrics::new(),
+            "telemetry-events".to_owned(),
+            true,
+        )))
+    }
+
+    async fn post(app: Router, body: Body) -> (StatusCode, String) {
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v2/telemetry")
+                    .header("content-type", "application/json")
+                    .header("x-bidon-version", "0.7.0")
+                    .body(body)
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let status = response.status();
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        (status, String::from_utf8_lossy(&bytes).into_owned())
+    }
+
+    #[tokio::test]
+    async fn post_valid_batch_is_202() {
+        let body = include_str!("../testdata/valid_request.json");
+        let (status, text) = post(app(), Body::from(body)).await;
+        assert_eq!(status, StatusCode::ACCEPTED);
+        assert!(text.starts_with(r#"{"accepted":"#));
+    }
+
+    #[tokio::test]
+    async fn post_malformed_batch_is_400_problem_json() {
+        let (status, text) = post(app(), Body::from("not-json")).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert!(text.contains(r#""code":400"#));
+    }
+
+    #[tokio::test]
+    async fn post_oversized_streamed_body_is_413() {
+        let chunk = vec![b' '; 64 << 10];
+        let chunks: Vec<Result<Vec<u8>, std::io::Error>> =
+            (0..5).map(|_| Ok(chunk.clone())).collect();
+        let body = Body::from_stream(futures_util::stream::iter(chunks));
+        let (status, text) = post(app(), body).await;
+        assert_eq!(status, StatusCode::PAYLOAD_TOO_LARGE);
+        assert!(text.contains("too large"));
     }
 }

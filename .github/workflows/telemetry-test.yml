@@ -1,0 +1,23 @@
+name: Telemetry build and test
+
+on:
+  pull_request:
+    paths:
+      - "telemetry/**"
+      - "schemas/proto/**"
+      - ".github/workflows/telemetry-test.yml"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: cargo test --manifest-path telemetry/Cargo.toml
+      - name: Clippy
+        run: cargo clippy --manifest-path telemetry/Cargo.toml --all-targets -- -D warnings
+      - name: Format
+        run: cargo fmt --manifest-path telemetry/Cargo.toml --check

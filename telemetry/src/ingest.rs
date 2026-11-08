@@ -154,7 +154,7 @@ impl Ingestor {
             return problem(StatusCode::PAYLOAD_TOO_LARGE, "telemetry batch too large");
         }
         if !self.enabled {
-            tracing::info!(sdk_version, app_key = %app.key, bytes = body.len(), accepted = 0, "telemetry ingest disabled");
+            tracing::debug!(sdk_version, app_key = %app.key, bytes = body.len(), accepted = 0, "telemetry ingest disabled");
             return accepted(0);
         }
 
@@ -171,9 +171,9 @@ impl Ingestor {
             }
             let Some(encoded) =
                 self.catalog
-                    .encode_event(event, &app.key, &app.bundle, &session.id)
+                    .encode_event(event, &app.key, &app.bundle, &session.id, sdk_version)
             else {
-                self.metrics.dropped_name();
+                self.metrics.dropped_invalid();
                 continue;
             };
             let subject = format!("{}-{}", self.topic, encoded.message_type);
@@ -203,7 +203,7 @@ impl Ingestor {
             }
         }
 
-        tracing::info!(sdk_version, app_key = %app.key, bytes = body.len(), accepted = kept, "telemetry ingest");
+        tracing::debug!(sdk_version, app_key = %app.key, bytes = body.len(), accepted = kept, "telemetry ingest");
         accepted(kept)
     }
 }
@@ -249,7 +249,7 @@ fn accepted(count: usize) -> HttpReply {
     }
 }
 
-fn problem(status: StatusCode, message: &str) -> HttpReply {
+pub(crate) fn problem(status: StatusCode, message: &str) -> HttpReply {
     HttpReply {
         status,
         content_type: "application/problem+json",
@@ -456,5 +456,44 @@ mod tests {
             .metrics()
             .encode()
             .contains(r#"result="buffer_full""#));
+    }
+
+    #[tokio::test]
+    async fn catalogue_fixture_is_fully_accepted() {
+        let (ingestor, out) = ingestor(true, None);
+        let body = include_str!("../testdata/catalogue_request.json");
+        let reply = ingestor.handle(body.as_bytes(), "0.7.0");
+        assert_eq!(reply.status, StatusCode::ACCEPTED);
+        // 43 client events and 3 metrics.
+        assert_eq!(reply.body, r#"{"accepted":46}"#);
+        assert_eq!(out.records.lock().unwrap().len(), 43);
+    }
+
+    #[tokio::test]
+    async fn unrecognized_fixture_drops_only_the_unknown_items() {
+        let (ingestor, out) = ingestor(true, None);
+        let body = include_str!("../testdata/unrecognized_request.json");
+        let reply = ingestor.handle(body.as_bytes(), "0.7.0");
+        assert_eq!(reply.status, StatusCode::ACCEPTED);
+        // One known event and one known metric are kept; one of each is dropped.
+        assert_eq!(reply.body, r#"{"accepted":2}"#);
+        assert_eq!(out.records.lock().unwrap().len(), 1);
+        let text = ingestor.metrics().encode();
+        assert!(text.contains(r#"ingest_total{result="dropped_name"} 1"#));
+        assert!(text.contains(r#"ingest_total{result="dropped_metric"} 1"#));
+    }
+
+    #[tokio::test]
+    async fn malformed_event_field_counts_as_invalid_not_unknown_name() {
+        let (ingestor, out) = ingestor(true, None);
+        let body = batch(
+            r#""events":[{"envelope":{"event_id":"11111111-1111-4111-8111-111111111111","event_name":"ad_filled","event_ts":1},"price":"not-a-number"}]"#,
+        );
+        let reply = ingestor.handle(body.as_bytes(), "");
+        assert_eq!(reply.body, r#"{"accepted":0}"#);
+        assert!(out.records.lock().unwrap().is_empty());
+        let text = ingestor.metrics().encode();
+        assert!(text.contains(r#"ingest_total{result="dropped_invalid"} 1"#));
+        assert!(text.contains(r#"ingest_total{result="dropped_name"} 0"#));
     }
 }

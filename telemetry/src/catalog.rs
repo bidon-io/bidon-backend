@@ -60,12 +60,14 @@ impl Catalog {
 
     /// Decodes one protojson client event and stamps server envelope fields.
     /// Unknown names and events that do not match their message return None.
+    /// `sdk_version` is the `X-Bidon-Version` header, empty when absent.
     pub fn encode_event(
         &self,
         raw: &serde_json::Value,
         app_key: &str,
         bundle: &str,
         session_id: &str,
+        sdk_version: &str,
     ) -> Option<EncodedEvent> {
         let event_name = raw
             .get("envelope")
@@ -77,7 +79,16 @@ impl Catalog {
         }
         let mut msg = DynamicMessage::new(event.descriptor.clone());
         fill_message(&mut msg, raw).ok()?;
-        stamp(&mut msg, app_key, bundle, session_id, raw, event_name).ok()?;
+        stamp(
+            &mut msg,
+            app_key,
+            bundle,
+            session_id,
+            sdk_version,
+            raw,
+            event_name,
+        )
+        .ok()?;
         Some(EncodedEvent {
             event_name: event_name.to_owned(),
             message_type: event.full_name.clone(),
@@ -163,11 +174,7 @@ fn identity_present(raw: &serde_json::Value) -> bool {
         .get("event_id")
         .and_then(|value| value.as_str())
         .unwrap_or("");
-    envelope
-        .get("event_ts")
-        .and_then(|value| value.as_i64())
-        .is_some()
-        && !id.is_empty()
+    envelope.get("event_ts").and_then(json_i64).is_some() && !id.is_empty()
 }
 
 fn stamp(
@@ -175,6 +182,7 @@ fn stamp(
     app_key: &str,
     bundle: &str,
     session_id: &str,
+    sdk_version: &str,
     raw: &serde_json::Value,
     event_name: &str,
 ) -> Result<(), ()> {
@@ -189,7 +197,7 @@ fn stamp(
         }
     };
     set_i64(&mut envelope, "app_id", 0)?;
-    set_app(&mut envelope, app_key, bundle)?;
+    set_app(&mut envelope, app_key, bundle, sdk_version)?;
     let schema_version = SCHEMA_VERSION.parse().map_err(|_| ())?;
     set_i32(&mut envelope, "schema_version", schema_version)?;
     set_string(&mut envelope, "event_name", event_name)?;
@@ -200,8 +208,11 @@ fn stamp(
         .get("envelope")
         .and_then(|envelope| envelope.get("session_id"))
         .and_then(|value| value.as_str())
-        .is_some_and(|value| !value.is_empty());
-    if !session_override {
+        .filter(|value| !value.is_empty());
+    if let Some(value) = session_override {
+        // An override must be a UUID, like the batch session.id.
+        uuid::Uuid::parse_str(value).map_err(|_| ())?;
+    } else {
         set_string(&mut envelope, "session_id", session_id)?;
     }
     let sampling_present = raw
@@ -241,7 +252,12 @@ fn set_enum(msg: &mut DynamicMessage, name: &str, number: i32) -> Result<(), ()>
 
 /// app_key and bundle live on the nested PRD app message. The request wins
 /// over anything the client put there.
-fn set_app(envelope: &mut DynamicMessage, app_key: &str, bundle: &str) -> Result<(), ()> {
+fn set_app(
+    envelope: &mut DynamicMessage,
+    app_key: &str,
+    bundle: &str,
+    sdk_version: &str,
+) -> Result<(), ()> {
     let field = envelope.descriptor().get_field_by_name("app").ok_or(())?;
     let Kind::Message(descriptor) = field.kind() else {
         return Err(());
@@ -252,6 +268,9 @@ fn set_app(envelope: &mut DynamicMessage, app_key: &str, bundle: &str) -> Result
     };
     set_string(&mut app, "app_key", app_key)?;
     set_string(&mut app, "bundle", bundle)?;
+    if !sdk_version.is_empty() {
+        set_string(&mut app, "sdk_version", sdk_version)?;
+    }
     envelope.set_field(&field, Value::Message(app));
     Ok(())
 }
@@ -391,11 +410,24 @@ fn json_scalar(kind: &Kind, value: &serde_json::Value) -> Result<Value, ()> {
         )),
         Kind::Int64 | Kind::Sint64 | Kind::Sfixed64 => Ok(Value::I64(json_i64(value).ok_or(())?)),
         Kind::Double | Kind::Float => Ok(Value::F64(json_f64(value).ok_or(())?)),
+        // protojson sends an enum by value name; a number is accepted too.
+        Kind::Enum(descriptor) => match value.as_str() {
+            Some(name) => Ok(Value::EnumNumber(
+                descriptor.get_value_by_name(name).ok_or(())?.number(),
+            )),
+            None => Ok(Value::EnumNumber(
+                json_i64(value).ok_or(())?.try_into().map_err(|_| ())?,
+            )),
+        },
         _ => Err(()),
     }
 }
 
+/// protojson writes int64 as a decimal string, so accept that as well as a number.
 fn json_i64(value: &serde_json::Value) -> Option<i64> {
+    if let Some(text) = value.as_str() {
+        return text.parse().ok();
+    }
     value.as_i64().or_else(|| {
         let number = value.as_f64()?;
         if number.fract() == 0.0 {
@@ -453,6 +485,7 @@ mod tests {
                 "chess_2000",
                 "com.demo.chessmaster",
                 "550e8400-e29b-41d4-a716-446655440000",
+                "0.7.0",
             )
             .expect("encode");
         assert_eq!(encoded.event_name, "ad_request_started");
@@ -472,6 +505,7 @@ mod tests {
         let app = message_field(&envelope, "app");
         assert_eq!(field_string(&app, "app_key"), "chess_2000");
         assert_eq!(field_string(&app, "bundle"), "com.demo.chessmaster");
+        assert_eq!(field_string(&app, "sdk_version"), "0.7.0");
         assert_eq!(
             field_string(&envelope, "session_id"),
             "550e8400-e29b-41d4-a716-446655440000"
@@ -504,7 +538,7 @@ mod tests {
             "not_in_proto": "dropped"
         });
         let encoded = catalog
-            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session", "")
             .expect("encode");
         let decoded = catalog
             .decode(&encoded.message_type, &encoded.payload)
@@ -532,7 +566,7 @@ mod tests {
             }
         });
         let encoded = catalog
-            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session", "")
             .expect("encode");
         let decoded = catalog
             .decode(&encoded.message_type, &encoded.payload)
@@ -563,7 +597,7 @@ mod tests {
             }]
         });
         let encoded = catalog
-            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session")
+            .encode_event(&raw, "chess_2000", "com.demo.chessmaster", "session", "")
             .expect("encode");
         let decoded = catalog
             .decode(&encoded.message_type, &encoded.payload)
@@ -604,6 +638,116 @@ mod tests {
             Value::I32(4) => {}
             other => panic!("omitted_frames: {other:?}"),
         }
+    }
+
+    #[test]
+    fn int64_sent_as_a_string_is_accepted() {
+        let catalog = Catalog::load();
+        let raw = serde_json::json!({
+            "envelope": {
+                "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "event_name": "ad_loaded",
+                "event_ts": 1710000000123i64
+            },
+            "total_duration_ms": "420"
+        });
+        let encoded = catalog
+            .encode_event(&raw, "k", "b", "session", "")
+            .expect("encode");
+        let decoded = catalog
+            .decode(&encoded.message_type, &encoded.payload)
+            .expect("decode");
+        assert_eq!(field_i64(&decoded, "total_duration_ms"), 420);
+    }
+
+    #[test]
+    fn event_ts_sent_as_a_string_is_accepted() {
+        let catalog = Catalog::load();
+        let raw = serde_json::json!({
+            "envelope": {
+                "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "event_name": "ad_loaded",
+                "event_ts": "1710000000123"
+            }
+        });
+        let encoded = catalog
+            .encode_event(&raw, "k", "b", "session", "")
+            .expect("encode");
+        let decoded = catalog
+            .decode(&encoded.message_type, &encoded.payload)
+            .expect("decode");
+        let envelope = message_field(&decoded, "envelope");
+        assert_eq!(field_i64(&envelope, "event_ts"), 1710000000123);
+    }
+
+    #[test]
+    fn enum_fields_accept_a_name_or_a_number() {
+        let catalog = Catalog::load();
+        let event = |connection: serde_json::Value| {
+            serde_json::json!({
+                "envelope": {
+                    "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                    "event_name": "ad_loaded",
+                    "event_ts": 1,
+                    "device": {"connection_type": connection}
+                }
+            })
+        };
+        for connection in [
+            serde_json::json!("CONNECTION_TYPE_WIFI"),
+            serde_json::json!(1),
+        ] {
+            let encoded = catalog
+                .encode_event(&event(connection), "k", "b", "session", "")
+                .expect("encode");
+            let decoded = catalog
+                .decode(&encoded.message_type, &encoded.payload)
+                .expect("decode");
+            let device = message_field(&message_field(&decoded, "envelope"), "device");
+            assert_eq!(field_enum(&device, "connection_type"), 1);
+        }
+        assert!(catalog
+            .encode_event(
+                &event(serde_json::json!("NOT_A_VALUE")),
+                "k",
+                "b",
+                "session",
+                ""
+            )
+            .is_none());
+    }
+
+    #[test]
+    fn session_override_must_be_a_uuid() {
+        let catalog = Catalog::load();
+        let event = |session: &str| {
+            serde_json::json!({
+                "envelope": {
+                    "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                    "event_name": "ad_request_started",
+                    "event_ts": 1,
+                    "session_id": session
+                }
+            })
+        };
+        assert!(catalog
+            .encode_event(
+                &event("not-a-uuid"),
+                "k",
+                "b",
+                "550e8400-e29b-41d4-a716-446655440000",
+                ""
+            )
+            .is_none());
+        assert!(catalog
+            .encode_event(
+                &event("11111111-1111-4111-8111-111111111111"),
+                "k",
+                "b",
+                "550e8400-e29b-41d4-a716-446655440000",
+                ""
+            )
+            .is_some());
     }
 
     fn field_string(msg: &DynamicMessage, name: &str) -> String {

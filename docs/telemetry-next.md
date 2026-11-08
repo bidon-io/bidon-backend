@@ -16,8 +16,7 @@ header. `app_key` and `bundle` are written on `envelope.app`, and
 ## What this pull request implements
 
 `POST /v2/telemetry` is served by `bidon-telemetry`, a Rust process on port
-**1326**. sdkapi does not register the route (`postTelemetry` is excluded from
-codegen). The handler allow-lists the client catalogue, stamps `app_key`,
+**1326**. sdkapi does not register the route (the contract is `telemetry/openapi.yaml`, outside the sdkapi spec). The handler allow-lists the client catalogue, stamps `app_key`,
 `bundle`, and `schema_version`, and fail-open produces to `telemetry-events`.
 An unknown event or metric is dropped. The batch still returns 202. A batch
 that is too large returns 413.
@@ -26,10 +25,10 @@ that is too large returns 413.
 | --- | --- |
 | [BAC-74](https://linear.app/bidon/issue/BAC-74) client events catalogue | Yes. Named client messages in `schemas/proto/org/bidon/telemetry/v1/events.proto`, registered in `telemetry/src/catalog.rs`. |
 | [BAC-75](https://linear.app/bidon/issue/BAC-75) client metrics catalogue | Yes. `MetricObservation` in the same proto. Unknown names and extra label keys are dropped, not a 400. |
-| [BAC-76](https://linear.app/bidon/issue/BAC-76) batched ingest | Yes. `telemetry/` (Rust). Fixtures under `internal/sdkapi/v2/apihandlers/testdata/telemetry/`. Try them from `sdk.http` against `http://localhost:1326`. |
-| [BAC-77](https://linear.app/bidon/issue/BAC-77) ingest observations on `/metrics` | Partial. `bidon-telemetry` exposes `ingest_total{result}` (`accepted`, `dropped_name`, `dropped_metric`, `buffer_full`, `produce_error`) and three client histograms on `:1326/metrics`. There is no `client_event_total{event_name}`. These series are on the Rust process, not on sdkapi `:1324/metrics`. VictoriaMetrics scrapes both (`docker/telemetry/victoriametrics/scrape.yml`). |
-| [BAC-78](https://linear.app/bidon/issue/BAC-78) kill switch and allow-lists on `/v2/config` | Partial. `TELEMETRY_INGEST_ENABLED=false` makes ingest return `accepted: 0` and leaves auctions alone. The server does not re-sample. `/v2/config` does **not** return `telemetry.enabled`, `sample_rate`, `event_names`, or `metric_names`. That response shape exists only in `docs/telemetry-poc/openapi-sdk-telemetry-wip.yaml`. |
-| [BAC-79](https://linear.app/bidon/issue/BAC-79) OpenAPI for ingest and config telemetry | Partial. `internal/sdkapi/v2/openapi/openapi.yaml` documents `POST /v2/telemetry` (202, 413, problem responses). The config `telemetry.*` block is only in the WIP yaml, and sdkapi does not serve the route. |
+| [BAC-76](https://linear.app/bidon/issue/BAC-76) batched ingest | Yes. `telemetry/` (Rust). Fixtures under `telemetry/testdata/`. Try them from `sdk.http` against `http://localhost:1326`. |
+| [BAC-77](https://linear.app/bidon/issue/BAC-77) ingest observations on `/metrics` | Partial. `bidon-telemetry` exposes `ingest_total{result}` (`accepted`, `dropped_name`, `dropped_metric`, `dropped_invalid`, `buffer_full`, `produce_error`) and three client histograms on `:1326/metrics`. There is no `client_event_total{event_name}`. These series are on the Rust process, not on sdkapi `:1324/metrics`. VictoriaMetrics scrapes both (`docker/telemetry/victoriametrics/scrape.yml`). |
+| [BAC-78](https://linear.app/bidon/issue/BAC-78) kill switch and allow-lists on `/v2/config` | Partial. `TELEMETRY_INGEST_ENABLED=false` makes ingest return `accepted: 0` and leaves auctions alone. The server does not re-sample. `/v2/config` does **not** return `telemetry.enabled`, `sample_rate`, `event_names`, or `metric_names`. The intended shape is under "BAC-78 config contract" below. |
+| [BAC-79](https://linear.app/bidon/issue/BAC-79) OpenAPI for ingest and config telemetry | Partial. `telemetry/openapi.yaml` documents `POST /v2/telemetry` (202, 413, problem responses) with its own `servers:` entry. The config `telemetry.*` block is below and is not served yet. |
 | [BAC-62](https://linear.app/bidon/issue/BAC-62) OpenTelemetry auction spans | No. See below. |
 
 Closed siblings, already replaced by this PR: [#957](https://github.com/bidon-io/bidon-backend/pull/957)
@@ -77,7 +76,27 @@ They are not a claim that this PR built it.
 
 ## If you continue the work
 
-1. Run the PR test plan: `go test ./internal/telemetry/ ./internal/sdkapi/v2/app/ ./internal/sdkapi/v2/api/`, `cargo test --manifest-path telemetry/Cargo.toml`, then `just compose` and POST `internal/sdkapi/v2/apihandlers/testdata/telemetry/valid_request.json` to `http://localhost:1326/v2/telemetry`. Confirm one framed record on `telemetry-events`, counters on `:1326/metrics`, and that `:1324` does not serve the route. POST `unrecognized_request.json` and confirm 202 with the unknown name dropped.
+1. Run the PR test plan: `go test ./internal/telemetry/ ./internal/sdkapi/v2/app/ ./internal/sdkapi/v2/api/`, `cargo test --manifest-path telemetry/Cargo.toml`, then `just compose` and POST `telemetry/testdata/valid_request.json` to `http://localhost:1326/v2/telemetry`. Confirm one framed record on `telemetry-events`, counters on `:1326/metrics`, and that `:1324` does not serve the route. POST `unrecognized_request.json` and confirm 202 with the unknown name dropped.
 2. Finish BAC-78 on sdkapi: add `telemetry.enabled`, `sample_rate`, `event_names`, and `metric_names` to `/v2/config`, using the WIP yaml as the contract. Leave sampling on the SDK.
 3. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
 4. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. The TRD and the store notes are the design.
+
+## BAC-78 config contract
+
+Additive `telemetry` object on the `POST /v2/config` response, served by
+sdkapi. Sampling stays on the SDK; the server does not re-sample.
+
+```yaml
+telemetry:
+  enabled: true          # false: SDK must not POST; ingest still 202s with accepted 0
+  sample_rate: 0.1       # coherent per-auction keep probability, 0..1; funnel and errors stay at 1 on the SDK
+  event_names:           # live allow-list, subset of the proto catalogue
+    - ad_request_started
+    - ad_filled
+  metric_names:          # live allow-list, subset of the metric catalogue
+    - client_auction_duration_seconds
+    - client_token_collection_duration_seconds
+    - client_ad_load_duration_seconds
+```
+
+Disabled looks like `enabled: false, sample_rate: 0, event_names: [], metric_names: []`.

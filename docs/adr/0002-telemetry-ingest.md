@@ -37,9 +37,8 @@ the bidding stack, or the app's `BaseRequest`.
 
 Serve `POST /v2/telemetry` from **`bidon-telemetry`**, a Rust executable in
 `telemetry/`, on port **1326**. `bidon-sdkapi` does not register the route.
-The OpenAPI operation stays in `internal/sdkapi/v2/openapi/openapi.yaml` as the
-contract and is excluded from sdkapi codegen (`postTelemetry` in
-`internal/sdkapi/v2/api/config.yaml`). `internal/sdkapi/v2/app/app_test.go`
+The OpenAPI contract lives in `telemetry/openapi.yaml`, separate from the sdkapi
+spec, so sdkapi neither documents nor generates code for it. `internal/sdkapi/v2/app/app_test.go`
 fails if sdkapi grows the route.
 
 Auction and DSP events stay in the Go logger. Both writers use topic
@@ -53,10 +52,10 @@ payload). `telemetry/src/frame.rs` is the Rust copy of that framing.
 | -- | -------- | -------------------- |
 | D1 | A separate process. Client ingest cannot share the auction process's memory, request deadlines, or Kafka producer. Stopping, crashing, or blocking `bidon-telemetry` leaves `/v2/auction` up. The kill switch is `TELEMETRY_INGEST_ENABLED` on this process only. | The thin sdkapi handler BAC-76 first described. A handler would meet the HTTP contract, and a panic, a full produce buffer, or a stuck Kafka client would sit in the auction process. |
 | D2 | The executable is Rust (`telemetry/`, Axum, prost, prost-reflect, rskafka). It loads `events.proto` as a descriptor and walks protojson. A new client message is a proto `event_name` option; there is no per-event handler. The crate does not import the Bidon Go module. | A second Go binary under `cmd/` that links `internal/telemetry` and `go.mod`. That would also isolate the process. It was not taken: this proxy is a protojson-to-framed-protobuf encoder, and the auction logger already owns the Go side of the topic. |
-| D3 | One image and one port. `telemetry/Dockerfile` builds a static-ish bookworm binary. Compose runs `rust:1.98-bookworm` with `telemetry/dev-entrypoint.sh` (`cargo run`) on `1326:1326`. Staging and prod use `BIDON_TELEMETRY_TAG`. Health is `GET /health`. Metrics are `GET /metrics` on the same port. VictoriaMetrics scrapes sdkapi `:1324` and this process `:1326`. | Serving `/metrics` from sdkapi. Client observations would then depend on the auction process being the thing that parsed the batch. |
-| D4 | The HTTP handler returns without waiting on Kafka or Schema Registry. Events go into a bounded channel (4096). A full channel counts `buffer_full` and the batch is still 202. A background task produces; a produce error counts `produce_error` and is logged. Schema registration retries in the background (1s growing to 30s, 2s HTTP timeout). Until a subject has an id, the value is raw protobuf. | Awaiting the produce, or failing the request when the registry is down. That puts Redpanda on the SDK's latency and turns a telemetry outage into a client error. |
+| D3 | One image and one port. `telemetry/Dockerfile` builds a static-ish bookworm binary. Compose runs `rust:1.98-bookworm` with `telemetry/dev-entrypoint.sh` (`cargo run`) on `1326:1326`. Staging uses `BIDON_TELEMETRY_TAG`; there is no prod deployment yet. Health is `GET /health`. Metrics are `GET /metrics` on the same port. VictoriaMetrics scrapes sdkapi `:1324` and this process `:1326`. | Serving `/metrics` from sdkapi. Client observations would then depend on the auction process being the thing that parsed the batch. |
+| D4 | The HTTP handler returns without waiting on Kafka or Schema Registry. Events go into a bounded channel (4096). A full channel counts `buffer_full` and the batch is still 202. A background task produces in batches of up to 500 records and 512 KiB with lz4. Kafka retries stop after 5 seconds; a failed produce counts `produce_error` for each record in the batch and is logged. On SIGTERM or Ctrl-C the server stops accepting, open requests finish, the queue is drained, and the process exits within 8 seconds. Schema registration retries in the background (1s growing to 30s, 2s HTTP timeout). Until a subject has an id, the value is raw protobuf. | Awaiting the produce, or failing the request when the registry is down. That puts Redpanda on the SDK's latency and turns a telemetry outage into a client error. |
 | D5 | Identity is the JSON `app.key`, `app.bundle`, and `session.id` (UUID). There is no database lookup. `app_id` is stamped `0`, `country` and `trace_id` are cleared, and `schema_version` is int32 `1`. `app_key` and `bundle` are written on `envelope.app`. Flat client labels `host` and `auction_owner` are stored on `envelope.integration` as the PRD enums. | Resolving the app row, filling `country` from MaxMind, and deduping `event_id` in this service. The spike lists those (BE-M0-3). They need Postgres, the geocoder, and Redis, which would pin ingest to the same dependencies as sdkapi. They stay follow-ups. |
-| D6 | Server-minted names are refused: `auction_request_received`, `auction_completed`, `dsp_request_sent`, `dsp_response_received`, `dsp_response_rejected`. Unknown event names, unknown metric names, and extra metric labels are dropped. Only the three client histograms are applied. 413 is the only size reject. Malformed JSON and a missing app or session are 400. | Accepting whatever `event_name` the client sends, or 400-ing the whole batch for one unknown name. |
+| D6 | Server-minted names are refused: `auction_request_received`, `auction_completed`, `dsp_request_sent`, `dsp_response_received`, `dsp_response_rejected`. Unknown event names, unknown metric names, and extra metric labels are dropped. Only the three client histograms are applied, with label values from fixed sets and non-negative finite values. An event that matches the catalogue but fails to decode counts `dropped_invalid`. 413 is the only size reject. Malformed JSON and a missing app or session are 400. | Accepting whatever `event_name` the client sends, or 400-ing the whole batch for one unknown name. |
 
 ### What the process does on one request
 
@@ -77,7 +76,7 @@ payload). `telemetry/src/frame.rs` is the Rust copy of that framing.
 | `telemetry/src/catalog.rs` | prost-reflect catalogue from `events.proto`; stamp `envelope.app`, `schema_version`, integration enums |
 | `telemetry/src/frame.rs` | Confluent protobuf framing, matching `internal/telemetry/confluent.go` |
 | `telemetry/src/registry.rs` | Background schema registration; raw protobuf until an id exists |
-| `telemetry/src/kafka.rs` | rskafka producer on partition 0; headers `event_name` and `protobuf_message` |
+| `telemetry/src/kafka.rs` | rskafka producer on partition 0 (the topic must already exist); headers `event_name` and `protobuf_message` |
 | `telemetry/src/metrics.rs` | `ingest_total{result}` and the three client histograms |
 
 ### Configuration
@@ -108,8 +107,8 @@ sets `telemetryHost` to `http://localhost:1326` locally. sdkapi remains on
   or an sdkapi route.
 - Auction rows and client rows share a topic and a framing, so one consumer
   reads both.
-- The OpenAPI document can describe `POST /v2/telemetry` without sdkapi serving
-  it. Codegen will not grow a handler by accident.
+- The telemetry contract has its own OpenAPI file, so the sdkapi spec and its
+  generated code are unchanged.
 - The image does not link Postgres, Redis, or the bidding code. Compose only
   waits for Redpanda.
 
@@ -123,6 +122,12 @@ sets `telemetryHost` to `http://localhost:1326` locally. sdkapi remains on
   `internal/telemetry/confluent_test.go` are the checks.
 - `app_id` is 0. Joins use `app_key` and `bundle`. Country is empty. There is
   no `event_id` dedupe. That is the POC, not the spike's full BE-M0-3.
+- The topic `telemetry-events` is declared once by the `redpanda-topics` compose
+  service (one partition, replication 1). Neither process creates it. The Rust
+  producer writes only partition 0, so adding partitions needs a partitioner here
+  first.
+- The process connects to Kafka before it listens. If Kafka is down at start it
+  exits and the orchestrator restarts it.
 - Schema Registry downtime means raw protobuf on the topic until registration
   catches up. Consumers that require the Confluent header must tolerate that
   window.

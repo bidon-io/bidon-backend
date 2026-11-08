@@ -5,6 +5,11 @@ use prometheus::{HistogramOpts, HistogramVec, IntCounterVec, Opts, Registry, Tex
 
 const BUCKETS: &[f64] = &[0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
 
+const AD_TYPES: &[&str] = &["banner", "interstitial", "rewarded"];
+const AD_LOAD_RESULTS: &[&str] = &["loaded", "failed", "no_fill", "timeout"];
+
+type LabelSpec = (&'static str, &'static [&'static str]);
+
 #[derive(Clone)]
 pub struct Metrics {
     registry: Arc<Registry>,
@@ -49,6 +54,7 @@ impl Metrics {
             "accepted",
             "dropped_name",
             "dropped_metric",
+            "dropped_invalid",
             "buffer_full",
             "produce_error",
         ] {
@@ -75,6 +81,10 @@ impl Metrics {
         self.bump("dropped_metric");
     }
 
+    pub fn dropped_invalid(&self) {
+        self.bump("dropped_invalid");
+    }
+
     pub fn buffer_full(&self) {
         self.bump("buffer_full");
     }
@@ -83,22 +93,43 @@ impl Metrics {
         self.bump("produce_error");
     }
 
+    pub fn produce_errors(&self, count: u64) {
+        self.ingest
+            .with_label_values(&["produce_error"])
+            .inc_by(count);
+    }
+
     /// Records an allow-listed histogram observation.
-    /// An unknown name, a non-histogram type, or an extra label key is rejected.
+    /// An unknown name, a negative or non-finite value, an extra label key, or a
+    /// label value outside the series' fixed set is rejected, so a client cannot
+    /// mint new series.
     pub fn observe(&self, name: &str, value: f64, labels: &HashMap<String, String>) -> bool {
-        let (series, keys): (&HistogramVec, &[&str]) = match name {
-            "client_auction_duration_seconds" => (&self.auction, &["ad_type"]),
-            "client_token_collection_duration_seconds" => (&self.tokens, &["ad_type"]),
-            "client_ad_load_duration_seconds" => (&self.ad_load, &["ad_type", "result"]),
+        let (series, spec): (&HistogramVec, &[LabelSpec]) = match name {
+            "client_auction_duration_seconds" => (&self.auction, &[("ad_type", AD_TYPES)]),
+            "client_token_collection_duration_seconds" => (&self.tokens, &[("ad_type", AD_TYPES)]),
+            "client_ad_load_duration_seconds" => (
+                &self.ad_load,
+                &[("ad_type", AD_TYPES), ("result", AD_LOAD_RESULTS)],
+            ),
             _ => return false,
         };
-        if labels.keys().any(|key| !keys.contains(&key.as_str())) {
+        if !value.is_finite() || value < 0.0 {
             return false;
         }
-        let values: Vec<&str> = keys
-            .iter()
-            .map(|key| labels.get(*key).map(String::as_str).unwrap_or(""))
-            .collect();
+        if labels
+            .keys()
+            .any(|key| !spec.iter().any(|(allowed, _)| *allowed == key.as_str()))
+        {
+            return false;
+        }
+        let mut values: Vec<&str> = Vec::with_capacity(spec.len());
+        for (key, allowed) in spec {
+            match labels.get(*key).map(String::as_str) {
+                Some(value) if allowed.contains(&value) => values.push(value),
+                Some(_) => return false,
+                None => values.push(""),
+            }
+        }
         series.with_label_values(&values).observe(value);
         true
     }
@@ -129,4 +160,46 @@ fn histogram(name: &str, help: &str, labels: &[&str]) -> HistogramVec {
         labels,
     )
     .expect("histogram")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn labels(pairs: &[(&str, &str)]) -> HashMap<String, String> {
+        pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn known_label_values_are_observed() {
+        let metrics = Metrics::new();
+        assert!(metrics.observe(
+            "client_ad_load_duration_seconds",
+            0.4,
+            &labels(&[("ad_type", "banner"), ("result", "loaded")]),
+        ));
+    }
+
+    #[test]
+    fn unknown_label_value_is_rejected() {
+        let metrics = Metrics::new();
+        assert!(!metrics.observe(
+            "client_auction_duration_seconds",
+            0.4,
+            &labels(&[("ad_type", "made-up-123")]),
+        ));
+        assert!(!metrics.encode().contains("made-up-123"));
+    }
+
+    #[test]
+    fn negative_and_non_finite_values_are_rejected() {
+        let metrics = Metrics::new();
+        let ok = labels(&[("ad_type", "banner")]);
+        assert!(!metrics.observe("client_auction_duration_seconds", -1.0, &ok));
+        assert!(!metrics.observe("client_auction_duration_seconds", f64::NAN, &ok));
+        assert!(!metrics.observe("client_auction_duration_seconds", f64::INFINITY, &ok));
+    }
 }

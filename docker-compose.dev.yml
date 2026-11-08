@@ -84,6 +84,16 @@ services:
       retries: 5
       start_period: 5s
 
+  # Declares telemetry-events once so sdkapi and bidon-telemetry never create it.
+  redpanda-topics:
+    image: docker.redpanda.com/redpandadata/redpanda:v26.1.9
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - rpk -X brokers=redpanda:9092 topic describe telemetry-events >/dev/null 2>&1 || rpk -X brokers=redpanda:9092 topic create telemetry-events -p 1 -r 1
+
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:v2.8.15
     ports:
@@ -152,6 +162,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      redpanda-topics:
+        condition: service_completed_successfully
       redpanda:
         condition: service_healthy
     environment:
@@ -179,6 +191,8 @@ services:
     ports:
       - '1326:1326'
     depends_on:
+      redpanda-topics:
+        condition: service_completed_successfully
       redpanda:
         condition: service_healthy
     environment:
