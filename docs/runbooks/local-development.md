@@ -108,16 +108,21 @@ See "End-to-end SDK flow" in [AGENTS.md](../../AGENTS.md).
 
 ## Read from Kafka
 
-Full local stack (Redpanda), or browse topics in Redpanda Console at http://localhost:8080:
+Three topics: `telemetry-events` (protobuf), `notification-events` (JSON), and
+`ad-events` (JSON). `ad-events` stays empty unless `KAFKA_PRODUCE_AD_EVENTS=true`.
+`telemetry-events` values are Confluent-framed protobuf, so read them in Redpanda
+Console at http://localhost:8080. See [the telemetry local stack](../telemetry/local-stack.md).
+
+Full local stack (Redpanda):
 
 ```shell
-docker compose -f docker-compose.dev.yml exec redpanda rpk topic consume ad-events
+docker compose -f docker-compose.dev.yml exec redpanda rpk topic consume notification-events
 ```
 
 Manual setup (`docker-compose.yml`, Kafka on localhost:9092):
 
 ```shell
-docker compose exec -it kafka kafka-console-consumer --bootstrap-server=localhost:9092 --topic=ad-events --from-beginning
+docker compose exec -it kafka kafka-console-consumer --bootstrap-server=localhost:9092 --topic=notification-events --from-beginning
 ```
 
 ## Copilot
