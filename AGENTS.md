@@ -23,6 +23,7 @@ config/    YAML config    docker/  scripts/  web/bidon_ui (Nuxt frontend)
 
 ## Local Development
 
+Operator steps are in the [local development runbook](docs/runbooks/local-development.md).
 Commands are `just` recipes — see `justfile`.
 
 ```bash
@@ -121,7 +122,7 @@ registry images** tagged via `BIDON_*_TAG` — not the working tree. When debugg
 staging-only UI issues, verify tags in Coolify match the commit you expect
 (especially `BIDON_UI_TAG`); backend/seed can be newer than `bidon-ui`. Rebuild
 with `just ci-build-ui` and redeploy with aligned tags. See
-[docs/runbooks/staging.md](docs/runbooks/staging.md).
+[Staging deployment](docs/runbooks/staging.md#staging-deployment).
 
 ## Architecture
 
@@ -168,6 +169,15 @@ bidding) → parallel bidding round → ranked ad units → win/loss notificatio
 
 ## Resources
 
-[Docs index](docs/README.md) ·
+[Docs index](docs/README.md) lists the files. The directories are:
+
+- [architecture/](docs/architecture/) — ad types, rendering schema, sequence diagrams
+- [adr/](docs/adr/README.md) — architecture decision records (index)
+- [runbooks/](docs/runbooks/) — local development, staging, network onboarding
+- [telemetry/](docs/telemetry/README.md) — telemetry status, local Console and vmui guide, design notes
+- [dev/](docs/dev/) — contributor tooling
+- [skills/](docs/skills/) — agent skills for DSP-facing config
+- [archive/backlog/](docs/archive/backlog/README.md) — superseded plans and reading copies
+
 [Self-Hosted Deployment Guide](https://docs.bidon.org/docs/server/self-hosted) ·
 OpenAPI: `internal/admin/openapi/` · Proto: `proto/`
