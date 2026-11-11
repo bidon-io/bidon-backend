@@ -18,6 +18,8 @@ To put data on the bus, use `sdk.http`:
 - `POST http://localhost:1324/v2/auction/{ad_type}` writes the server auction and DSP events.
 - `POST http://localhost:1326/v2/telemetry` writes client events onto the same telemetry topic and updates the client histograms.
 
+`just sdk-api` on the host, without `USE_KAFKA=true`, does not write the topic. The same server events are protojson lines in the sdkapi log.
+
 ## What you are looking at
 
 Three topics. Only one of them is the new catalog.
@@ -136,7 +138,7 @@ sdkapi emits these. `POST /v2/telemetry` refuses the five names in this table.
 | `OUTCOME_BID` | A bid |
 | `OUTCOME_NOBID` | A clean no-bid (204 or an empty seat) |
 
-Timeout is chosen before the HTTP and parse checks. `errorCode` on `auction_completed` is `ERROR_CODE_NO_ADS_FOUND`, `ERROR_CODE_INVALID_AUCTION_KEY`, or `ERROR_CODE_ERROR`. Empty means the round finished without an auction error. `winnerDsp` is empty when nothing cleared the effective floor.
+Timeout is chosen before the HTTP and parse checks. An adapter whose `ExecuteOptions` failed (missing credentials, bad adapter config) still has a `dsp_request_sent` and a response with `OUTCOME_HTTP_ERROR` and status 0, even though no request left sdkapi. `adapter_options_errors_total` tells the two apart (see vmui below). `errorCode` on `auction_completed` is `ERROR_CODE_NO_ADS_FOUND`, `ERROR_CODE_INVALID_AUCTION_KEY`, or `ERROR_CODE_ERROR`. Empty means the round finished without an auction error. `winnerDsp` is empty when nothing cleared the effective floor.
 
 Show and notice events (`ad_impression`, `win_notice_sent`, `billing_notice_sent`, `loss_notice_sent`, `notice_delivery_failed`) and their metrics come with [#961](https://github.com/bidon-io/bidon-backend/pull/961) (BAC-64). They are not on `new-main` yet.
 
@@ -239,6 +241,14 @@ sum by (reason) (increase(telemetry_dropped_total[15m]))
 | `buffer_full` | The producer buffer was full. Counted, not logged on every row |
 | `produce_error` | The broker rejected the record |
 
+### Adapter misconfiguration
+
+```promql
+sum by (adapter) (increase(adapter_options_errors_total[15m]))
+```
+
+No series when every adapter built its request options. A series names the adapter key whose `ExecuteOptions` failed. It keeps climbing on every auction that reaches that adapter, after the once-per-app error log goes quiet.
+
 ### Client ingest
 
 These series are on `job="bidon-telemetry"`. They stay absent until something calls `POST /v2/telemetry`.
@@ -278,9 +288,31 @@ Anything else in the batch’s `metrics` array increments `dropped_metric` and d
 
 ## One auction, both UIs
 
-1. Send a banner auction from `sdk.http`.
+1. Send **Auction banner Adikteev — iOS** from `sdk.http` (the `local` environment in `http-client.env.json` points `sdkapiHost` at http://localhost:1324).
 2. In Console, open `telemetry-events` from the newest offset and read `envelope.auctionId` off `auction_request_received`.
 3. Filter on that `auctionId`. You should see the request, a send and a response per DSP, any below-floor reject, and `auction_completed`. `latencyMs` on each response is that DSP only. `totalLatencyMs` on the completion is the whole round.
 4. Wait for a scrape, then in vmui run `sum by (dsp, outcome) (increase(dsp_response_total[15m]))`. The outcomes should match the `outcome` fields you just read, summed across every auction in the window, not just this one.
 
 If Console has the events and vmui does not, check http://localhost:8428/targets and http://localhost:1324/metrics. If `/metrics` has the counter and vmui does not, the scrape is behind or the time range does not cover it. If `/metrics` does not have it either, that code path did not run.
+
+## Schema registry down
+
+The registry is fail-open: auctions keep working and the producer sends raw protobuf until registration succeeds. To check it, keep Redpanda up and give sdkapi an unreachable registry URL. Stop the compose sdkapi so ports 1324 and 50051 are free, then run one with the override:
+
+```shell
+docker compose -f docker-compose.dev.yml stop bidon-sdkapi
+docker compose -f docker-compose.dev.yml run --no-deps --service-ports --rm \
+  -e SCHEMA_REGISTRY_URL=http://127.0.0.1:9 \
+  bidon-sdkapi
+```
+
+- At startup, and again on each backoff retry, the log warns `schema registry register; producing raw protobuf until it succeeds`.
+- Send an auction. `/v2/auction` returns as usual.
+- The new `telemetry-events` values have no leading `0x00` Confluent magic byte, so Console shows them as opaque bytes. Headers are still there, so the `event_name` filter works.
+- `run` does not register the `bidon-sdkapi` network alias, so http://localhost:8428/targets shows the sdkapi target down for the duration. Read http://localhost:1324/metrics directly instead.
+
+Stop it with Ctrl-C, then bring the normal service back:
+
+```shell
+docker compose -f docker-compose.dev.yml up -d bidon-sdkapi
+```
