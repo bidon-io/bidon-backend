@@ -84,6 +84,16 @@ services:
       retries: 5
       start_period: 5s
 
+  # Declares telemetry-events once so sdkapi and bidon-telemetry never create it.
+  redpanda-topics:
+    image: docker.redpanda.com/redpandadata/redpanda:v26.1.9
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - rpk -X brokers=redpanda:9092 topic describe telemetry-events >/dev/null 2>&1 || rpk -X brokers=redpanda:9092 topic create telemetry-events -p 1 -r 1
+
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:v2.8.15
     ports:
@@ -152,6 +162,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      redpanda-topics:
+        condition: service_completed_successfully
       redpanda:
         condition: service_healthy
     environment:
@@ -172,7 +184,27 @@ services:
       <<: [*dev-db-env, *dev-bidon-app-env]
       DSPSIM_PORT: 1325
 
-  # Scrapes bidon-sdkapi /metrics. Nothing depends on it; stopping it never affects auctions.
+  bidon-telemetry:
+    image: rust:1.98-bookworm
+    working_dir: /app/telemetry
+    command: ["sh", "/app/telemetry/dev-entrypoint.sh"]
+    ports:
+      - '1326:1326'
+    depends_on:
+      redpanda-topics:
+        condition: service_completed_successfully
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: *dev-kafka-env
+      TELEMETRY_PORT: 1326
+    volumes:
+      - .:/app
+      - cargo-registry-dev:/usr/local/cargo/registry
+      - cargo-git-dev:/usr/local/cargo/git
+      - telemetry-target-dev:/app/telemetry/target
+
+  # Scrapes bidon-sdkapi and bidon-telemetry /metrics. Nothing depends on it; stopping it never affects auctions.
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.153.0
     command:
@@ -235,3 +267,6 @@ volumes:
   redpanda-data-dev:
   victoriametrics-data-dev:
   bidon-ui-node-modules-dev:
+  cargo-registry-dev:
+  cargo-git-dev:
+  telemetry-target-dev:

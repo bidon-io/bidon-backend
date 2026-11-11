@@ -25,6 +25,7 @@ x-logging: &default-logging
 #   BIDON_MIGRATE_TAG         — Docker image tag for bidon-migrate
 #   BIDON_SEED_TAG            — Docker image tag for bidon-seed
 #   BIDON_UI_TAG              — Docker image tag for bidon-ui (e.g. git SHA from CI)
+#   BIDON_TELEMETRY_TAG       — Docker image tag for bidon-telemetry
 #   MAXMIND_GEOIP_ACCOUNT_ID  — MaxMind account ID for GeoLite2-City updates
 #   MAXMIND_GEOIP_LICENSE_KEY — MaxMind license key for GeoLite2-City updates
 #   REDPANDA_CONSOLE_BA_USERS — Traefik basicAuth.users for redpanda-console only (never commit).
@@ -136,6 +137,17 @@ services:
     logging: *default-logging
     <<: *restart-policy
 
+  # Declares telemetry-events once so sdkapi and bidon-telemetry never create it.
+  redpanda-topics:
+    image: redpandadata/redpanda:v26.1.9
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - rpk -X brokers=${SERVICE_NAME_REDPANDA:-redpanda}:29092 topic describe telemetry-events >/dev/null 2>&1 || rpk -X brokers=${SERVICE_NAME_REDPANDA:-redpanda}:29092 topic create telemetry-events -p 1 -r 1
+    restart: "no"
+
   # Redpanda Console (UI): expose publicly via Coolify → Traefik; protect with Basic Auth middleware
   # labels only on this service. Kafka brokers stay on the compose network (no proxy auth) — see Coolify docs:
   # https://coolify.io/docs/knowledge-base/proxy/traefik/basic-auth#docker-compose-and-services
@@ -216,6 +228,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      redpanda-topics:
+        condition: service_completed_successfully
       redpanda:
         condition: service_healthy
     environment:
@@ -226,6 +240,27 @@ services:
       APP_SECRET: ${APP_SECRET}
     volumes:
       - geodb:/public/system
+    logging: *default-logging
+    <<: *restart-policy
+
+  bidon-telemetry:
+    image: "registry.digitalocean.com/bidon-io/bidon-telemetry:${BIDON_TELEMETRY_TAG}"
+    expose:
+      - "1326"
+    depends_on:
+      redpanda-topics:
+        condition: service_completed_successfully
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: *staging-bidon-app-env
+      TELEMETRY_PORT: 1326
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1326/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     logging: *default-logging
     <<: *restart-policy
 
@@ -249,6 +284,9 @@ services:
           - job_name: bidon-sdkapi
             static_configs:
               - targets: ["${SERVICE_NAME_BIDON_SDKAPI:-bidon-sdkapi}:1323"]
+          - job_name: bidon-telemetry
+            static_configs:
+              - targets: ["${SERVICE_NAME_BIDON_TELEMETRY:-bidon-telemetry}:1326"]
         EOF
         exec /victoria-metrics-prod \
           -promscrape.config=/tmp/scrape.yml \

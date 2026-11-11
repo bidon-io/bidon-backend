@@ -1,0 +1,47 @@
+{
+  "app": {
+    "key": "app_abc123",
+    "bundle": "com.example.game"
+  },
+  "session": {
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "events": [
+    {
+      "envelope": {
+        "event_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+        "event_name": "ad_request_started",
+        "event_ts": 1710000000123,
+        "auction_id": "auc_01J8Z3K4N5",
+        "ad_type": "banner",
+        "ad_format": "BANNER",
+        "sampling_rate": 1
+      },
+      "price_floor": 0.05
+    },
+    {
+      "envelope": {
+        "event_id": "0f14d0ab-9605-4a62-a9e4-90e086941e9f",
+        "event_name": "ad_filled",
+        "event_ts": 1710000000450,
+        "auction_id": "auc_01J8Z3K4N5",
+        "ad_type": "banner",
+        "ad_format": "BANNER",
+        "sampling_rate": 1
+      },
+      "demand_id": "bidmachine",
+      "price": 1.24,
+      "bid_type": "bidding"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "client_auction_duration_seconds",
+      "type": "histogram",
+      "value": 0.327,
+      "labels": {
+        "ad_type": "banner"
+      }
+    }
+  ]
+}
