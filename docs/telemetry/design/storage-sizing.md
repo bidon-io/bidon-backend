@@ -1,6 +1,6 @@
 # Telemetry storage sizing
 
-Planning model for [events](./telemetry-events-store.md), [traces](./telemetry-traces-store.md), and [metrics](./telemetry-metrics-store.md).
+Planning model for [events](./events-store.md), [traces](./traces-store.md), and [metrics](./metrics-store.md).
 
 **Design point is the first iteration, not the ceiling.** The tables below lead with ~10k DAU (where we are), then show 100k and 1M as headroom checks. Nothing here is sized for 10M DAU on day one, and nothing here has to be — the tripwires in §7 say when each component stops being adequate.
 

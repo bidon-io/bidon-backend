@@ -1,17 +1,17 @@
 # Telemetry: requirements (clean slate)
 
-**Status:** Draft — requirements only. Settled stores: grain A → [telemetry-events-store.md](./telemetry-events-store.md); grain B → [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces from day 1); grain C → [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics from day 1).  
+**Status:** Draft — requirements only. Settled stores: grain A → [events-store.md](./events-store.md); grain B → [traces-store.md](./traces-store.md) (VictoriaTraces from day 1); grain C → [metrics-store.md](./metrics-store.md) (VictoriaMetrics from day 1).  
 **Date:** 2026-08-26  
-**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
-**PRD:** [PRD_BidOn_Telemetry v1](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
-**Events warehouse TRD:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) (Parquet on DigitalOcean Spaces only)  
-**Code audit:** [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md)
+**Start here:** [brief.md](./brief.md)  
+**PRD:** [PRD v1](./prd-v1.pdf)  
+**Events warehouse TRD:** [trd-events-warehouse.md](./trd-events-warehouse.md) (Parquet on DigitalOcean Spaces only)  
+**Code audit:** [backend-spike.md](./backend-spike.md)
 
 Vendor notes from earlier discussion are *not* requirements. This document is what a store (or stores) must satisfy.
 
-**Chosen:** grain A = Parquet lake (Iceberg when a catalog exists); grain B = VictoriaTraces; grain C = VictoriaMetrics. Per-unit bytes and volume tiers: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+**Chosen:** grain A = Parquet lake (Iceberg when a catalog exists); grain B = VictoriaTraces; grain C = VictoriaMetrics. Per-unit bytes and volume tiers: [storage-sizing.md](./storage-sizing.md).
 
-**This is a judgement call, not a conclusion these requirements force.** §6 permits one database if it passes both the §2.A funnel and the §2.B point-get, and a self-hosted single-node ClickHouse passes both — [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) makes that case honestly and concedes the split is not obviously cheaper in machines or people. We chose the split for grain fit, PromQL-native paging, and failure isolation. Anyone re-reading these criteria will notice they do not discriminate; say "we preferred this" rather than "the requirements required it."
+**This is a judgement call, not a conclusion these requirements force.** §6 permits one database if it passes both the §2.A funnel and the §2.B point-get, and a self-hosted single-node ClickHouse passes both — [clickhouse-declined.md](./clickhouse-declined.md) makes that case honestly and concedes the split is not obviously cheaper in machines or people. We chose the split for grain fit, PromQL-native paging, and failure isolation. Anyone re-reading these criteria will notice they do not discriminate; say "we preferred this" rather than "the requirements required it."
 
 ---
 
@@ -67,7 +67,7 @@ One trace per auction; child span per DSP call; notice spans. `trace_id` rides o
 - Fetch the tree for auction/trace X (point lookup).
 - Quantiles of span duration by `demand_id` over a window (baselines). Head-sample rate **known and recorded** if traces are used for p95; otherwise p95 comes from C, not from “only slow traces we kept.”
 
-**The sample rate has to be high enough that the tree is actually there.** This store exists to answer "show me the auction this partner is complaining about." At a 1% head sample it is absent 99% of the time, which fails the requirement while appearing to satisfy it. At current volume a trace tree is ~1.5 KiB and 14 days of *every* auction is under a gigabyte — so keep 100% until disk says otherwise ([traces store](./telemetry-traces-store.md#phases)).
+**The sample rate has to be high enough that the tree is actually there.** This store exists to answer "show me the auction this partner is complaining about." At a 1% head sample it is absent 99% of the time, which fails the requirement while appearing to satisfy it. At current volume a trace tree is ~1.5 KiB and 14 days of *every* auction is under a gigabyte — so keep 100% until disk says otherwise ([traces store](./traces-store.md#phases)).
 
 **UI is not an M0 requirement.** Storage is. Sentry is not this store (not actionable for reports).
 
@@ -91,7 +91,7 @@ Today `GET /metrics` **exposes** Prometheus text. Nothing in this repo **stores*
 | G2 | Impression + BURL stay on `POST /v2/show`. Warehouse row may lag; billing must not. |
 | G3 | New stream follows the PRD advertising-id table: always present, real id only when consent is present and COPPA and limit-ad-tracking do not match, otherwise the all-zero UUID. It does not copy IP, IDFV, IDG, app set id, user agent, or raw DSP bodies. `country` from MaxMind. COPPA reduced field set is still an owner gap; the specified rule is the zero UUID. |
 | G4 | Dual-emit existing `ad-events` / `notification-events` until that consumer is named and migrated. New catalog is a **new** stream. |
-| G5 | Dedupe on `event_id`. Redis at ingest is the M0 default; read-time dedupe on the lake is an equally valid implementation and the stated fallback when Redis RAM exceeds the lake's cost ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). Server-minted ids never need a dedupe entry. |
+| G5 | Dedupe on `event_id`. Redis at ingest is the M0 default; read-time dedupe on the lake is an equally valid implementation and the stated fallback when Redis RAM exceeds the lake's cost ([sizing §7](./storage-sizing.md#7-tripwires)). Server-minted ids never need a dedupe entry. |
 | G6 | Errors never sampled. Sampling rate on the event; server does not re-sample. |
 | G7 | Kill switch via `/v2/config` (publisher). |
 | G8 | Schema versioned; additive within a major. Version is **recorded, never a rejection reason**: the lake is schema-on-read, and PRD rationale 6 says old-SDK publishers persist for quarters and never reach zero. Rejecting them would bias the fill and reconciliation numbers J3/J4 exist to produce. |
@@ -106,8 +106,8 @@ Today `GET /metrics` **exposes** Prometheus text. Nothing in this repo **stores*
 - Self-hosted (Coolify / Compose). Small team. Non-profit. Cost-sensitive: **SaaS OLAP meters** are the expensive thing; a single extra box is in play.
 - Redpanda already exists and must keep receiving the old topics (G4).
 - No Prometheus *server* today. No trace store today (Sentry only).
-- **This is a first iteration.** The design point is ~10k DAU with headroom checked to 1M, each component carrying a written tripwire ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). It is not sized for 10M DAU and does not need to be.
-- Volume unmeasured. The PRD's 20–40× events/impression is a hypothesis; modelling the full PRD catalog gives **~55 raw events per auction**, above that band, which is why sampling is load-bearing rather than optional. Raw emit sizes the bus, the client queue and ingest; *stored* sizes the lake. See [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+- **This is a first iteration.** The design point is ~10k DAU with headroom checked to 1M, each component carrying a written tripwire ([sizing §7](./storage-sizing.md#7-tripwires)). It is not sized for 10M DAU and does not need to be.
+- Volume unmeasured. The PRD's 20–40× events/impression is a hypothesis; modelling the full PRD catalog gives **~55 raw events per auction**, above that band, which is why sampling is load-bearing rather than optional. Raw emit sizes the bus, the client queue and ingest; *stored* sizes the lake. See [storage-sizing.md](./storage-sizing.md).
 - Open source / public SDK: collection story must stay minimal, gated, and **allow-listed** (PRD rationale 5 — over-collection here cannot be quietly fixed).
 
 ---
@@ -166,7 +166,7 @@ Anything that only answers 3 (classic PromQL TSDB) or only answers 2 (VictoriaTr
 - Impression definition vs OM (meaning of `ad_impression`).  
 - Legal retention for G3, which is **three questions, not one**: (a) the statutory accounting window for the *ledger* (commonly 6–10 y — satisfied by aggregates, not raw events); (b) the **contractual** dispute and audit window in the MAX certification terms and DSP agreements, which is what actually binds impression-level retention and is currently unchecked; (c) whether `session_id` + device + bundle is pseudonymous personal data. A "yes" on (c) makes long retention a liability rather than prudence, and makes row-level delete an M0 requirement — which promotes Iceberg out of Phase 2.
 
-Until those, capacity and monthly $ stay ranges from [telemetry-storage-sizing.md](./telemetry-storage-sizing.md), not a bill.
+Until those, capacity and monthly $ stay ranges from [storage-sizing.md](./storage-sizing.md), not a bill.
 
 ### Gaps in PRD v1 (October 14, 2026)
 
@@ -184,16 +184,16 @@ Still open with the owner:
 
 ## 9. Events-only store (grain A)
 
-See [telemetry-events-store.md](./telemetry-events-store.md): **phased** — Parquet on S3 + DuckDB (Phase 1); Iceberg via OSS writer + REST catalog (Phase 2); Athena/Trino if needed (Phase 3); ClickHouse reads the **same** lake (Phase 4). No Redpanda Enterprise.
+See [events-store.md](./events-store.md): **phased** — Parquet on S3 + DuckDB (Phase 1); Iceberg via OSS writer + REST catalog (Phase 2); Athena/Trino if needed (Phase 3); ClickHouse reads the **same** lake (Phase 4). No Redpanda Enterprise.
 
 ---
 
 ## 10. Traces store (grain B)
 
-See [telemetry-traces-store.md](./telemetry-traces-store.md): **VictoriaTraces** from day 1. OTLP via otelcol-contrib. GET by `trace_id`. Sentry exceptions only. Unbiased p95 / paging is grain C (spanmetrics), not this store.
+See [traces-store.md](./traces-store.md): **VictoriaTraces** from day 1. OTLP via otelcol-contrib. GET by `trace_id`. Sentry exceptions only. Unbiased p95 / paging is grain C (spanmetrics), not this store.
 
 ---
 
 ## 11. Metrics store (grain C)
 
-See [telemetry-metrics-store.md](./telemetry-metrics-store.md): **VictoriaMetrics** from day 1. Scrape `/metrics` + OTel Prometheus exporter. vmalert + Alertmanager. No `auction_id` on series.
+See [metrics-store.md](./metrics-store.md): **VictoriaMetrics** from day 1. Scrape `/metrics` + OTel Prometheus exporter. vmalert + Alertmanager. No `auction_id` on series.

@@ -677,8 +677,7 @@ func (ErrorCode) EnumDescriptor() ([]byte, []int) {
 // keys are flat; the rest is grouped by topic. A group the event has nothing
 // for is left unset, and fields the stage has not produced stay at the proto3
 // default. The header is defined by the telemetry PRD and TRD
-// (docs/PRD_BidOn_Telemetry - v1.pdf, docs/TRD_BidOn_Telemetry.md on the
-// BAC-53 initiative branch).
+// (docs/telemetry/design/prd-v1.pdf, docs/telemetry/design/trd-events-warehouse.md).
 //
 // schema_version is the current major. Additive changes stay on this number.
 // A breaking change bumps it.

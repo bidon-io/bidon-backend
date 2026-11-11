@@ -6,14 +6,14 @@ Start here. The supporting documents are linked at each decision.
 
 | | |
 | --- | --- |
-| Why | [PRD v1](./PRD_BidOn_Telemetry%20-%20v1.pdf) (Jonathan Kuperberg) |
-| What must be true | [telemetry-requirements.md](./telemetry-requirements.md) |
-| Events warehouse (Parquet on Spaces) | [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) |
-| What the code does today | [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) |
-| First implementable slice | [telemetry-poc/](./telemetry-poc/README.md) (6 Linear issues, 5 MRs) |
-| Stores | [events](./telemetry-events-store.md) · [traces](./telemetry-traces-store.md) · [metrics](./telemetry-metrics-store.md) |
-| Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
-| Option history | [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) |
+| Why | [PRD v1](./prd-v1.pdf) (Jonathan Kuperberg) |
+| What must be true | [requirements.md](./requirements.md) |
+| Events warehouse (Parquet on Spaces) | [trd-events-warehouse.md](./trd-events-warehouse.md) |
+| What the code does today | [backend-spike.md](./backend-spike.md) |
+| First implementable slice, and its status | [telemetry/README.md](../README.md) (the BAC-91 issues in Linear) |
+| Stores | [events](./events-store.md) · [traces](./traces-store.md) · [metrics](./metrics-store.md) |
+| Numbers | [storage-sizing.md](./storage-sizing.md) |
+| Option history | [clickhouse-declined.md](./clickhouse-declined.md) |
 
 ---
 
@@ -51,7 +51,7 @@ Three kinds of data. They can share infrastructure; they must not share grain.
 
 **C — Operational metrics.** Scrape `/metrics` + collector spanmetrics → VictoriaMetrics → vmalert → Alertmanager. Answers "is it bad right now." Never carries `auction_id` on a series.
 
-**Why three and not one.** A self-hosted single-node ClickHouse would pass our own funnel and point-get tests — [the history doc](./telemetry-storage-recommendation.md) makes that case honestly. We preferred the split for grain fit, PromQL-native paging, and blast-radius isolation: a stalled sink cannot stop paging, and a heavy funnel query cannot starve alerts. **This is a judgement call, not something the requirements forced**, and the reversal path (ClickHouse on the same Parquet files) is written down and cheap.
+**Why three and not one.** A self-hosted single-node ClickHouse would pass our own funnel and point-get tests — [the history doc](./clickhouse-declined.md) makes that case honestly. We preferred the split for grain fit, PromQL-native paging, and blast-radius isolation: a stalled sink cannot stop paging, and a heavy funnel query cannot starve alerts. **This is a judgement call, not something the requirements forced**, and the reversal path (ClickHouse on the same Parquet files) is written down and cheap.
 
 ---
 
@@ -63,7 +63,7 @@ At the design point (~10k DAU, **2 sessions × 5 auctions**, fill 0.4, **Parquet
 | --- | --- | --- |
 | **Events (Parquet)** | **1.1 GiB** (5.9M events) | **114 GiB** (~$5/mo Spaces) |
 
-JSON/protobuf on Redpanda is the bus; topic retention is days, not 400 d. Traces and metrics are not in the events TRD. [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost).
+JSON/protobuf on Redpanda is the bus; topic retention is days, not 400 d. Traces and metrics are not in the events TRD. [TRD §5](./trd-events-warehouse.md#5-volume-and-cost).
 
 **At 10k, Parquet on Spaces is ~$5/mo** (114 GiB). At 1M: **~11 TiB retained (~$230/mo)**. Redis 72 h dedupe is ~2.5 GiB now and ~250 GiB RAM at 1M unsampled — tripwire to SQL dedupe.
 
@@ -148,4 +148,4 @@ Two limits are technical, and the target remains the PRD:
 - `telemetry_dropped` is a client queue counter (disk-backed queue, oldest-first eviction). It is not a catalog event. The server counter `telemetry_dropped_total` is a different quantity.
 - Define `demand_load_attempt` and `waterfall_exhausted`, or drop them. Fill rate is defined on `ad_filled`, which the proto has and the M1 tables never specify. Token events are in the proto and the M3 migration table, and missing from the M1 tables.
 
-**Unresolved by choice.** Monthly cost stays a range until volume is measured. The three-store split is a preference we can defend but did not derive from the requirements — [the option history](./telemetry-storage-recommendation.md) holds the counter-case. And J3/J4/J5 name non-engineers as users while M0/M1 delivers engineer-mediated SQL; that expectation needs setting with BD and support directly.
+**Unresolved by choice.** Monthly cost stays a range until volume is measured. The three-store split is a preference we can defend but did not derive from the requirements — [the option history](./clickhouse-declined.md) holds the counter-case. And J3/J4/J5 name non-engineers as users while M0/M1 delivers engineer-mediated SQL; that expectation needs setting with BD and support directly.

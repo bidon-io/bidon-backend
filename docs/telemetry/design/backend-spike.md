@@ -2,13 +2,13 @@
 
 **Status:** Draft (backend audit + ticket list; no production instrumentation)  
 **Date:** 2026-08-26  
-**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
-**Source PRD:** [PRD_BidOn_Telemetry - v1.pdf](./PRD_BidOn_Telemetry%20-%20v1.pdf)  
-**Requirements:** [telemetry-requirements.md](./telemetry-requirements.md)  
-**Events warehouse TRD:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) (Parquet on Spaces only; not ingest, traces, or metrics)  
-**Settled stores:** events (A) [telemetry-events-store.md](./telemetry-events-store.md) · traces (B) [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces) · metrics (C) [telemetry-metrics-store.md](./telemetry-metrics-store.md) (VictoriaMetrics)  
-**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md)  
-**Option we declined:** [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) (unified ClickHouse)  
+**Start here:** [brief.md](./brief.md)  
+**Source PRD:** [prd-v1.pdf](./prd-v1.pdf)  
+**Requirements:** [requirements.md](./requirements.md)  
+**Events warehouse TRD:** [trd-events-warehouse.md](./trd-events-warehouse.md) (Parquet on Spaces only; not ingest, traces, or metrics)  
+**Settled stores:** events (A) [events-store.md](./events-store.md) · traces (B) [traces-store.md](./traces-store.md) (VictoriaTraces) · metrics (C) [metrics-store.md](./metrics-store.md) (VictoriaMetrics)  
+**Sizing:** [storage-sizing.md](./storage-sizing.md)  
+**Option we declined:** [clickhouse-declined.md](./clickhouse-declined.md) (unified ClickHouse)  
 **Linear initiative:** [Telemetry M0/M1 foundations](https://linear.app/bidon/initiative/telemetry-m0m1-foundations-validate-assumptions-and-size-the-build-2d2f5f28ed90) (read-only; this spike does not file or comment there)
 
 This document answers the backend-owned spike questions, inventories the event stream that already exists, maps it onto the PRD catalog, and lists M0/M1 backend tickets. SDK envelope/transport review stays with BID-46 / BID-47 / BID-54.
@@ -285,7 +285,7 @@ M1 funnel metrics that need **both** sides:
 ## 4. Dual-emission rules
 
 1. Keep writing `ad-events` and `notification-events` unchanged until the downstream owner signs off.
-2. New PRD events go to a new topic (`telemetry-events`; the [events TRD](./TRD_BidOn_Telemetry.md) sink reads only this topic).
+2. New PRD events go to a new topic (`telemetry-events`; the [events TRD](./trd-events-warehouse.md) sink reads only this topic).
 3. Do not widen `AdEvent` in place to look like the M0 envelope. That mixes PII policy and schema versioning.
 4. `/v2/show` remains the billing trigger. New `ad_impression` / `billing_notice_sent` are additional writes from that handler, not a replacement of BURL.
 5. If the SDK later posts `ad_impression` to ingest as well, dedupe on `event_id` (or a derived key `show:{auction_id}:{demand_id}` during transition).
@@ -294,6 +294,8 @@ M1 funnel metrics that need **both** sides:
 ---
 
 ## 5. Proposed backend architecture (not implemented)
+
+> Superseded for client ingest by [ADR 0002](../../adr/0002-telemetry-ingest.md): `POST /v2/telemetry` is served by the separate `bidon-telemetry` process, not sdkapi, with no app-key lookup, MaxMind or `event_id` dedupe yet (auth is BAC-125).
 
 Three grains, three stores. Details in the store docs; this is the wiring.
 
@@ -332,7 +334,7 @@ OTel: span in `auction.Service.Run`, child span per DSP in `bidding.Builder`, ch
 
 Infra not in the Go ticket list: Compose/Coolify for VM, VT, otelcol, Parquet sink, object-storage bucket. Owners still unnamed.
 
-Events warehouse (Parquet sink, Spaces, DuckDB): [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md). Ingest, sampling, dual-emit, and OTel stay in this spike.
+Events warehouse (Parquet sink, Spaces, DuckDB): [trd-events-warehouse.md](./trd-events-warehouse.md). Ingest, sampling, dual-emit, and OTel stay in this spike.
 
 ---
 

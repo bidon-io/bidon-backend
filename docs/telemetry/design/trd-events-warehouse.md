@@ -8,10 +8,10 @@
 
 | | |
 | --- | --- |
-| Why the warehouse exists | [PRD v1](./PRD_BidOn_Telemetry%20-%20v1.pdf) — Goals 1–4; Part II “raw events to a columnar warehouse for funnel joins” |
-| What the warehouse must answer | [telemetry-requirements.md](./telemetry-requirements.md) §2.A (jobs J3, J4, J5) |
-| Why Parquet on object storage | [telemetry-events-store.md](./telemetry-events-store.md) |
-| Numbers | [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) |
+| Why the warehouse exists | [PRD v1](./prd-v1.pdf) — Goals 1–4; Part II “raw events to a columnar warehouse for funnel joins” |
+| What the warehouse must answer | [requirements.md](./requirements.md) §2.A (jobs J3, J4, J5) |
+| Why Parquet on object storage | [events-store.md](./events-store.md) |
+| Numbers | [storage-sizing.md](./storage-sizing.md) |
 
 No production instrumentation ships from this draft. The lake can exist empty; producers are a different piece of work.
 
@@ -162,7 +162,7 @@ The sink cannot start without a topic. Provisioning it is in this TRD because it
 | Creation | **Explicit.** `config/kafka.go` allows auto-create, which yields one partition. |
 | Compression | Producer zstd (set at topic / producer; do not rely on the franz-go default). |
 | Retention on the bus | **Days**, not 400 d. The lake is the retain. |
-| Partitions | Set from peak protobuf/day before first write ([sizing §7](./telemetry-storage-sizing.md#7-tripwires)). |
+| Partitions | Set from peak protobuf/day before first write ([sizing §7](./storage-sizing.md#7-tripwires)). |
 
 ### 4.7 Query
 
@@ -175,7 +175,7 @@ The sink cannot start without a topic. Provisioning it is in this TRD because it
 
 ### 4.8 Retention
 
-Three drivers, three artefacts. Do not keep one window for everything. Detail: [sizing §4](./telemetry-storage-sizing.md#4-retention).
+Three drivers, three artefacts. Do not keep one window for everything. Detail: [sizing §4](./storage-sizing.md#4-retention).
 
 | Class | Window | Where | Contents |
 | --- | --- | --- | --- |
@@ -207,7 +207,7 @@ The sink is not on the ad path. Do not add a Spaces, Connect, or DuckDB dependen
 
 ## 5. Volume and cost
 
-Design point: ~10k DAU, 2 sessions × 5 auctions, fill 0.4, **unsampled** (`K` = 1.0). Model and caveats: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+Design point: ~10k DAU, 2 sessions × 5 auctions, fill 0.4, **unsampled** (`K` = 1.0). Model and caveats: [storage-sizing.md](./storage-sizing.md).
 
 Sizing still uses **1.2 KiB/event on the bus** and **200 B/row Parquet** as unmeasured placeholders (those were JSON-era). Protobuf + typed columns should compress better than a `payload` JSON blob; treat figures as ±2× until the sink produces real bytes.
 

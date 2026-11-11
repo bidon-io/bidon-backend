@@ -6,17 +6,17 @@
 
 | Grain | Store | Doc |
 | --- | --- | --- |
-| A events | Parquet / Iceberg lake + DuckDB | [telemetry-events-store.md](./telemetry-events-store.md) |
-| B traces | VictoriaTraces from day 1 | [telemetry-traces-store.md](./telemetry-traces-store.md) |
-| C metrics | VictoriaMetrics from day 1 | [telemetry-metrics-store.md](./telemetry-metrics-store.md) |
+| A events | Parquet / Iceberg lake + DuckDB | [events-store.md](./events-store.md) |
+| B traces | VictoriaTraces from day 1 | [traces-store.md](./traces-store.md) |
+| C metrics | VictoriaMetrics from day 1 | [metrics-store.md](./metrics-store.md) |
 
-Per-unit bytes and retention windows: [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+Per-unit bytes and retention windows: [storage-sizing.md](./storage-sizing.md).
 
-Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5. Events warehouse TRD: [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md).
+Requirements: [requirements.md](./requirements.md). Spike architecture: [backend-spike.md](./backend-spike.md) §5. Events warehouse TRD: [trd-events-warehouse.md](./trd-events-warehouse.md).
 
 **Date:** 2026-08-26  
-**Start here:** [telemetry-brief.md](./telemetry-brief.md)  
-**PRD:** [PRD_BidOn_Telemetry v1](./PRD_BidOn_Telemetry%20-%20v1.pdf)
+**Start here:** [brief.md](./brief.md)  
+**PRD:** [PRD v1](./prd-v1.pdf)
 
 ---
 
@@ -24,7 +24,7 @@ Requirements: [telemetry-requirements.md](./telemetry-requirements.md). Spike ar
 
 The second half of this file argues that one self-hosted ClickHouse is *good enough at all three grains* and cheaper in *people* than three products. That argument is sound as a capability claim, and we still declined it. Isolation is a grain decision, not a claim that three stores use less CPU or are simpler to run.
 
-**Read this before presenting the decision.** The requirements document's own criteria ([§6 and §7](./telemetry-requirements.md#6-what-a-solution-has-to-be)) do not eliminate ClickHouse — a single self-hosted node passes the funnel test, the point-get test, and all six sniff-test questions. The tiebreaker actually available, "alerts cannot wait on lake lag," rules out a *lake-only* design; it does not rule out CH, which pairs with Grafana alerting or a small VM.
+**Read this before presenting the decision.** The requirements document's own criteria ([§6 and §7](./requirements.md#6-what-a-solution-has-to-be)) do not eliminate ClickHouse — a single self-hosted node passes the funnel test, the point-get test, and all six sniff-test questions. The tiebreaker actually available, "alerts cannot wait on lake lag," rules out a *lake-only* design; it does not rule out CH, which pairs with Grafana alerting or a small VM.
 
 So the honest framing is: **we preferred the split, we did not derive it.** Present it that way. Anyone who reads these documents carefully will find this section, and "we chose grain fit and blast-radius isolation, here is what we gave up" is a much stronger position than a claim of necessity that the next question dismantles.
 
@@ -181,4 +181,4 @@ Still required outside the family: **OTLP collector + a trace (and metric) store
 
 ## Where this option would have landed
 
-This option's M0 would have been: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Our M0 is the three-store architecture** in the spike §5; the events warehouse is the [events TRD](./TRD_BidOn_Telemetry.md).
+This option's M0 would have been: events and sampled traces **queryable in one ClickHouse**, billing still on `/show`, old `ad-events` still flowing, collector exporting to CH not Sentry. **Our M0 is the three-store architecture** in the spike §5; the events warehouse is the [events TRD](./trd-events-warehouse.md).

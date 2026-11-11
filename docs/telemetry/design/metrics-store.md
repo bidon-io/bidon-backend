@@ -1,9 +1,9 @@
 # Operational metrics: VictoriaMetrics from day 1
 
-**Scope:** grain C only ([telemetry-requirements.md](./telemetry-requirements.md) §2.C). Grain A: [telemetry-events-store.md](./telemetry-events-store.md). Grain B: [telemetry-traces-store.md](./telemetry-traces-store.md) (VictoriaTraces from day 1). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5.
+**Scope:** grain C only ([requirements.md](./requirements.md) §2.C). Grain A: [events-store.md](./events-store.md). Grain B: [traces-store.md](./traces-store.md) (VictoriaTraces from day 1). Spike architecture: [backend-spike.md](./backend-spike.md) §5.
 
 **Decision:** scrape existing `GET /metrics` (and later the OTel Prometheus exporter) into **single-node VictoriaMetrics**. **vmalert** evaluates rules; **Alertmanager** pages. Grafana uses the Prometheus datasource pointed at VM. **`vmbackup` to S3** when local retention is not enough. **VM cluster** only if scrape volume hurts.  
-**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) — bytes track **series × scrape**, not ads served.
+**Sizing:** [storage-sizing.md](./storage-sizing.md) — bytes track **series × scrape**, not ads served.
 
 These are **phased**. Each phase keeps the produce path: in-process Prometheus *client* on `/metrics`. We are not running a Prometheus *server*.
 
@@ -61,7 +61,7 @@ otelcol Prometheus exporter ↗
 ```
 
 - Compose/Coolify sidecar. Retention **30–90d** is fine on one disk at low cardinality; no need to start at 15d.
-- Budget **~1,300 series per instance** (Go runtime ~120, echoprometheus ~300, telemetry counters + DSP duration histogram ~450, spanmetrics ~400), so **~5,000 across replicas** and **~4 GiB at 90 d** — [sizing §6](./telemetry-storage-sizing.md#6-metrics-derived). Series count scales with **replica count**, not with DAU: this grain costs the same at 10k and 1M DAU. It is the cheapest of the three and should not consume decision time.
+- Budget **~1,300 series per instance** (Go runtime ~120, echoprometheus ~300, telemetry counters + DSP duration histogram ~450, spanmetrics ~400), so **~5,000 across replicas** and **~4 GiB at 90 d** — [sizing §6](./storage-sizing.md#6-metrics-derived). Series count scales with **replica count**, not with DAU: this grain costs the same at 10k and 1M DAU. It is the cheapest of the three and should not consume decision time.
 - Scrape config can live on VM itself for a handful of targets. Split out **vmagent** only if scrape fan-out grows.
 - Rules: Prometheus-style YAML in **vmalert**. Alertmanager for routing.
 - Query language: MetricsQL. Write new alerts against VM; do not assume Prometheus `rate()` extrapolation.

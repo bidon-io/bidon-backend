@@ -5,7 +5,7 @@
 **Deciders:** Zandre Witte
 **Linear:** [BAC-73](https://linear.app/bidon/issue/BAC-73), [BAC-76](https://linear.app/bidon/issue/BAC-76), [BAC-91](https://linear.app/bidon/issue/BAC-91)
 **Supersedes / Superseded by:** —
-**Implementation:** [PR #963](https://github.com/bidon-io/bidon-backend/pull/963) (`bac-73-sdk-telemetry-ingest`). Status of what that PR does and does not cover: [telemetry-next.md](../telemetry-next.md).
+**Implementation:** [PR #963](https://github.com/bidon-io/bidon-backend/pull/963) (`bac-73-sdk-telemetry-ingest`). Status of what that PR does and does not cover: [docs/telemetry/README.md](../telemetry/README.md).
 
 ---
 

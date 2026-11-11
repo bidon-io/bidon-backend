@@ -1,9 +1,9 @@
 # Product events: Parquet on S3, SQL when needed, Iceberg when ready
 
-**Scope:** events only ([telemetry-requirements.md](./telemetry-requirements.md) §2.A). Traces: [telemetry-traces-store.md](./telemetry-traces-store.md). Metrics: [telemetry-metrics-store.md](./telemetry-metrics-store.md).  
-**Phase 1 implementation contract:** [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) — Parquet on DigitalOcean Spaces, 10 min flush. This file is the design and later phases.  
+**Scope:** events only ([requirements.md](./requirements.md) §2.A). Traces: [traces-store.md](./traces-store.md). Metrics: [metrics-store.md](./metrics-store.md).  
+**Phase 1 implementation contract:** [trd-events-warehouse.md](./trd-events-warehouse.md) — Parquet on DigitalOcean Spaces, 10 min flush. This file is the design and later phases.  
 **Decision:** protobuf → OSS Redpanda → **Kafka Connect S3 sink (Parquet)** → **DuckDB** when you query. Iceberg later is an OSS catalog over the same files — not Redpanda Enterprise Iceberg. ClickHouse later reads the **same** lake.  
-**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md).
+**Sizing:** [storage-sizing.md](./storage-sizing.md).
 
 These are **phased**. Each phase keeps the wire format and `/v2/show` → Redpanda produce path.
 
@@ -38,7 +38,7 @@ bidon-sdkapi (protobuf) → Redpanda telemetry-events
 
 **Good enough** to size sampling and prove the catalog. Hive paths are a **temporary** layout.
 
-At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./telemetry-storage-sizing.md), [TRD §5](./TRD_BidOn_Telemetry.md#5-volume-and-cost)). Bus volume is protobuf, not JSON; the 1.2 KiB/event figure is still unmeasured.
+At the first-iteration design point (5 auctions/session, unsampled): **1.1 GiB/day Parquet, ~114 GiB retained on Spaces** ([sizing](./storage-sizing.md), [TRD §5](./trd-events-warehouse.md#5-volume-and-cost)). Bus volume is protobuf, not JSON; the 1.2 KiB/event figure is still unmeasured.
 
 ### Phase 2 — Iceberg table (OSS, no Enterprise)
 
@@ -102,8 +102,8 @@ Protobuf on the topic is the bus contract.
 
 ## M0 slice
 
-1. Schema Registry + protobuf event messages + `telemetry-events` + Connect Parquet sink ([TRD](./TRD_BidOn_Telemetry.md)).  
+1. Schema Registry + protobuf event messages + `telemetry-events` + Connect Parquet sink ([TRD](./trd-events-warehouse.md)).  
 2. DuckDB SQL pack.  
-3. **Daily aggregate rollup** written to a separate long-retention prefix ([sizing §4](./telemetry-storage-sizing.md#4-retention)) — a scheduled query, ~25 GiB over seven years, and the only artefact that survives a decision to shorten raw retention. It cannot be backfilled once raw rows expire, so it ships with the sink.  
+3. **Daily aggregate rollup** written to a separate long-retention prefix ([sizing §4](./storage-sizing.md#4-retention)) — a scheduled query, ~25 GiB over seven years, and the only artefact that survives a decision to shorten raw retention. It cannot be backfilled once raw rows expire, so it ships with the sink.  
 4. Freshness alert on the sink.  
 5. Written tripwire for Phase 4 (CH).

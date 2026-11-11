@@ -1,9 +1,9 @@
 # Operational traces: VictoriaTraces from day 1
 
-**Scope:** grain B only ([telemetry-requirements.md](./telemetry-requirements.md) §2.B). Grain A: [telemetry-events-store.md](./telemetry-events-store.md). Grain C: [telemetry-metrics-store.md](./telemetry-metrics-store.md). Spike architecture: [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) §5.
+**Scope:** grain B only ([requirements.md](./requirements.md) §2.B). Grain A: [events-store.md](./events-store.md). Grain C: [metrics-store.md](./metrics-store.md). Spike architecture: [backend-spike.md](./backend-spike.md) §5.
 
 **Decision:** export OTLP from `bidon-sdkapi` via **otelcol-contrib** into **single-node VictoriaTraces**. GET the tree by `trace_id` (Jaeger API; Tempo HTTP API when useful). Grafana later, optional. **Spanmetrics → VictoriaMetrics** for unbiased p95 and paging. **Sentry stays exceptions only.** Cluster VT only if one node hurts. Backup/`vmbackup`-style copy to S3 when local disk is not enough — VT is not a live Parquet lake.  
-**Sizing:** [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) — one tree ≈ `2+D` spans; disk is `s_trace ×` that.
+**Sizing:** [storage-sizing.md](./storage-sizing.md) — one tree ≈ `2+D` spans; disk is `s_trace ×` that.
 
 These are **phased**. Each phase keeps the produce path: OTel SDK, never await from the ad path.
 
@@ -54,7 +54,7 @@ bidon-sdkapi (OTel SDK) → otelcol-contrib
 | `auction.dsp.{demand_id}` | `auction.run` | `demand_id`, `http.status`, `outcome` |
 | `notification.send` | `auction.run` or `/v2/show` | `notice_type`, `demand_id`, `http.status` |
 
-**Keep 100% of traces at current scale.** A trace tree is ~10 spans ≈ 1.5 KiB; at the first-iteration design point that is 59 MiB/day and **820 MiB at 14 days**, and at 100k DAU still only 7.8 GiB ([sizing §5](./telemetry-storage-sizing.md#5-volume)). There is nothing to save by sampling.
+**Keep 100% of traces at current scale.** A trace tree is ~10 spans ≈ 1.5 KiB; at the first-iteration design point that is 59 MiB/day and **820 MiB at 14 days**, and at 100k DAU still only 7.8 GiB ([sizing §5](./storage-sizing.md#5-volume)). There is nothing to save by sampling.
 
 The instinct with traces is to sample hard, because that is what large deployments do. At 1% the auction a partner escalates is **absent 99% of the time**, which defeats the only reason this store exists. Sampling schedule:
 

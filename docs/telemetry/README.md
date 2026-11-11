@@ -3,7 +3,7 @@
 Start here if you are picking up Bidon telemetry after the 2026 wrap-up.
 This file is the status of [PR #963](https://github.com/bidon-io/bidon-backend/pull/963)
 (`bac-73-sdk-telemetry-ingest`) against the BAC-91 tickets. The design notes
-live beside it; this page says which of them the code actually implements.
+are in [design/](#docs); this page says which of them the code actually implements.
 
 The branch is rebased onto `new-main`, which already has the PRD envelope
 ([#962](https://github.com/bidon-io/bidon-backend/pull/962)) and Smadex
@@ -42,45 +42,49 @@ Do not re-implement these.
 
 - Typed `telemetry-events` logger, auction and DSP events, sdkapi `/metrics` counters ([#954](https://github.com/bidon-io/bidon-backend/pull/954), BAC-60/61).
 - PRD envelope header on auction and DSP events ([#962](https://github.com/bidon-io/bidon-backend/pull/962)).
-- VictoriaMetrics scraping sdkapi, described in [telemetry-poc.md](./telemetry-poc.md).
+- VictoriaMetrics scraping sdkapi. How to query it: [local-stack.md](./local-stack.md).
 
 ## Parked outside this pull request
 
 | Work | Where it is | What to do |
 | --- | --- | --- |
-| [BAC-62](https://linear.app/bidon/issue/BAC-62) auction parent span and one child per DSP | Branch `bac-62-poc-opentelemetry-auction-parent-and-per-dsp-child-spans`. No open PR. The branch still contains the pre-merge BAC-60/61 commits, so it is not a clean diff on `new-main`. Brief: [03-traces.md](./telemetry-poc/03-traces.md). | Rebase onto `new-main` before treating the diff as the patch. VictoriaTraces and otelcol are not in compose. `OTEL_EXPORTER_OTLP_ENDPOINT` unset must leave auctions unchanged. |
-| [BAC-64](https://linear.app/bidon/issue/BAC-64) `ad_impression` and notice HTTP outcomes | Open [PR #961](https://github.com/bidon-io/bidon-backend/pull/961), one commit, not rebased onto the PRD envelope. Brief: [05-impressions-notices.md](./telemetry-poc/05-impressions-notices.md). | Rebase onto `new-main`. Show still fires BURL. `notification-events` JSON stays as it is. |
-| Observe stack: RisingWave, VictoriaTraces, otelcol, Grafana ([BAC-63](https://linear.app/bidon/issue/BAC-63), BAC-85, BAC-86, BAC-87, BAC-88) | Not started. `docker/telemetry/risingwave-init.sql` is a draft and is not mounted by compose. Brief: [04-observe-stack.md](./telemetry-poc/04-observe-stack.md). How to read the bus and vmui once events exist: [explore-console-and-vmui.md](./telemetry-poc/explore-console-and-vmui.md). The screenshots in that note were taken on a stack that also produced show and notice rows, which this PR does not emit. | Leave parked unless someone is going to operate the stack. |
-| Scalar OpenAPI docs ([BAC-80](https://linear.app/bidon/issue/BAC-80)) | Not started. | The spec in `openapi.yaml` is enough to generate a client. |
-| Events warehouse | Design only. [TRD](./TRD_BidOn_Telemetry.md): Parquet on DigitalOcean Spaces, one table per event type, DuckDB for the SQL. No sink in this repo. | Build the sink only after `telemetry-events` on `new-main` is the schema you mean to keep. |
+| [BAC-62](https://linear.app/bidon/issue/BAC-62) auction parent span and one child per DSP | Branch `bac-62-poc-opentelemetry-auction-parent-and-per-dsp-child-spans`. No open PR. The branch still contains the pre-merge BAC-60/61 commits, so it is not a clean diff on `new-main`. | Rebase onto `new-main` before treating the diff as the patch. VictoriaTraces and otelcol are not in compose. `OTEL_EXPORTER_OTLP_ENDPOINT` unset must leave auctions unchanged. |
+| [BAC-64](https://linear.app/bidon/issue/BAC-64) `ad_impression` and notice HTTP outcomes | Open [PR #961](https://github.com/bidon-io/bidon-backend/pull/961), one commit, not rebased onto the PRD envelope. | Rebase onto `new-main`. Show still fires BURL. `notification-events` JSON stays as it is. |
+| Observe stack: RisingWave, VictoriaTraces, otelcol, Grafana ([BAC-63](https://linear.app/bidon/issue/BAC-63), BAC-85, BAC-86, BAC-87, BAC-88) | Not started. The briefs are on the Linear issues. | Leave parked unless someone is going to operate the stack. |
+| Scalar OpenAPI docs ([BAC-80](https://linear.app/bidon/issue/BAC-80)) | Not started. | The spec in `telemetry/openapi.yaml` is enough to generate a client. |
+| Events warehouse | Design only. [TRD](./design/trd-events-warehouse.md): Parquet on DigitalOcean Spaces, one table per event type, DuckDB for the SQL. No sink in this repo. | Build the sink only after `telemetry-events` on `new-main` is the schema you mean to keep. |
 
-## Docs in the repo
-
-Design and research, from the BAC-53 spike. They describe the intended system.
-They are not a claim that this PR built it.
+## Docs
 
 | Doc | What it is |
 | --- | --- |
-| [adr/0002-telemetry-ingest.md](./adr/0002-telemetry-ingest.md) | Why client ingest is a separate Rust process. |
-| [telemetry-brief.md](./telemetry-brief.md) | Short brief. |
-| [telemetry-requirements.md](./telemetry-requirements.md) | Jobs to be done, grains A/B/C. |
-| [telemetry-m0-m1-backend-spike.md](./telemetry-m0-m1-backend-spike.md) | What sdkapi already emits, PII, dual-emit, ticket list. |
-| [PRD v1](./PRD_BidOn_Telemetry%20-%20v1.pdf) | Product requirements. PDF only. |
-| [TRD_BidOn_Telemetry.md](./TRD_BidOn_Telemetry.md) | Events warehouse (grain A). |
-| [telemetry-events-store.md](./telemetry-events-store.md) | Why Parquet/Iceberg, not a database, for events. |
-| [telemetry-traces-store.md](./telemetry-traces-store.md) | VictoriaTraces for grain B. |
-| [telemetry-metrics-store.md](./telemetry-metrics-store.md) | VictoriaMetrics for grain C. |
-| [telemetry-storage-sizing.md](./telemetry-storage-sizing.md) | Volume numbers. |
-| [telemetry-storage-recommendation.md](./telemetry-storage-recommendation.md) | Unified ClickHouse, declined. |
-| [telemetry-poc/](./telemetry-poc/README.md) | Original issue briefs (`00`–`05`). Historical. Status is this file. |
-| [telemetry-poc.md](./telemetry-poc.md) | How to query VictoriaMetrics locally. |
+| [ADR 0002](../adr/0002-telemetry-ingest.md) | Why client ingest is a separate Rust process. |
+| [local-stack.md](./local-stack.md) | Reading `telemetry-events` in Redpanda Console and the metrics in vmui on `just compose`. |
+| [`telemetry/openapi.yaml`](../../telemetry/openapi.yaml) | The `POST /v2/telemetry` contract. |
+
+`design/` is research from the BAC-53 spike, written before the code. It
+describes the intended system, not what is built. Where it disagrees with
+ADR 0002 or this page, those win.
+
+| Doc | What it is |
+| --- | --- |
+| [brief.md](./design/brief.md) | Short brief; start here for the design. |
+| [requirements.md](./design/requirements.md) | Jobs to be done, grains A/B/C. |
+| [backend-spike.md](./design/backend-spike.md) | What sdkapi already emitted, PII, dual-emit, original ticket list. |
+| [prd-v1.pdf](./design/prd-v1.pdf) | Product requirements. |
+| [trd-events-warehouse.md](./design/trd-events-warehouse.md) | Events warehouse (grain A), phase 1 contract. |
+| [events-store.md](./design/events-store.md) | Why Parquet/Iceberg, not a database, for events. |
+| [traces-store.md](./design/traces-store.md) | VictoriaTraces for grain B. |
+| [metrics-store.md](./design/metrics-store.md) | VictoriaMetrics for grain C. |
+| [storage-sizing.md](./design/storage-sizing.md) | Volume numbers. |
+| [clickhouse-declined.md](./design/clickhouse-declined.md) | Unified ClickHouse, the option we declined. |
 
 ## If you continue the work
 
-1. Run the PR test plan: `go test ./internal/telemetry/ ./internal/sdkapi/v2/app/ ./internal/sdkapi/v2/api/`, `cargo test --manifest-path telemetry/Cargo.toml`, then `just compose` and POST `telemetry/testdata/valid_request.json` to `http://localhost:1326/v2/telemetry`. Confirm one framed record on `telemetry-events`, counters on `:1326/metrics`, and that `:1324` does not serve the route. POST `unrecognized_request.json` and confirm 202 with the unknown name dropped.
-2. Finish BAC-78 on sdkapi: add `telemetry.enabled`, `sample_rate`, `event_names`, and `metric_names` to `/v2/config`, using the WIP yaml as the contract. Leave sampling on the SDK.
+1. Finish BAC-78 on sdkapi: add the `telemetry` block below to `/v2/config`. Leave sampling on the SDK.
+2. BAC-125: issue the ingest token from that same block.
 3. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
-4. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. The TRD and the store notes are the design.
+4. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. `design/` is the starting point.
 
 ## BAC-78 config contract
 
