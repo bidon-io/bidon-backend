@@ -120,8 +120,8 @@ Local dev mounts source into `bidon-ui` and hot-reloads. **Coolify runs pre-buil
 registry images** tagged via `BIDON_*_TAG` — not the working tree. When debugging
 staging-only UI issues, verify tags in Coolify match the commit you expect
 (especially `BIDON_UI_TAG`); backend/seed can be newer than `bidon-ui`. Rebuild
-with `just ci-build-ui` and redeploy with aligned tags. See README "Staging
-deployment".
+with `just ci-build-ui` and redeploy with aligned tags. See
+[docs/runbooks/staging.md](docs/runbooks/staging.md).
 
 ## Architecture
 
