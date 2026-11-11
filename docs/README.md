@@ -45,6 +45,13 @@ Diagrams:
 - [Index](adr/README.md)
 - [0001 — DSP simulator](adr/0001-dsp-simulator.md)
 - [0002 — SDK telemetry ingest service](adr/0002-telemetry-ingest.md)
+- [0003 — Redpanda](adr/0003-redpanda.md)
+- [0004 — Standalone Redis](adr/0004-standalone-redis.md)
+- [0005 — Standalone admin UI](adr/0005-standalone-admin-ui.md)
+- [0006 — Network registry](adr/0006-network-registry.md)
+- [0007 — Rendering config placement](adr/0007-rendering-config-placement.md)
+- [0008 — Server telemetry topic](adr/0008-telemetry-events-topic.md)
+- [0009 — Staging images and preview databases](adr/0009-staging-images-and-preview-databases.md)
 
 ## Runbooks
 
