@@ -7,7 +7,7 @@ info:
     `bidon-sdkapi`. See docs/adr/0002-telemetry-ingest.md.
 
     Unauthenticated in the POC: `app.key` and `app.bundle` are not checked.
-    The planned fix is under "Ingest auth" in docs/telemetry-next.md.
+    The planned fix is BAC-125, a token issued by `/v2/config`.
 security: []
 servers:
   - url: http://localhost:1326

@@ -134,8 +134,8 @@ sets `telemetryHost` to `http://localhost:1326` locally. sdkapi remains on
 - Ingest is unauthenticated. Anyone can post well-formed batches for any
   `app_key`, including apps that do not exist. The damage is junk events and
   skewed per-app numbers; the label allow-lists stop new metric series. The
-  planned fix, a token issued by `/v2/config`, is under "Ingest auth" in
-  `docs/telemetry-next.md`.
+  planned fix is a token issued by `/v2/config`
+  ([BAC-125](https://linear.app/bidon/issue/BAC-125)).
 - Clients and any edge proxy must send `POST /v2/telemetry` to this service.
   The path is not on `:1324`.
 - `/v2/config` does not yet advertise `telemetry.enabled`, `sample_rate`, or
@@ -149,7 +149,7 @@ sets `telemetryHost` to `http://localhost:1326` locally. sdkapi remains on
    This service keeps the env kill switch.
 3. Optional `client_event_total{event_name}` on this process (BAC-77). Do not
    move the existing series onto sdkapi.
-4. Ingest auth with a `/v2/config` token (see `docs/telemetry-next.md`). It
+4. BAC-125: ingest auth with a `/v2/config` token. It
    also fills `app_id`. MaxMind `country` and `event_id` dedupe only if ingest
    is allowed to take those dependencies. They are not required for the POC.
 5. Auction spans (BAC-62) and impression or notice outcomes (#961) stay in
