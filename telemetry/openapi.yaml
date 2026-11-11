@@ -5,6 +5,10 @@ info:
   description: |
     Client telemetry ingest, served by `bidon-telemetry` (port 1326), not by
     `bidon-sdkapi`. See docs/adr/0002-telemetry-ingest.md.
+
+    Unauthenticated in the POC: `app.key` and `app.bundle` are not checked.
+    The planned fix is under "Ingest auth" in docs/telemetry-next.md.
+security: []
 servers:
   - url: http://localhost:1326
     description: Local

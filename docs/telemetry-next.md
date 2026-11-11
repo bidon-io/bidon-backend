@@ -30,6 +30,7 @@ that is too large returns 413.
 | [BAC-78](https://linear.app/bidon/issue/BAC-78) kill switch and allow-lists on `/v2/config` | Partial. `TELEMETRY_INGEST_ENABLED=false` makes ingest return `accepted: 0` and leaves auctions alone. The server does not re-sample. `/v2/config` does **not** return `telemetry.enabled`, `sample_rate`, `event_names`, or `metric_names`. The intended shape is under "BAC-78 config contract" below. |
 | [BAC-79](https://linear.app/bidon/issue/BAC-79) OpenAPI for ingest and config telemetry | Partial. `telemetry/openapi.yaml` documents `POST /v2/telemetry` (202, 413, problem responses) with its own `servers:` entry. The config `telemetry.*` block is below and is not served yet. |
 | [BAC-62](https://linear.app/bidon/issue/BAC-62) OpenTelemetry auction spans | No. See below. |
+| Ingest auth (no ticket yet) | No. Ingest does not check `app.key` or `app.bundle`. The plan is under "Ingest auth" below. |
 
 Closed siblings, already replaced by this PR: [#957](https://github.com/bidon-io/bidon-backend/pull/957)
 (WIP OpenAPI on the old stacked history). There is no separate PR for
@@ -100,3 +101,24 @@ telemetry:
 ```
 
 Disabled looks like `enabled: false, sample_rate: 0, event_names: [], metric_names: []`.
+
+## Ingest auth
+
+No Linear ticket yet: the workspace is at its issue limit.
+
+**Problem.** `bidon-telemetry` accepts any `app.key` and `app.bundle` and
+writes them onto events without checking them. sdkapi rejects unknown apps by
+looking up `(app_key, package_name)` in Postgres, but ADR 0002 (D5) keeps
+Postgres out of the ingest service.
+
+**Plan.** sdkapi already validates the app on `/v2/config`. Add a
+`telemetry.token` to the BAC-78 block: an HMAC signed with `APP_SECRET` over
+`app_key`, `bundle`, `app_id` and an expiry (about 24h, refreshed on each config
+fetch). The SDK sends it on every batch in a header. `bidon-telemetry` checks
+the signature and expiry in `telemetry/src/http.rs`, with no database, and
+stamps the real `app_id`. A missing, forged or expired token gets 401, or is
+counted as `dropped_auth` during rollout. `telemetry/openapi.yaml` then declares
+the security scheme in place of `security: []`.
+
+**Limit.** This matches sdkapi's level of protection. Someone who replays a
+real app's config call still gets a valid token.
