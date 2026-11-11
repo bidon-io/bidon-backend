@@ -13,6 +13,9 @@ just build-admin    # bidon-admin
 just build-sdkapi   # bidon-sdkapi
 just build-migrate  # bidon-migrate
 just build-seed     # bidon-seed
+just build-dspsim   # bidon-dspsim
+just build-ui       # bidon-ui
+just build-telemetry  # bidon-telemetry
 just build-all      # all of the above
 ```
 
@@ -31,7 +34,9 @@ just ci-build-admin
 just ci-build-sdkapi
 just ci-build-migrate
 just ci-build-seed
+just ci-build-dspsim
 just ci-build-ui
+just ci-build-telemetry
 ```
 
 Or push all services (logs in once):
@@ -42,7 +47,7 @@ just ci-build-all
 
 ## Staging deployment
 
-Staging runs in [Coolify](http://coolify.bidon.squads.com/).
+Staging runs in [Coolify](https://coolify.bidon.squads.com/).
 
 After pushing images with `just ci-build-*`, update the app configuration there. Set each `BIDON_*_TAG` environment variable to the git SHA produced by the build. See [`.env.staging.example`](../../.env.staging.example) for the full list of required variables.
 

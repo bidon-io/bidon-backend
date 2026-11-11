@@ -6,7 +6,7 @@ Commands below run from the repository root.
 
 Nix keeps the development environment reproducible.
 
-1. Install [Nix](https://nixos.org/download/#nix-install-macos)
+1. Install [Nix](https://nixos.org/download/)
 2. Install [direnv](https://direnv.net/docs/installation.html)
 3. Run `direnv allow`. The nix flake shell will load.
 
@@ -17,6 +17,8 @@ Runs Postgres, Redis, Redpanda (Kafka API), migrations, seed data, both API serv
 ```shell
 docker compose -f docker-compose.dev.yml up -d
 ```
+
+`just compose` does the same in the foreground, and `just compose-down` stops it.
 
 | Service           | URL                        |
 |-------------------|----------------------------|
@@ -57,6 +59,12 @@ make local-init
 docker compose up -d
 ```
 
+To tear down this stack and remove its data and locally built images:
+
+```shell
+docker compose down --volumes --rmi local --remove-orphans || true
+```
+
 ## Migrations
 
 ```shell
@@ -82,15 +90,21 @@ default, so admin and sdkapi can run side by side. If your `.env.local` still ha
 
 ## Tests
 
+On your machine, start the test database first:
+
+```shell
+just test-db
+just test
+```
+
+Or run the suite inside Docker:
+
 ```shell
 make test
 ```
 
-## Clean env
-
-```shell
-docker compose down --volumes --rmi local --remove-orphans || true
-```
+The end-to-end SDK suite has its own stack (`just test-e2e-up`, `just test-e2e`).
+See "End-to-end SDK flow" in [AGENTS.md](../../AGENTS.md).
 
 ## Read from Kafka
 
