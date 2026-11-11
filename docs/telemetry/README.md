@@ -81,27 +81,47 @@ ADR 0002 or this page, those win.
 
 ## If you continue the work
 
-1. Finish BAC-78 on sdkapi: add the `telemetry` block below to `/v2/config`. Leave sampling on the SDK.
-2. BAC-125: issue the ingest token from that same block.
-3. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
-4. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. `design/` is the starting point.
+1. Finish BAC-78 on sdkapi: add the `telemetry` block below to the `adikteev` adapter section of `/v2/config`. Leave sampling on the SDK.
+2. [BAC-126](https://linear.app/bidon/issue/BAC-126): route a staging hostname to `bidon-telemetry` and serve it as `telemetry.url`.
+3. BAC-125: issue the ingest token from that same block.
+4. Rebase [#961](https://github.com/bidon-io/bidon-backend/pull/961) and the BAC-62 branch separately. Do not fold them into this PR.
+5. Leave the warehouse, RisingWave, VictoriaTraces, and Grafana until someone is going to run them. `design/` is the starting point.
 
 ## BAC-78 config contract
 
-Additive `telemetry` object on the `POST /v2/config` response, served by
-sdkapi. Sampling stays on the SDK; the server does not re-sample.
+The Android SDK already parses this block (`usdk-android`,
+`telemetry/TelemetrySettings.kt`, BID-139), so sdkapi has to match it. It goes in
+the Bidon adapter's own section of the `POST /v2/config` response,
+`adapters.adikteev`, next to `sdk_instance_id` (`AdkiteevInitConfig` in
+`internal/sdkapi/adapter_init_config.go`). It is not a top-level key.
 
-```yaml
-telemetry:
-  enabled: true          # false: SDK must not POST; ingest still 202s with accepted 0
-  sample_rate: 0.1       # coherent per-auction keep probability, 0..1; funnel and errors stay at 1 on the SDK
-  event_names:           # live allow-list, subset of the proto catalogue
-    - ad_request_started
-    - ad_filled
-  metric_names:          # live allow-list, subset of the metric catalogue
-    - client_auction_duration_seconds
-    - client_token_collection_duration_seconds
-    - client_ad_load_duration_seconds
+```json
+"adapters": {
+  "adikteev": {
+    "sdk_instance_id": "...",
+    "order": 0,
+    "telemetry": {
+      "url": "https://telemetry.bidon.squads.com/v2/telemetry",
+      "app_key": "<publisher app key>",
+      "enabled": true,
+      "sample_rate": 0.25,
+      "event_rates": { "ad_loaded": 0.05 },
+      "event_names": ["ad_request_started", "ad_filled"]
+    }
+  }
+}
 ```
 
-Disabled looks like `enabled: false, sample_rate: 0, event_names: [], metric_names: []`.
+| Key | Meaning |
+| --- | --- |
+| `url` | Where the SDK posts batches: the `bidon-telemetry` host, `https` only. Without it the SDK stores events and sends nothing. Comes from an sdkapi env var; empty means the key is left out. |
+| `app_key` | Optional. The SDK falls back to its own app key. |
+| `enabled` | `false` stops sending. Ingest also has its own `TELEMETRY_INGEST_ENABLED`. |
+| `sample_rate` | Default keep probability, 0 to 1. Sampling happens on the SDK; the server does not re-sample. |
+| `event_rates` | Per-event keep probability, overriding `sample_rate`. |
+| `event_names` | Allow-list, a subset of the proto catalogue. Absent means all. |
+
+Every key is optional. The SDK treats `url` (with `app_key`) and the switches
+as two separate parts: a bad switch makes it ignore all the switches but keep
+the endpoint. There is no `metric_names`; the metric allow-list stays on the
+server.

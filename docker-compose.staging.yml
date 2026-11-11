@@ -243,6 +243,9 @@ services:
     logging: *default-logging
     <<: *restart-policy
 
+  # Its public domain (for example https://telemetry.bidon.squads.com:1326) is set
+  # on this service in Coolify. The SDK learns the URL from /v2/config
+  # (adapters.adikteev.telemetry.url), so sdkapi's host does not route it.
   bidon-telemetry:
     image: "registry.digitalocean.com/bidon-io/bidon-telemetry:${BIDON_TELEMETRY_TAG}"
     expose:

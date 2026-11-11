@@ -144,8 +144,10 @@ sets `telemetryHost` to `http://localhost:1326` locally. sdkapi remains on
 
 ### Follow-ups
 
-1. Merge #963, then route `POST /v2/telemetry` at the edge to `bidon-telemetry`.
-2. BAC-78: publish the config block from sdkapi. Leave sampling on the SDK.
+1. BAC-126: give `bidon-telemetry` its own staging hostname; sdkapi serves it as
+   `telemetry.url`.
+2. BAC-78: publish the config block from sdkapi, including `url`, which is how
+   the SDK finds this service. Leave sampling on the SDK.
    This service keeps the env kill switch.
 3. Optional `client_event_total{event_name}` on this process (BAC-77). Do not
    move the existing series onto sdkapi.
