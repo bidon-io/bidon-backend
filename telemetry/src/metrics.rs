@@ -6,7 +6,8 @@ use prometheus::{HistogramOpts, HistogramVec, IntCounterVec, Opts, Registry, Tex
 const BUCKETS: &[f64] = &[0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
 
 const AD_TYPES: &[&str] = &["banner", "interstitial", "rewarded"];
-const AD_LOAD_RESULTS: &[&str] = &["loaded", "failed", "no_fill", "timeout"];
+/// A load ends in `ad_loaded` or `ad_load_failed`; the failure detail is on that event.
+const AD_LOAD_RESULTS: &[&str] = &["loaded", "failed"];
 
 type LabelSpec = (&'static str, &'static [&'static str]);
 
@@ -174,13 +175,19 @@ mod tests {
     }
 
     #[test]
-    fn known_label_values_are_observed() {
+    fn ad_load_result_is_loaded_or_failed() {
         let metrics = Metrics::new();
-        assert!(metrics.observe(
-            "client_ad_load_duration_seconds",
-            0.4,
-            &labels(&[("ad_type", "banner"), ("result", "loaded")]),
-        ));
+        for (result, kept) in [("loaded", true), ("failed", true), ("no_fill", false)] {
+            assert_eq!(
+                metrics.observe(
+                    "client_ad_load_duration_seconds",
+                    0.4,
+                    &labels(&[("ad_type", "banner"), ("result", result)]),
+                ),
+                kept,
+                "{result}"
+            );
+        }
     }
 
     #[test]

@@ -1560,9 +1560,9 @@ components:
             type: string
           description: |
             Only keys listed for that series, with values from that series' fixed set
-            (`ad_type` is banner, interstitial or rewarded; `result` is loaded, failed,
-            no_fill or timeout). An extra key, an unknown value, or a negative value
-            drops the observation.
+            (`ad_type` is banner, interstitial or rewarded; `result` is loaded or
+            failed, matching the `ad_loaded` and `ad_load_failed` events). An extra
+            key, an unknown value, or a negative value drops the observation.
     ClientMetricName:
       type: string
       description: POC discussion set. Additive only — new series = proto + OpenAPI change.
